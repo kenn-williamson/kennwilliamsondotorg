@@ -67,6 +67,9 @@ Create a Vue 3 landing page with a header and dynamic "days without accident" st
 ## Recent Changes
 - **Text Update**: Changed banner title from "Days Without Incident" to "Time since last incident"
 - **Documentation**: Updated CLAUDE.md with current application status and commit conventions
+- **Image Integration**: Added smokey1.png (512x768) to landing page between header and counter
+- **Responsive Layout**: Modified counter to use vertical stacking on screens ≤480px instead of wrapping
+- **Smart Layout**: Prevents awkward text wrapping by switching to column layout on mobile devices
 
 ## Files to Modify/Create
 - `src/components/HeaderComponent.vue` (new)

@@ -49,10 +49,12 @@ When working on this project, use the Context7 MCP server to look up APIs and do
 ## Current Application
 The application is a "Time since last incident" counter landing page featuring:
 - **HeaderComponent**: Welcome message for KennWilliamson.org
+- **Smokey Image**: 512x768px image (smokey1.png) with responsive scaling
 - **CounterBanner**: Real-time counter showing time elapsed since August 24, 2025
 - Dynamic time display with years, months, weeks, days, hours, minutes, seconds
-- Responsive design with flexbox layout
+- Responsive design with flexbox layout and smart wrapping behavior
 - Live updates every second using Vue reactivity
+- Adaptive layout: stacks counter units vertically on screens ≤480px to prevent awkward wrapping
 
 ## Commit Convention
 This project uses conventional commits with prefixes:

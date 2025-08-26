@@ -196,6 +196,7 @@ onUnmounted(() => {
   }
   
   .counter-display {
+    flex-direction: column;
     gap: 0.5rem;
   }
   

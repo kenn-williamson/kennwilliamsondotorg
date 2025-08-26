@@ -6,6 +6,7 @@ import CounterBanner from './components/CounterBanner.vue'
 <template>
   <div class="app-container">
     <HeaderComponent />
+    <img src="./assets/smokey1.png" alt="Smokey" class="smokey-image" />
     <CounterBanner />
   </div>
 </template>
@@ -18,5 +19,11 @@ import CounterBanner from './components/CounterBanner.vue'
   align-items: center;
   justify-content: center;
   gap: 2rem;
+}
+
+.smokey-image {
+  max-width: 512px;
+  width: 100%;
+  height: auto;
 }
 </style>
