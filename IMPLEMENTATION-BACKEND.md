@@ -55,7 +55,9 @@ backend/
 │   ├── 20250829095648_add_user_slug_to_users.sql
 │   └── 20250829095731_create_incident_timers_table.sql
 ├── tests/               # Integration tests ✅
-│   └── integration_tests.rs # Comprehensive endpoint tests
+│   ├── auth_simple.rs       # Authentication endpoint tests
+│   ├── incident_simple.rs   # Incident timer endpoint tests
+│   └── test_helpers.rs      # Database utilities for testing
 ├── Cargo.toml           # Dependencies ✅
 ├── Dockerfile           # Multi-stage container build
 └── .env                 # Environment configuration
@@ -70,7 +72,7 @@ backend/
 - **Public API**: User slug-based public timer access (no authentication required)
 - **Database Integration**: PostgreSQL with SQLx, UUIDv7 primary keys, automated timestamp triggers
 - **Security**: Proper JWT validation, password hashing, role extraction middleware
-- **Testing**: Comprehensive integration tests covering all endpoints and authentication flows
+- **Testing**: Clean, focused integration tests with fast execution and proper isolation
 - **Development Tools**: Database reset script for easy local development
 
 ### 🏗️ Architecture Highlights
@@ -195,6 +197,50 @@ cargo clippy
 - **CORS**: Restrict origins in production
 - **Rate Limiting**: Prevent brute force attacks
 - **SQL Injection**: SQLx compile-time query checking
+
+## Testing Architecture
+
+### ✅ Test Implementation Complete
+- **5 focused integration tests**: 3 auth tests + 2 incident timer tests
+- **Fast execution**: ~0.16s per test using direct database operations
+- **Clean isolation**: Each test sets up and cleans up its own data
+- **Focused scope**: Auth tests only test auth, timer tests only test timers
+
+### Test Structure
+```
+tests/
+├── auth_simple.rs       # Authentication functionality tests
+│   ├── test_user_registration_success
+│   ├── test_user_login_success  
+│   └── test_user_login_invalid_credentials
+├── incident_simple.rs   # Incident timer functionality tests
+│   ├── test_get_timer_by_user_slug_public     # Public endpoint
+│   └── test_create_timer_protected_endpoint   # Protected endpoint  
+└── test_helpers.rs      # Database utilities
+    ├── create_test_user_in_db()    # Direct user creation
+    ├── create_test_timer_in_db()   # Direct timer creation
+    ├── cleanup_test_db()           # Test cleanup
+    └── unique_test_*()             # Test data generators
+```
+
+### Testing Best Practices Implemented
+- **Direct DB setup**: Use database operations for test data, not HTTP calls
+- **Real service usage**: Use actual `AuthService.login()` for tokens, not mocks
+- **Separation of concerns**: Only test the specific functionality, not dependencies  
+- **Environment isolation**: Uses `.env.test` with separate test configuration
+
+### Running Tests
+```bash
+# Run all tests
+cargo test
+
+# Run specific test file
+cargo test --test auth_simple
+cargo test --test incident_simple
+
+# Run specific test
+cargo test test_user_registration_success
+```
 
 ## Performance Optimizations
 - **Connection Pooling**: SQLx connection pool

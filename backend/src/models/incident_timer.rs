@@ -12,7 +12,7 @@ pub struct IncidentTimer {
     pub updated_at: DateTime<Utc>,
 }
 
-#[derive(Debug, Deserialize)]
+#[derive(Debug, Serialize, Deserialize)]
 pub struct CreateIncidentTimer {
     pub reset_timestamp: Option<DateTime<Utc>>,
     pub notes: Option<String>,
