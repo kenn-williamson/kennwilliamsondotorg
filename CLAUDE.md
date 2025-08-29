@@ -1,11 +1,18 @@
 # CLAUDE.md - Project Context
 
 ## Project Overview
-This is a **Vue.js 3 + TypeScript + Vite** project located in the `vue-project/` folder. The project uses modern Vue 3 Composition API with TypeScript and Vite for fast development and building.
+This project is transitioning to a **full-stack web application** for kennwilliamson.org. The current simple Vue.js counter app will be replaced with a comprehensive architecture featuring:
+- **Frontend**: Nuxt.js 3 (Vue 3 + SSR + routing)
+- **Backend**: Rust with Actix-web framework
+- **Database**: PostgreSQL
+- **Infrastructure**: AWS EC2 free tier with Docker + Docker Compose
+- **Reverse Proxy**: Nginx with Let's Encrypt SSL
 
-## Project Structure
+See **ARCHITECTURE.md** for detailed system design and future roadmap.
+
+## Current Structure (Legacy)
 ```
-vue-project/
+vue-project/                 # LEGACY: Will be replaced
 ├── src/
 │   ├── components/          # Vue components (HeaderComponent, CounterBanner)
 │   ├── assets/             # Static assets and CSS
@@ -18,43 +25,87 @@ vue-project/
 └── eslint.config.ts       # ESLint configuration
 ```
 
-## Key Technologies
+## New Architecture Structure (Planned)
+```
+kennwilliamsondotorg/
+├── ARCHITECTURE.md          # System architecture documentation
+├── CLAUDE.md               # Project context (this file)
+├── docker-compose.yml      # Service orchestration
+├── frontend/               # Nuxt.js application
+│   ├── pages/              # File-based routing
+│   ├── components/         # Vue components
+│   ├── composables/        # Shared logic
+│   └── package.json        # Frontend dependencies
+├── backend/                # Rust Actix-web API
+│   ├── src/                # Rust source code
+│   ├── Cargo.toml          # Rust dependencies
+│   └── Dockerfile          # Backend container
+├── nginx/                  # Reverse proxy configuration
+└── scripts/                # Deployment and utility scripts
+```
+
+## Technology Stack
+
+### Current (Legacy)
 - **Vue 3.5.18** - Progressive JavaScript framework
 - **TypeScript 5.8** - Type-safe JavaScript
 - **Vite 7.0.6** - Fast build tool and dev server
 - **ESLint + Prettier** - Code quality and formatting
 
-## Available Scripts
-- `npm run dev` - Start development server
-- `npm run build` - Build for production
-- `npm run preview` - Preview production build
-- `npm run lint` - Run ESLint with auto-fix
-- `npm run format` - Format code with Prettier
+### New Full-Stack Architecture
+- **Frontend**: Nuxt.js 3 with Vue 3, TypeScript, SSR
+- **Backend**: Rust 1.70+ with Actix-web 4.x
+- **Database**: PostgreSQL 15
+- **Infrastructure**: Docker, Docker Compose, Nginx
+- **Deployment**: AWS EC2 t2.micro (free tier)
+- **SSL**: Let's Encrypt with automated renewal
 
 ## Context7 MCP Server Usage
 When working on this project, use the Context7 MCP server to look up APIs and documentation:
 
+### Current/Legacy Stack
 1. **For Vue.js APIs**: Use `resolve-library-id` with "vue" to get Vue.js documentation
 2. **For TypeScript**: Use `resolve-library-id` with "typescript" for TypeScript language features
 3. **For Vite**: Use `resolve-library-id` with "vite" for build tool configuration
-4. **For ESLint/Prettier**: Use `resolve-library-id` with respective tool names
+
+### New Full-Stack APIs
+1. **For Nuxt.js**: Use `resolve-library-id` with "nuxt.js" for SSR, routing, and framework features
+2. **For Rust/Actix-web**: Use `resolve-library-id` with "actix-web" for web framework documentation
+3. **For PostgreSQL**: Use `resolve-library-id` with "postgresql" for database operations
+4. **For Docker**: Use `resolve-library-id` with "docker" for containerization
 
 ## Development Notes
+
+### Current Legacy App
 - The app uses Vue 3 Composition API with `<script setup>` syntax
 - Components are located in `src/components/` with a clean, modular structure
 - TypeScript is configured for strict type checking
 - Vite provides hot module replacement for fast development
 - The project follows Vue.js best practices and conventions
 
-## Current Application
-The application is a "Time since last incident" counter landing page featuring:
-- **HeaderComponent**: Welcome message for KennWilliamson.org
-- **Smokey Image**: 512x768px image (smokey1.png) with responsive scaling
-- **CounterBanner**: Real-time counter showing time elapsed since August 24, 2025
-- Dynamic time display with years, months, weeks, days, hours, minutes, seconds
-- Responsive design with flexbox layout and smart wrapping behavior
-- Live updates every second using Vue reactivity
-- Adaptive layout: stacks counter units vertically on screens ≤480px to prevent awkward wrapping
+### New Architecture Guidelines
+- **Node.js 20+**: Required for Nuxt.js (even-numbered versions recommended)
+- **Rust 1.70+**: Required for modern async/await and latest features
+- **Docker Compose**: Orchestrates all services with resource constraints for AWS free tier
+- **Security-First**: JWT authentication, bcrypt hashing, HTTPS everywhere
+- **Performance**: Optimized for 1GB RAM constraint on EC2 t2.micro
+
+## Development Status
+
+### Current Applications
+- **Legacy Vue App** (vue-project/): Simple counter app, preserved as reference
+- **Frontend** (frontend/): Nuxt.js 4.0.3 + Docker ready
+- **Backend** (backend/): Rust Actix-web + SQLx + Docker ready
+- **Infrastructure**: Docker Compose + Nginx + SSL automation ready
+
+## New Full-Stack Application (Planned)
+The new application will be a personal playground website featuring:
+- **About Me Page**: Personal information and portfolio
+- **User Management**: Registration/login system with email/password auth
+- **CRUD Operations**: Various data management features
+- **Future OAuth**: Google and GitHub authentication with account linking
+- **Responsive SSR**: Server-side rendered Vue.js with Nuxt.js
+- **API-First**: RESTful API built with Rust and Actix-web
 
 ## Commit Convention
 This project uses conventional commits with prefixes:
@@ -63,9 +114,51 @@ This project uses conventional commits with prefixes:
 - **[CHORE]**: Maintenance, documentation, and tooling
 - **[REFACTOR]**: Code restructuring without functional changes
 
-## Future Considerations
-This project may expand to include:
-- Backend services in additional folders
-- Alternative frontend implementations
-- API integrations (use Context7 MCP server for API documentation)
-- Database connections and data management
+# Architecture & Implementation Documentation
+- @ARCHITECTURE.md
+- @IMPLEMENTATION-FRONTEND.md
+- @IMPLEMENTATION-BACKEND.md
+- @IMPLEMENTATION-DATABASE.md
+- @IMPLEMENTATION-NGINX.md
+- @IMPLEMENTATION-DEPLOYMENT.md
+- @IMPLEMENTATION-AUTH.md
+
+## Implementation Phases
+
+### Phase 0: Planning & Documentation (Completed)
+- ✅ Architecture design with future roadmap
+- ✅ Frontend implementation plan (fresh Nuxt.js approach)
+- ✅ Backend implementation plan (Rust + Actix-web)
+- ✅ Database implementation plan (PostgreSQL + SQLx migrations)
+- ✅ Nginx reverse proxy and SSL configuration plan
+- ✅ Deployment strategy (AWS EC2 + Docker Compose)
+- ✅ Authentication system design (JWT + future OAuth)
+
+### Phase 1: Foundation (In Progress)
+- ✅ **Rust toolchain installed** (1.89.0 + cargo-watch + sqlx-cli)
+- ✅ **Frontend created** (Nuxt.js 4.0.3 + TypeScript + TailwindCSS + Pinia)
+- ✅ **Backend created** (Rust + Actix-web 4 + health endpoints)
+- ✅ **Database schema designed** (users, roles, user_roles with UUIDv7)
+- ✅ **Docker infrastructure** (Compose + Dockerfiles + Nginx config)
+- 🔄 Set up PostgreSQL database connection and run migrations
+- 🔄 Implement basic authentication endpoints (register/login)
+- 🔄 Deploy to AWS EC2 with SSL
+
+### Phase 2: Enhancement
+- Add OAuth integration (Google, GitHub)
+- Implement GitHub Actions CI/CD pipeline
+- Add comprehensive testing (unit, integration, e2e)
+- Set up staging environment
+
+### Phase 3: Advanced Features  
+- Enhanced monitoring and logging
+- Performance optimization and caching
+- Advanced user features and CRUD operations
+- Backup automation and disaster recovery
+
+
+# RULES
+ - Use idomatic code for the appropriate language framework.
+ - Documentation should not include code that should go in actual implemented files.
+ - Documentation should be succinct and clear
+ - Code should prefer clarity over cleverness
