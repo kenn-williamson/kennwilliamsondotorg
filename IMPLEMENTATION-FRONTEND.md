@@ -20,10 +20,16 @@ frontend/
 ├── layouts/          # Application layouts
 ├── middleware/       # Route middleware
 ├── pages/            # File-based routing
+│   ├── login.vue     # Authentication page
+│   ├── incident-manager.vue # Protected CRUD management page
+│   └── incident-timer/
+│       └── [user_slug].vue # Public timer display page
 ├── plugins/          # Vue plugins
 ├── public/           # Static assets
 ├── server/api/       # API routes (proxy to Rust backend)
 ├── stores/           # Pinia stores
+│   ├── auth.ts       # Authentication state
+│   └── incident-timers.ts # Timer management state
 ├── types/            # TypeScript definitions
 ├── utils/            # Utility functions
 ├── nuxt.config.ts    # Nuxt configuration
@@ -32,11 +38,15 @@ frontend/
 
 ## Key Features
 - **Server-Side Rendering**: Full SSR with hydration
-- **Authentication**: JWT-based auth with httpOnly cookies
+- **Authentication**: JWT-based auth with httpOnly cookies and route protection
 - **API Integration**: Composables for Rust backend communication
 - **Forms**: VeeValidate with Yup validation
 - **Responsive Design**: Mobile-first with TailwindCSS
 - **SEO**: Meta tags, Open Graph, structured data
+- **Incident Timer Features**:
+  - Public timer display page accessible via user slug
+  - Protected CRUD management interface for authenticated users
+  - Real-time timer calculation similar to legacy Vue app
 
 ## Docker Configuration
 - Multi-stage build (Node 20 Alpine)
