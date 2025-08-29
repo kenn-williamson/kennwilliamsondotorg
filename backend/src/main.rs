@@ -1,9 +1,12 @@
 use actix_web::{web, App, HttpResponse, HttpServer, Result};
 use dotenv::dotenv;
-use sqlx::{PgPool, Pool, Postgres};
+use sqlx::PgPool;
 use std::env;
 
+mod middleware;
 mod models;
+mod routes;
+mod services;
 
 async fn health() -> Result<HttpResponse> {
     Ok(HttpResponse::Ok().json(serde_json::json!({
@@ -44,15 +47,34 @@ async fn main() -> std::io::Result<()> {
         .await
         .expect("Failed to connect to database");
 
+    // Create services
+    let jwt_secret = env::var("JWT_SECRET")
+        .expect("JWT_SECRET must be set");
+    
+    let auth_service = services::auth::AuthService::new(pool.clone(), jwt_secret);
+    let incident_timer_service = services::incident_timer::IncidentTimerService::new(pool.clone());
+
     println!("🚀 Starting server at http://{}:{}", host, port);
     println!("📊 Database connected successfully");
 
     HttpServer::new(move || {
         App::new()
             .app_data(web::Data::new(pool.clone()))
+            .app_data(web::Data::new(auth_service.clone()))
+            .app_data(web::Data::new(incident_timer_service.clone()))
             .route("/health", web::get().to(health))
             .route("/api/health", web::get().to(health))
             .route("/api/health/db", web::get().to(health_db))
+            .service(
+                web::scope("/api")
+                    .configure(routes::auth::configure_routes)
+                    .configure(routes::incident_timers::configure_public_routes)
+                    .service(
+                        web::scope("")
+                            .wrap(actix_web::middleware::from_fn(middleware::auth::jwt_auth_middleware))
+                            .configure(routes::incident_timers::configure_protected_routes)
+                    )
+            )
     })
     .bind(format!("{}:{}", host, port))?
     .run()

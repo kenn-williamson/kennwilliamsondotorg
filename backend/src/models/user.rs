@@ -9,6 +9,7 @@ pub struct User {
     pub email: String,
     pub password_hash: String,
     pub display_name: String,
+    pub slug: String,
     pub created_at: DateTime<Utc>,
     pub updated_at: DateTime<Utc>,
 }
@@ -32,6 +33,7 @@ pub struct Role {
     pub name: String,
     pub description: Option<String>,
     pub created_at: DateTime<Utc>,
+    pub updated_at: DateTime<Utc>,
 }
 
 #[derive(Debug, Clone, FromRow)]
