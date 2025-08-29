@@ -13,6 +13,9 @@ pub async fn create_test_user_in_db(
     display_name: &str,
     slug: &str,
 ) -> Result<User, sqlx::Error> {
+    // Use a transaction to ensure atomicity
+    let mut tx = pool.begin().await?;
+    
     let user = sqlx::query_as!(
         User,
         r#"
@@ -26,14 +29,14 @@ pub async fn create_test_user_in_db(
         display_name,
         slug
     )
-    .fetch_one(pool)
+    .fetch_one(&mut *tx)
     .await?;
 
     // Add default 'user' role
     let role_id = sqlx::query_scalar!(
         "SELECT id FROM roles WHERE name = 'user'"
     )
-    .fetch_one(pool)
+    .fetch_one(&mut *tx)
     .await?;
 
     sqlx::query!(
@@ -42,8 +45,11 @@ pub async fn create_test_user_in_db(
         user.id,
         role_id
     )
-    .execute(pool)
+    .execute(&mut *tx)
     .await?;
+
+    // Commit the transaction
+    tx.commit().await?;
 
     Ok(user)
 }

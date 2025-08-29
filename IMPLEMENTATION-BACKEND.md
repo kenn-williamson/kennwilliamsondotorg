@@ -55,8 +55,9 @@ backend/
 │   ├── 20250829095648_add_user_slug_to_users.sql
 │   └── 20250829095731_create_incident_timers_table.sql
 ├── tests/               # Integration tests ✅
-│   ├── auth_simple.rs       # Authentication endpoint tests
-│   ├── incident_simple.rs   # Incident timer endpoint tests
+│   ├── auth_simple.rs       # Authentication endpoint tests (3 tests)
+│   ├── incident_simple.rs   # Incident timer endpoint tests (5 tests)
+│   ├── health_simple.rs     # Health endpoint tests (2 tests)
 │   └── test_helpers.rs      # Database utilities for testing
 ├── Cargo.toml           # Dependencies ✅
 ├── Dockerfile           # Multi-stage container build
@@ -201,21 +202,27 @@ cargo clippy
 ## Testing Architecture
 
 ### ✅ Test Implementation Complete
-- **5 focused integration tests**: 3 auth tests + 2 incident timer tests
-- **Fast execution**: ~0.16s per test using direct database operations
+- **10 comprehensive integration tests**: Full API endpoint coverage
+- **Fast execution**: ~5.5s total runtime with sequential execution
 - **Clean isolation**: Each test sets up and cleans up its own data
-- **Focused scope**: Auth tests only test auth, timer tests only test timers
+- **Modular organization**: Tests separated by functionality for clarity
 
 ### Test Structure
 ```
 tests/
-├── auth_simple.rs       # Authentication functionality tests
+├── auth_simple.rs       # Authentication functionality tests (3 tests)
 │   ├── test_user_registration_success
 │   ├── test_user_login_success  
 │   └── test_user_login_invalid_credentials
-├── incident_simple.rs   # Incident timer functionality tests
+├── incident_simple.rs   # Incident timer functionality tests (5 tests)
 │   ├── test_get_timer_by_user_slug_public     # Public endpoint
-│   └── test_create_timer_protected_endpoint   # Protected endpoint  
+│   ├── test_create_timer_protected_endpoint   # Create timer
+│   ├── test_get_user_timers_protected         # List user timers
+│   ├── test_update_timer_protected            # Update timer
+│   └── test_delete_timer_protected            # Delete timer
+├── health_simple.rs     # Health check endpoint tests (2 tests)
+│   ├── test_health_endpoint                   # Basic health check
+│   └── test_health_db_endpoint                # Database connectivity
 └── test_helpers.rs      # Database utilities
     ├── create_test_user_in_db()    # Direct user creation
     ├── create_test_timer_in_db()   # Direct timer creation
@@ -231,12 +238,13 @@ tests/
 
 ### Running Tests
 ```bash
-# Run all tests
-cargo test
+# Run all tests (sequential to avoid race conditions)
+cargo test -- --test-threads 1
 
 # Run specific test file
 cargo test --test auth_simple
 cargo test --test incident_simple
+cargo test --test health_simple
 
 # Run specific test
 cargo test test_user_registration_success

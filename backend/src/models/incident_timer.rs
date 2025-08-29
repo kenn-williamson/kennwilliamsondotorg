@@ -18,7 +18,7 @@ pub struct CreateIncidentTimer {
     pub notes: Option<String>,
 }
 
-#[derive(Debug, Deserialize)]
+#[derive(Debug, Serialize, Deserialize)]
 pub struct UpdateIncidentTimer {
     pub reset_timestamp: Option<DateTime<Utc>>,
     pub notes: Option<String>,
