@@ -1,9 +1,9 @@
 version: '3.8'
 
 services:
-  # PostgreSQL Database
+  # PostgreSQL Database with UUIDv7 support
   postgres:
-    image: postgres:15-alpine
+    image: ghcr.io/fboulnois/pg_uuidv7:1.6.0
     environment:
       POSTGRES_DB: kennwilliamson
       POSTGRES_USER: ${DB_USER:-postgres}
