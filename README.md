@@ -1,34 +1,48 @@
 # KennWilliamson.org
 
-A Vue.js 3 landing page featuring a real-time "Time since last incident" counter.
+Full-stack web application with incident timer management, user authentication, and public sharing capabilities.
 
 ## Overview
 
-This project is a modern web application built with Vue 3, TypeScript, and Vite that displays a dynamic counter showing the time elapsed since August 24, 2025. The counter updates in real-time and displays years, months, weeks, days, hours, minutes, and seconds in a responsive layout.
+A modern web application built with Nuxt.js 4 and Rust, featuring JWT-based authentication, incident timer tracking with real-time updates, and shareable public timer displays. The application includes a comprehensive development environment with hot reload capabilities.
 
 ## Features
 
-- **Real-time Counter**: Updates every second with precise time calculations
-- **Responsive Design**: Flexbox layout that adapts to different screen sizes
-- **Modern Stack**: Vue 3 Composition API with TypeScript and Vite
-- **Clean Architecture**: Modular component structure
-- **Live Updates**: No page refresh required
+- **User Authentication**: Registration and login with JWT tokens
+- **Incident Timers**: Create, manage, and track incident timers with notes
+- **Public Sharing**: Share timer displays via public URLs (`/{user_slug}/incident-timer`)
+- **Real-time Updates**: Live timer displays that update every second
+- **Responsive Design**: Mobile-first design with Gothic construction theming
+- **Hot Reload Development**: Instant updates for both frontend and backend during development
 
 ## Technology Stack
 
-- **Vue 3.5.18** - Progressive JavaScript framework
-- **TypeScript 5.8** - Type-safe JavaScript
-- **Vite 7.0.6** - Fast build tool and dev server
-- **ESLint + Prettier** - Code quality and formatting
+### Frontend
+- **Nuxt.js 4.0.3** - Vue 3 framework with SSR
+- **TypeScript** - Type-safe JavaScript
+- **TailwindCSS** - Utility-first CSS framework
+- **Pinia** - State management
+- **VeeValidate + Yup** - Form validation
 
-## Local Development
+### Backend
+- **Rust 1.89.0** - Systems programming language
+- **Actix-web 4.x** - Web framework
+- **PostgreSQL 17** - Database with UUIDv7 support
+- **SQLx** - Database toolkit
+- **JWT + bcrypt** - Authentication and password hashing
+
+### Infrastructure
+- **Docker Compose** - Container orchestration
+- **Nginx** - Reverse proxy with SSL
+- **Automated Scripts** - Development workflow management
+
+## Quick Start
 
 ### Prerequisites
+- Docker and Docker Compose
+- Git
 
-- Node.js v20.19.4 or higher
-- npm (comes with Node.js)
-
-### Setup Instructions
+### Development Setup
 
 1. **Clone the repository**
    ```bash
@@ -36,56 +50,61 @@ This project is a modern web application built with Vue 3, TypeScript, and Vite 
    cd kennwilliamsondotorg
    ```
 
-2. **Navigate to the Vue project**
+2. **Start the development environment**
    ```bash
-   cd vue-project
+   ./scripts/dev-start.sh
    ```
 
-3. **Install dependencies**
-   ```bash
-   npm install
-   ```
+3. **Access the application**
+   - Open https://localhost in your browser
+   - The development environment includes SSL and hot reload
 
-4. **Start the development server**
-   ```bash
-   npm run dev
-   ```
+### Development Commands
 
-5. **Open your browser**
-   - The application will be available at `http://localhost:5173`
-   - The dev server supports hot module replacement for instant updates
-
-### Available Scripts
-
-- `npm run dev` - Start development server
-- `npm run build` - Build for production
-- `npm run preview` - Preview production build
-- `npm run lint` - Run ESLint with auto-fix
-- `npm run format` - Format code with Prettier
+- `./scripts/dev-start.sh` - Start all services with hot reload
+- `./scripts/dev-logs.sh` - View service logs  
+- `./scripts/dev-stop.sh` - Stop all services
+- `./scripts/health-check.sh` - Verify service health
+- `./scripts/setup-db.sh` - Run database migrations
 
 ## Project Structure
 
 ```
-vue-project/
-├── src/
-│   ├── components/          # Vue components
-│   │   ├── HeaderComponent.vue
-│   │   └── CounterBanner.vue
-│   ├── assets/             # Static assets and CSS
-│   ├── App.vue            # Main application component
-│   └── main.ts            # Application entry point
-├── public/                 # Public static files
-└── package.json           # Dependencies and scripts
+kennwilliamsondotorg/
+├── frontend/app/           # Nuxt.js 4 application
+│   ├── components/         # Vue components
+│   ├── pages/             # File-based routing
+│   ├── stores/            # Pinia state management
+│   └── middleware/        # Route protection
+├── backend/               # Rust API server
+│   ├── src/               # Rust source code
+│   ├── tests/             # Integration tests
+│   └── migrations/        # Database migrations
+├── scripts/               # Development automation
+├── nginx/                 # Reverse proxy configuration
+└── docker-compose.development.yml
 ```
+
+## API Endpoints
+
+- `POST /api/auth/register` - User registration
+- `POST /api/auth/login` - User login
+- `GET /api/incident-timers` - Get user's timers (protected)
+- `POST /api/incident-timers` - Create timer (protected)
+- `GET /{user_slug}/incident-timer` - Public timer display
+
+## Documentation
+
+See [CLAUDE.md](CLAUDE.md) for complete project context and cross-references to detailed implementation documentation.
 
 ## Contributing
 
-This project uses conventional commits with the following prefixes:
-- `[FEATURE]` - New features and enhancements
-- `[FIX]` - Bug fixes and corrections
-- `[CHORE]` - Maintenance, documentation, and tooling
-- `[REFACTOR]` - Code restructuring without functional changes
+This project follows conventional commits:
+- `feat:` - New features
+- `fix:` - Bug fixes
+- `docs:` - Documentation changes
+- `chore:` - Maintenance tasks
 
 ## License
 
-This project is for personal use.
+Personal project - All rights reserved.
