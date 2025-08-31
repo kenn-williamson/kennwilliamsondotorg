@@ -215,7 +215,7 @@ const debouncedSlugPreview = useDebounceFn(async (displayName) => {
 
   try {
     slugPreviewLoading.value = true
-    const { authService } = useServices()
+    const authService = useAuthService()
     const preview = await authService.previewSlug(displayName.trim())
     slugPreview.value = preview
   } catch (error) {
@@ -237,13 +237,11 @@ const onSubmit = handleSubmit(async (values) => {
     serverError.value = ''
 
     // Get services from composable where it's safe to use
-    const { authService } = useServices()
-
     const result = await authStore.register({
       email: values.email,
       display_name: values.displayName,
       password: values.password,
-    }, authService)
+    })
 
     if (result.success) {
       // Redirect to homepage after successful registration

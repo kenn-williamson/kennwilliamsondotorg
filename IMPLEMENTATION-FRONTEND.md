@@ -11,6 +11,7 @@
 - **Styling**: TailwindCSS 6.14.0 ✅
 - **Form Validation**: VeeValidate 4.15.1 + Yup 1.7.0 ✅
 - **Utilities**: VueUse 13.8.0 ✅
+- **HTTP Client**: Custom composables with interceptors (Vue 3 best practices) ✅
 
 ## Project Structure (✅ Nuxt 4 Compatible)
 ```
@@ -38,11 +39,9 @@ frontend/
 │   ├── plugins/           # Nuxt plugins ✅
 │   │   └── auth.client.ts # Client-side auth initialization ✅
 │   ├── composables/       # Composition API logic ✅
-│   │   └── useServices.ts # Service layer composable ✅
-│   ├── services/          # API service layer ✅
-│   │   ├── base.service.ts # Base API service ✅
-│   │   ├── auth.service.ts # Authentication API ✅
-│   │   └── incident-timer.service.ts # Timer API ✅
+│   │   ├── useAuthFetch.ts # HTTP client with auth interceptors ✅
+│   │   ├── useAuthService.ts # Authentication operations ✅
+│   │   └── useIncidentTimerService.ts # Timer CRUD operations ✅
 │   ├── layouts/           # Application layouts (ready)
 │   └── types/             # TypeScript definitions (ready)
 ├── nuxt.config.ts         # Nuxt configuration ✅
@@ -114,10 +113,31 @@ frontend/
 - **Solution**: Implemented proper Vue reactivity with `watch` and `computed` properties
 - **Result**: Real-time URL preview as user types in registration form
 
-### ✅ Service Layer Architecture
+### ✅ Service Layer Architecture (DEPRECATED)
 - **Problem**: Stores directly calling composables causing context issues
-- **Solution**: Refactored to use `useServices()` composable and pass services as parameters
+- **Solution**: Refactored to use `useServices()` composable and pass services as parameters  
 - **Result**: Clean separation of concerns, no more composable context conflicts
+- **Status**: ⚠️ **REPLACED by HTTP Client Refactor** (see below)
+
+### ✅ HTTP Client Architecture Refactor (Latest)
+- **Problem**: Inheritance-based service classes, manual auth parameter passing, not idiomatic Vue 3
+- **Research**: Vue 3 moved away from inheritance toward composable patterns, interceptors are standard
+- **Solution**: Complete refactor to composable-based HTTP client with automatic authentication
+- **Implementation**:
+  - Created `useAuthFetch()` composable with request/response interceptors
+  - Automatic auth header injection from Pinia store
+  - 401 error handling with automatic logout and redirect
+  - Converted `AuthService` → `useAuthService()` composable  
+  - Converted `IncidentTimerService` → `useIncidentTimerService()` composable
+  - Removed all `authStore` parameter passing (6 locations updated)
+  - Deleted old service class files and inheritance-based architecture
+- **Benefits**:
+  - ✅ **Vue 3 Best Practices**: Composables over inheritance
+  - ✅ **Auto Authentication**: Headers injected automatically
+  - ✅ **Refresh Token Ready**: Interceptor architecture prepared for token refresh
+  - ✅ **Cleaner API**: `getUserTimers()` instead of `getUserTimers(authStore)`
+  - ✅ **Better Maintainability**: Horizontal composition vs vertical inheritance
+- **Result**: Modern, maintainable HTTP client architecture following Vue 3 conventions
 
 ## Current Status
 

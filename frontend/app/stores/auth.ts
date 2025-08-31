@@ -50,7 +50,7 @@ export const useAuthStore = defineStore('auth', {
       try {
         this.loading = true
         
-        const { authService } = useServices()
+        const authService = useAuthService()
         const data = await authService.login(credentials)
 
         // Store authentication data
@@ -80,10 +80,11 @@ export const useAuthStore = defineStore('auth', {
       }
     },
 
-    async register(userData: RegisterRequest, authService: any): Promise<{ success: boolean; error?: string }> {
+    async register(userData: RegisterRequest): Promise<{ success: boolean; error?: string }> {
       try {
         this.loading = true
         
+        const authService = useAuthService()
         const data = await authService.register(userData)
 
         // Store authentication data
@@ -148,7 +149,7 @@ export const useAuthStore = defineStore('auth', {
         this.token = tokenCookie.value
 
         // Verify token and get user data from backend
-        const { authService } = useServices()
+        const authService = useAuthService()
         const userData = await authService.me()
         
         // Store user data and mark as authenticated

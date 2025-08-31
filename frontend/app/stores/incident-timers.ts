@@ -174,9 +174,8 @@ export const useIncidentTimerStore = defineStore('incident-timers', {
         this.loading = true
         this.error = undefined
 
-        const { incidentTimerService } = useServices()
-        const authStore = useAuthStore()
-        const data = await incidentTimerService.getUserTimers(authStore)
+        const incidentTimerService = useIncidentTimerService()
+        const data = await incidentTimerService.getUserTimers()
 
         this.timers = data
         return { success: true }
@@ -198,7 +197,7 @@ export const useIncidentTimerStore = defineStore('incident-timers', {
         this.loading = true
         this.error = undefined
 
-        const { incidentTimerService } = useServices()
+        const incidentTimerService = useIncidentTimerService()
         const data = await incidentTimerService.getPublicTimer(userSlug)
 
         this.publicTimer = data
@@ -222,9 +221,8 @@ export const useIncidentTimerStore = defineStore('incident-timers', {
         this.loading = true
         this.error = undefined
 
-        const { incidentTimerService } = useServices()
-        const authStore = useAuthStore()
-        const data = await incidentTimerService.createTimer(timerData, authStore)
+        const incidentTimerService = useIncidentTimerService()
+        const data = await incidentTimerService.createTimer(timerData)
 
         // Add new timer to the beginning of the list
         this.timers.unshift(data)
@@ -249,9 +247,8 @@ export const useIncidentTimerStore = defineStore('incident-timers', {
         this.loading = true
         this.error = undefined
 
-        const { incidentTimerService } = useServices()
-        const authStore = useAuthStore()
-        const data = await incidentTimerService.updateTimer(id, updates, authStore)
+        const incidentTimerService = useIncidentTimerService()
+        const data = await incidentTimerService.updateTimer(id, updates)
 
         // Update timer in the list
         const index = this.timers.findIndex(timer => timer.id === id)
@@ -283,9 +280,8 @@ export const useIncidentTimerStore = defineStore('incident-timers', {
         this.loading = true
         this.error = undefined
 
-        const { incidentTimerService } = useServices()
-        const authStore = useAuthStore()
-        await incidentTimerService.deleteTimer(id, authStore)
+        const incidentTimerService = useIncidentTimerService()
+        await incidentTimerService.deleteTimer(id)
 
         // Remove timer from the list
         this.timers = this.timers.filter(timer => timer.id !== id)
@@ -311,9 +307,8 @@ export const useIncidentTimerStore = defineStore('incident-timers', {
     // Quick reset - create a new timer with current time
     async quickReset(notes?: string): Promise<{ success: boolean; error?: string }> {
       try {
-        const { incidentTimerService } = useServices()
-        const authStore = useAuthStore()
-        const timer = await incidentTimerService.quickReset(authStore, notes)
+        const incidentTimerService = useIncidentTimerService()
+        const timer = await incidentTimerService.quickReset(notes)
         
         this.timers.unshift(timer)
         this.currentTimer = timer

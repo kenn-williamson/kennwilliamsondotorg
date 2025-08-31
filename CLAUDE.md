@@ -229,6 +229,7 @@ DELETE /api/incident-timers/{id} # Delete timer
 
 ### Frontend Stack
 - **Framework**: Nuxt.js 4.0.3 with Vue 3 Composition API
+- **HTTP Client**: Custom composables with interceptors (modern Vue 3 pattern)
 - **Styling**: TailwindCSS with custom design system
 - **Forms**: VeeValidate + Yup for validation
 - **State**: Pinia stores with proper SSR handling
@@ -307,5 +308,5 @@ When working on this project, use the Context7 MCP server to look up APIs and do
 ---
 
 **Status**: ✅ **Production-ready foundation with hot reload development environment**  
-**Latest**: ✅ **Backend routing architecture cleaned and tested - all auth endpoints working**
-**Next**: Fix frontend auth persistence, then ready for deployment
+**Latest**: ✅ **HTTP client architecture refactor complete - modern Vue 3 composable pattern**
+**Next**: Ready for deployment - core functionality complete with modern architecture
