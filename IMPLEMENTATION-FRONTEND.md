@@ -1,242 +1,186 @@
-# Frontend Implementation Status - Nuxt.js 3 (✅ FULLY COMPLETE)
+# Frontend Implementation
 
 ## Overview
-✅ **IMPLEMENTATION COMPLETE** - Full-featured Nuxt.js 3 frontend with authentication, incident timer features, responsive design, and proper UX/layout architecture. Built with Nuxt 4 directory structure and fully integrated with the Rust backend. End-to-end functionality working.
+Full-featured Nuxt.js 4.0.3 frontend with authentication, incident timer features, responsive design, and proper UX/layout architecture. Built with Nuxt 4 directory structure and fully integrated with the Rust backend.
 
-## Technology Stack (✅ Implemented)
-- **Framework**: Nuxt.js 4.0.3 (latest stable) ✅
-- **Node.js**: 20+ (even-numbered version) ✅
-- **TypeScript**: Full support with strict mode ✅
-- **State Management**: Pinia (built-in) ✅
-- **Styling**: TailwindCSS 6.14.0 ✅
-- **Form Validation**: VeeValidate 4.15.1 + Yup 1.7.0 ✅
-- **Utilities**: VueUse 13.8.0 ✅
-- **HTTP Client**: Custom composables with interceptors (Vue 3 best practices) ✅
+## Technology Stack
+- **Framework**: Nuxt.js 4.0.3 (latest stable)
+- **Node.js**: 20+ (even-numbered version)
+- **TypeScript**: Full support with strict mode
+- **State Management**: Pinia (built-in)
+- **Styling**: TailwindCSS 6.14.0
+- **Form Validation**: VeeValidate 4.15.1 + Yup 1.7.0
+- **Utilities**: VueUse 13.8.0
+- **HTTP Client**: Custom composables with interceptors (Vue 3 best practices)
 
-## Project Structure (✅ Nuxt 4 Compatible)
+## Project Structure
 ```
 frontend/
-├── app/                    # Nuxt 4 app directory structure ✅
-│   ├── app.vue            # Main application entry point ✅
-│   ├── assets/            # Assets directory (moved to correct location) ✅
-│   │   ├── css/           # TailwindCSS configuration ✅
-│   │   └── images/        # Image assets (construction-castle.jpg) ✅
-│   ├── components/        # Vue components ✅
-│   │   └── AppHeader.vue  # Responsive header with auth states ✅
-│   ├── pages/             # File-based routing ✅
-│   │   ├── index.vue      # Homepage with gothic construction theme ✅
-│   │   ├── about.vue      # About page (placeholder) ✅
-│   │   ├── login.vue      # Authentication login page ✅
-│   │   ├── register.vue   # User registration with dynamic URL preview ✅
-│   │   ├── incidents.vue  # Protected CRUD management ✅
-│   │   └── incident-timer/
-│   │       └── [user_slug].vue # Public timer display ✅
-│   ├── stores/            # Pinia stores ✅
-│   │   ├── auth.ts        # Authentication state ✅
-│   │   └── incident-timers.ts # Timer management state ✅
-│   ├── middleware/        # Route middleware ✅
-│   │   └── auth.ts        # Route protection ✅
-│   ├── plugins/           # Nuxt plugins ✅
-│   │   └── auth.client.ts # Client-side auth initialization ✅
-│   ├── composables/       # Composition API logic ✅
-│   │   ├── useAuthFetch.ts # HTTP client with auth interceptors ✅
-│   │   ├── useAuthService.ts # Authentication operations ✅
-│   │   └── useIncidentTimerService.ts # Timer CRUD operations ✅
-│   ├── layouts/           # Application layouts (ready)
-│   └── types/             # TypeScript definitions (ready)
-├── nuxt.config.ts         # Nuxt configuration ✅
-├── package.json           # Dependencies ✅
-├── Dockerfile             # Production container ✅
-└── tsconfig.json          # TypeScript config ✅
+├── app/                    # Nuxt 4 app directory structure
+│   ├── app.vue            # Main application entry point
+│   ├── assets/            # Assets directory
+│   │   ├── css/           # TailwindCSS configuration
+│   │   └── images/        # Image assets (construction-castle.jpg)
+│   ├── components/        # Vue components
+│   │   └── AppHeader.vue  # Responsive header with auth states
+│   ├── pages/             # File-based routing
+│   │   ├── index.vue      # Homepage with gothic construction theme
+│   │   ├── about.vue      # About page (placeholder)
+│   │   ├── login.vue      # Authentication login page
+│   │   ├── register.vue   # User registration with dynamic URL preview
+│   │   ├── incidents.vue  # Protected CRUD management
+│   │   └── [user_slug]/
+│   │       └── incident-timer.vue # Public timer display
+│   ├── stores/            # Pinia stores
+│   │   ├── auth.ts        # Authentication state
+│   │   └── incident-timers.ts # Timer management state
+│   ├── middleware/        # Route middleware
+│   │   └── auth.ts        # Route protection
+│   ├── plugins/           # Nuxt plugins
+│   │   └── auth.client.ts # Client-side auth initialization
+│   ├── composables/       # Composition API logic
+│   │   ├── useAuthFetch.ts # HTTP client with auth interceptors
+│   │   ├── useAuthService.ts # Authentication operations
+│   │   └── useIncidentTimerService.ts # Timer CRUD operations
+│   ├── layouts/           # Application layouts
+│   └── types/             # TypeScript definitions
+├── nuxt.config.ts         # Nuxt configuration
+├── package.json           # Dependencies
+├── Dockerfile             # Production container
+└── tsconfig.json          # TypeScript config
 ```
 
-## Implemented Features (✅ Complete)
+## Current Features
 
-### ✅ Authentication System
-- **Registration Page** (`/register`): Email, user slug, password with VeeValidate ✅
-- **Login Page** (`/login`): Email/password authentication with error handling ✅
-- **JWT Token Management**: httpOnly cookies with automatic refresh ✅
-- **Route Protection**: Middleware-based authentication for protected pages ✅
-- **Authentication Store**: Complete Pinia store with login/register/logout ✅
-- **Auth Plugin**: Client-side initialization after Pinia is ready ✅
+### Authentication System
+- **Registration Page** (`/register`): Email, display name, password with VeeValidate validation
+- **Login Page** (`/login`): Email/password authentication with error handling
+- **JWT Token Management**: httpOnly cookies with automatic refresh capability
+- **Route Protection**: Middleware-based authentication for protected pages
+- **Authentication Store**: Complete Pinia store with login/register/logout operations
+- **Auth Plugin**: Client-side initialization after Pinia is ready
 
-### ✅ User Interface & Navigation
-- **Responsive Header**: Sticky navigation with mobile hamburger menu ✅
-- **Authentication States**: Different UI for authenticated vs unauthenticated users ✅
-- **Avatar Dropdown**: User initial display with account menu ✅
-- **Navigation Links**: About, Incidents with active state indicators ✅
-- **Mobile-First Design**: Fully responsive across all breakpoints ✅
+### User Interface & Navigation
+- **Responsive Header**: Sticky navigation with mobile hamburger menu
+- **Authentication States**: Different UI for authenticated vs unauthenticated users
+- **Avatar Dropdown**: User initial display with account menu
+- **Navigation Links**: About, Incidents with active state indicators
+- **Mobile-First Design**: Fully responsive across all breakpoints
 
-### ✅ Page Implementation
-- **Homepage** (`/`): Gothic construction theme with optimized image ✅
-- **About Page** (`/about`): Placeholder with frontier/traditional aesthetic ✅
-- **Login/Register**: Complete forms with VeeValidate + Yup validation ✅
-- **Incidents Management** (`/incidents`): Protected CRUD interface ✅
-- **Public Timer Display** (`/incident-timer/[user_slug]`): Real-time timer ✅
+### Page Implementation
+- **Homepage** (`/`): Gothic construction theme with optimized image
+- **About Page** (`/about`): Placeholder with frontier/traditional aesthetic
+- **Login/Register**: Complete forms with VeeValidate + Yup validation
+- **Incidents Management** (`/incidents`): Protected CRUD interface
+- **Public Timer Display** (`/{user_slug}/incident-timer`): Real-time timer display
 
-### ✅ Incident Timer Features
-- **CRUD Operations**: Create, read, update, delete incident timers ✅
-- **Real-time Display**: Live timer updates every second ✅
-- **Public Access**: Shareable URLs for public timer viewing ✅
-- **Timer Management**: History, notes, reset functionality ✅
-- **State Management**: Complete Pinia store for timer operations ✅
+### Incident Timer Features
+- **CRUD Operations**: Create, read, update, delete incident timers
+- **Real-time Display**: Live timer updates every second
+- **Public Access**: Shareable URLs for public timer viewing
+- **Timer Management**: History, notes, reset functionality
+- **State Management**: Complete Pinia store for timer operations
 
-### ✅ Design System (Per UX-LAYOUT.md)
-- **Aesthetic Themes**: Page-specific design languages ✅
-  - Homepage: Sacred/Gothic with construction motifs ✅
-  - Authentication: Clean, minimal with subtle sacred elements ✅
-  - Incidents: Technology theme with geometric patterns ✅
-  - About: Frontier/Nature with Japanese traditional influences ✅
-- **Color Palette**: Sky blue primary with gold/silver accents ✅
-- **Typography**: Ornate headers, clean body text ✅
-- **Responsive Breakpoints**: Content-first approach (320px, 480px, 768px, 1024px, 1440px) ✅
+### Design System
+Page-specific aesthetic themes per [UX-LAYOUT.md](UX-LAYOUT.md):
+- **Homepage**: Sacred/Gothic with construction motifs
+- **Authentication**: Clean, minimal with subtle sacred elements
+- **Incidents**: Technology theme with geometric patterns
+- **About**: Frontier/Nature with Japanese traditional influences
+- **Color Palette**: Sky blue primary with gold/silver accents
+- **Typography**: Ornate headers, clean body text
+- **Responsive Breakpoints**: Content-first approach (320px, 480px, 768px, 1024px, 1440px)
 
-## Recent Fixes & Improvements (✅ Resolved)
+## Architecture Implementation
 
-### ✅ Pinia Context Issues
-- **Problem**: `"getActivePinia()" was called but there was no active Pinia` error
-- **Solution**: Created client-side auth plugin (`auth.client.ts`) that initializes after Pinia is ready
-- **Result**: No more Pinia context errors, proper store initialization
+### HTTP Client Architecture
+Modern composable-based HTTP client following Vue 3 conventions:
+- **`useAuthFetch()`**: Composable with request/response interceptors
+- **Automatic Authentication**: Headers injected automatically from Pinia store
+- **Error Handling**: 401 error handling with automatic logout and redirect
+- **Service Composables**: `useAuthService()` and `useIncidentTimerService()`
+- **Token Management**: Interceptor architecture prepared for token refresh
 
-### ✅ VeeValidate Integration
-- **Problem**: Duplicate declaration errors and improper form handling
-- **Solution**: Implemented proper VeeValidate patterns using `useForm` and `handleSubmit`
-- **Result**: Clean form validation, proper error handling, no more duplicate identifier errors
+### State Management
+- **Pinia Integration**: Modern Vue 3 state management
+- **Authentication Store**: User state, token management, login/logout operations
+- **Timer Store**: CRUD operations, real-time updates, timer history
+- **Context Handling**: Proper initialization sequence to avoid Pinia context errors
 
-### ✅ Image Asset Handling
-- **Problem**: Failed to resolve import for construction image
-- **Solution**: Moved `assets/` directory to correct Nuxt 4 location (`app/assets/`) and used proper `~/assets/` path
-- **Result**: Homepage loads with beautiful gothic construction image, proper build-time optimization
+### Form Handling
+- **VeeValidate Integration**: Modern form validation with `useForm` and `handleSubmit`
+- **Yup Schema Validation**: Type-safe validation schemas
+- **Real-time Validation**: Instant feedback during form input
+- **Dynamic URL Preview**: Real-time slug generation preview during registration
 
-### ✅ Dynamic URL Preview
-- **Problem**: User slug input not showing dynamic URL preview
-- **Solution**: Implemented proper Vue reactivity with `watch` and `computed` properties
-- **Result**: Real-time URL preview as user types in registration form
+## Development Environment
 
-### ✅ Service Layer Architecture (DEPRECATED)
-- **Problem**: Stores directly calling composables causing context issues
-- **Solution**: Refactored to use `useServices()` composable and pass services as parameters  
-- **Result**: Clean separation of concerns, no more composable context conflicts
-- **Status**: ⚠️ **REPLACED by HTTP Client Refactor** (see below)
+### Running the Frontend
+The frontend is typically run through development scripts:
+```bash
+# Start with hot reload (recommended)
+./scripts/dev-start.sh frontend
 
-### ✅ HTTP Client Architecture Refactor (Latest)
-- **Problem**: Inheritance-based service classes, manual auth parameter passing, not idiomatic Vue 3
-- **Research**: Vue 3 moved away from inheritance toward composable patterns, interceptors are standard
-- **Solution**: Complete refactor to composable-based HTTP client with automatic authentication
-- **Implementation**:
-  - Created `useAuthFetch()` composable with request/response interceptors
-  - Automatic auth header injection from Pinia store
-  - 401 error handling with automatic logout and redirect
-  - Converted `AuthService` → `useAuthService()` composable  
-  - Converted `IncidentTimerService` → `useIncidentTimerService()` composable
-  - Removed all `authStore` parameter passing (6 locations updated)
-  - Deleted old service class files and inheritance-based architecture
-- **Benefits**:
-  - ✅ **Vue 3 Best Practices**: Composables over inheritance
-  - ✅ **Auto Authentication**: Headers injected automatically
-  - ✅ **Refresh Token Ready**: Interceptor architecture prepared for token refresh
-  - ✅ **Cleaner API**: `getUserTimers()` instead of `getUserTimers(authStore)`
-  - ✅ **Better Maintainability**: Horizontal composition vs vertical inheritance
-- **Result**: Modern, maintainable HTTP client architecture following Vue 3 conventions
+# View frontend logs
+./scripts/dev-logs.sh frontend
 
-## Current Status
-
-### ✅ Working Features
-- **Server Running**: Nuxt dev server at localhost:3000 ✅
-- **Component Auto-Import**: Proper Nuxt 4 structure with component discovery ✅
-- **TailwindCSS Integration**: Styling system fully operational ✅
-- **Route System**: File-based routing with proper middleware ✅
-- **Authentication Flow**: Complete login/register/logout cycle ✅
-- **Form Validation**: VeeValidate working properly with Yup schemas ✅
-- **Image Assets**: Proper Nuxt 4 asset handling and optimization ✅
-- **Pinia Stores**: No more context errors, proper initialization ✅
-
-### 🔧 Minor Issues to Resolve
-1. **TypeScript Type Issues**: Store interfaces need refinement
-2. **Timer Calculation Logic**: Implement sophisticated legacy timer calculation
-3. **Error Handling**: Improve error states and user feedback
-
-### 🎯 Architecture Improvements Completed
-
-#### ✅ Service Layer Implementation
-Successfully implemented service layer architecture:
-```
-app/services/
-├── auth.service.ts          # Authentication API calls ✅
-├── incident-timer.service.ts # Timer CRUD operations ✅
-└── base.service.ts          # Common API configuration ✅
+# Direct npm commands (if needed)
+cd frontend
+npm run dev
+npm run build
 ```
 
-#### ✅ Proper Nuxt 4 Structure
-- **Assets directory**: Correctly placed in `app/assets/` ✅
-- **Plugin system**: Client-side auth initialization ✅
-- **Composables**: Proper service layer integration ✅
+### Hot Module Replacement
+- **Vue/TypeScript Changes**: Update instantly without page refresh
+- **Component Updates**: Real-time component hot swapping
+- **Style Changes**: TailwindCSS updates apply immediately
+- **State Preservation**: Component state maintained during updates
 
-## Docker Configuration (✅ Production Ready)
-```dockerfile
-# Multi-stage build optimized for production
-FROM node:20-alpine AS builder -> Production image
-- Security: Non-root user (1000:1000) ✅
-- Health checks: HTTP endpoint monitoring ✅  
-- Resource limits: 250MB limit, 150MB reservation ✅
-- Environment variables: Proper API base URL configuration ✅
-```
+### Environment Configuration
+Located in `frontend/.env` and Nuxt configuration:
+- API base URL configuration
+- Development vs production settings
+- TailwindCSS and build optimization settings
 
-## Environment Configuration (✅ Complete)
-```env
-# Client-side (public)
-NUXT_PUBLIC_API_BASE=http://localhost:8080/api  # Backend integration ✅
-JWT_SECRET=your-secret-key                       # Token validation ✅
+## Integration with Backend
 
-# Docker Compose integration ✅
-# Proper service dependencies and networking ✅
-```
+### API Integration
+- **Automatic Authentication**: JWT tokens handled transparently
+- **Error Handling**: Comprehensive error state management
+- **Type Safety**: TypeScript interfaces aligned with backend contracts
+- **Real-time Updates**: Timer displays update automatically
 
-## Integration Status
+### Route Structure
+- **Protected Routes**: `/incidents` requires authentication
+- **Public Routes**: Homepage, about, login, register, public timer display
+- **Dynamic Routes**: `/{user_slug}/incident-timer` for public timer access
 
-### ✅ Backend Integration
-- **API Endpoints**: All backend endpoints properly configured ✅
-- **Authentication**: JWT token handling with Rust backend ✅
-- **CORS Configuration**: Cross-origin requests working ✅
-- **Error Handling**: HTTP error responses properly handled ✅
+For detailed API contracts, see [IMPLEMENTATION-DATA-CONTRACTS.md](IMPLEMENTATION-DATA-CONTRACTS.md).
 
-### ✅ Development Experience
-- **Hot Reload**: Instant updates during development ✅
-- **TypeScript**: Full type checking and IntelliSense ✅
-- **Dev Tools**: Nuxt DevTools integration ✅
-- **Error Reporting**: Clear development error messages ✅
-- **Build Stability**: No more import/resolution errors ✅
+## Docker Configuration
 
-## Next Steps (Priority Order)
+### Production Build
+Multi-stage Dockerfile optimized for production:
+- **Node.js 20**: Even-numbered LTS version for stability
+- **Build Optimization**: Efficient production build process
+- **Security**: Non-root user execution
+- **Health Checks**: Container health monitoring
 
-### 🎯 Phase 1: Final Polish (2% Remaining)
-1. **Timer Calculation Enhancement**: Implement legacy year/month/week/day calculation
-2. **Error Handling**: Improve user feedback for API errors
-3. **Loading States**: Better loading indicators and skeleton screens
+### Development Integration
+Designed for seamless integration with Docker Compose development environment and hot reload functionality.
 
-### 🎯 Phase 2: Testing & Deployment
-1. **Unit Tests**: Tests for stores, services, and components
-2. **Performance Optimization**: Bundle analysis and optimization
-3. **SEO Enhancement**: Meta tags, structured data, sitemap
-4. **Accessibility**: WCAG 2.1 AA compliance verification
+## Asset Management
 
-## Implementation Lessons Learned
+### Image Assets
+- **Optimized Images**: Build-time optimization for web delivery
+- **Responsive Images**: Multiple sizes for different screen densities
+- **Nuxt 4 Asset Handling**: Proper `~/assets/` path resolution
 
-### ✅ Successful Decisions
-- **Nuxt 4 Structure**: Using proper `app/` directory prevented component resolution issues
-- **Service Layer**: Proper separation of concerns between stores and API calls
-- **Plugin Architecture**: Client-side initialization for auth state
-- **Asset Management**: Correct Nuxt 4 asset handling with build-time optimization
-- **VeeValidate Integration**: Using proper patterns from documentation instead of guessing
-
-### 🎓 Architecture Insights
-- **Pinia Context**: Stores must be initialized after Pinia is ready
-- **Asset Paths**: `~/assets/` for build-time processing, `/` for static serving
-- **Composable Context**: Avoid calling composables from within store actions
-- **VeeValidate Patterns**: Use `useForm` with `handleSubmit` for proper form handling
-- **Directory Structure**: Following framework conventions prevents many issues
+### CSS Architecture
+- **TailwindCSS**: Utility-first CSS framework
+- **Custom Design System**: Project-specific color palette and typography
+- **Responsive Design**: Mobile-first approach with content-driven breakpoints
 
 ---
 
-**Status**: 98% Complete - Fully functional frontend with all major issues resolved
-**Next Session**: Focus on final timer calculation implementation and deployment preparation
+*This document describes the current frontend implementation. For future enhancements and planned features, see [ROADMAP.md](ROADMAP.md). For design guidelines, see [UX-LAYOUT.md](UX-LAYOUT.md).*

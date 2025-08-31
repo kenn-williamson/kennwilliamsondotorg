@@ -11,10 +11,7 @@ utils/
 ├── hash_gen/           # Rust bcrypt password hasher
 │   ├── Cargo.toml
 │   └── src/main.rs
-├── [future utilities]
-│   ├── slug_gen/       # Python slug generator
-│   ├── db_seed/        # Node.js database seeding
-│   └── image_resize/   # Image processing utility
+└── [additional utilities as needed]
 ```
 
 ### Design Principles
@@ -66,50 +63,18 @@ cargo run TestPassword1
 - Memory safety for security-sensitive operations
 - Easy distribution as single binary
 
-## Planned Utilities
+## Development Integration
 
-### slug_gen - URL Slug Generator
-**Technology**: Python  
-**Purpose**: Generate URL-safe slugs from display names  
-**Integration**: User registration, content management
-
-### db_seed - Database Seeding
-**Technology**: Node.js + PostgreSQL  
-**Purpose**: Populate database with realistic test data  
-**Integration**: Development environment setup
-
-### image_resize - Image Processing
-**Technology**: Python + Pillow or Rust + image crate  
-**Purpose**: Resize and optimize user-uploaded images  
-**Integration**: Future file upload features
-
-## Development Workflow
+### Usage in Scripts
+Utilities are designed to be called from development scripts and automation workflows.
 
 ### Adding New Utilities
 1. Create dedicated subdirectory in `utils/`
-2. Initialize with appropriate language tooling
-3. Document in this file with usage examples
-4. Add integration examples for scripts
-5. Include in CI/CD if needed
+2. Initialize with appropriate language tooling  
+3. Document usage and integration points
+4. Test with existing development workflow
 
-### Integration Pattern
-```bash
-# Common pattern in development scripts
-cd utils/[utility_name]
-RESULT=$(command_to_run_utility 2>/dev/null)
-if [ $? -ne 0 ]; then
-    echo "❌ Utility failed"
-    exit 1
-fi
-cd ../..
-# Use $RESULT in script
-```
-
-### Maintenance
-- Keep utilities focused and lightweight
-- Update dependencies regularly for security
-- Test utilities as part of development workflow
-- Document breaking changes in this file
+For planned utility enhancements, see [ROADMAP.md](ROADMAP.md).
 
 ## Security Considerations
 
