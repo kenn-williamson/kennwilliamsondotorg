@@ -68,12 +68,13 @@ backend/
 
 ### ✅ Completed Features
 - **Authentication System**: Full JWT-based auth with registration, login, and role-based middleware
-- **User Management**: User creation with bcrypt password hashing and role assignment
+- **User Management**: User creation with bcrypt password hashing and role assignment + automatic slug generation
+- **Slug System**: Real-time slug preview endpoint with collision handling and URL-safe generation
 - **Incident Timer CRUD**: Complete create, read, update, delete operations for authenticated users
 - **Public API**: User slug-based public timer access (no authentication required)
 - **Database Integration**: PostgreSQL with SQLx, UUIDv7 primary keys, automated timestamp triggers
 - **Security**: Proper JWT validation, password hashing, role extraction middleware
-- **Testing**: Clean, focused integration tests with fast execution and proper isolation
+- **Testing**: Comprehensive integration tests (11 tests) with fast execution and proper isolation
 - **Development Tools**: Database reset script for easy local development
 
 ### 🏗️ Architecture Highlights
@@ -99,6 +100,7 @@ GET    /health                              # Health check ✅
 GET    /health/db                           # Database connectivity check ✅
 POST   /auth/register                       # User registration ✅
 POST   /auth/login                          # User login ✅
+POST   /auth/preview-slug                   # Slug preview for registration form ✅
 GET    /api/incident-timers/{user_slug}     # Get latest timer by user slug ✅
 ```
 
@@ -111,10 +113,143 @@ DELETE /api/incident-timers/{id}            # Delete timer entry ✅
 ```
 
 ### 📋 Request/Response Examples
-- **Registration**: Returns JWT token + user profile with roles
-- **Login**: Returns JWT token + user profile with roles
+- **Registration**: Returns JWT token + user profile with roles + auto-generated slug
+- **Login**: Returns JWT token + user profile with roles + slug
+- **Slug Preview**: Returns generated slug + availability check + final slug (with collision handling)
 - **Timer CRUD**: All operations require Bearer token authentication
 - **Public Timer**: Accessible via user slug, no authentication needed
+
+## 🔧 Required Implementation Updates
+
+### 1. Add Slug Preview Endpoint
+```rust
+// New route handler in auth.rs
+pub async fn preview_slug(
+    data: web::Json<SlugPreviewRequest>,
+    auth_service: web::Data<AuthService>,
+) -> ActixResult<HttpResponse> {
+    match auth_service.preview_slug(data.into_inner()).await {
+        Ok(response) => Ok(HttpResponse::Ok().json(response)),
+        Err(err) => {
+            log::error!("Slug preview error: {}", err);
+            Ok(HttpResponse::InternalServerError().json(serde_json::json!({
+                "error": "Internal server error"
+            })))
+        }
+    }
+}
+```
+
+### 2. Slug Generation Algorithm
+```rust
+// Add to AuthService in services/auth.rs
+impl AuthService {
+    pub fn generate_slug(display_name: &str) -> String {
+        display_name
+            .to_lowercase()
+            .trim()
+            .replace(' ', "-")
+            .chars()
+            .filter(|c| c.is_alphanumeric() || *c == '-')
+            .collect::<String>()
+            .trim_matches('-')
+            .to_string()
+    }
+    
+    pub async fn preview_slug(&self, request: SlugPreviewRequest) -> Result<SlugPreviewResponse> {
+        let base_slug = Self::generate_slug(&request.display_name);
+        let (available, final_slug) = self.find_available_slug(base_slug.clone()).await?;
+        
+        Ok(SlugPreviewResponse {
+            slug: base_slug,
+            available,
+            final_slug,
+        })
+    }
+    
+    async fn find_available_slug(&self, base_slug: String) -> Result<(bool, String)> {
+        // Check if base slug exists
+        if !self.slug_exists(&base_slug).await? {
+            return Ok((true, base_slug));
+        }
+        
+        // Try numbered variants: slug-2, slug-3, etc.
+        for i in 2..=999 {
+            let candidate = format!("{}-{}", base_slug, i);
+            if !self.slug_exists(&candidate).await? {
+                return Ok((false, candidate));
+            }
+        }
+        
+        // Fallback: append timestamp if all numbered variants taken
+        let timestamp = chrono::Utc::now().timestamp();
+        Ok((false, format!("{}-{}", base_slug, timestamp)))
+    }
+    
+    async fn slug_exists(&self, slug: &str) -> Result<bool> {
+        let count = sqlx::query_scalar::<_, i64>("SELECT COUNT(*) FROM users WHERE slug = $1")
+            .bind(slug)
+            .fetch_one(&self.pool)
+            .await?;
+        Ok(count > 0)
+    }
+}
+```
+
+### 3. Update UserResponse to Include Slug
+```rust
+// In models/user.rs - UserResponse already correct in our case
+#[derive(Debug, Serialize)]
+pub struct UserResponse {
+    pub id: Uuid,
+    pub email: String,
+    pub display_name: String,
+    pub slug: String,              // ✅ ADD THIS FIELD
+    pub roles: Vec<String>,
+    pub created_at: DateTime<Utc>,
+}
+
+// Update the from_user_with_roles method
+impl UserResponse {
+    pub fn from_user_with_roles(user: User, roles: Vec<String>) -> Self {
+        UserResponse {
+            id: user.id,
+            email: user.email,
+            display_name: user.display_name,
+            slug: user.slug,           // ✅ ADD THIS LINE
+            roles,
+            created_at: user.created_at,
+        }
+    }
+}
+```
+
+### 4. Update Registration Logic
+```rust
+// In services/auth.rs - update register method
+pub async fn register(&self, request: CreateUserRequest) -> Result<AuthResponse> {
+    // Generate slug from display_name
+    let base_slug = Self::generate_slug(&request.display_name);
+    let (_, final_slug) = self.find_available_slug(base_slug).await?;
+    
+    // Hash password
+    let password_hash = bcrypt::hash(request.password, bcrypt::DEFAULT_COST)?;
+    
+    // Insert user with generated slug
+    let user_id = sqlx::query_scalar::<_, Uuid>(
+        "INSERT INTO users (email, password_hash, display_name, slug) 
+         VALUES ($1, $2, $3, $4) RETURNING id"
+    )
+    .bind(&request.email)
+    .bind(&password_hash)
+    .bind(&request.display_name)
+    .bind(&final_slug)
+    .fetch_one(&self.pool)
+    .await?;
+    
+    // Continue with existing role assignment and JWT generation logic...
+}
+```
 
 ## Database Integration
 - PostgreSQL connection via SQLx with connection pooling

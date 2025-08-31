@@ -10,7 +10,10 @@ export default defineNuxtConfig({
   },
 
   // CSS framework
-  css: ['~/assets/css/main.css'],
+  // css: ['~/assets/css/main.css'], // Removed - TailwindCSS handles this
+  
+  // Components auto-import
+  components: true,
   
   // Modules
   modules: [
@@ -34,11 +37,23 @@ export default defineNuxtConfig({
   // SSR Configuration
   ssr: true,
   nitro: {
-    preset: 'node-server'
+    preset: 'node-server',
+    minify: false,
+    experimental: {
+      wasm: false
+    }
   },
 
   // Build optimization for Docker
   build: {
     transpile: []
+  },
+
+  // App configuration
+  app: {
+    head: {
+      charset: 'utf-8',
+      viewport: 'width=device-width, initial-scale=1'
+    }
   }
 })

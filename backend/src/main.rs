@@ -1,4 +1,5 @@
 use actix_web::{web, App, HttpResponse, HttpServer, Result};
+use actix_cors::Cors;
 use dotenv::dotenv;
 use sqlx::PgPool;
 use std::env;
@@ -58,7 +59,18 @@ async fn main() -> std::io::Result<()> {
     println!("📊 Database connected successfully");
 
     HttpServer::new(move || {
+        let cors_origin = env::var("CORS_ORIGIN")
+            .unwrap_or_else(|_| "http://localhost:3000".to_string());
+            
+        let cors = Cors::default()
+            .allowed_origin(&cors_origin)
+            .allowed_methods(vec!["GET", "POST", "PUT", "DELETE", "OPTIONS"])
+            .allowed_headers(vec!["Content-Type", "Authorization"])
+            .max_age(3600);
+
         App::new()
+            .wrap(actix_web::middleware::Logger::default())
+            .wrap(cors)
             .app_data(web::Data::new(pool.clone()))
             .app_data(web::Data::new(auth_service.clone()))
             .app_data(web::Data::new(incident_timer_service.clone()))

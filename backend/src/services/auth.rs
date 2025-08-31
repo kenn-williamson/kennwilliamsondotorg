@@ -6,7 +6,7 @@ use uuid::Uuid;
 use anyhow::Result;
 use chrono::{Duration, Utc};
 
-use crate::models::user::{AuthResponse, CreateUserRequest, LoginRequest, User, UserResponse};
+use crate::models::user::{AuthResponse, CreateUserRequest, LoginRequest, User, UserResponse, SlugPreviewRequest, SlugPreviewResponse};
 
 #[derive(Debug, Serialize, Deserialize)]
 pub struct Claims {
@@ -32,8 +32,8 @@ impl AuthService {
         // Hash password
         let password_hash = hash(&data.password, DEFAULT_COST)?;
         
-        // Create user with default slug
-        let user_slug = self.generate_unique_slug(&data.display_name).await?;
+        // Generate slug from display_name
+        let (_, final_slug) = self.find_available_slug(Self::generate_slug(&data.display_name)).await?;
         
         let user = sqlx::query_as!(
             User,
@@ -45,7 +45,7 @@ impl AuthService {
             data.email,
             password_hash,
             data.display_name,
-            user_slug
+            final_slug
         )
         .fetch_one(&self.pool)
         .await?;
@@ -153,32 +153,53 @@ impl AuthService {
         Ok(token)
     }
 
-    async fn generate_unique_slug(&self, display_name: &str) -> Result<String> {
-        let base_slug = display_name
+    pub async fn preview_slug(&self, request: SlugPreviewRequest) -> Result<SlugPreviewResponse> {
+        let base_slug = Self::generate_slug(&request.display_name);
+        let (available, final_slug) = self.find_available_slug(base_slug.clone()).await?;
+        
+        Ok(SlugPreviewResponse {
+            slug: base_slug,
+            available,
+            final_slug,
+        })
+    }
+
+    pub fn generate_slug(display_name: &str) -> String {
+        display_name
             .to_lowercase()
+            .trim()
+            .replace(' ', "-")
             .chars()
-            .filter(|c| c.is_alphanumeric() || *c == '-' || *c == '_')
+            .filter(|c| c.is_alphanumeric() || *c == '-')
             .collect::<String>()
-            .replace(' ', "-");
+            .trim_matches('-')
+            .to_string()
+    }
 
-        let mut slug = base_slug.clone();
-        let mut counter = 1;
-
-        loop {
-            let exists = sqlx::query!(
-                "SELECT id FROM users WHERE slug = $1",
-                slug
-            )
-            .fetch_optional(&self.pool)
-            .await?
-            .is_some();
-
-            if !exists {
-                return Ok(slug);
-            }
-
-            counter += 1;
-            slug = format!("{}-{}", base_slug, counter);
+    async fn find_available_slug(&self, base_slug: String) -> Result<(bool, String)> {
+        // Check if base slug exists
+        if !self.slug_exists(&base_slug).await? {
+            return Ok((true, base_slug));
         }
+        
+        // Try numbered variants: slug-2, slug-3, etc.
+        for i in 2..=999 {
+            let candidate = format!("{}-{}", base_slug, i);
+            if !self.slug_exists(&candidate).await? {
+                return Ok((false, candidate));
+            }
+        }
+        
+        // Fallback: append timestamp if all numbered variants taken
+        let timestamp = chrono::Utc::now().timestamp();
+        Ok((false, format!("{}-{}", base_slug, timestamp)))
+    }
+
+    async fn slug_exists(&self, slug: &str) -> Result<bool> {
+        let count = sqlx::query_scalar::<_, i64>("SELECT COUNT(*) FROM users WHERE slug = $1")
+            .bind(slug)
+            .fetch_one(&self.pool)
+            .await?;
+        Ok(count > 0)
     }
 }

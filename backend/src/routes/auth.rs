@@ -1,6 +1,6 @@
 use actix_web::{web, HttpResponse, Result as ActixResult};
 
-use crate::models::user::{CreateUserRequest, LoginRequest};
+use crate::models::user::{CreateUserRequest, LoginRequest, SlugPreviewRequest};
 use crate::services::auth::AuthService;
 
 pub async fn register(
@@ -42,10 +42,26 @@ pub async fn login(
     }
 }
 
+pub async fn preview_slug(
+    data: web::Json<SlugPreviewRequest>,
+    auth_service: web::Data<AuthService>,
+) -> ActixResult<HttpResponse> {
+    match auth_service.preview_slug(data.into_inner()).await {
+        Ok(response) => Ok(HttpResponse::Ok().json(response)),
+        Err(err) => {
+            log::error!("Slug preview error: {}", err);
+            Ok(HttpResponse::InternalServerError().json(serde_json::json!({
+                "error": "Internal server error"
+            })))
+        }
+    }
+}
+
 pub fn configure_routes(cfg: &mut web::ServiceConfig) {
     cfg.service(
         web::scope("/auth")
             .route("/register", web::post().to(register))
             .route("/login", web::post().to(login))
+            .route("/preview-slug", web::post().to(preview_slug))
     );
 }

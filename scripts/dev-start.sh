@@ -1,0 +1,171 @@
+#!/bin/bash
+
+# Development Environment Startup Script
+# Starts all services with proper development configuration
+
+set -e  # Exit on any error
+
+# Colors for output
+RED='\033[0;31m'
+GREEN='\033[0;32m'
+YELLOW='\033[1;33m'
+BLUE='\033[0;34m'
+NC='\033[0m' # No Color
+
+# Configuration
+ENV_FILE=".env.development"
+COMPOSE_FILES="-f docker-compose.yml -f docker-compose.development.yml"
+
+echo -e "${BLUE}🚀 Starting KennWilliamson.org Development Environment${NC}"
+echo "   Environment: ${ENV_FILE}"
+echo "   Compose files: docker-compose.yml + docker-compose.development.yml"
+echo ""
+
+# Check if environment file exists
+if [ ! -f "$ENV_FILE" ]; then
+    echo -e "${RED}❌ Error: $ENV_FILE not found${NC}"
+    echo "   Please create $ENV_FILE with development configuration"
+    exit 1
+fi
+
+# Parse command line arguments
+SERVICES=""
+BUILD_FLAG=""
+NO_CACHE_FLAG=""
+RESTART_FLAG=""
+REBUILD_FLAG=""
+DETACHED="-d"
+LOGS_FLAG=""
+
+while [[ $# -gt 0 ]]; do
+    case $1 in
+        --build)
+            BUILD_FLAG="--build"
+            shift
+            ;;
+        --rebuild)
+            REBUILD_FLAG="--rebuild"
+            BUILD_FLAG="--build"
+            shift
+            ;;
+        --no-cache)
+            NO_CACHE_FLAG="--no-cache"
+            BUILD_FLAG="--build"
+            shift
+            ;;
+        --restart)
+            RESTART_FLAG="--restart"
+            shift
+            ;;
+        --logs|-f)
+            LOGS_FLAG="--logs"
+            DETACHED=""  # Don't run detached if showing logs
+            shift
+            ;;
+        --help|-h)
+            echo "Usage: $0 [OPTIONS] [SERVICES]"
+            echo ""
+            echo "Build Options:"
+            echo "  --build         Force rebuild of containers"
+            echo "  --rebuild       Force recreate containers (--force-recreate)"
+            echo "  --no-cache      Build without using cache"
+            echo "  --restart       Restart existing containers"
+            echo ""
+            echo "Runtime Options:"
+            echo "  --logs, -f      Show logs after starting (runs in foreground)"
+            echo "  --help, -h      Show this help message"
+            echo ""
+            echo "Services (optional):"
+            echo "  postgres        Start only PostgreSQL"
+            echo "  backend         Start only backend API"
+            echo "  frontend        Start only frontend"
+            echo ""
+            echo "Examples:"
+            echo "  $0                          # Start all development services"
+            echo "  $0 --build                 # Rebuild and start all services"
+            echo "  $0 --rebuild backend       # Force recreate backend container"
+            echo "  $0 --no-cache frontend     # Rebuild frontend without cache"
+            echo "  $0 --restart postgres      # Restart PostgreSQL only"
+            echo "  $0 --logs                  # Start services and show logs"
+            echo "  $0 backend frontend        # Start only backend and frontend"
+            exit 0
+            ;;
+        postgres|backend|frontend)
+            SERVICES="$SERVICES $1"
+            shift
+            ;;
+        *)
+            echo -e "${RED}❌ Unknown option: $1${NC}"
+            echo "   Use --help for usage information"
+            exit 1
+            ;;
+    esac
+done
+
+# Handle different operation modes
+if [ -n "$RESTART_FLAG" ]; then
+    # Restart mode - just restart existing containers
+    CMD="docker-compose --env-file $ENV_FILE $COMPOSE_FILES restart $SERVICES"
+    echo -e "${YELLOW}🔄 Restarting containers: $CMD${NC}"
+else
+    # Normal start/build mode
+    DOCKER_FLAGS="$BUILD_FLAG"
+    
+    # Add force recreate flag if rebuild requested
+    if [ -n "$REBUILD_FLAG" ]; then
+        DOCKER_FLAGS="$DOCKER_FLAGS --force-recreate"
+    fi
+    
+    # Handle no-cache builds (requires separate build step)
+    if [ -n "$NO_CACHE_FLAG" ]; then
+        echo -e "${YELLOW}🏗️  Building without cache...${NC}"
+        BUILD_CMD="docker-compose --env-file $ENV_FILE $COMPOSE_FILES build --no-cache $SERVICES"
+        echo "   Running: $BUILD_CMD"
+        
+        if ! eval $BUILD_CMD; then
+            echo -e "${RED}❌ Build failed${NC}"
+            exit 1
+        fi
+        echo ""
+    fi
+    
+    # Build the main command
+    CMD="docker-compose --env-file $ENV_FILE $COMPOSE_FILES up $DETACHED $DOCKER_FLAGS $SERVICES"
+    echo -e "${YELLOW}📦 Starting services: $CMD${NC}"
+fi
+
+echo ""
+
+# Execute the command
+if eval $CMD; then
+    echo ""
+    if [ -n "$DETACHED" ]; then
+        echo -e "${GREEN}✅ Development environment started successfully!${NC}"
+        echo ""
+        echo -e "${BLUE}🔗 Services:${NC}"
+        echo "   Frontend:  http://localhost:3000"
+        echo "   Backend:   http://localhost:8080"
+        echo "   Database:  localhost:5432"
+        echo ""
+        echo -e "${BLUE}📋 Useful commands:${NC}"
+        echo "   ./scripts/dev-logs.sh           # View logs"
+        echo "   ./scripts/dev-stop.sh           # Stop services"
+        echo "   docker-compose --env-file $ENV_FILE ps  # Check status"
+        echo ""
+        
+        # Show if we started specific services
+        if [ -n "$SERVICES" ]; then
+            echo -e "${YELLOW}ℹ️  Started only:$SERVICES${NC}"
+            echo "   Other services may need to be started separately"
+        fi
+    fi
+    
+    # If logs requested, show them
+    if [ -n "$LOGS_FLAG" ]; then
+        echo -e "${BLUE}📋 Following logs (Ctrl+C to stop):${NC}"
+        docker-compose --env-file $ENV_FILE $COMPOSE_FILES logs -f $SERVICES
+    fi
+else
+    echo -e "${RED}❌ Failed to start development environment${NC}"
+    exit 1
+fi

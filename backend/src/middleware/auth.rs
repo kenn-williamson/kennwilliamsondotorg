@@ -29,6 +29,8 @@ pub async fn jwt_auth_middleware(
     req: ServiceRequest,
     next: Next<impl actix_web::body::MessageBody>,
 ) -> Result<ServiceResponse<impl actix_web::body::MessageBody>, Error> {
+    log::debug!("JWT middleware called for: {} {}", req.method(), req.path());
+    
     // Extract token from Authorization header
     let token = match req.headers().get("Authorization") {
         Some(auth_header) => {
@@ -45,6 +47,7 @@ pub async fn jwt_auth_middleware(
             }
         }
         None => {
+            log::debug!("No Authorization header found");
             return Err(actix_web::error::ErrorUnauthorized(
                 "Authorization header missing"
             ));
@@ -56,8 +59,10 @@ pub async fn jwt_auth_middleware(
         .ok_or_else(|| actix_web::error::ErrorInternalServerError("Auth service not found"))?;
 
     // Verify token
+    log::debug!("Verifying token for request");
     match auth_service.verify_token(token).await {
         Ok(Some(claims)) => {
+            log::debug!("Token verified successfully for user: {}", claims.email);
             // Parse user ID from claims
             let user_id = claims.sub.parse::<Uuid>().map_err(|_| {
                 actix_web::error::ErrorUnauthorized("Invalid user ID in token")
@@ -79,7 +84,12 @@ pub async fn jwt_auth_middleware(
             let res = next.call(req).await?;
             Ok(res)
         }
-        Ok(None) | Err(_) => {
+        Ok(None) => {
+            log::debug!("Token verification returned None - invalid token");
+            Err(actix_web::error::ErrorUnauthorized("Invalid or expired token"))
+        }
+        Err(e) => {
+            log::debug!("Token verification failed: {}", e);
             Err(actix_web::error::ErrorUnauthorized("Invalid or expired token"))
         }
     }

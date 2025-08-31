@@ -1,0 +1,72 @@
+# Development Docker Compose Override
+# This file automatically extends docker-compose.yml for development
+# Usage: docker-compose up -d (automatically includes override)
+
+services:
+  # PostgreSQL - Development Configuration
+  postgres:
+    ports:
+      - "5432:5432"  # Expose for local development tools (pgAdmin, etc.)
+    
+  # Backend - Development with Hot Reload
+  backend:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile.dev  # Development-specific Dockerfile
+    ports:
+      - "8080:8080"  # Expose for direct API access
+    environment:
+      - RUST_LOG=${RUST_LOG:-backend=debug,actix_web=debug,actix_web::middleware::logger=info}
+      - DATABASE_URL=postgresql://${DB_USER:-postgres}:${DB_PASSWORD:-password}@postgres:5432/kennwilliamson
+      - JWT_SECRET=${JWT_SECRET}
+      - CORS_ORIGIN=${CORS_ORIGIN:-http://localhost:3000}
+    volumes:
+      - ./backend/src:/app/src:ro           # Mount source code (read-only)
+      - ./backend/Cargo.toml:/app/Cargo.toml:ro
+      - ./backend/Cargo.lock:/app/Cargo.lock:ro
+      - backend_target:/app/target          # Persistent build cache
+    command: cargo watch -x run              # Auto-reload on file changes
+    depends_on:
+      postgres:
+        condition: service_healthy
+    
+  # Frontend - Development with Hot Reload  
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile.dev  # Development-specific Dockerfile
+    ports:
+      - "3000:3000"   # Expose for direct frontend access
+      - "24678:24678" # Nuxt DevTools port
+    environment:
+      - NODE_ENV=development
+      - NUXT_PUBLIC_API_BASE=${NUXT_PUBLIC_API_BASE:-http://localhost:8080/api}
+      - JWT_SECRET=${JWT_SECRET}
+      - CHOKIDAR_USEPOLLING=true  # For file watching in containers
+    volumes:
+      - ./frontend/app:/app/app:ro              # Mount source code (read-only)
+      - ./frontend/package.json:/app/package.json:ro
+      - ./frontend/package-lock.json:/app/package-lock.json:ro
+      - ./frontend/nuxt.config.ts:/app/nuxt.config.ts:ro
+      - ./frontend/tsconfig.json:/app/tsconfig.json:ro
+      - frontend_node_modules:/app/node_modules # Persistent node_modules
+    command: npm run dev -- --host 0.0.0.0     # Development server with external access
+    depends_on:
+      - backend
+    
+  # Nginx - Disabled in development (use direct service access)
+  nginx:
+    profiles:
+      - production  # Only run in production profile
+    
+  # Certbot - Disabled in development
+  certbot:
+    profiles:
+      - production  # Only run in production profile
+
+# Development-specific volumes
+volumes:
+  backend_target:
+    driver: local
+  frontend_node_modules:
+    driver: local

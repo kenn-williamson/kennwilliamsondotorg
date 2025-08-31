@@ -1,0 +1,14 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "\n            INSERT INTO user_roles (user_id, role_id)\n            SELECT $1, id FROM roles WHERE name = 'user'\n            ",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Left": [
+        "Uuid"
+      ]
+    },
+    "nullable": []
+  },
+  "hash": "39526d3c554ff80369d7c9f5c3b0ea0edd0d36575b86bfe7dd1601c76ced0cbc"
+}

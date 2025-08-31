@@ -13,6 +13,7 @@ RUN rm src/main.rs
 # Build application
 COPY src ./src
 COPY migrations ./migrations
+COPY .sqlx ./.sqlx
 RUN touch src/main.rs
 RUN cargo build --release
 
