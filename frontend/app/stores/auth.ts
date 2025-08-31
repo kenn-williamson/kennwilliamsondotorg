@@ -147,13 +147,16 @@ export const useAuthStore = defineStore('auth', {
         // Set token from cookie
         this.token = tokenCookie.value
 
-        // TODO: Verify token with backend when /auth/me endpoint is implemented
-        // For now, we'll assume the token is valid if it exists
-        // In a real implementation, you'd validate the token against the backend
+        // Verify token and get user data from backend
+        const { authService } = useServices()
+        const userData = await authService.me()
         
+        // Store user data and mark as authenticated
+        this.user = userData
         this.isAuthenticated = true
       } catch (error) {
         console.error('Auth check error:', error)
+        // Token is invalid or expired, clear auth state
         this.clearAuth()
       }
     },

@@ -167,7 +167,7 @@ check_backend() {
     fi
     
     # Check health endpoint
-    if curl -f -s http://localhost:8080/health >/dev/null 2>&1; then
+    if curl -f -s http://localhost:8080/api/health >/dev/null 2>&1; then
         success "Backend health endpoint responding"
     else
         failure "Backend health endpoint not responding"

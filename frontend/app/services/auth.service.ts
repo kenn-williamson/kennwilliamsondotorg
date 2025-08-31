@@ -62,10 +62,9 @@ export class AuthService extends BaseService {
     // })
   }
 
-  async getMe(authStore: any): Promise<User> {
-    // TODO: implement when /auth/me endpoint is available
+  async me(): Promise<User> {
     return this.makeRequest<User>('/auth/me', {
-      headers: this.getAuthHeaders(authStore),
+      method: 'GET',
     })
   }
 

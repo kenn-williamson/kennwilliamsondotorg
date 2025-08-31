@@ -76,11 +76,15 @@ backend/
 - **Security**: Proper JWT validation, password hashing, role extraction middleware
 - **Testing**: Comprehensive integration tests (11 tests) with fast execution and proper isolation
 - **Development Tools**: Database reset script for easy local development
+- **Clean Route Architecture**: Idiomatic Actix-web routing with selective middleware application
+- **Request Logging**: Comprehensive request logging middleware for debugging
 
 ### 🏗️ Architecture Highlights
 - **Modern Middleware**: Uses `actix_web::middleware::from_fn()` for clean JWT validation
 - **Role-Based Auth**: Middleware extracts user + roles for future admin/user authorization
-- **Clean Separation**: Routes separated into public (no auth) and protected (JWT required) scopes
+- **Idiomatic Routing**: Single `/api` scope with selective middleware application
+- **Clean Route Structure**: Sub-scopes prevent middleware duplication (e.g., `/incident-timers` scope)
+- **Request Logging**: Built-in debugging with comprehensive request/response logging
 - **Production Ready**: Proper error handling, logging, and security best practices
 
 ## Core Features

@@ -9,34 +9,19 @@ mod models;
 mod routes;
 mod services;
 
-async fn health() -> Result<HttpResponse> {
-    Ok(HttpResponse::Ok().json(serde_json::json!({
-        "status": "healthy",
-        "service": "kennwilliamson-backend",
-        "version": "0.1.0"
-    })))
+async fn request_logging_middleware(
+    req: actix_web::dev::ServiceRequest,
+    next: actix_web::middleware::Next<impl actix_web::body::MessageBody>,
+) -> actix_web::Result<actix_web::dev::ServiceResponse<impl actix_web::body::MessageBody>, actix_web::Error> {
+    println!("🔍 REQUEST: {} {}", req.method(), req.path());
+    next.call(req).await
 }
 
-async fn health_db(pool: web::Data<PgPool>) -> Result<HttpResponse> {
-    match sqlx::query("SELECT 1").fetch_one(pool.get_ref()).await {
-        Ok(_) => Ok(HttpResponse::Ok().json(serde_json::json!({
-            "status": "healthy",
-            "database": "connected",
-            "service": "kennwilliamson-backend",
-            "version": "0.1.0"
-        }))),
-        Err(e) => Ok(HttpResponse::ServiceUnavailable().json(serde_json::json!({
-            "status": "unhealthy",
-            "database": "disconnected",
-            "error": e.to_string()
-        })))
-    }
-}
 
 #[actix_web::main]
 async fn main() -> std::io::Result<()> {
     dotenv().ok();
-    env_logger::init();
+    env_logger::init_from_env(env_logger::Env::new().default_filter_or("info"));
 
     let host = env::var("HOST").unwrap_or_else(|_| "0.0.0.0".to_string());
     let port = env::var("PORT").unwrap_or_else(|_| "8080".to_string());
@@ -70,23 +55,12 @@ async fn main() -> std::io::Result<()> {
 
         App::new()
             .wrap(actix_web::middleware::Logger::default())
+            .wrap(actix_web::middleware::from_fn(request_logging_middleware))
             .wrap(cors)
             .app_data(web::Data::new(pool.clone()))
             .app_data(web::Data::new(auth_service.clone()))
             .app_data(web::Data::new(incident_timer_service.clone()))
-            .route("/health", web::get().to(health))
-            .route("/api/health", web::get().to(health))
-            .route("/api/health/db", web::get().to(health_db))
-            .service(
-                web::scope("/api")
-                    .configure(routes::auth::configure_routes)
-                    .configure(routes::incident_timers::configure_public_routes)
-                    .service(
-                        web::scope("")
-                            .wrap(actix_web::middleware::from_fn(middleware::auth::jwt_auth_middleware))
-                            .configure(routes::incident_timers::configure_protected_routes)
-                    )
-            )
+            .configure(routes::configure_app_routes)
     })
     .bind(format!("{}:{}", host, port))?
     .run()

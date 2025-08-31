@@ -1,5 +1,7 @@
-use actix_web::{web, HttpResponse, Result as ActixResult};
+use actix_web::{web, HttpMessage, HttpRequest, HttpResponse, Result as ActixResult};
+use uuid::Uuid;
 
+use crate::middleware::auth::AuthUser;
 use crate::models::api::{CreateUserRequest, LoginRequest, SlugPreviewRequest};
 use crate::services::auth::AuthService;
 
@@ -57,11 +59,23 @@ pub async fn preview_slug(
     }
 }
 
-pub fn configure_routes(cfg: &mut web::ServiceConfig) {
-    cfg.service(
-        web::scope("/auth")
-            .route("/register", web::post().to(register))
-            .route("/login", web::post().to(login))
-            .route("/preview-slug", web::post().to(preview_slug))
-    );
+pub async fn get_current_user(
+    req: HttpRequest,
+    auth_service: web::Data<AuthService>,
+) -> ActixResult<HttpResponse> {
+    let auth_user = req.extensions().get::<AuthUser>().cloned().unwrap();
+    
+    match auth_service.get_current_user(auth_user.id).await {
+        Ok(Some(user)) => Ok(HttpResponse::Ok().json(user)),
+        Ok(None) => Ok(HttpResponse::NotFound().json(serde_json::json!({
+            "error": "User not found"
+        }))),
+        Err(err) => {
+            log::error!("Get current user error: {}", err);
+            Ok(HttpResponse::InternalServerError().json(serde_json::json!({
+                "error": "Internal server error"
+            })))
+        }
+    }
 }
+

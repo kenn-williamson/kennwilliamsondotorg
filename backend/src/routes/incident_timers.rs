@@ -126,21 +126,3 @@ pub async fn delete_timer(
     }
 }
 
-pub fn configure_public_routes(cfg: &mut web::ServiceConfig) {
-    log::info!("Configuring public incident timer routes");
-    cfg.route("/{user_slug}/incident-timers", web::get().to(get_latest_by_user_slug)); // Public
-}
-
-pub fn configure_protected_routes(cfg: &mut web::ServiceConfig) {
-    log::info!("Configuring protected incident timer routes");
-    cfg.service(
-        web::resource("/incident-timers")
-            .route(web::get().to(get_user_timers))    // GET /api/incident-timers
-            .route(web::post().to(create_timer))      // POST /api/incident-timers
-    )
-    .service(
-        web::resource("/incident-timers/{id}")
-            .route(web::put().to(update_timer))       // PUT /api/incident-timers/{id}
-            .route(web::delete().to(delete_timer))    // DELETE /api/incident-timers/{id}
-    );
-}

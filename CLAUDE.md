@@ -285,6 +285,7 @@ When working on this project, use the Context7 MCP server to look up APIs and do
 - @IMPLEMENTATION-BACKEND.md - Rust/Actix-web patterns, authentication flow, database integration, testing
 - @IMPLEMENTATION-DATABASE.md - PostgreSQL schema, migrations, UUIDv7 setup, backup strategy
 - @IMPLEMENTATION-SCRIPTS.md - Development automation architecture, script design patterns
+- @IMPLEMENTATION-UTILS.md - Development utilities, password hashing, data generation tools
 - @IMPLEMENTATION-NGINX.md - Reverse proxy setup, SSL configuration, routing rules
 - @IMPLEMENTATION-DEPLOYMENT.md - AWS EC2 deployment, Docker orchestration, CI/CD planning
 - @IMPLEMENTATION-AUTH.md - JWT authentication design, security patterns, OAuth planning
@@ -306,4 +307,5 @@ When working on this project, use the Context7 MCP server to look up APIs and do
 ---
 
 **Status**: ✅ **Production-ready foundation with hot reload development environment**  
-**Next**: Ready for advanced features, deployment, or new functionality
+**Latest**: ✅ **Backend routing architecture cleaned and tested - all auth endpoints working**
+**Next**: Fix frontend auth persistence, then ready for deployment

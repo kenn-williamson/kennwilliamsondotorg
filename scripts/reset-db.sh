@@ -47,6 +47,40 @@ docker-compose exec -T postgres psql -U postgres -d kennwilliamson -c "SELECT uu
 echo "📋 Listing database tables..."
 docker-compose exec -T postgres psql -U postgres -d kennwilliamson -c "\dt"
 
+echo "👤 Creating test user..."
+# Generate hash for "TestPassword1" using our utility (cost 4 for faster development)
+echo "🔑 Generating password hash..."
+cd utils/hash_gen
+if ! TEST_PASSWORD_HASH=$(cargo run --quiet TestPassword1 2>/dev/null); then
+    echo "❌ Failed to generate password hash"
+    cd ../..
+    exit 1
+fi
+cd ../..
+
+if [ -z "$TEST_PASSWORD_HASH" ]; then
+    echo "❌ Password hash generation returned empty result"
+    exit 1
+fi
+
+echo "✅ Password hash generated successfully"
+
+docker-compose exec -T postgres psql -U postgres -d kennwilliamson <<EOF
+-- Insert test user
+INSERT INTO users (email, password_hash, display_name, slug)
+VALUES ('kenn@seqtek.com', '$TEST_PASSWORD_HASH', 'Kenn', 'kenn')
+ON CONFLICT (email) DO NOTHING;
+
+-- Assign user role
+INSERT INTO user_roles (user_id, role_id)
+SELECT u.id, r.id FROM users u, roles r 
+WHERE u.email = 'kenn@seqtek.com' AND r.name = 'user'
+ON CONFLICT (user_id, role_id) DO NOTHING;
+
+-- Verify test user creation
+SELECT email, display_name, slug FROM users WHERE email = 'kenn@seqtek.com';
+EOF
+
 echo ""
 echo "✅ Database reset complete!"
 echo "📊 Database is ready with:"

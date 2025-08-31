@@ -251,9 +251,10 @@ pub struct UpdateIncidentTimer {
 ├── auth/
 │   ├── POST /register          # Public
 │   ├── POST /login            # Public  
-│   └── POST /preview-slug     # Public
+│   ├── POST /preview-slug     # Public
+│   └── GET  /me               # Protected (current user info)
 ├── {user_slug}/
-│   └── GET /incident-timers   # Public (latest timer by user slug)
+│   └── GET /incident-timer    # Public (latest timer by user slug)
 ├── incident-timers/
 │   ├── GET  /                 # Protected (user's all timers)
 │   ├── POST /                 # Protected (create timer)
@@ -269,13 +270,14 @@ pub struct UpdateIncidentTimer {
 - POST `/api/auth/register`
 - POST `/api/auth/login`  
 - POST `/api/auth/preview-slug`
+- GET `/api/auth/me` (protected - current user info)
 
 **Timer Service:**
 - GET `/api/incident-timers` (user's timers - protected)
 - POST `/api/incident-timers` (create timer - protected)
 - PUT `/api/incident-timers/{id}` (update timer - protected)
 - DELETE `/api/incident-timers/{id}` (delete timer - protected)
-- GET `/api/{user_slug}/incident-timers` (public timer display)
+- GET `/api/{user_slug}/incident-timer` (public timer display)
 
 ## 📡 API Endpoint Contracts
 
@@ -383,7 +385,7 @@ Error Responses:
 
 #### Get Public Timer
 ```
-GET /api/incident-timers/{user_slug}
+GET /api/{user_slug}/incident-timer
 
 Response (200 OK):
 {
@@ -405,6 +407,27 @@ Error Responses:
 All protected endpoints require:
 ```
 Authorization: Bearer {jwt_token}
+```
+
+#### Get Current User Info
+```
+GET /api/auth/me
+Authorization: Bearer {jwt_token}
+
+Response (200 OK):
+{
+  "id": "uuid-string",
+  "email": "user@example.com",
+  "display_name": "John Doe",
+  "slug": "john-doe",
+  "roles": ["user"],
+  "created_at": "2024-01-01T12:00:00Z"
+}
+
+Error Responses:
+- 401 Unauthorized: { "error": "Invalid or expired token" }
+- 404 Not Found: { "error": "User not found" }
+- 500 Internal Server Error: { "error": "Internal server error" }
 ```
 
 #### Get Current User's Timers
@@ -494,70 +517,11 @@ Error Responses:
 - 500 Internal Server Error: { "error": "Internal server error" }
 ```
 
-## 🔄 Required Changes for Alignment
+## ✅ Status Update (Latest Session)
 
-### Backend Changes Required
+**Backend Routing**: All API endpoints tested and working correctly. Routes follow clean Actix-web patterns with proper middleware application.
 
-1. **Add user slug to UserResponse:**
-```rust
-// In backend/src/models/user.rs
-#[derive(Debug, Serialize)]
-pub struct UserResponse {
-    pub id: Uuid,
-    pub email: String,
-    pub display_name: String,
-    pub slug: String,              // ✅ ADD THIS FIELD
-    pub roles: Vec<String>,
-    pub created_at: DateTime<Utc>,
-}
-
-// Update the from_user_with_roles method accordingly
-```
-
-### Frontend Changes Required
-
-1. **Fix field names in auth.service.ts:**
-```typescript
-// Change user_slug to display_name in RegisterRequest
-interface RegisterRequest {
-  email: string
-  password: string
-  display_name: string  // ✅ UPDATE FROM user_slug
-}
-
-// Update User interface  
-interface User {
-  id: string
-  email: string
-  display_name: string  // ✅ ADD THIS FIELD
-  slug: string          // ✅ UPDATE FROM user_slug  
-  roles: string[]
-  created_at: string
-}
-```
-
-2. **Fix field names in incident-timer.service.ts:**
-```typescript
-// Update all timer interfaces
-interface IncidentTimer {
-  id: string
-  reset_timestamp: string  // ✅ UPDATE FROM incident_started_at
-  notes?: string
-  created_at: string
-  updated_at: string
-  // ✅ REMOVE user_id field
-}
-
-interface CreateTimerRequest {
-  reset_timestamp?: string  // ✅ UPDATE FROM incident_started_at
-  notes?: string
-}
-
-interface UpdateTimerRequest {
-  reset_timestamp?: string  // ✅ UPDATE FROM incident_started_at  
-  notes?: string
-}
-```
+**Remaining Alignment Issues**: Need to verify current status of frontend/backend field name alignment and update this document accordingly.
 
 ## 🔒 Security Considerations
 
@@ -595,8 +559,4 @@ interface UpdateTimerRequest {
 
 ---
 
-**Next Steps:**
-1. Update backend to include user slug in UserResponse
-2. Update frontend service interfaces to match corrected field names  
-3. Test integration between corrected contracts
-4. Add comprehensive error handling for all documented error cases
+**Updated Status**: Backend routing complete and tested. Next step is to verify and fix any remaining frontend/backend contract mismatches.

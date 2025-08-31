@@ -117,6 +117,29 @@ impl AuthService {
         Ok(Some(token_data.claims))
     }
 
+    // Generic, reusable user lookup
+    async fn get_user_by_id(&self, user_id: Uuid) -> Result<Option<User>> {
+        let user = sqlx::query_as!(
+            User,
+            "SELECT id, email, password_hash, display_name, slug, created_at, updated_at FROM users WHERE id = $1",
+            user_id
+        )
+        .fetch_optional(&self.pool)
+        .await?;
+
+        Ok(user)
+    }
+
+    // Business logic for current user API endpoint
+    pub async fn get_current_user(&self, user_id: Uuid) -> Result<Option<UserResponse>> {
+        if let Some(user) = self.get_user_by_id(user_id).await? {
+            let roles = self.get_user_roles(user.id).await?;
+            Ok(Some(UserResponse::from_user_with_roles(user, roles)))
+        } else {
+            Ok(None)
+        }
+    }
+
     async fn get_user_roles(&self, user_id: Uuid) -> Result<Vec<String>> {
         let roles = sqlx::query!(
             r#"
