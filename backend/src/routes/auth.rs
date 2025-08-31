@@ -1,6 +1,6 @@
 use actix_web::{web, HttpResponse, Result as ActixResult};
 
-use crate::models::user::{CreateUserRequest, LoginRequest, SlugPreviewRequest};
+use crate::models::api::{CreateUserRequest, LoginRequest, SlugPreviewRequest};
 use crate::services::auth::AuthService;
 
 pub async fn register(

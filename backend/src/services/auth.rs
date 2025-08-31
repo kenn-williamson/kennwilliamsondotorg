@@ -6,7 +6,8 @@ use uuid::Uuid;
 use anyhow::Result;
 use chrono::{Duration, Utc};
 
-use crate::models::user::{AuthResponse, CreateUserRequest, LoginRequest, User, UserResponse, SlugPreviewRequest, SlugPreviewResponse};
+use crate::models::db::User;
+use crate::models::api::{AuthResponse, CreateUserRequest, LoginRequest, UserResponse, SlugPreviewRequest, SlugPreviewResponse};
 
 #[derive(Debug, Serialize, Deserialize)]
 pub struct Claims {

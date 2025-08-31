@@ -2,7 +2,7 @@ use actix_web::{web, HttpMessage, HttpRequest, HttpResponse, Result as ActixResu
 use uuid::Uuid;
 
 use crate::middleware::auth::AuthUser;
-use crate::models::incident_timer::{
+use crate::models::api::{
     CreateIncidentTimer, IncidentTimerResponse, UpdateIncidentTimer,
 };
 use crate::services::incident_timer::IncidentTimerService;

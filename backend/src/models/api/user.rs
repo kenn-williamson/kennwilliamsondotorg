@@ -1,0 +1,59 @@
+use chrono::{DateTime, Utc};
+use serde::{Deserialize, Serialize};
+use uuid::Uuid;
+
+use crate::models::db::User;
+
+#[derive(Debug, Serialize, Deserialize)]
+pub struct CreateUserRequest {
+    pub email: String,
+    pub password: String,
+    pub display_name: String,
+}
+
+#[derive(Debug, Serialize, Deserialize)]
+pub struct LoginRequest {
+    pub email: String,
+    pub password: String,
+}
+
+#[derive(Debug, Serialize)]
+pub struct UserResponse {
+    pub id: Uuid,
+    pub email: String,
+    pub display_name: String,
+    pub slug: String,
+    pub roles: Vec<String>,
+    pub created_at: DateTime<Utc>,
+}
+
+#[derive(Debug, Serialize)]
+pub struct AuthResponse {
+    pub token: String,
+    pub user: UserResponse,
+}
+
+#[derive(Debug, Serialize, Deserialize)]
+pub struct SlugPreviewRequest {
+    pub display_name: String,
+}
+
+#[derive(Debug, Serialize)]
+pub struct SlugPreviewResponse {
+    pub slug: String,
+    pub available: bool,
+    pub final_slug: String,
+}
+
+impl UserResponse {
+    pub fn from_user_with_roles(user: User, roles: Vec<String>) -> Self {
+        UserResponse {
+            id: user.id,
+            email: user.email,
+            display_name: user.display_name,
+            slug: user.slug,
+            roles,
+            created_at: user.created_at,
+        }
+    }
+}

@@ -2,9 +2,8 @@ use anyhow::Result;
 use sqlx::{PgPool, Row};
 use uuid::Uuid;
 
-use crate::models::incident_timer::{
-    CreateIncidentTimer, IncidentTimer, UpdateIncidentTimer,
-};
+use crate::models::db::IncidentTimer;
+use crate::models::api::{CreateIncidentTimer, UpdateIncidentTimer};
 
 #[derive(Clone)]
 pub struct IncidentTimerService {
