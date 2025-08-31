@@ -45,7 +45,7 @@
               class="text-6xl sm:text-8xl lg:text-9xl font-mono font-bold text-white tracking-tight"
               id="public-live-timer"
             >
-              {{ formatElapsedTime(timerStore.publicTimer) }}
+              {{ formattedTime }}
             </div>
           </div>
           
@@ -73,7 +73,7 @@
           <!-- Days -->
           <div class="bg-white/5 backdrop-blur-sm rounded-xl border border-white/10 p-6">
             <div class="text-3xl font-bold text-blue-300 mb-1">
-              {{ getDays(timerStore.publicTimer) }}
+              {{ timeBreakdown.days }}
             </div>
             <p class="text-white/70">Days</p>
           </div>
@@ -81,7 +81,7 @@
           <!-- Hours -->
           <div class="bg-white/5 backdrop-blur-sm rounded-xl border border-white/10 p-6">
             <div class="text-3xl font-bold text-indigo-300 mb-1">
-              {{ getHours(timerStore.publicTimer) }}
+              {{ timeBreakdown.hours }}
             </div>
             <p class="text-white/70">Hours Today</p>
           </div>
@@ -89,7 +89,7 @@
           <!-- Total Seconds -->
           <div class="bg-white/5 backdrop-blur-sm rounded-xl border border-white/10 p-6 sm:col-span-2 lg:col-span-1">
             <div class="text-3xl font-bold text-purple-300 mb-1">
-              {{ getTotalSeconds(timerStore.publicTimer).toLocaleString() }}
+              {{ totalSeconds.toLocaleString() }}
             </div>
             <p class="text-white/70">Total Seconds</p>
           </div>
@@ -125,12 +125,27 @@ useHead({
   ]
 })
 
-// Timer formatting functions
-const formatElapsedTime = (timer) => {
-  if (!timer?.reset_timestamp) return '00:00:00'
-  return timerStore.formatElapsedTime(timer)
+// Reactive time breakdown - calculated once and updated efficiently
+const timeBreakdown = ref({ years: 0, months: 0, weeks: 0, days: 0, hours: 0, minutes: 0, seconds: 0 })
+const formattedTime = ref('00:00:00')
+const totalSeconds = ref(0)
+
+// Update all time calculations at once
+const updateTimeCalculations = () => {
+  if (!timerStore.publicTimer?.reset_timestamp) {
+    timeBreakdown.value = { years: 0, months: 0, weeks: 0, days: 0, hours: 0, minutes: 0, seconds: 0 }
+    formattedTime.value = '00:00:00'
+    totalSeconds.value = 0
+    return
+  }
+
+  // Get breakdown once
+  timeBreakdown.value = timerStore.getElapsedTimeBreakdown(timerStore.publicTimer)
+  formattedTime.value = timerStore.formatElapsedTime(timerStore.publicTimer)
+  totalSeconds.value = timerStore.getElapsedSeconds(timerStore.publicTimer)
 }
 
+// Utility formatting functions
 const formatDate = (dateString) => {
   return new Date(dateString).toLocaleDateString('en-US', {
     year: 'numeric',
@@ -149,39 +164,26 @@ const formatTime = (date) => {
   })
 }
 
-// Calculate days, hours, total seconds
-const getDays = (timer) => {
-  const seconds = timerStore.getElapsedTime(timer)
-  return Math.floor(seconds / (24 * 60 * 60))
-}
-
-const getHours = (timer) => {
-  const seconds = timerStore.getElapsedTime(timer)
-  return Math.floor((seconds % (24 * 60 * 60)) / (60 * 60))
-}
-
-const getTotalSeconds = (timer) => {
-  return timerStore.getElapsedTime(timer)
-}
-
 // Load public timer data
 onMounted(async () => {
   await timerStore.fetchPublicTimer(userSlug)
   
+  // Calculate initial time values
+  updateTimeCalculations()
+  
   // Set up live updates every second
   const updateInterval = setInterval(() => {
     if (timerStore.publicTimer) {
-      const timerElement = document.getElementById('public-live-timer')
-      if (timerElement) {
-        timerElement.textContent = formatElapsedTime(timerStore.publicTimer)
-      }
+      updateTimeCalculations()
     }
   }, 1000)
 
   // Refresh timer data every 5 minutes to catch updates
   const refreshInterval = setInterval(() => {
     if (!timerStore.loading) {
-      timerStore.fetchPublicTimer(userSlug)
+      timerStore.fetchPublicTimer(userSlug).then(() => {
+        updateTimeCalculations()
+      })
     }
   }, 5 * 60 * 1000) // 5 minutes
 
