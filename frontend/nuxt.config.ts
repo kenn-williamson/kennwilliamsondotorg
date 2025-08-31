@@ -49,6 +49,23 @@ export default defineNuxtConfig({
     transpile: []
   },
 
+  // Development server configuration for containers
+  devServer: {
+    host: '0.0.0.0',  // Required for container access
+    port: 3000
+  },
+
+  // Vite configuration for hot reload in containers
+  vite: {
+    server: {
+      hmr: {
+        protocol: 'wss',    // WebSocket Secure for HTTPS
+        clientPort: 443,    // Connect to nginx HTTPS port
+        path: '/_nuxt/hmr'  // Dedicated HMR path
+      }
+    }
+  },
+
   // App configuration
   app: {
     head: {

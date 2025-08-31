@@ -52,6 +52,7 @@ while [[ $# -gt 0 ]]; do
             echo "  postgres        Show only PostgreSQL logs"
             echo "  backend         Show only backend API logs"
             echo "  frontend        Show only frontend logs"
+            echo "  nginx           Show only nginx proxy logs"
             echo ""
             echo "Examples:"
             echo "  $0                    # Follow all development service logs"
@@ -61,7 +62,7 @@ while [[ $# -gt 0 ]]; do
             echo "  $0 --timestamps backend frontend  # Backend and frontend with timestamps"
             exit 0
             ;;
-        postgres|backend|frontend)
+        postgres|backend|frontend|nginx)
             SERVICES="$SERVICES $1"
             shift
             ;;

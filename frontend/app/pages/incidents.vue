@@ -61,7 +61,7 @@
               </button>
               
               <NuxtLink 
-                :to="`/incident-timer/${authStore.user?.slug || 'user'}`"
+                :to="`/${authStore.user?.slug || 'user'}/incident-timer`"
                 target="_blank"
                 class="px-6 py-3 border border-blue-600 text-blue-600 rounded-md hover:bg-blue-50 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 transition-colors duration-200 font-medium text-center"
               >

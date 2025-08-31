@@ -1,0 +1,31 @@
+# Development Dockerfile for Nuxt.js frontend with hot reload
+FROM node:20-alpine AS dev
+
+WORKDIR /app
+
+# Install development dependencies first for better caching
+COPY package*.json ./
+
+# Install all dependencies (including dev dependencies)
+RUN npm ci --include=dev
+
+# Set up environment for development
+ENV NODE_ENV=development
+ENV CHOKIDAR_USEPOLLING=true
+ENV HOST=0.0.0.0
+ENV PORT=3000
+
+# Use existing node user (uid/gid 1000) for security
+RUN chown -R node:node /app
+
+# Expose ports for Nuxt dev server and DevTools
+EXPOSE 3000 24678
+
+# Switch to node user
+USER node
+
+# Source code will be mounted at runtime from docker-compose
+# node_modules will be a persistent volume
+
+# Development command with Nuxt dev server and HMR
+CMD ["npm", "run", "dev", "--", "--host", "0.0.0.0"]

@@ -1,0 +1,41 @@
+# Development Dockerfile for Rust backend with hot reload
+FROM rust:1.89.0-alpine AS dev
+
+# Install development dependencies
+RUN apk add --no-cache \
+    musl-dev \
+    openssl-dev \
+    pkgconfig \
+    && cargo install cargo-watch
+
+WORKDIR /app
+
+# Copy dependency files first for caching
+COPY Cargo.toml Cargo.lock ./
+
+# Pre-build dependencies (creates dummy main.rs for caching)
+RUN mkdir src && \
+    echo "fn main() {println!(\"Dummy for dependency caching\")}" > src/main.rs && \
+    cargo build && \
+    rm src/main.rs
+
+# Set up volume mount points
+# Source code will be mounted at runtime from docker-compose
+# Target directory will be a persistent volume for build cache
+
+# Set environment variables for development
+ENV RUST_LOG=backend=debug,actix_web=debug
+ENV RUST_BACKTRACE=1
+
+# Expose backend port
+EXPOSE 8080
+
+# Create non-root user for security
+RUN addgroup -g 1000 appuser && \
+    adduser -D -u 1000 -G appuser appuser && \
+    chown -R appuser:appuser /app
+
+USER appuser
+
+# Development command with cargo-watch for hot reload
+CMD ["cargo", "watch", "-x", "run"]

@@ -49,7 +49,7 @@
             <div v-if="slugPreview && form.display_name.length >= 2" class="mt-2 p-3 bg-sky-50 border border-sky-200 rounded-md">
               <p class="text-xs text-gray-600 mb-2">Your public incident timer will be available at:</p>
               <p class="text-sm font-mono text-sky-700 break-all mb-2">
-                kennwilliamson.org/incident-timer/<span class="font-bold">{{ slugPreview.final_slug }}</span>
+                kennwilliamson.org/<span class="font-bold">{{ slugPreview.final_slug }}</span>/incident-timer
               </p>
               <div v-if="!slugPreview.available" class="flex items-center text-xs text-amber-600">
                 <svg class="w-4 h-4 mr-1" fill="currentColor" viewBox="0 0 20 20">
@@ -59,7 +59,7 @@
               </div>
             </div>
             <p v-else-if="form.display_name.length < 2" class="text-xs text-gray-500 mt-1">
-              Your public incident timer will be available at kennwilliamson.org/incident-timer/{auto-generated-slug}
+              Your public incident timer will be available at kennwilliamson.org/{auto-generated-slug}/incident-timer
             </p>
           </div>
 

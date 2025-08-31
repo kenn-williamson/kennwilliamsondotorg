@@ -178,22 +178,19 @@ onMounted(async () => {
     }
   }, 1000)
 
+  // Refresh timer data every 5 minutes to catch updates
+  const refreshInterval = setInterval(() => {
+    if (!timerStore.loading) {
+      timerStore.fetchPublicTimer(userSlug)
+    }
+  }, 5 * 60 * 1000) // 5 minutes
+
   onUnmounted(() => {
     clearInterval(updateInterval)
+    if (refreshInterval) {
+      clearInterval(refreshInterval)
+    }
   })
-})
-
-// Refresh timer data every 5 minutes to catch updates
-const refreshInterval = setInterval(() => {
-  if (!timerStore.loading) {
-    timerStore.fetchPublicTimer(userSlug)
-  }
-}, 5 * 60 * 1000) // 5 minutes
-
-onUnmounted(() => {
-  if (refreshInterval) {
-    clearInterval(refreshInterval)
-  }
 })
 </script>
 

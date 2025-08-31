@@ -1,0 +1,2 @@
+# Override gitignore for Cursor - allow .env files to be visible
+!.env*

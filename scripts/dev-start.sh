@@ -79,6 +79,7 @@ while [[ $# -gt 0 ]]; do
             echo "  postgres        Start only PostgreSQL"
             echo "  backend         Start only backend API"
             echo "  frontend        Start only frontend"
+            echo "  nginx           Start only nginx proxy"
             echo ""
             echo "Examples:"
             echo "  $0                          # Start all development services"
@@ -90,7 +91,7 @@ while [[ $# -gt 0 ]]; do
             echo "  $0 backend frontend        # Start only backend and frontend"
             exit 0
             ;;
-        postgres|backend|frontend)
+        postgres|backend|frontend|nginx)
             SERVICES="$SERVICES $1"
             shift
             ;;
@@ -143,9 +144,10 @@ if eval $CMD; then
         echo -e "${GREEN}✅ Development environment started successfully!${NC}"
         echo ""
         echo -e "${BLUE}🔗 Services:${NC}"
-        echo "   Frontend:  http://localhost:3000"
-        echo "   Backend:   http://localhost:8080"
-        echo "   Database:  localhost:5432"
+        echo "   🌐 Main Site:  https://localhost (nginx proxy - recommended)"
+        echo "   🖥️  Frontend:   http://localhost:3000 (direct access)"
+        echo "   🔧 Backend:    http://localhost:8080 (direct access)"
+        echo "   🗄️  Database:   localhost:5432"
         echo ""
         echo -e "${BLUE}📋 Useful commands:${NC}"
         echo "   ./scripts/dev-logs.sh           # View logs"

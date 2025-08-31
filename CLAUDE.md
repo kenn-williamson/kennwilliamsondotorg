@@ -1,423 +1,294 @@
 # CLAUDE.md - Project Context
 
 ## Project Overview
-This project is transitioning to a **full-stack web application** for kennwilliamson.org. The current simple Vue.js counter app will be replaced with a comprehensive architecture featuring:
-- **Frontend**: Nuxt.js 3 (Vue 3 + SSR + routing)
-- **Backend**: Rust with Actix-web framework
-- **Database**: PostgreSQL
-- **Infrastructure**: AWS EC2 free tier with Docker + Docker Compose
-- **Reverse Proxy**: Nginx with Let's Encrypt SSL
+**KennWilliamson.org** is a full-stack web application featuring:
+- **Frontend**: Nuxt.js 4.0.3 (Vue 3 + SSR + TypeScript + TailwindCSS)
+- **Backend**: Rust 1.89.0 + Actix-web 4.x + PostgreSQL 17
+- **Development**: Docker Compose + Hot Reload Environment
+- **Infrastructure**: Nginx proxy + AWS EC2 deployment ready
 
-See **ARCHITECTURE.md** for detailed system design and future roadmap.
+**Current State**: ✅ **Fully Functional** - Complete end-to-end application with hot reload development environment.
 
-## Current Structure (Legacy)
-```
-vue-project/                 # LEGACY: Will be replaced
-├── src/
-│   ├── components/          # Vue components (HeaderComponent, CounterBanner)
-│   ├── assets/             # Static assets and CSS
-│   ├── App.vue            # Main application component
-│   └── main.ts            # Application entry point
-├── public/                 # Public static files
-├── package.json           # Dependencies and scripts
-├── vite.config.ts         # Vite configuration
-├── tsconfig.json          # TypeScript configuration
-└── eslint.config.ts       # ESLint configuration
-```
-
-## New Architecture Structure (Planned)
+## Current Architecture
 ```
 kennwilliamsondotorg/
-├── ARCHITECTURE.md          # System architecture documentation
-├── CLAUDE.md               # Project context (this file)
-├── docker-compose.yml      # Service orchestration
-├── frontend/               # Nuxt.js application
-│   ├── pages/              # File-based routing
-│   ├── components/         # Vue components
-│   ├── composables/        # Shared logic
-│   └── package.json        # Frontend dependencies
-├── backend/                # Rust Actix-web API
-│   ├── src/                # Rust source code
-│   ├── Cargo.toml          # Rust dependencies
-│   └── Dockerfile          # Backend container
-├── nginx/                  # Reverse proxy configuration
-└── scripts/                # Deployment and utility scripts
+├── PROJECT_HISTORY.md       # Completed phases and implementation history
+├── ARCHITECTURE.md          # System architecture and deployment details
+├── CLAUDE.md               # Current project context (this file)
+├── frontend/               # Nuxt.js 4.0.3 application (✅ Complete)
+│   └── app/               # Nuxt 4 directory structure
+│       ├── components/    # Vue components
+│       ├── pages/        # File-based routing
+│       ├── stores/       # Pinia state management
+│       ├── services/     # API service layer
+│       └── middleware/   # Route protection
+├── backend/               # Rust + Actix-web API (✅ Production Ready)
+│   ├── src/              # Rust source code
+│   ├── tests/            # Integration test suite (11 tests)
+│   └── migrations/       # Database migrations (4 applied)
+├── scripts/               # Development automation (✅ Complete)
+│   ├── dev-start.sh      # Service management
+│   ├── dev-stop.sh       # Service shutdown
+│   ├── dev-logs.sh       # Log viewing
+│   ├── setup-db.sh       # Database migrations
+│   ├── prepare-sqlx.sh   # SQLx cache management
+│   └── health-check.sh   # Service monitoring
+├── nginx/                # Reverse proxy + SSL
+├── docker-compose.yml    # Production configuration
+└── docker-compose.development.yml # Hot reload environment
 ```
 
-## Technology Stack
+## Development Environment
 
-### Current (Legacy)
-- **Vue 3.5.18** - Progressive JavaScript framework
-- **TypeScript 5.8** - Type-safe JavaScript
-- **Vite 7.0.6** - Fast build tool and dev server
-- **ESLint + Prettier** - Code quality and formatting
+### 🚀 **Hot Reload Environment (Ready)**
+The project includes a complete hot reload development environment that mimics production:
 
-### New Full-Stack Architecture
-- **Frontend**: Nuxt.js 3 with Vue 3, TypeScript, SSR
-- **Backend**: Rust 1.70+ with Actix-web 4.x
-- **Database**: PostgreSQL 15
-- **Infrastructure**: Docker, Docker Compose, Nginx
-- **Deployment**: AWS EC2 t2.micro (free tier)
-- **SSL**: Let's Encrypt with automated renewal
+**Features**:
+- **Frontend HMR**: Vue/TypeScript changes update instantly without page refresh
+- **Backend Hot Reload**: Rust code changes trigger automatic recompilation
+- **SSL Development**: Self-signed HTTPS certificates (`https://localhost`)
+- **Production Routing**: Nginx proxy eliminates CORS issues
+- **Automated Scripts**: Use scripts instead of manual docker commands
 
-## Context7 MCP Server Usage
-When working on this project, use the Context7 MCP server to look up APIs and documentation:
-
-### Current/Legacy Stack
-1. **For Vue.js APIs**: Use `resolve-library-id` with "vue" to get Vue.js documentation
-2. **For TypeScript**: Use `resolve-library-id` with "typescript" for TypeScript language features
-3. **For Vite**: Use `resolve-library-id` with "vite" for build tool configuration
-
-### New Full-Stack APIs
-1. **For Nuxt.js**: Use `resolve-library-id` with "nuxt.js" for SSR, routing, and framework features
-2. **For Rust/Actix-web**: Use `resolve-library-id` with "actix-web" for web framework documentation
-3. **For PostgreSQL**: Use `resolve-library-id` with "postgresql" for database operations
-4. **For Docker**: Use `resolve-library-id` with "docker" for containerization
-
-## Development Notes
-
-### Current Legacy App
-- The app uses Vue 3 Composition API with `<script setup>` syntax
-- Components are located in `src/components/` with a clean, modular structure
-- TypeScript is configured for strict type checking
-- Vite provides hot module replacement for fast development
-- The project follows Vue.js best practices and conventions
-
-### New Architecture Guidelines
-- **Node.js 20+**: Required for Nuxt.js (even-numbered versions recommended)
-- **Rust 1.70+**: Required for modern async/await and latest features
-- **Docker Compose**: Orchestrates all services with resource constraints for AWS free tier
-- **Security-First**: JWT authentication, bcrypt hashing, HTTPS everywhere
-- **Performance**: Optimized for 1GB RAM constraint on EC2 t2.micro
-
-## Development Status
-
-### 🎉 **MAJOR MILESTONE ACHIEVED** - Full-Stack Integration Complete!
-
-**Current Status**: End-to-end functionality working with comprehensive development tooling
-
-### ✅ Backend API Complete (Phase 1 - Production Ready)
-The Rust backend is **production-ready** with all core functionality implemented:
-- **Authentication**: JWT-based registration/login with bcrypt password hashing ✅
-- **Authorization**: Role-based middleware (user/admin) ready for future use ✅
-- **Database**: PostgreSQL 17 + UUIDv7 with automated timestamp triggers ✅
-- **API Endpoints**: Full CRUD operations + public incident timer endpoint ✅
-- **Testing**: Comprehensive integration test suite covering all endpoints ✅
-- **Security**: Proper JWT validation, password hashing, and route protection ✅
-- **CORS Resolution**: Fixed nested route scope conflicts, proper middleware setup ✅
-
-### ✅ Frontend Complete (Phase 2 - Fully Functional)
-The Nuxt.js 4.0.3 frontend is **fully functional** and integrated with backend:
-- **Authentication System**: Complete login/register with VeeValidate + Yup ✅
-- **User Interface**: Responsive design with gothic construction theme ✅
-- **Incident Timers**: Full CRUD operations with real-time updates ✅
-- **Service Layer**: Clean architecture with proper API separation ✅
-- **Asset Management**: Correct Nuxt 4 structure with build-time optimization ✅
-- **Pinia Integration**: No more context errors, proper store initialization ✅
-- **Form Validation**: VeeValidate working properly without conflicts ✅
-- **CORS Integration**: Backend API calls working from frontend ✅
-- **Type Alignment**: Frontend/backend contracts aligned per DATA-CONTRACTS.md ✅
-- **Route Protection**: Middleware-based authentication working ✅
-
-### ✅ Development Tooling Complete (Phase 2.5 - New!)
-**Comprehensive development workflow with automated scripts**:
-- **Development Scripts**: Complete script suite for dev workflow automation ✅
-  - `./scripts/dev-start.sh` - Flexible service startup with build/restart/logs options
-  - `./scripts/dev-stop.sh` - Clean service shutdown with removal options
-  - `./scripts/dev-logs.sh` - Log viewing with filtering and timestamps
-  - `./scripts/setup-db.sh` - Safe database migration management
-  - `./scripts/prepare-sqlx.sh` - SQLx query cache generation
-  - `./scripts/health-check.sh` - Comprehensive service health monitoring
-- **Docker Compose Development**: `docker-compose.development.yml` for hot reload setup ✅
-- **Environment Management**: Proper `.env.development` handling with debug logging ✅
-- **Documentation**: Complete API contracts, UX guidelines, implementation guides ✅
-
-### Current Applications Status
-- **Legacy Vue App** (vue-project/): Simple counter app, preserved as reference
-- **Frontend** (frontend/): ✅ **FULLY FUNCTIONAL** - Nuxt.js 4.0.3 + Complete backend integration
-- **Backend** (backend/): ✅ **PRODUCTION READY** - Full API implementation + comprehensive testing
-- **Infrastructure**: Docker Compose + development tooling + automated scripts ready
-- **Integration Status**: ✅ **END-TO-END WORKING** - Registration → Login → Timer CRUD → Public display
-
-### 🚧 Known Issues (Minor)
-- **Public timer link**: Button works but slug construction needs one small fix (non-blocking)
-- **Hot reload environment**: Ready for implementation (development Dockerfiles needed)
-
-## New Full-Stack Application (Planned)
-The new application will be a personal playground website featuring:
-- **About Me Page**: Personal information and portfolio
-- **User Management**: Registration/login system with email/password auth
-- **CRUD Operations**: Various data management features
-- **Future OAuth**: Google and GitHub authentication with account linking
-- **Responsive SSR**: Server-side rendered Vue.js with Nuxt.js
-- **API-First**: RESTful API built with Rust and Actix-web
-
-## Commit Convention
-This project uses conventional commits with prefixes:
-- **[FEATURE]**: New features and enhancements
-- **[FIX]**: Bug fixes and corrections  
-- **[CHORE]**: Maintenance, documentation, and tooling
-- **[REFACTOR]**: Code restructuring without functional changes
-
-## Development Workflow
-
-### Docker Service Management
-Use standard Docker Compose commands for service management:
-
+### Quick Start
 ```bash
-# Build services
-docker-compose build                 # Build all services
-docker-compose build backend        # Build specific service
-docker-compose build --no-cache     # Force rebuild
+# Start entire development environment with hot reload
+./scripts/dev-start.sh
 
-# Start services  
-docker-compose up -d                 # Start all services
-docker-compose up -d backend        # Start specific service
+# View logs
+./scripts/dev-logs.sh
 
-# Combined build and start
-docker-compose up -d --build backend
+# Stop services
+./scripts/dev-stop.sh
 
-# ⚠️  IMPORTANT: Always use .env.development for development
-docker-compose --env-file .env.development up -d
-docker-compose --env-file .env.development up backend -d
-docker-compose --env-file .env.development build backend
-
-# Service status and logs
-docker-compose ps                    # Service status
-docker-compose --env-file .env.development logs backend         # View service logs with proper config
-docker-compose --env-file .env.development logs -f backend      # Follow logs with proper config
-docker-compose logs backend         # View service logs (basic, may miss debug logging)
-docker-compose logs -f backend      # Follow logs (basic, may miss debug logging)
+# Access application
+# Frontend: https://localhost (recommended - nginx proxy)
+# Direct: http://localhost:3000 (fallback)
 ```
 
-### Development Scripts
-- `./scripts/reset-db.sh` - Complete database reset with fresh migrations
-- `./scripts/setup-db.sh` - Run pending migrations safely (preserves data)
-- `./scripts/prepare-sqlx.sh` - Generate SQLx query cache for Docker builds
-- `./scripts/health-check.sh` - Comprehensive service health verification
+## Development Scripts Documentation
 
-### ⚠️ Environment File Usage (Critical for Debug Logging)
-**Important**: For proper debug logging (HTTP requests, JWT middleware), containers must be started with the environment file:
+### Core Scripts (Always Use These)
+
+#### `./scripts/dev-start.sh` - Service Management
+**Purpose**: Start, build, or restart development services  
+**When to use**: Instead of manual docker-compose commands
+
 ```bash
-# Start with proper environment configuration
-docker-compose --env-file .env.development up -d backend
+# Basic usage
+./scripts/dev-start.sh                    # Start all services
+./scripts/dev-start.sh --logs            # Start and follow logs
 
-# Then view logs (now includes debug output)
-docker-compose logs -f backend
+# Build options
+./scripts/dev-start.sh --build           # Force rebuild all
+./scripts/dev-start.sh --rebuild backend # Force recreate backend only
+./scripts/dev-start.sh --no-cache frontend # Rebuild frontend without cache
+
+# Service-specific
+./scripts/dev-start.sh backend           # Start only backend
+./scripts/dev-start.sh postgres frontend # Start only specified services
 ```
 
-### Common Development Workflows
+#### `./scripts/dev-logs.sh` - Log Viewing
+**Purpose**: View service logs with filtering and formatting  
+**When to use**: To monitor service behavior and debug issues
 
-**New Developer Setup:**
 ```bash
-# 1. Start database
-docker-compose --env-file .env.development up postgres -d
+# Basic usage
+./scripts/dev-logs.sh                    # Follow all services
+./scripts/dev-logs.sh backend           # Follow specific service
+./scripts/dev-logs.sh nginx --tail 20   # Show last 20 lines
 
-# 2. Run migrations
-./scripts/setup-db.sh --verify
+# Options
+./scripts/dev-logs.sh --no-follow       # Show logs and exit
+./scripts/dev-logs.sh --timestamps      # Include timestamps
+```
 
-# 3. Prepare SQLx cache
-./scripts/prepare-sqlx.sh
+#### `./scripts/dev-stop.sh` - Service Shutdown
+**Purpose**: Clean shutdown of development services  
+**When to use**: To stop services cleanly
 
-# 4. Build and start backend
-docker-compose --env-file .env.development build backend
-docker-compose --env-file .env.development up -d backend
+```bash
+./scripts/dev-stop.sh                   # Stop all services
+./scripts/dev-stop.sh --remove          # Stop and remove containers
+./scripts/dev-stop.sh backend          # Stop specific service
+```
 
-# 5. Verify everything is healthy
+### Database Scripts
+
+#### `./scripts/setup-db.sh` - Safe Migrations
+**Purpose**: Run database migrations safely (preserves data)  
+**When to use**: After schema changes, new developer setup
+
+```bash
+./scripts/setup-db.sh                  # Run pending migrations
+./scripts/setup-db.sh --verify         # Run migrations + verify schema
+```
+
+#### `./scripts/prepare-sqlx.sh` - SQLx Cache
+**Purpose**: Generate SQLx query cache for Docker builds  
+**When to use**: After changing SQL queries, before Docker builds
+
+```bash
+./scripts/prepare-sqlx.sh              # Generate cache
+./scripts/prepare-sqlx.sh --clean      # Clean + regenerate
+```
+
+### Health & Maintenance Scripts
+
+#### `./scripts/health-check.sh` - Service Monitoring
+**Purpose**: Verify all services are healthy and responsive  
+**When to use**: After builds, deployments, debugging issues
+
+```bash
+./scripts/health-check.sh              # Check all services
+./scripts/health-check.sh --wait       # Wait up to 60s for startup
+./scripts/health-check.sh --service postgres # Check specific service
+```
+
+## Daily Development Workflows
+
+### Starting Work
+```bash
+# 1. Start development environment
+./scripts/dev-start.sh
+
+# 2. Verify everything is healthy (optional)
 ./scripts/health-check.sh
+
+# 3. Open https://localhost and start coding
+# - Frontend changes update instantly (HMR)
+# - Backend changes trigger automatic rebuild
 ```
 
-**After Database Schema Changes:**
+### After Database Schema Changes
 ```bash
 # 1. Run new migrations
 ./scripts/setup-db.sh
 
-# 2. Update SQLx cache
+# 2. Update SQLx cache for Docker builds
 ./scripts/prepare-sqlx.sh --clean
 
-# 3. Rebuild backend with new cache
-docker-compose --env-file .env.development build backend
-docker-compose --env-file .env.development up -d backend
+# 3. Restart backend to pick up changes
+./scripts/dev-start.sh --rebuild backend
 ```
 
-**When Things Are Broken (Nuclear Reset):**
+### When Things Break
 ```bash
-# 1. Reset database completely
-./scripts/reset-db.sh
+# Nuclear option - reset everything
+./scripts/dev-stop.sh --remove
+./scripts/dev-start.sh --build
 
-# 2. Prepare SQLx cache
-./scripts/prepare-sqlx.sh
-
-# 3. Rebuild everything
-docker-compose --env-file .env.development build
-docker-compose --env-file .env.development up -d
-
-# 4. Verify health
-./scripts/health-check.sh --wait
+# Or check what's wrong first
+./scripts/health-check.sh
+./scripts/dev-logs.sh backend --tail 50
 ```
 
-**Daily Development (New Simplified Workflow):**
+### Debugging Issues
 ```bash
-# Start development environment
-./scripts/dev-start.sh                    # Start all services
-./scripts/dev-start.sh --build           # Force rebuild
-./scripts/dev-start.sh --logs            # Start and follow logs
+# View logs for specific service
+./scripts/dev-logs.sh nginx           # Web server issues
+./scripts/dev-logs.sh backend        # API issues  
+./scripts/dev-logs.sh frontend       # Build issues
 
-# Rebuild specific services
-./scripts/dev-start.sh --rebuild backend    # Force recreate backend
-./scripts/dev-start.sh --no-cache frontend # Rebuild frontend without cache
+# Check service health
+./scripts/health-check.sh --service backend
 
-# View logs
-./scripts/dev-logs.sh                    # Follow all logs
-./scripts/dev-logs.sh backend           # Follow backend only
-./scripts/dev-logs.sh --tail 50         # Show last 50 lines
-
-# Stop services
-./scripts/dev-stop.sh                   # Stop all services
-./scripts/dev-stop.sh backend          # Stop specific service
-
-# Health and maintenance
-./scripts/health-check.sh               # Check service health
-cd backend && cargo test               # Run tests
+# Test direct service access
+curl http://localhost:8080/api/health    # Backend API
+curl http://localhost:3000               # Frontend direct
 ```
+
+## Current Features
+
+### Working Applications
+- **Authentication**: JWT-based register/login with secure tokens
+- **Incident Timers**: Full CRUD operations with real-time display
+- **Public Sharing**: Timer URLs at `/{user_slug}/incident-timer`
+- **Responsive UI**: Works on mobile, tablet, desktop
+- **Route Protection**: Protected pages require authentication
+
+### API Endpoints (All Working)
+```
+# Public
+GET  /health                    # Service health
+GET  /{user_slug}/incident-timer # Public timer display
+
+# Authentication (Public)
+POST /api/auth/register         # User registration
+POST /api/auth/login           # User login
+
+# Timers (Protected - requires JWT)
+GET    /api/incident-timers     # User's timers
+POST   /api/incident-timers     # Create timer
+PUT    /api/incident-timers/{id} # Update timer
+DELETE /api/incident-timers/{id} # Delete timer
+```
+
+## Technology Stack Details
+
+### Frontend Stack
+- **Framework**: Nuxt.js 4.0.3 with Vue 3 Composition API
+- **Styling**: TailwindCSS with custom design system
+- **Forms**: VeeValidate + Yup for validation
+- **State**: Pinia stores with proper SSR handling
+- **Types**: TypeScript with strict mode
+
+### Backend Stack
+- **Language**: Rust 1.89.0 with async/await
+- **Framework**: Actix-web 4.x with middleware
+- **Database**: PostgreSQL 17 + UUIDv7 + SQLx
+- **Auth**: JWT + bcrypt password hashing
+- **Tests**: 11 integration tests covering all endpoints
+
+### Development Stack
+- **Containers**: Docker + Docker Compose
+- **Hot Reload**: Cargo-watch (backend) + Vite HMR (frontend)
+- **Proxy**: Nginx with self-signed SSL
+- **Environment**: `.env.development` with debug logging
+
+## Context7 MCP Server Usage
+When working on this project, use the Context7 MCP server to look up APIs and documentation:
+
+### Framework Documentation
+1. **Nuxt.js**: Use `resolve-library-id` with "nuxt.js" for SSR, routing, and framework features
+2. **Rust/Actix-web**: Use `resolve-library-id` with "actix-web" for web framework documentation  
+3. **PostgreSQL**: Use `resolve-library-id` with "postgresql" for database operations
+4. **Docker**: Use `resolve-library-id` with "docker" for containerization
+
+## Important Rules & Conventions
+
+### Development Workflow Rules
+1. **Always use development scripts** instead of manual docker commands
+2. **Use `.env.development`** for all development work
+3. **Check service health** after major changes
+4. **Run migrations safely** with `setup-db.sh` (preserves data)
+5. **Update SQLx cache** after SQL query changes
+
+### Commit Conventions
+- **[FEATURE]**: New features and enhancements
+- **[FIX]**: Bug fixes and corrections
+- **[CHORE]**: Maintenance, documentation, and tooling
+- **[REFACTOR]**: Code restructuring without functional changes
+
+### Code Standards
+- **TypeScript**: Strict mode, proper typing
+- **Rust**: Follow Rust conventions, comprehensive error handling
+- **Vue**: Composition API with `<script setup>` syntax
+- **Testing**: Add tests for new API endpoints
 
 # Architecture & Implementation Documentation
-- @ARCHITECTURE.md
-- @UX-LAYOUT.md
-- @DATA-CONTRACTS.md
-- @IMPLEMENTATION-FRONTEND.md
-- @IMPLEMENTATION-BACKEND.md
-- @IMPLEMENTATION-DATABASE.md
-- @IMPLEMENTATION-SCRIPTS.md
-- @IMPLEMENTATION-NGINX.md
-- @IMPLEMENTATION-DEPLOYMENT.md
-- @IMPLEMENTATION-AUTH.md
-
-## Implementation Phases
-
-### Phase 0: Planning & Documentation (Completed)
-- ✅ Architecture design with future roadmap
-- ✅ Frontend implementation plan (fresh Nuxt.js approach)
-- ✅ Backend implementation plan (Rust + Actix-web)
-- ✅ Database implementation plan (PostgreSQL + SQLx migrations)
-- ✅ Nginx reverse proxy and SSL configuration plan
-- ✅ Deployment strategy (AWS EC2 + Docker Compose)
-- ✅ Authentication system design (JWT + future OAuth)
-
-### Phase 1: Foundation (✅ COMPLETED)
-- ✅ **Rust toolchain installed** (1.89.0 + cargo-watch + sqlx-cli)
-- ✅ **Frontend created** (Nuxt.js 4.0.3 + TypeScript + TailwindCSS + Pinia)
-- ✅ **Backend COMPLETE** (Rust + Actix-web 4 + full API implementation)
-- ✅ **Database schema COMPLETE** (users, roles, user_roles, incident_timers with UUIDv7)
-- ✅ **Docker infrastructure** (Compose + Dockerfiles + Nginx config)
-- ✅ **PostgreSQL 17 + UUIDv7** (running with migrations applied + database triggers)
-- ✅ **Database reset script** (`./scripts/reset-db.sh` for development)
-- ✅ **Database migration script** (`./scripts/setup-db.sh` for safe migrations without reset)
-- ✅ **SQLx cache script** (`./scripts/prepare-sqlx.sh` for Docker builds with migration validation)
-- ✅ **Health check script** (`./scripts/health-check.sh` for service verification and monitoring)
-- ✅ **Authentication system COMPLETE** (JWT-based register/login with role middleware)
-- ✅ **Incident timer CRUD** (Full create, read, update, delete + public endpoint)
-- ✅ **Comprehensive testing** (Integration tests covering all endpoints)
-- 🔄 Deploy to AWS EC2 with SSL
-
-### Phase 2: Frontend Development (✅ COMPLETED)
-- ✅ **Nuxt.js 4.0.3 setup** with proper directory structure
-- ✅ **Authentication pages** (login/register) with VeeValidate
-- ✅ **Responsive header** with mobile navigation
-- ✅ **Homepage** with gothic construction theme
-- ✅ **Incident management** with CRUD operations
-- ✅ **Service layer architecture** for API calls
-- ✅ **Pinia stores** with proper context handling (no more context errors)
-- ✅ **Asset management** with build-time optimization
-- ✅ **Form validation** working without conflicts
-- ✅ **CORS integration** - Backend API calls working from frontend
-- ✅ **Route protection** - Middleware-based authentication implemented
-
-### Phase 2.5: Integration & Tooling (✅ COMPLETED)
-- ✅ **Full-stack integration** - End-to-end registration → login → timer CRUD working
-- ✅ **Development scripts** - Complete automation suite (`dev-start.sh`, `dev-logs.sh`, etc.)
-- ✅ **Docker development** - `docker-compose.development.yml` for hot reload setup
-- ✅ **API contracts** - Complete type alignment between frontend/backend
-- ✅ **Documentation** - Comprehensive guides (UX-LAYOUT.md, DATA-CONTRACTS.md, etc.)
-- ✅ **CORS resolution** - Fixed nested route scope conflicts
-- ✅ **Environment management** - Proper `.env.development` handling with debug logging
-
-### Phase 3: Development Experience Enhancement (🔄 IN PROGRESS)
-- 🔄 **Hot reload development environment** - Dockerfiles + nginx + self-signed certs
-- 🔄 **Container naming separation** - Avoid prod/dev image conflicts
-- 📋 **Minor bug fixes** - Public timer link slug construction
-- 📋 **Nginx development proxy** - SSL termination with self-signed certificates
-
-### Phase 4: Production & Deployment
-- Deploy to AWS EC2 with SSL
-- Add OAuth integration (Google, GitHub)
-- Implement GitHub Actions CI/CD pipeline
-- Add comprehensive testing (unit, integration, e2e)
-- Set up staging environment
-
-### Phase 4: Advanced Features  
-- Enhanced monitoring and logging
-- Performance optimization and caching
-- Advanced user features and CRUD operations
-- Backup automation and disaster recovery
-
-## Future Development Environment (Desired State)
-
-### Enhanced Development Container Setup
-**Goal**: Full development environment with production-like architecture but optimized for development workflow.
-
-**Architecture:**
-```
-Development Stack:
-┌─────────────────┐
-│ Nginx Proxy     │ ← Port 80/443 (dev SSL)
-│ :80 → :3000     │
-│ :80/api → :8080 │
-└─────────────────┘
-         │
-    ┌────┴────┐
-    │         │
-┌───▼───┐ ┌──▼──────┐
-│Nuxt.js│ │ Rust    │
-│Dev    │ │ API     │
-│Server │ │ :8080   │
-│:3000  │ │         │
-└───────┘ └──┬──────┘
-              │
-        ┌─────▼─────┐
-        │PostgreSQL │
-        │   :5432   │
-        └───────────┘
-```
-
-**Features:**
-- **Volume Mounting**: Source code directories mounted for instant file changes
-- **Hot Reload**: Nuxt dev server with HMR, Rust with cargo-watch auto-rebuild
-- **Production Simulation**: Nginx proxy eliminates CORS issues, matches production routing
-- **SSL Development**: Self-signed certificates for HTTPS development
-- **Network Isolation**: Docker internal networking with exposed dev ports
-
-**Development Experience:**
-- Single `docker-compose up -d` starts entire development stack
-- Code changes reflect immediately (no container rebuilds)
-- Production-like URL structure: `https://localhost/api/health`
-- Proper SSL certificate handling for auth testing
-- No CORS configuration needed (same-origin requests)
-
-**Implementation Plan:**
-- **docker-compose.dev.yml**: Development-specific compose file
-- **Volume Mounts**: Source directories attached to containers
-- **nginx/dev.conf**: Development proxy configuration with self-signed SSL
-- **Frontend**: Nuxt dev mode with `--host 0.0.0.0` for container access
-- **Backend**: cargo-watch for auto-rebuild on file changes
-
-**Benefits:**
-- Eliminates CORS complexity in development
-- Matches production environment architecture  
-- Faster development cycle (no rebuilds)
-- Easier onboarding for new developers
-- Production-like SSL/routing behavior
-
+- @ARCHITECTURE.md - System design, AWS deployment strategy, service architecture, resource allocation
+- @UX-LAYOUT.md - Design system, responsive breakpoints, aesthetic themes, component patterns
+- @DATA-CONTRACTS.md - API type alignment, request/response DTOs, frontend/backend contract fixes
+- @IMPLEMENTATION-FRONTEND.md - Nuxt.js patterns, component structure, state management, form validation
+- @IMPLEMENTATION-BACKEND.md - Rust/Actix-web patterns, authentication flow, database integration, testing
+- @IMPLEMENTATION-DATABASE.md - PostgreSQL schema, migrations, UUIDv7 setup, backup strategy
+- @IMPLEMENTATION-SCRIPTS.md - Development automation architecture, script design patterns
+- @IMPLEMENTATION-NGINX.md - Reverse proxy setup, SSL configuration, routing rules
+- @IMPLEMENTATION-DEPLOYMENT.md - AWS EC2 deployment, Docker orchestration, CI/CD planning
+- @IMPLEMENTATION-AUTH.md - JWT authentication design, security patterns, OAuth planning
+- @PROJECT_HISTORY.md - Completed phases, lessons learned, architectural insights, milestones
 
 # RULES
  - Use idomatic code for the appropriate language or framework.
@@ -430,3 +301,9 @@ Development Stack:
  - ASK QUESTIONS INSTEAD OF ASSUMING: it is better to ask me than make an assumption. But also don't ask about every little detail. I know this is confusing but let's try to strike a balance. The more core the question is to the work the more likely you need to ask a question and not assume.
  - CHALLENGE BAD REQUESTS: If it seems like I (the user) am making a mistake. Challenge that mistake and make me defend the reasoning. If I override the objections then let it go.
 - When a bash command fails because it has "No such file or directory" but you think that directory or file should exist. First check `pwd` to make sure you are where you think you are before you try anything else.
+- ALWAYS use development scripts instead of manual docker commands. Update scripts rather than fall back to direct CLI commands.
+
+---
+
+**Status**: ✅ **Production-ready foundation with hot reload development environment**  
+**Next**: Ready for advanced features, deployment, or new functionality
