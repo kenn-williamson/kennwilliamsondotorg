@@ -25,6 +25,16 @@ pub struct IncidentTimerResponse {
     pub updated_at: DateTime<Utc>,
 }
 
+#[derive(Debug, Serialize)]
+pub struct PublicIncidentTimerResponse {
+    pub id: Uuid,
+    pub reset_timestamp: DateTime<Utc>,
+    pub notes: Option<String>,
+    pub created_at: DateTime<Utc>,
+    pub updated_at: DateTime<Utc>,
+    pub user_display_name: String,
+}
+
 impl From<IncidentTimer> for IncidentTimerResponse {
     fn from(timer: IncidentTimer) -> Self {
         Self {

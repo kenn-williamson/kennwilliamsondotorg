@@ -13,6 +13,10 @@ interface IncidentTimer {
   updated_at: string
 }
 
+interface PublicIncidentTimer extends IncidentTimer {
+  user_display_name: string
+}
+
 interface CreateTimerRequest {
   reset_timestamp?: string
   notes?: string
@@ -39,8 +43,8 @@ export function useIncidentTimerService() {
     },
 
     // Get public timer by user slug (no auth required)
-    async getPublicTimer(userSlug: string): Promise<IncidentTimer> {
-      return authFetch<IncidentTimer>(apiUrl(`/${userSlug}/incident-timer`), {
+    async getPublicTimer(userSlug: string): Promise<PublicIncidentTimer> {
+      return authFetch<PublicIncidentTimer>(apiUrl(`/${userSlug}/incident-timer`), {
         method: 'GET',
       })
     },

@@ -3,7 +3,7 @@ use uuid::Uuid;
 
 use crate::middleware::auth::AuthUser;
 use crate::models::api::{
-    CreateIncidentTimer, IncidentTimerResponse, UpdateIncidentTimer,
+    CreateIncidentTimer, IncidentTimerResponse, PublicIncidentTimerResponse, UpdateIncidentTimer,
 };
 use crate::services::incident_timer::IncidentTimerService;
 
@@ -23,8 +23,15 @@ pub async fn get_latest_by_user_slug(
     service: web::Data<IncidentTimerService>,
 ) -> ActixResult<HttpResponse> {
     match service.get_latest_by_user_slug(&path.user_slug).await {
-        Ok(Some(timer)) => {
-            let response: IncidentTimerResponse = timer.into();
+        Ok(Some((timer, user_display_name))) => {
+            let response = PublicIncidentTimerResponse {
+                id: timer.id,
+                reset_timestamp: timer.reset_timestamp,
+                notes: timer.notes,
+                created_at: timer.created_at,
+                updated_at: timer.updated_at,
+                user_display_name,
+            };
             Ok(HttpResponse::Ok().json(response))
         }
         Ok(None) => Ok(HttpResponse::NotFound().json(serde_json::json!({

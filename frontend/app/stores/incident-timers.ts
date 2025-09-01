@@ -8,6 +8,10 @@ interface IncidentTimer {
   updated_at: string
 }
 
+interface PublicIncidentTimer extends IncidentTimer {
+  user_display_name: string
+}
+
 interface CreateTimerRequest {
   reset_timestamp: string
   notes?: string
@@ -21,7 +25,7 @@ interface UpdateTimerRequest {
 interface TimerState {
   timers: IncidentTimer[]
   currentTimer: IncidentTimer | null
-  publicTimer: IncidentTimer | null
+  publicTimer: PublicIncidentTimer | null
   loading: boolean
   error: string | undefined
 }

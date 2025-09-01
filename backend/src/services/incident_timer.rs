@@ -15,10 +15,10 @@ impl IncidentTimerService {
         Self { pool }
     }
 
-    pub async fn get_latest_by_user_slug(&self, user_slug: &str) -> Result<Option<IncidentTimer>> {
+    pub async fn get_latest_by_user_slug(&self, user_slug: &str) -> Result<Option<(IncidentTimer, String)>> {
         let row = sqlx::query(
             r#"
-            SELECT it.id, it.user_id, it.reset_timestamp, it.notes, it.created_at, it.updated_at
+            SELECT it.id, it.user_id, it.reset_timestamp, it.notes, it.created_at, it.updated_at, u.display_name
             FROM incident_timers it
             JOIN users u ON it.user_id = u.id
             WHERE u.slug = $1
@@ -39,7 +39,8 @@ impl IncidentTimerService {
                 created_at: row.get("created_at"),
                 updated_at: row.get("updated_at"),
             };
-            Ok(Some(timer))
+            let display_name: String = row.get("display_name");
+            Ok(Some((timer, display_name)))
         } else {
             Ok(None)
         }

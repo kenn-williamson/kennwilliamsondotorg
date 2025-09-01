@@ -40,7 +40,7 @@
         <!-- User Info -->
         <div class="user-info">
           <p class="user-tracking">
-            Live tracking for <span class="user-name">{{ userSlug }}</span>
+            Live tracking for <span class="user-name">{{ timerStore.publicTimer.user_display_name }}</span>
           </p>
         </div>
 
@@ -67,16 +67,27 @@ const timerStore = useIncidentTimerStore()
 // Get user slug from route params
 const userSlug = String(route.params.user_slug);
 
-// Page meta
-useHead({
-  title: `${userSlug}'s Incident Timer`,
+// Computed meta for dynamic updates
+const pageTitle = computed(() => {
+  const displayName = timerStore.publicTimer?.user_display_name || userSlug
+  return `${displayName}'s Incident Timer`
+})
+
+const pageDescription = computed(() => {
+  const displayName = timerStore.publicTimer?.user_display_name || userSlug
+  return `Live incident-free timer for ${displayName}. Real-time tracking of incident-free periods.`
+})
+
+// Page meta with computed values
+useHead(() => ({
+  title: pageTitle.value,
   meta: [
-    { name: 'description', content: `Live incident-free timer for ${userSlug}. Real-time tracking of incident-free periods.` },
-    { property: 'og:title', content: `${userSlug}'s Incident Timer` },
+    { name: 'description', content: pageDescription.value },
+    { property: 'og:title', content: pageTitle.value },
     { property: 'og:description', content: 'Real-time incident tracking timer' },
     { property: 'og:type', content: 'website' },
   ]
-})
+}))
 
 // Reactive time breakdown - calculated once and updated efficiently
 const timeBreakdown = ref({ years: 0, months: 0, weeks: 0, days: 0, hours: 0, minutes: 0, seconds: 0 })

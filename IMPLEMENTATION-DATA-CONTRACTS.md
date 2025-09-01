@@ -229,7 +229,8 @@ This document defines the exact API contracts between the Nuxt.js frontend and R
   "reset_timestamp": "2024-01-01T12:00:00Z",
   "notes": "Public incident display",
   "created_at": "2024-01-01T12:00:00Z",
-  "updated_at": "2024-01-01T12:00:00Z"
+  "updated_at": "2024-01-01T12:00:00Z",
+  "user_display_name": "John Doe"
 }
 ```
 
