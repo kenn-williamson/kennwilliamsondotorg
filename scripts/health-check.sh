@@ -1,7 +1,7 @@
 #!/bin/bash
 
 # health-check.sh - Comprehensive service health verification
-# Usage: ./scripts/health-check.sh [--wait] [--service SERVICE]
+# Usage: ./scripts/health-check.sh [--wait] [--service SERVICE] [--dev]
 
 set -e
 
@@ -43,14 +43,18 @@ failure() {
 }
 
 show_help() {
-    echo "Usage: $0 [--wait] [--service SERVICE]"
+    echo "Usage: $0 [--wait] [--service SERVICE] [--dev] [--local-prod]"
     echo ""
     echo "Verify service health and connectivity"
     echo ""
     echo "Options:"
     echo "  --wait             Wait up to 60s for services to become healthy"
     echo "  --service SERVICE  Check only specific service (postgres, frontend, backend)"
+    echo "  --dev              Use development environment"
+    echo "  --local-prod       Use local production environment"
     echo "  --help, -h         Show this help message"
+    echo ""
+    echo "Default: Uses production environment"
     echo ""
     echo "Health Checks:"
     echo "  - PostgreSQL: Database connectivity and schema"
@@ -63,11 +67,21 @@ show_help() {
 WAIT_FOR_HEALTHY=false
 TARGET_SERVICE=""
 EXPECT_SERVICE=false
+DEV_MODE=false
+LOCAL_PROD_MODE=false
 
 while [[ $# -gt 0 ]]; do
     case $1 in
         --wait)
             WAIT_FOR_HEALTHY=true
+            shift
+            ;;
+        --dev)
+            DEV_MODE=true
+            shift
+            ;;
+        --local-prod)
+            LOCAL_PROD_MODE=true
             shift
             ;;
         --service)
@@ -98,15 +112,47 @@ if ! command -v docker-compose >/dev/null 2>&1; then
     error "docker-compose not found. Please install Docker Compose."
 fi
 
-# Load environment if available
-if [[ -f ".env.development" ]]; then
-    export $(grep -v '^#' .env.development | xargs) 2>/dev/null || true
-elif [[ -f ".env" ]]; then
-    export $(grep -v '^#' .env | xargs) 2>/dev/null || true
+# Load environment based on mode
+if [[ "$DEV_MODE" == true ]]; then
+    # Development mode - load dev environment
+    if [[ -f ".env.development" ]]; then
+        export $(grep -v '^#' .env.development | xargs) 2>/dev/null || true
+        info "Using development environment"
+    else
+        warn "Development mode requested but .env.development not found"
+    fi
+elif [[ "$LOCAL_PROD_MODE" == true ]]; then
+    # Local production mode - load production environment
+    if [[ -f ".env.production" ]]; then
+        export $(grep -v '^#' .env.production | xargs) 2>/dev/null || true
+        info "Using local production environment"
+    else
+        warn "Local production mode requested but .env.production not found"
+    fi
+else
+    # Production mode (default) - load production environment
+    if [[ -f ".env.production" ]]; then
+        export $(grep -v '^#' .env.production | xargs) 2>/dev/null || true
+        info "Using production environment"
+    elif [[ -f ".env" ]]; then
+        export $(grep -v '^#' .env | xargs) 2>/dev/null || true
+        info "Using .env file"
+    else
+        warn "No production environment file found (.env.production or .env)"
+    fi
+fi
+
+# Set docker-compose command based on mode
+if [[ "$DEV_MODE" == true ]]; then
+    COMPOSE_CMD="docker-compose --env-file .env.development -f docker-compose.yml -f docker-compose.development.yml"
+elif [[ "$LOCAL_PROD_MODE" == true ]]; then
+    COMPOSE_CMD="docker-compose --env-file .env.production -f docker-compose.yml -f docker-compose.local-prod.yml"
+else
+    COMPOSE_CMD="docker-compose --env-file .env.production -f docker-compose.yml"
 fi
 
 # Get available services
-AVAILABLE_SERVICES=$(docker-compose config --services 2>/dev/null || echo "postgres backend frontend")
+AVAILABLE_SERVICES=$($COMPOSE_CMD config --services 2>/dev/null || echo "postgres backend frontend")
 
 # Validate target service
 if [[ -n "$TARGET_SERVICE" ]]; then
@@ -121,13 +167,13 @@ check_postgres() {
     info "Checking PostgreSQL health..."
     
     # Check container status
-    if ! docker-compose ps "$service_name" | grep -q "Up"; then
+    if ! $COMPOSE_CMD ps "$service_name" | grep -q "Up"; then
         failure "PostgreSQL container is not running"
         return 1
     fi
     
     # Check database connectivity
-    if docker-compose exec -T "$service_name" pg_isready -U postgres >/dev/null 2>&1; then
+    if $COMPOSE_CMD exec -T "$service_name" pg_isready -U postgres >/dev/null 2>&1; then
         success "PostgreSQL is accepting connections"
     else
         failure "PostgreSQL is not accepting connections"
@@ -135,7 +181,7 @@ check_postgres() {
     fi
     
     # Check database exists
-    if docker-compose exec -T "$service_name" psql -U postgres -lqt | cut -d \| -f 1 | grep -qw kennwilliamson; then
+    if $COMPOSE_CMD exec -T "$service_name" psql -U postgres -lqt | cut -d \| -f 1 | grep -qw kennwilliamson; then
         success "Database 'kennwilliamson' exists"
     else
         failure "Database 'kennwilliamson' not found"
@@ -145,7 +191,7 @@ check_postgres() {
     # Check key tables
     local tables=("users" "incident_timers")
     for table in "${tables[@]}"; do
-        if docker-compose exec -T "$service_name" psql -U postgres -d kennwilliamson -c "SELECT 1 FROM $table LIMIT 1;" >/dev/null 2>&1; then
+        if $COMPOSE_CMD exec -T "$service_name" psql -U postgres -d kennwilliamson -c "SELECT 1 FROM $table LIMIT 1;" >/dev/null 2>&1; then
             success "Table '$table' is accessible"
         else
             failure "Table '$table' is not accessible"
@@ -161,7 +207,7 @@ check_backend() {
     info "Checking Backend API health..."
     
     # Check container status
-    if ! docker-compose ps "$service_name" | grep -q "Up"; then
+    if ! $COMPOSE_CMD ps "$service_name" | grep -q "Up"; then
         failure "Backend container is not running"
         return 1
     fi
@@ -190,7 +236,7 @@ check_frontend() {
     info "Checking Frontend health..."
     
     # Check container status
-    if ! docker-compose ps "$service_name" | grep -q "Up"; then
+    if ! $COMPOSE_CMD ps "$service_name" | grep -q "Up"; then
         failure "Frontend container is not running"
         return 1
     fi
@@ -298,7 +344,7 @@ main() {
         error "❌ Some health checks failed!"
         echo ""
         info "Check the output above for specific issues"
-        info "Try: docker-compose logs [service] for more details"
+        info "Try: $COMPOSE_CMD logs [service] for more details"
         return 1
     fi
 }

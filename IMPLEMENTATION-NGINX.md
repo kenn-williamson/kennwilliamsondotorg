@@ -1,15 +1,15 @@
 # Nginx Implementation
 
 ## Overview
-Nginx reverse proxy implementation providing SSL termination, static file serving, and request routing between frontend and backend services in the development environment.
+Nginx reverse proxy implementation providing SSL termination, static file serving, and request routing between frontend and backend services. Supports both development and local production testing environments.
 
 ## Current Implementation
 
 ### Technology Stack
 - **Server**: Nginx (alpine Docker image)
-- **SSL**: Self-signed certificates for development HTTPS
-- **Configuration**: Volume-mounted config files
-- **Environment**: Docker Compose integration
+- **SSL**: Self-signed certificates for development and local production HTTPS
+- **Configuration**: Volume-mounted config files with environment-specific variants
+- **Environment**: Multi-environment Docker Compose integration (dev, local-prod, production)
 
 ### Service Architecture
 ```
@@ -31,9 +31,12 @@ Nginx Reverse Proxy (Port 443)
 ## Current Configuration
 
 ### Configuration Files
-- `nginx/conf.d/default.conf` - Main site configuration with routing rules
+- `nginx/conf.d/default.conf` - Production site configuration with Let's Encrypt SSL
+- `nginx/conf.d-local-prod/default.conf` - Local production configuration with domain testing
 - `nginx/nginx.conf` - Global nginx settings and performance tuning
-- `nginx/ssl/` - Self-signed SSL certificates for development
+- `nginx/nginx.local-prod.conf` - Local production nginx config with rate limiting zones
+- `nginx/ssl/` - Development SSL certificates (localhost)
+- `nginx/ssl-local/` - Local production SSL certificates (domain testing)
 
 ### Routing Implementation
 - **API Routes**: `/api/*` proxied to backend service on port 8080
@@ -47,6 +50,13 @@ Nginx Reverse Proxy (Port 443)
 - **CORS Elimination**: Nginx proxy eliminates cross-origin issues
 - **Request Logging**: Detailed access and error logging
 
+### SSL Certificate Management
+- **Development Certificates**: `nginx/ssl/localhost.crt/key` for pure localhost development
+- **Local Production Certificates**: `nginx/ssl-local/nginx-selfsigned.crt/key` for domain testing
+- **Certificate Generation**: Managed by unified `./scripts/generate-ssl.sh` script
+- **Domain Testing**: Support for testing production domain configurations locally
+- **DH Parameters**: Production-grade Diffie-Hellman parameters for enhanced security
+
 ## Current Environment Setup
 
 ### Development Environment
@@ -55,12 +65,29 @@ Nginx Reverse Proxy (Port 443)
 - **SSL Certificates**: Self-signed for development use
 - **Service Discovery**: Uses Docker Compose service names for upstream routing
 
+### Local Production Environment
+- **Access URLs**: https://localhost or https://kennwilliamson.org (with /etc/hosts)
+- **Domain Testing**: Full production domain configuration testing
+- **SSL Certificates**: Domain-specific certificates with production-grade security
+- **Enhanced Security**: DH parameters and production-like SSL configuration
+- **DNS Resolution**: Docker internal DNS resolver (127.0.0.11) with variable-based upstreams
+- **Rate Limiting**: Production-equivalent rate limiting zones and rules
+- **Security Headers**: Full production security header configuration
+
 ### Docker Compose Configuration
-Nginx service defined in docker-compose.development.yml:
-- Depends on frontend and backend services
-- Mounts configuration from nginx/ directory
-- Exposes port 443 for HTTPS access
-- Includes health check configuration
+**Development**: `docker-compose.development.yml`
+- Development SSL certificates and configuration
+- Permissive CORS and debug settings
+
+**Local Production**: `docker-compose.local-prod.yml`
+- Production-equivalent configuration and SSL
+- Domain certificate support with proper dependency management
+- Isolated database volume and environment
+- Rate limiting and security header configuration
+
+**Production**: `docker-compose.yml`
+- Let's Encrypt SSL integration (planned)
+- Production security and performance optimization
 
 ## Current Capabilities
 
@@ -77,8 +104,37 @@ Nginx service defined in docker-compose.development.yml:
 
 ### Security Features
 - **HTTPS Only**: All traffic served over HTTPS in development
-- **Security Headers**: Basic security header configuration
+- **Security Headers**: Full production security header configuration
 - **Request Validation**: Input validation and request filtering
+- **Rate Limiting**: Configurable rate limiting zones for API and general traffic
+
+## Technical Implementation
+
+### Docker Network DNS Resolution
+**Challenge**: Nginx upstream resolution in Docker Compose environments
+**Solution**: Implemented Docker's internal DNS resolver with variable-based upstream addresses
+
+```nginx
+# DNS resolver for Docker network
+resolver 127.0.0.11 valid=30s ipv6=off;
+
+# Variable-based upstream addresses prevent emergency shutdown
+location /api/ {
+    set $backend_upstream backend:8080;
+    proxy_pass http://$backend_upstream;
+}
+
+location / {
+    set $frontend_upstream frontend:3000;
+    proxy_pass http://$frontend_upstream;
+}
+```
+
+**Key Benefits**:
+- Prevents nginx emergency shutdown during service startup
+- Enables dynamic DNS resolution within Docker networks
+- Allows nginx to start before upstream services are ready
+- Maintains proper service dependency management
 
 ## Configuration Management
 

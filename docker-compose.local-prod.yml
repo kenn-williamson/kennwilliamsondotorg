@@ -1,0 +1,48 @@
+# Local Production Environment - For testing production configs locally
+# Usage: docker-compose -f docker-compose.yml -f docker-compose.local-prod.yml up -d
+
+services:
+  # PostgreSQL - Same as production but with exposed port for debugging
+  postgres:
+    ports:
+      - "5432:5432"  # Exposed for local debugging
+    volumes:
+      - postgres_data_local_prod:/var/lib/postgresql/data
+      - ./backups:/backups
+
+  # Rust Backend - Same as production config
+  backend:
+    ports:
+      - "8080:8080"  # Exposed for direct API testing
+    environment:
+      # Override CORS for local testing
+      CORS_ORIGIN: https://localhost,https://kennwilliamson.org
+
+  # Nuxt.js Frontend - Same as production config  
+  frontend:
+    ports:
+      - "3000:3000"  # Exposed for direct frontend testing
+
+  # Nginx Reverse Proxy - Modified for local SSL
+  nginx:
+    volumes:
+      # Override nginx config directory for local production
+      - ./nginx/conf.d-local-prod:/etc/nginx/conf.d
+      # Use local self-signed certificates
+      - ./nginx/ssl-local:/etc/nginx/ssl
+      # Include main nginx.conf with rate limiting
+      - ./nginx/nginx.local-prod.conf:/etc/nginx/nginx.conf
+    ports:
+      - "80:80"
+      - "443:443"
+    environment:
+      - LOCAL_PROD=true
+    depends_on:
+      - backend
+      - frontend
+
+volumes:
+  # Separate volume for local production data
+  postgres_data_local_prod:
+    driver: local
+  # Remove certbot volumes since we're using self-signed

@@ -14,6 +14,9 @@
 # Start entire development environment
 ./scripts/dev-start.sh
 
+# OR start local production environment for production testing
+./scripts/setup-local-prod.sh
+
 # View logs and monitor services
 ./scripts/dev-logs.sh
 

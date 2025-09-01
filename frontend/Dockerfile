@@ -12,6 +12,9 @@ RUN npm ci && npm cache clean --force
 # Copy source code
 COPY . .
 
+# Generate Nuxt types for auto-imports (required for TypeScript in production builds)
+RUN npm run prepare
+
 # Build application
 RUN npm run build
 

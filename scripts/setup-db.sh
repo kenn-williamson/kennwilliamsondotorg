@@ -1,7 +1,7 @@
 #!/bin/bash
 
 # setup-db.sh - Database migrations without reset (preserves existing data)
-# Usage: ./scripts/setup-db.sh [--verify]
+# Usage: ./scripts/setup-db.sh [--verify] [--dev]
 
 set -e
 
@@ -35,13 +35,16 @@ error() {
 }
 
 show_help() {
-    echo "Usage: $0 [--verify]"
+    echo "Usage: $0 [--verify] [--dev]"
     echo ""
     echo "Setup database with migrations (preserves existing data)"
     echo ""
     echo "Options:"
     echo "  --verify      Run migrations + verify schema state"
+    echo "  --dev         Use development environment (.env.development)"
     echo "  --help, -h    Show this help message"
+    echo ""
+    echo "Default: Uses production environment (.env.production or .env)"
     echo ""
     echo "Features:"
     echo "  - Auto-starts PostgreSQL if not running"
@@ -53,11 +56,15 @@ show_help() {
 
 # Parse arguments
 VERIFY_SCHEMA=false
+DEV_MODE=false
 
 for arg in "$@"; do
     case $arg in
         --verify)
             VERIFY_SCHEMA=true
+            ;;
+        --dev)
+            DEV_MODE=true
             ;;
         --help|-h)
             show_help
@@ -69,44 +76,75 @@ for arg in "$@"; do
     esac
 done
 
+# Change to project root directory
+cd "$PROJECT_ROOT"
+
 # Check if we're in the right directory
 if [[ ! -f "$BACKEND_DIR/Cargo.toml" ]]; then
     error "Backend directory not found at $BACKEND_DIR"
 fi
 
-# Load environment variables
-if [[ -f "$PROJECT_ROOT/.env.development" ]]; then
-    log "Loading environment from .env.development"
-    export $(grep -v '^#' "$PROJECT_ROOT/.env.development" | xargs)
-elif [[ -f "$PROJECT_ROOT/.env" ]]; then
-    log "Loading environment from .env"
-    export $(grep -v '^#' "$PROJECT_ROOT/.env" | xargs)
+# Initialize Docker Compose command
+COMPOSE_CMD="docker-compose"
+
+# Load environment based on mode
+if [[ "$DEV_MODE" == true ]]; then
+    # Development mode - load dev environment
+    if [[ -f "$PROJECT_ROOT/.env.development" ]]; then
+        export $(grep -v '^#' "$PROJECT_ROOT/.env.development" | xargs) 2>/dev/null || true
+        log "Using development environment"
+        COMPOSE_CMD="$COMPOSE_CMD --env-file .env.development -f docker-compose.yml -f docker-compose.development.yml"
+    else
+        error "Development mode requested but .env.development not found"
+    fi
 else
-    warn "No project environment file found"
+    # Production mode (default) - load production environment
+    if [[ -f "$PROJECT_ROOT/.env.production" ]]; then
+        export $(grep -v '^#' "$PROJECT_ROOT/.env.production" | xargs) 2>/dev/null || true
+        log "Using production environment"
+        COMPOSE_CMD="$COMPOSE_CMD --env-file .env.production -f docker-compose.yml"
+    elif [[ -f "$PROJECT_ROOT/.env" ]]; then
+        export $(grep -v '^#' "$PROJECT_ROOT/.env" | xargs) 2>/dev/null || true
+        log "Using .env file"
+        COMPOSE_CMD="$COMPOSE_CMD --env-file .env -f docker-compose.yml"
+    else
+        error "No production environment file found (.env.production or .env)"
+    fi
 fi
 
-# Also load backend-specific .env if it exists
-if [[ -f "$BACKEND_DIR/.env" ]]; then
-    log "Loading backend environment from backend/.env"
-    export $(grep -v '^#' "$BACKEND_DIR/.env" | xargs)
-fi
+# Note: Backend .env file is not used - Docker Compose provides all environment variables
 
 # Verify DATABASE_URL is set
 if [[ -z "$DATABASE_URL" ]]; then
     error "DATABASE_URL not set. Check environment files:
   - $PROJECT_ROOT/.env.development
-  - $PROJECT_ROOT/.env  
-  - $BACKEND_DIR/.env"
+  - $PROJECT_ROOT/.env.production
+  - $PROJECT_ROOT/.env"
+fi
+
+# Convert Docker network hostname to localhost for host-side script execution
+# Docker containers use 'postgres' hostname, but host scripts need 'localhost'
+if [[ "$DATABASE_URL" == *"@postgres:"* ]]; then
+    SCRIPT_DATABASE_URL="${DATABASE_URL/@postgres:/@localhost:}"
+    info "Converting DATABASE_URL for host-side execution: postgres -> localhost"
+else
+    SCRIPT_DATABASE_URL="$DATABASE_URL"
 fi
 
 # Function to test database connectivity
 test_db_connection() {
+    # Extract database details from SCRIPT_DATABASE_URL for connection test
+    DB_HOST=$(echo "$SCRIPT_DATABASE_URL" | sed -n 's|.*@\([^:]*\):.*|\1|p')
+    DB_PORT=$(echo "$SCRIPT_DATABASE_URL" | sed -n 's|.*:\([0-9]*\)/.*|\1|p')
+    DB_NAME=$(echo "$SCRIPT_DATABASE_URL" | sed -n 's|.*/\([^?]*\).*|\1|p')
+    
     # Try direct connection if pg_isready is available
     if command -v pg_isready >/dev/null 2>&1; then
-        pg_isready -d "$DATABASE_URL" >/dev/null 2>&1
+        pg_isready -h "$DB_HOST" -p "$DB_PORT" -d "$DB_NAME" >/dev/null 2>&1
     else
         # Use Docker to test connectivity
-        docker-compose exec -T postgres pg_isready -U postgres >/dev/null 2>&1
+        cd "$PROJECT_ROOT"
+        $COMPOSE_CMD exec -T postgres pg_isready -U postgres -h localhost -p 5432 >/dev/null 2>&1
     fi
 }
 
@@ -122,7 +160,7 @@ if ! test_db_connection; then
         if [[ "$response" =~ ^[Yy]$ ]]; then
             log "Starting PostgreSQL service..."
             cd "$PROJECT_ROOT"
-            docker-compose up postgres -d
+            $COMPOSE_CMD up postgres -d
             
             # Wait for database to be ready
             log "Waiting for database to be ready..."
@@ -138,7 +176,7 @@ if ! test_db_connection; then
             done
             cd "$BACKEND_DIR"
         else
-            error "Database is required for migrations. Start it with: docker-compose up postgres -d"
+            error "Database is required for migrations. Start it with: $COMPOSE_CMD up postgres -d"
         fi
     else
         error "Cannot connect to database and docker-compose not available"
@@ -147,6 +185,9 @@ fi
 
 # Change to backend directory for SQLx operations
 cd "$BACKEND_DIR"
+
+# Set DATABASE_URL for SQLx operations (using the host-accessible version)
+export DATABASE_URL="$SCRIPT_DATABASE_URL"
 
 # Check if sqlx-cli is installed
 if ! command -v sqlx >/dev/null 2>&1; then
@@ -187,8 +228,11 @@ fi
 if [[ "$VERIFY_SCHEMA" == true ]]; then
     log "Verifying database schema..."
     
+    # Extract database name from SCRIPT_DATABASE_URL
+    DB_NAME=$(echo "$SCRIPT_DATABASE_URL" | sed -n 's|.*/\([^?]*\).*|\1|p')
+    
     # Check UUIDv7 extension
-    if docker-compose exec -T postgres psql -U postgres -d kennwilliamson -c "SELECT 1 FROM pg_extension WHERE extname = 'pg_uuidv7';" >/dev/null 2>&1; then
+    if $COMPOSE_CMD exec -T postgres psql -U postgres -d "$DB_NAME" -c "SELECT 1 FROM pg_extension WHERE extname = 'pg_uuidv7';" >/dev/null 2>&1; then
         log "✅ UUIDv7 extension is installed"
     else
         warn "⚠️  UUIDv7 extension not found"
@@ -197,7 +241,7 @@ if [[ "$VERIFY_SCHEMA" == true ]]; then
     # Check key tables exist
     TABLES=("users" "roles" "user_roles" "incident_timers")
     for table in "${TABLES[@]}"; do
-        if docker-compose exec -T postgres psql -U postgres -d kennwilliamson -c "SELECT 1 FROM information_schema.tables WHERE table_name = '$table';" >/dev/null 2>&1; then
+        if $COMPOSE_CMD exec -T postgres psql -U postgres -d "$DB_NAME" -c "SELECT 1 FROM information_schema.tables WHERE table_name = '$table';" >/dev/null 2>&1; then
             log "✅ Table '$table' exists"
         else
             warn "⚠️  Table '$table' not found"
@@ -205,7 +249,7 @@ if [[ "$VERIFY_SCHEMA" == true ]]; then
     done
     
     # Check timestamp triggers
-    if docker-compose exec -T postgres psql -U postgres -d kennwilliamson -c "SELECT 1 FROM information_schema.triggers WHERE trigger_name LIKE '%updated_at%';" >/dev/null 2>&1; then
+    if $COMPOSE_CMD exec -T postgres psql -U postgres -d "$DB_NAME" -c "SELECT 1 FROM information_schema.triggers WHERE trigger_name LIKE '%updated_at%';" >/dev/null 2>&1; then
         log "✅ Timestamp triggers are configured"
     else
         warn "⚠️  Timestamp triggers not found"
@@ -217,6 +261,6 @@ log "🚀 Database setup complete!"
 echo ""
 info "Next steps:"
 echo "  - Generate SQLx cache: ./scripts/prepare-sqlx.sh"
-echo "  - Start all services: docker-compose up -d"
+echo "  - Start all services: $COMPOSE_CMD up -d"
 echo "  - Reset database: ./scripts/reset-db.sh (destroys data!)"
 echo "  - Check service health: ./scripts/health-check.sh (when available)"

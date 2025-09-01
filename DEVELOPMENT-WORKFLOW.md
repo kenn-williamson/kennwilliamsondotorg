@@ -281,6 +281,84 @@ docker system prune
 3. **Test direct access** to isolate networking vs application issues
 4. **Escalate systematically** from service restart to complete rebuild
 
+## Local Production Environment
+
+### Setting Up Local Production Testing
+
+When you need to test production-like configurations locally (e.g., debugging production-only issues, testing SSL configuration, validating production environment variables):
+
+```bash
+# One-command setup of local production environment
+./scripts/setup-local-prod.sh
+
+# Optional: Force rebuild and follow logs
+./scripts/setup-local-prod.sh --build --logs
+
+# Optional: Stop existing services first
+./scripts/setup-local-prod.sh --stop-first
+```
+
+### Local Production Workflow
+
+```bash
+# 1. Set up local production environment
+./scripts/setup-local-prod.sh
+
+# 2. Verify all services are healthy
+./scripts/health-check.sh --local-prod
+
+# 3. Test production configuration
+curl -k https://localhost  # Browser shows cert warning (expected)
+
+# 4. Optional: Add domain testing to /etc/hosts
+echo "127.0.0.1 kennwilliamson.org" | sudo tee -a /etc/hosts
+echo "127.0.0.1 www.kennwilliamson.org" | sudo tee -a /etc/hosts
+
+# 5. Test with production domain
+curl -k https://kennwilliamson.org
+
+# 6. When done, stop local production environment
+docker-compose --env-file .env.production -f docker-compose.yml -f docker-compose.local-prod.yml down
+```
+
+### Local Production Features
+
+**What You Get:**
+- **Production Environment Variables**: Same `.env.production` as real production
+- **Production-Like SSL**: Domain certificates with production-grade security
+- **Rate Limiting**: Same rate limiting rules as production
+- **Security Headers**: Full production security header configuration
+- **Isolated Database**: Separate `postgres_data_local_prod` volume
+- **Domain Testing**: Support for testing with production domain names
+
+**Access Points:**
+- **HTTPS (Recommended)**: https://localhost
+- **Domain Testing**: https://kennwilliamson.org (requires /etc/hosts entry)
+- **Backend API**: https://localhost/api/
+- **Health Check**: https://localhost/health
+
+**Common Use Cases:**
+- Debug production-only configuration issues
+- Test SSL certificate handling
+- Validate production environment variables
+- Test rate limiting and security headers
+- Integration testing with production-like setup
+
+### Switching Between Environments
+
+```bash
+# Development environment (default)
+./scripts/dev-start.sh
+./scripts/health-check.sh --dev
+
+# Local production environment
+./scripts/setup-local-prod.sh
+./scripts/health-check.sh --local-prod
+
+# Production environment (deployment only)
+./scripts/health-check.sh  # defaults to production mode
+```
+
 ## Environment Access Points
 
 ### Primary Development URLs

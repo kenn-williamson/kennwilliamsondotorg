@@ -3,8 +3,12 @@
 # Usage: docker-compose up -d (automatically includes override)
 
 services:
-  # PostgreSQL - Development Configuration (unchanged)
+  # PostgreSQL - Development Configuration
   postgres:
+    container_name: kennwilliamson-postgres-dev
+    volumes:
+      - postgres_data_dev:/var/lib/postgresql/data
+      - ./backups:/backups
     ports:
       - "5432:5432"  # Expose for local development tools (pgAdmin, etc.)
     
@@ -93,6 +97,8 @@ services:
 
 # Development-specific volumes with separate naming
 volumes:
+  postgres_data_dev:
+    driver: local
   backend_target_dev:
     driver: local
   frontend_node_modules_dev:
