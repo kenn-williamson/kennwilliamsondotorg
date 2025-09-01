@@ -12,8 +12,13 @@ export default defineNuxtConfig({
   // CSS framework
   // css: ['~/assets/css/main.css'], // Removed - TailwindCSS handles this
   
-  // Components auto-import
-  components: true,
+  // Components auto-import with nested directory support
+  components: [
+    {
+      path: '~/components',
+      pathPrefix: false
+    }
+  ],
   
   // Modules
   modules: [

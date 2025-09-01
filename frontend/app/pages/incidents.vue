@@ -74,36 +74,13 @@
           </div>
         </div>
 
-        <!-- Current Timer Display -->
-        <div v-if="timerStore.latestTimer" class="mb-8 bg-white/90 backdrop-blur-sm rounded-lg shadow-lg border border-blue-200 p-8">
-          <div class="text-center">
-            <h2 class="text-lg font-medium text-gray-700 mb-2">Current Incident-Free Time</h2>
-            <div class="text-6xl sm:text-7xl font-mono font-bold text-blue-600 mb-4" id="live-timer">
-              {{ formatElapsedTime() }}
-            </div>
-            <p class="text-gray-600">
-              Started {{ formatDate(timerStore.latestTimer.reset_timestamp) }}
-            </p>
-            <p v-if="timerStore.latestTimer.notes" class="text-gray-500 mt-2 italic">
-              "{{ timerStore.latestTimer.notes }}"
-            </p>
-          </div>
-        </div>
-
-        <!-- No Timer State -->
-        <div v-else-if="!timerStore.loading" class="mb-8 bg-white/80 backdrop-blur-sm rounded-lg shadow-lg border border-blue-200 p-8 text-center">
-          <svg class="w-16 h-16 text-gray-400 mx-auto mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/>
-          </svg>
-          <h2 class="text-xl font-semibold text-gray-900 mb-2">No Active Timer</h2>
-          <p class="text-gray-600 mb-4">Start tracking your incident-free time by creating your first timer.</p>
-          <button
-            @click="showResetModal = true"
-            class="px-6 py-3 bg-blue-600 text-white rounded-md hover:bg-blue-700 transition-colors duration-200 font-medium"
-          >
-            Create First Timer
-          </button>
-        </div>
+        <!-- Current Timer Display with Steampunk Design -->
+        <TimerStats 
+          :timer="timerStore.latestTimer"
+          :breakdown="activeTimerBreakdown"
+          :loading="timerStore.loading"
+          @create-timer="showResetModal = true"
+        />
 
         <!-- Timer History -->
         <div class="bg-white/80 backdrop-blur-sm rounded-lg shadow-lg border border-blue-200">
@@ -121,158 +98,41 @@
           </div>
           
           <div v-else class="divide-y divide-blue-100">
-            <div 
-              v-for="timer in timerStore.timers" 
+            <TimerListItem
+              v-for="timer in timerStore.timers"
               :key="timer.id"
-              class="p-6 hover:bg-blue-50/50 transition-colors duration-200"
-            >
-              <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-                <div>
-                  <p class="font-medium text-gray-900">
-                    Started: {{ formatDate(timer.reset_timestamp) }}
-                  </p>
-                  <p v-if="timer.notes" class="text-gray-600 text-sm mt-1">
-                    {{ timer.notes }}
-                  </p>
-                  <p class="text-xs text-gray-500 mt-1">
-                    Created {{ formatDate(timer.created_at) }}
-                  </p>
-                </div>
-                <div class="flex items-center gap-3">
-                  <span class="font-mono text-lg font-medium text-blue-600">
-                    {{ timer === timerStore.latestTimer ? formatElapsedTime() : timerStore.formatElapsedTime(timer) }}
-                  </span>
-                  <div class="flex gap-2">
-                    <button
-                      @click="editTimer(timer)"
-                      class="p-2 text-gray-500 hover:text-blue-600 hover:bg-blue-100 rounded-md transition-colors duration-200"
-                      title="Edit timer"
-                    >
-                      <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"/>
-                      </svg>
-                    </button>
-                    <button
-                      @click="confirmDelete(timer)"
-                      class="p-2 text-gray-500 hover:text-red-600 hover:bg-red-100 rounded-md transition-colors duration-200"
-                      title="Delete timer"
-                    >
-                      <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/>
-                      </svg>
-                    </button>
-                  </div>
-                </div>
-              </div>
-            </div>
+              :timer="timer"
+              :is-latest="timer === timerStore.latestTimer"
+              :live-elapsed-time="formatElapsedTime()"
+              @edit="editTimer"
+              @delete="confirmDelete"
+            />
           </div>
         </div>
       </div>
 
-      <!-- Reset Timer Modal -->
-      <div v-if="showResetModal" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
-        <div class="bg-white rounded-lg shadow-xl max-w-md w-full p-6">
-          <h3 class="text-lg font-semibold text-gray-900 mb-4">Reset Incident Timer</h3>
-          
-          <form @submit.prevent="handleReset">
-            <div class="mb-4">
-              <label for="resetNotes" class="block text-sm font-medium text-gray-700 mb-2">
-                Notes (optional)
-              </label>
-              <textarea
-                id="resetNotes"
-                v-model="resetForm.notes"
-                class="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500"
-                rows="3"
-                placeholder="Add any notes about this reset..."
-              ></textarea>
-            </div>
-            
-            <div class="flex gap-3 justify-end">
-              <button
-                type="button"
-                @click="showResetModal = false"
-                class="px-4 py-2 text-gray-700 border border-gray-300 rounded-md hover:bg-gray-50 transition-colors duration-200"
-              >
-                Cancel
-              </button>
-              <button
-                type="submit"
-                :disabled="timerStore.loading"
-                class="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 disabled:opacity-50 transition-colors duration-200"
-              >
-                {{ timerStore.loading ? 'Resetting...' : 'Reset Timer' }}
-              </button>
-            </div>
-          </form>
-        </div>
-      </div>
+      <!-- Timer Reset Modal -->
+      <TimerResetModal
+        :show="showResetModal"
+        :loading="timerStore.loading"
+        @close="showResetModal = false"
+        @reset="handleReset"
+      />
 
-      <!-- Edit Timer Modal -->
-      <div v-if="showEditModal" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
-        <div class="bg-white rounded-lg shadow-xl max-w-md w-full p-6">
-          <h3 class="text-lg font-semibold text-gray-900 mb-4">Edit Timer</h3>
-          
-          <form @submit.prevent="handleEditTimer">
-            <div class="mb-4">
-              <label for="editResetTimestamp" class="block text-sm font-medium text-gray-700 mb-2">
-                Reset Date & Time *
-              </label>
-              <input
-                id="editResetTimestamp"
-                v-model="editResetTimestamp"
-                type="datetime-local"
-                :max="new Date().toISOString().slice(0, 16)"
-                class="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500"
-                :class="{ 'border-red-500': editErrors.reset_timestamp }"
-                required
-              />
-              <p v-if="editErrors.reset_timestamp" class="mt-1 text-sm text-red-600">
-                {{ editErrors.reset_timestamp }}
-              </p>
-            </div>
-
-            <div class="mb-4">
-              <label for="editNotes" class="block text-sm font-medium text-gray-700 mb-2">
-                Notes (optional)
-              </label>
-              <textarea
-                id="editNotes"
-                v-model="editNotes"
-                class="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500"
-                rows="3"
-                placeholder="Add any notes about this timer..."
-              ></textarea>
-            </div>
-            
-            <div class="flex gap-3 justify-end">
-              <button
-                type="button"
-                @click="showEditModal = false"
-                class="px-4 py-2 text-gray-700 border border-gray-300 rounded-md hover:bg-gray-50 transition-colors duration-200"
-              >
-                Cancel
-              </button>
-              <button
-                type="submit"
-                :disabled="timerStore.loading"
-                class="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 disabled:opacity-50 transition-colors duration-200"
-              >
-                {{ timerStore.loading ? 'Updating...' : 'Update Timer' }}
-              </button>
-            </div>
-          </form>
-        </div>
-      </div>
+      <!-- Timer Edit Modal -->
+      <TimerEditModal
+        :show="showEditModal"
+        :timer="editingTimer"
+        :loading="timerStore.loading"
+        @close="closeEditModal"
+        @updated="handleEditTimer"
+      />
     </div>
   </div>
 </template>
 
 <script setup>
 import { storeToRefs } from 'pinia'
-import { useForm, useField } from 'vee-validate'
-import * as yup from 'yup'
-import { toDatetimeLocalInput, fromDatetimeLocalInput, formatDisplayDate } from '~/utils/dateUtils'
 
 // Page meta and middleware
 definePageMeta({
@@ -293,36 +153,8 @@ const { activeTimerBreakdown } = storeToRefs(timerStore)
 
 // Reactive state
 const showResetModal = ref(false)
-const resetForm = reactive({
-  notes: ''
-})
-
 const showEditModal = ref(false)
 const editingTimer = ref(null)
-
-// Edit form validation with VeeValidate + Yup
-const editFormSchema = yup.object({
-  notes: yup.string(),
-  reset_timestamp: yup.string()
-    .required('Reset date/time is required')
-    .test('not-future', 'Reset date/time cannot be in the future', (value) => {
-      if (!value) return true // Let required handle empty values
-      const selectedDate = new Date(value)
-      const now = new Date()
-      return selectedDate <= now
-    })
-})
-
-const { handleSubmit: handleEditSubmit, resetForm: resetEditForm, errors: editErrors } = useForm({
-  validationSchema: editFormSchema,
-  initialValues: {
-    notes: '',
-    reset_timestamp: ''
-  }
-})
-
-const { value: editNotes } = useField('notes')
-const { value: editResetTimestamp } = useField('reset_timestamp')
 
 // Format elapsed time using reactive store breakdown
 const formatElapsedTime = () => {
@@ -344,56 +176,42 @@ const formatElapsedTime = () => {
   return parts.join(', ')
 }
 
-// Format date for display using utility
-const formatDate = (dateString) => {
-  return formatDisplayDate(dateString)
-}
-
 // Handle timer reset
-const handleReset = async () => {
-  const result = await timerStore.quickReset(resetForm.notes || undefined)
+const handleReset = async (notes) => {
+  const result = await timerStore.quickReset(notes)
   
   if (result.success) {
     showResetModal.value = false
-    resetForm.notes = ''
   }
 }
 
 // Edit timer - open modal with current values
 const editTimer = (timer) => {
   editingTimer.value = timer
-  editNotes.value = timer.notes || ''
-  
-  // Convert the reset_timestamp to local datetime-local format using utility
-  editResetTimestamp.value = toDatetimeLocalInput(timer.reset_timestamp)
-  
-  console.log('Original timestamp:', timer.reset_timestamp)
-  console.log('Local datetime-local value:', editResetTimestamp.value)
-  
   showEditModal.value = true
 }
 
+// Close edit modal
+const closeEditModal = () => {
+  showEditModal.value = false
+  editingTimer.value = null
+}
+
 // Handle edit form submission
-const handleEditTimer = handleEditSubmit(async (values) => {
-  if (!editingTimer.value) return
-  
+const handleEditTimer = async (timerId, updateData) => {
   try {
-    const result = await timerStore.updateTimer(editingTimer.value.id, {
-      notes: values.notes || undefined,
-      reset_timestamp: fromDatetimeLocalInput(values.reset_timestamp)
-    })
+    const result = await timerStore.updateTimer(timerId, updateData)
     
     if (result.success) {
       showEditModal.value = false
       editingTimer.value = null
-      resetEditForm()
     }
   } catch (error) {
     console.error('Failed to update timer:', error)
   }
-})
+}
 
-// Confirm delete timer (placeholder for future implementation)
+// Confirm delete timer
 const confirmDelete = (timer) => {
   if (confirm('Are you sure you want to delete this timer?')) {
     timerStore.deleteTimer(timer.id)
