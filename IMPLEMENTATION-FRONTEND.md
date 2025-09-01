@@ -76,20 +76,53 @@ frontend/
 
 ### Incident Timer Features
 - **CRUD Operations**: Create, read, update, delete incident timers
-- **Real-time Display**: Live timer updates every second
-- **Public Access**: Shareable URLs for public timer viewing
+- **Real-time Display**: Live timer updates every second with steampunk flip-clock animation
+- **Public Access**: Shareable URLs for public timer viewing with full steampunk aesthetic
 - **Timer Management**: History, notes, reset functionality
 - **State Management**: Complete Pinia store for timer operations
+- **Steampunk Design**: Gold engraved flip cards, mahogany wood background, animated gears, vintage scroll notes
 
 ### Design System
 Page-specific aesthetic themes per [UX-LAYOUT.md](UX-LAYOUT.md):
 - **Homepage**: Sacred/Gothic with construction motifs
 - **Authentication**: Clean, minimal with subtle sacred elements
 - **Incidents**: Technology theme with geometric patterns
+- **Public Timer**: Complete steampunk aesthetic with airship cabin theme
 - **About**: Frontier/Nature with Japanese traditional influences
-- **Color Palette**: Sky blue primary with gold/silver accents
-- **Typography**: Ornate headers, clean body text
+- **Color Palette**: Sky blue primary with gold/silver accents, mahogany wood for steampunk
+- **Typography**: Ornate headers, clean body text, engraved gold text for steampunk
 - **Responsive Breakpoints**: Content-first approach (320px, 480px, 768px, 1024px, 1440px)
+
+## Steampunk Component Architecture
+
+### Flip Clock Components
+- **FlippingDigit.vue**: Individual split-flap digit with authentic mechanical animation
+  - Gold plate background with engraved dark text effects
+  - CSS-based flip animation using `data-value` attributes and pseudo-elements
+  - Perfect timing replicating real flip/flap clock mechanics
+- **SlidingTimeGroup.vue**: Container for time units with mechanical slide animations
+  - Handles Y/M/W/D/H/M/S labels with proper padding to 2-digit display
+  - Smooth slide-in/out animations when time units appear/disappear
+- **SteamClock.vue**: Main clock assembly with decorative elements
+  - Silver frame with rivets and animated clockwork gears
+  - Blue enamel face with proper time unit organization
+
+### Steampunk Visual Elements
+- **SteampunkBackground.vue**: Mahogany wood texture with rotating gear overlays
+  - Real mahogany wood image (`~/assets/images/mahogany-wood.jpg`) as tiled background
+  - Animated gears with proper teeth and mechanical timing
+- **SteampunkBanner.vue**: Gold enamel plaque with etched motto
+  - "Vigilance Maintained - Until the Next Challenge Arises"
+  - Wood-mounted plaque with brass screws and engraved text effects
+- **VintageNoteCard.vue**: Scroll-style note display
+  - Vintage scroll background image with handwritten-style text
+  - Proper aging effects and realistic paper texture
+
+### Animation System
+- **Split-flap Mechanics**: Authentic two-phase flip animation (top flips down, bottom slides up)
+- **Gear Synchronization**: Gears tick with seconds, spin with minutes
+- **Slide Transitions**: Mechanical slide-in/out for time units with 3D perspective
+- **Engraving Effects**: Multi-layer text shadows creating realistic etched metal appearance
 
 ## Architecture Implementation
 
