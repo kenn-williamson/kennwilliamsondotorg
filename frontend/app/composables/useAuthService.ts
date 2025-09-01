@@ -49,27 +49,27 @@ export function useAuthService() {
 
   return {
     async login(credentials: LoginRequest): Promise<AuthResponse> {
-      return authFetch(apiUrl('/auth/login'), {
+      return authFetch<AuthResponse>(apiUrl('/auth/login'), {
         method: 'POST',
         body: credentials,
       })
     },
 
     async register(userData: RegisterRequest): Promise<AuthResponse> {
-      return authFetch(apiUrl('/auth/register'), {
+      return authFetch<AuthResponse>(apiUrl('/auth/register'), {
         method: 'POST',
         body: userData,
       })
     },
 
     async me(): Promise<User> {
-      return authFetch(apiUrl('/auth/me'), {
+      return authFetch<User>(apiUrl('/auth/me'), {
         method: 'GET',
       })
     },
 
     async previewSlug(displayName: string): Promise<SlugPreviewResponse> {
-      return authFetch(apiUrl('/auth/preview-slug'), {
+      return authFetch<SlugPreviewResponse>(apiUrl('/auth/preview-slug'), {
         method: 'POST',
         body: { display_name: displayName },
       })

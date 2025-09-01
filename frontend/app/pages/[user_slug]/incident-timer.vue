@@ -1,107 +1,68 @@
 <template>
-  <div class="min-h-screen bg-gradient-to-br from-slate-900 via-blue-900 to-indigo-900 flex items-center justify-center px-4 sm:px-6 lg:px-8">
-    <div class="max-w-2xl w-full text-center">
+  <div class="min-h-screen flex items-center justify-center px-4 sm:px-6 lg:px-8 relative mahogany-background">
+    <!-- Steampunk Background -->
+    <SteampunkBackground />
+    
+    <div class="max-w-4xl w-full text-center relative z-10">
       
       <!-- Loading State -->
-      <div v-if="timerStore.loading" class="bg-white/10 backdrop-blur-sm rounded-2xl shadow-2xl border border-white/20 p-12">
-        <div class="animate-spin rounded-full h-16 w-16 border-b-4 border-white mx-auto mb-6"></div>
-        <p class="text-white/80 text-lg">Loading timer...</p>
+      <div v-if="timerStore.loading" class="steampunk-loading-card">
+        <div class="loading-gears">
+          <div class="loading-gear gear-1"></div>
+          <div class="loading-gear gear-2"></div>
+        </div>
+        <p class="loading-text">Initializing Steam Timer...</p>
       </div>
 
       <!-- Error State -->
-      <div v-else-if="timerStore.error" class="bg-red-900/20 backdrop-blur-sm rounded-2xl shadow-2xl border border-red-500/30 p-12">
-        <svg class="w-20 h-20 text-red-400 mx-auto mb-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L4.082 16.5c-.77.833.192 2.5 1.732 2.5z"/>
-        </svg>
-        <h1 class="text-2xl font-bold text-white mb-4">Timer Not Found</h1>
-        <p class="text-red-200 mb-8">{{ timerStore.error }}</p>
-        <NuxtLink 
-          to="/" 
-          class="inline-flex items-center px-6 py-3 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors duration-200"
-        >
-          <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+      <div v-else-if="timerStore.error" class="steampunk-error-card">
+        <div class="error-icon">
+          <svg viewBox="0 0 24 24" class="error-svg">
+            <path d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L4.082 16.5c-.77.833.192 2.5 1.732 2.5z" 
+                  fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+          </svg>
+        </div>
+        <h1 class="error-title">Timer Mechanism Not Found</h1>
+        <p class="error-message">{{ timerStore.error }}</p>
+        <NuxtLink to="/" class="error-button">
+          <svg class="button-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6"/>
           </svg>
-          Go Home
+          Return Home
         </NuxtLink>
       </div>
 
       <!-- Timer Display -->
       <div v-else-if="timerStore.publicTimer" class="space-y-8">
-        <!-- Header -->
-        <div class="mb-12">
-          <h1 class="text-3xl sm:text-4xl font-bold text-white mb-4">
-            Incident-Free Time
-          </h1>
-          <p class="text-white/70 text-lg">
-            Live tracking for {{ userSlug }}
+        <!-- Steampunk Banner -->
+        <SteampunkBanner />
+        
+        <!-- User Info -->
+        <div class="user-info">
+          <p class="user-tracking">
+            Live tracking for <span class="user-name">{{ userSlug }}</span>
           </p>
         </div>
 
-        <!-- Main Timer Display -->
-        <div class="bg-white/10 backdrop-blur-sm rounded-3xl shadow-2xl border border-white/20 p-12 mb-8">
-          <div class="mb-8">
-            <div 
-              class="text-6xl sm:text-8xl lg:text-9xl font-mono font-bold text-white tracking-tight"
-              id="public-live-timer"
-            >
-              {{ formattedTime }}
-            </div>
-          </div>
-          
-          <div class="space-y-4">
-            <p class="text-white/80 text-xl">
-              Started {{ formatDate(timerStore.publicTimer.reset_timestamp) }}
-            </p>
-            
-            <div v-if="timerStore.publicTimer.notes" class="bg-white/5 rounded-lg p-4 border border-white/10">
-              <p class="text-white/70 italic text-lg">
-                "{{ timerStore.publicTimer.notes }}"
-              </p>
-            </div>
-
-            <div class="pt-4">
-              <p class="text-white/50 text-sm">
-                Last updated: {{ formatTime(new Date()) }}
-              </p>
-            </div>
-          </div>
+        <!-- Main Steam Clock -->
+        <SteamClock :time-breakdown="timeBreakdown" />
+        
+        <!-- Timer Started Info -->
+        <div class="timer-info">
+          <p class="started-text">
+            Timer Reset: {{ formatDate(timerStore.publicTimer.reset_timestamp) }}
+          </p>
+          <p class="last-updated">
+            Last Updated: {{ formatTime(new Date()) }}
+          </p>
         </div>
 
-        <!-- Stats/Info -->
-        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
-          <!-- Days -->
-          <div class="bg-white/5 backdrop-blur-sm rounded-xl border border-white/10 p-6">
-            <div class="text-3xl font-bold text-blue-300 mb-1">
-              {{ timeBreakdown.days }}
-            </div>
-            <p class="text-white/70">Days</p>
-          </div>
-
-          <!-- Hours -->
-          <div class="bg-white/5 backdrop-blur-sm rounded-xl border border-white/10 p-6">
-            <div class="text-3xl font-bold text-indigo-300 mb-1">
-              {{ timeBreakdown.hours }}
-            </div>
-            <p class="text-white/70">Hours Today</p>
-          </div>
-
-          <!-- Total Seconds -->
-          <div class="bg-white/5 backdrop-blur-sm rounded-xl border border-white/10 p-6 sm:col-span-2 lg:col-span-1">
-            <div class="text-3xl font-bold text-purple-300 mb-1">
-              {{ totalSeconds.toLocaleString() }}
-            </div>
-            <p class="text-white/70">Total Seconds</p>
-          </div>
-        </div>
-
-        <!-- Geometric decorative elements -->
-        <div class="flex justify-center space-x-8 opacity-30 mt-12">
-          <!-- Tech-inspired geometric shapes -->
-          <div class="w-12 h-12 border-2 border-blue-400 rotate-45 bg-blue-400/10"></div>
-          <div class="w-12 h-12 border-2 border-indigo-400 bg-indigo-400/10"></div>
-          <div class="w-12 h-12 border-2 border-purple-400 rotate-45 bg-purple-400/10"></div>
-        </div>
+        <!-- Vintage Note Card -->
+        <VintageNoteCard 
+          v-if="timerStore.publicTimer.notes"
+          :notes="timerStore.publicTimer.notes"
+          :reset-timestamp="timerStore.publicTimer.reset_timestamp"
+        />
       </div>
     </div>
   </div>
@@ -127,22 +88,45 @@ useHead({
 
 // Reactive time breakdown - calculated once and updated efficiently
 const timeBreakdown = ref({ years: 0, months: 0, weeks: 0, days: 0, hours: 0, minutes: 0, seconds: 0 })
-const formattedTime = ref('00:00:00')
-const totalSeconds = ref(0)
 
 // Update all time calculations at once
 const updateTimeCalculations = () => {
   if (!timerStore.publicTimer?.reset_timestamp) {
     timeBreakdown.value = { years: 0, months: 0, weeks: 0, days: 0, hours: 0, minutes: 0, seconds: 0 }
-    formattedTime.value = '00:00:00'
-    totalSeconds.value = 0
     return
   }
 
-  // Get breakdown once
-  timeBreakdown.value = timerStore.getElapsedTimeBreakdown(timerStore.publicTimer)
-  formattedTime.value = timerStore.formatElapsedTime(timerStore.publicTimer)
-  totalSeconds.value = timerStore.getElapsedSeconds(timerStore.publicTimer)
+  const now = new Date()
+  const resetTime = new Date(timerStore.publicTimer.reset_timestamp)
+  const diffMs = now.getTime() - resetTime.getTime()
+  
+  if (diffMs < 0) {
+    timeBreakdown.value = { years: 0, months: 0, weeks: 0, days: 0, hours: 0, minutes: 0, seconds: 0 }
+    return
+  }
+  
+  // Calculate time breakdown with weeks
+  let totalSeconds = Math.floor(diffMs / 1000)
+  
+  const years = Math.floor(totalSeconds / (365 * 24 * 60 * 60))
+  totalSeconds %= (365 * 24 * 60 * 60)
+  
+  const months = Math.floor(totalSeconds / (30 * 24 * 60 * 60))
+  totalSeconds %= (30 * 24 * 60 * 60)
+  
+  const weeks = Math.floor(totalSeconds / (7 * 24 * 60 * 60))
+  totalSeconds %= (7 * 24 * 60 * 60)
+  
+  const days = Math.floor(totalSeconds / (24 * 60 * 60))
+  totalSeconds %= (24 * 60 * 60)
+  
+  const hours = Math.floor(totalSeconds / (60 * 60))
+  totalSeconds %= (60 * 60)
+  
+  const minutes = Math.floor(totalSeconds / 60)
+  const seconds = totalSeconds % 60
+  
+  timeBreakdown.value = { years, months, weeks, days, hours, minutes, seconds }
 }
 
 // Utility formatting functions
@@ -197,44 +181,299 @@ onMounted(async () => {
 </script>
 
 <style scoped>
-/* Glowing effect for the main timer */
-#public-live-timer {
-  text-shadow: 0 0 20px rgba(255, 255, 255, 0.5);
-  animation: gentle-glow 2s ease-in-out infinite alternate;
-}
-
-@keyframes gentle-glow {
-  from {
-    text-shadow: 0 0 20px rgba(255, 255, 255, 0.3);
-  }
-  to {
-    text-shadow: 0 0 30px rgba(255, 255, 255, 0.6);
-  }
-}
-
-/* Subtle animation for stat cards */
-.bg-white\/5:hover {
-  background: rgba(255, 255, 255, 0.1);
-  transform: translateY(-2px);
-  transition: all 0.3s ease;
-}
-
-/* Tech-inspired background pattern */
-body {
+/* Mahogany Background */
+.mahogany-background {
+  background-color: #371200; /* Fallback solid color */
+  background-image: url('~/assets/images/mahogany-wood.jpg');
+  background-repeat: repeat;
+  background-size: 400px 400px; /* Adjust size as needed */
   background-attachment: fixed;
 }
 
-/* Geometric decorative elements animation */
-.rotate-45 {
-  animation: slow-rotate 20s linear infinite;
+/* Steampunk Loading State */
+.steampunk-loading-card {
+  background: 
+    linear-gradient(145deg, #8B4513 0%, #A0522D 50%, #8B4513 100%);
+  border: 4px solid #C0C0C0;
+  border-radius: 16px;
+  padding: 48px;
+  box-shadow: 
+    inset 0 4px 8px rgba(255, 255, 255, 0.2),
+    inset 0 -4px 8px rgba(0, 0, 0, 0.4),
+    0 8px 32px rgba(0, 0, 0, 0.5);
+  
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 24px;
 }
 
-@keyframes slow-rotate {
-  from {
-    transform: rotate(45deg);
-  }
+.loading-gears {
+  display: flex;
+  gap: 16px;
+  align-items: center;
+}
+
+.loading-gear {
+  width: 40px;
+  height: 40px;
+  border: 4px solid #FFD700;
+  border-radius: 50%;
+  border-right-color: transparent;
+  border-top-color: transparent;
+}
+
+.loading-gear.gear-1 {
+  animation: spin-clockwise 2s linear infinite;
+}
+
+.loading-gear.gear-2 {
+  animation: spin-counter-clockwise 1.5s linear infinite;
+}
+
+@keyframes spin-clockwise {
   to {
-    transform: rotate(405deg);
+    transform: rotate(360deg);
+  }
+}
+
+@keyframes spin-counter-clockwise {
+  to {
+    transform: rotate(-360deg);
+  }
+}
+
+.loading-text {
+  font-family: 'Georgia', serif;
+  font-size: 20px;
+  font-weight: bold;
+  color: #FFD700;
+  text-shadow: 0 2px 4px rgba(0, 0, 0, 0.5);
+}
+
+/* Steampunk Error State */
+.steampunk-error-card {
+  background: 
+    linear-gradient(145deg, #5d3420 0%, #4a2c18 50%, #3c2414 100%);
+  border: 4px solid #8B4513;
+  border-radius: 16px;
+  padding: 48px;
+  box-shadow: 
+    inset 0 4px 8px rgba(255, 255, 255, 0.1),
+    inset 0 -4px 8px rgba(0, 0, 0, 0.4),
+    0 8px 32px rgba(0, 0, 0, 0.5);
+  
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 24px;
+}
+
+.error-icon {
+  width: 80px;
+  height: 80px;
+  background: 
+    radial-gradient(circle at 30% 30%, #CC0000, #AA0000 60%, #880000);
+  border: 3px solid #660000;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 
+    0 4px 8px rgba(0, 0, 0, 0.4),
+    inset 0 2px 4px rgba(255, 255, 255, 0.2);
+}
+
+.error-svg {
+  width: 48px;
+  height: 48px;
+  color: rgba(255, 255, 255, 0.9);
+}
+
+.error-title {
+  font-family: 'Georgia', serif;
+  font-size: 28px;
+  font-weight: bold;
+  color: #FFD700;
+  text-shadow: 0 2px 4px rgba(0, 0, 0, 0.5);
+  margin: 0;
+}
+
+.error-message {
+  font-family: 'Georgia', serif;
+  font-size: 18px;
+  color: #D4AF37;
+  text-align: center;
+  opacity: 0.9;
+  margin: 0;
+}
+
+.error-button {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 12px 24px;
+  background: 
+    linear-gradient(145deg, #1e40af 0%, #2563eb 50%, #1e40af 100%);
+  border: 2px solid #C0C0C0;
+  border-radius: 8px;
+  color: #FFD700;
+  font-family: 'Georgia', serif;
+  font-weight: bold;
+  text-decoration: none;
+  box-shadow: 
+    inset 0 2px 4px rgba(255, 255, 255, 0.2),
+    0 4px 8px rgba(0, 0, 0, 0.3);
+  
+  transition: all 0.3s ease;
+}
+
+.error-button:hover {
+  transform: translateY(-2px);
+  box-shadow: 
+    inset 0 2px 4px rgba(255, 255, 255, 0.3),
+    0 6px 12px rgba(0, 0, 0, 0.4);
+}
+
+.button-icon {
+  width: 16px;
+  height: 16px;
+}
+
+/* User Info Styling */
+.user-info {
+  margin-bottom: 32px;
+}
+
+.user-tracking {
+  font-family: 'Georgia', serif;
+  font-size: 20px;
+  color: #D4AF37;
+  text-shadow: 0 2px 4px rgba(0, 0, 0, 0.5);
+  margin: 0;
+}
+
+.user-name {
+  color: #FFD700;
+  font-weight: bold;
+  text-shadow: 0 0 8px rgba(255, 215, 0, 0.3);
+}
+
+/* Timer Info Styling */
+.timer-info {
+  margin: 32px 0;
+  padding: 20px;
+  background: 
+    linear-gradient(145deg, 
+      rgba(139, 69, 19, 0.3) 0%, 
+      rgba(160, 82, 45, 0.2) 50%, 
+      rgba(139, 69, 19, 0.3) 100%);
+  border: 2px solid rgba(212, 175, 55, 0.4);
+  border-radius: 12px;
+  box-shadow: 
+    inset 0 2px 4px rgba(255, 255, 255, 0.1),
+    0 4px 8px rgba(0, 0, 0, 0.3);
+}
+
+.started-text {
+  font-family: 'Georgia', serif;
+  font-size: 18px;
+  color: #FFD700;
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.5);
+  margin: 0 0 8px 0;
+  font-weight: bold;
+}
+
+.last-updated {
+  font-family: 'Georgia', serif;
+  font-size: 14px;
+  color: #D4AF37;
+  opacity: 0.8;
+  font-style: italic;
+  margin: 0;
+}
+
+/* Responsive Design */
+@media (max-width: 768px) {
+  .steampunk-loading-card,
+  .steampunk-error-card {
+    padding: 32px;
+  }
+  
+  .loading-gear {
+    width: 32px;
+    height: 32px;
+    border-width: 3px;
+  }
+  
+  .loading-text {
+    font-size: 18px;
+  }
+  
+  .error-icon {
+    width: 64px;
+    height: 64px;
+  }
+  
+  .error-svg {
+    width: 36px;
+    height: 36px;
+  }
+  
+  .error-title {
+    font-size: 24px;
+  }
+  
+  .error-message {
+    font-size: 16px;
+  }
+  
+  .user-tracking {
+    font-size: 18px;
+  }
+  
+  .started-text {
+    font-size: 16px;
+  }
+  
+  .timer-info {
+    padding: 16px;
+  }
+}
+
+@media (max-width: 480px) {
+  .steampunk-loading-card,
+  .steampunk-error-card {
+    padding: 24px;
+  }
+  
+  .loading-gear {
+    width: 28px;
+    height: 28px;
+  }
+  
+  .loading-text {
+    font-size: 16px;
+  }
+  
+  .error-title {
+    font-size: 20px;
+  }
+  
+  .error-message {
+    font-size: 14px;
+  }
+  
+  .user-tracking {
+    font-size: 16px;
+  }
+  
+  .started-text {
+    font-size: 14px;
+  }
+  
+  .last-updated {
+    font-size: 12px;
   }
 }
 </style>

@@ -33,21 +33,21 @@ export function useIncidentTimerService() {
   return {
     // Get all timers for current user (protected)
     async getUserTimers(): Promise<IncidentTimer[]> {
-      return authFetch(apiUrl('/incident-timers'), {
+      return authFetch<IncidentTimer[]>(apiUrl('/incident-timers'), {
         method: 'GET',
       })
     },
 
     // Get public timer by user slug (no auth required)
     async getPublicTimer(userSlug: string): Promise<IncidentTimer> {
-      return authFetch(apiUrl(`/${userSlug}/incident-timer`), {
+      return authFetch<IncidentTimer>(apiUrl(`/${userSlug}/incident-timer`), {
         method: 'GET',
       })
     },
 
     // Create new timer (protected)
     async createTimer(timerData: CreateTimerRequest): Promise<IncidentTimer> {
-      return authFetch(apiUrl('/incident-timers'), {
+      return authFetch<IncidentTimer>(apiUrl('/incident-timers'), {
         method: 'POST',
         body: timerData,
       })
@@ -55,7 +55,7 @@ export function useIncidentTimerService() {
 
     // Update existing timer (protected)
     async updateTimer(id: string, updates: UpdateTimerRequest): Promise<IncidentTimer> {
-      return authFetch(apiUrl(`/incident-timers/${id}`), {
+      return authFetch<IncidentTimer>(apiUrl(`/incident-timers/${id}`), {
         method: 'PUT',
         body: updates,
       })
@@ -63,7 +63,7 @@ export function useIncidentTimerService() {
 
     // Delete timer (protected)
     async deleteTimer(id: string): Promise<void> {
-      return authFetch(apiUrl(`/incident-timers/${id}`), {
+      return authFetch<void>(apiUrl(`/incident-timers/${id}`), {
         method: 'DELETE',
       })
     },
