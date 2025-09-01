@@ -79,7 +79,7 @@
           <div class="text-center">
             <h2 class="text-lg font-medium text-gray-700 mb-2">Current Incident-Free Time</h2>
             <div class="text-6xl sm:text-7xl font-mono font-bold text-blue-600 mb-4" id="live-timer">
-              {{ formatElapsedTime(timerStore.latestTimer) }}
+              {{ formatElapsedTime() }}
             </div>
             <p class="text-gray-600">
               Started {{ formatDate(timerStore.latestTimer.reset_timestamp) }}
@@ -140,7 +140,7 @@
                 </div>
                 <div class="flex items-center gap-3">
                   <span class="font-mono text-lg font-medium text-blue-600">
-                    {{ formatElapsedTime(timer) }}
+                    {{ timer === timerStore.latestTimer ? formatElapsedTime() : timerStore.formatElapsedTime(timer) }}
                   </span>
                   <div class="flex gap-2">
                     <button
@@ -212,6 +212,8 @@
 </template>
 
 <script setup>
+import { storeToRefs } from 'pinia'
+
 // Page meta and middleware
 definePageMeta({
   middleware: 'auth'
@@ -227,6 +229,7 @@ useHead({
 // Stores
 const authStore = useAuthStore()
 const timerStore = useIncidentTimerStore()
+const { activeTimerBreakdown } = storeToRefs(timerStore)
 
 // Reactive state
 const showResetModal = ref(false)
@@ -234,13 +237,24 @@ const resetForm = reactive({
   notes: ''
 })
 
-// Auto-update timer display
-const liveTimer = ref(null)
-
-// Format elapsed time with live updates
-const formatElapsedTime = (timer) => {
-  if (!timer?.reset_timestamp) return '00:00:00'
-  return timerStore.formatElapsedTime(timer)
+// Format elapsed time using reactive store breakdown
+const formatElapsedTime = () => {
+  const breakdown = activeTimerBreakdown.value
+  if (!breakdown || (breakdown.years === 0 && breakdown.months === 0 && breakdown.weeks === 0 && breakdown.days === 0 && breakdown.hours === 0 && breakdown.minutes === 0 && breakdown.seconds === 0)) {
+    return 'No incident started'
+  }
+  
+  const parts = []
+  
+  if (breakdown.years > 0) parts.push(`${breakdown.years} year${breakdown.years !== 1 ? 's' : ''}`)
+  if (breakdown.months > 0) parts.push(`${breakdown.months} month${breakdown.months !== 1 ? 's' : ''}`)
+  if (breakdown.weeks > 0) parts.push(`${breakdown.weeks} week${breakdown.weeks !== 1 ? 's' : ''}`)
+  if (breakdown.days > 0) parts.push(`${breakdown.days} day${breakdown.days !== 1 ? 's' : ''}`)
+  if (breakdown.hours > 0) parts.push(`${breakdown.hours} hour${breakdown.hours !== 1 ? 's' : ''}`)
+  if (breakdown.minutes > 0) parts.push(`${breakdown.minutes} minute${breakdown.minutes !== 1 ? 's' : ''}`)
+  if (breakdown.seconds > 0 || parts.length === 0) parts.push(`${breakdown.seconds} second${breakdown.seconds !== 1 ? 's' : ''}`)
+  
+  return parts.join(', ')
 }
 
 // Format date for display
@@ -275,22 +289,12 @@ const confirmDelete = (timer) => {
 onMounted(async () => {
   if (authStore.isAuthenticated) {
     await timerStore.fetchUserTimers()
-    
-    // Set up live timer updates every second
-    const updateInterval = setInterval(() => {
-      // Force reactivity update for live timer display
-      if (timerStore.latestTimer) {
-        const timerElement = document.getElementById('live-timer')
-        if (timerElement) {
-          timerElement.textContent = formatElapsedTime(timerStore.latestTimer)
-        }
-      }
-    }, 1000)
-
-    onUnmounted(() => {
-      clearInterval(updateInterval)
-    })
   }
+})
+
+// Cleanup on unmount
+onUnmounted(() => {
+  timerStore.stopLiveTimerUpdates()
 })
 
 // Watch for authentication changes

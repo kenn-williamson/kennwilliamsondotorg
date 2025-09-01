@@ -61,6 +61,8 @@
 </template>
 
 <script setup>
+import { storeToRefs } from 'pinia'
+
 const route = useRoute()
 const timerStore = useIncidentTimerStore()
 
@@ -89,96 +91,29 @@ useHead(() => ({
   ]
 }))
 
-// Reactive time breakdown - calculated once and updated efficiently
-const timeBreakdown = ref({ years: 0, months: 0, weeks: 0, days: 0, hours: 0, minutes: 0, seconds: 0 })
+// Reactive time breakdown from store - automatically updates every second
+const { activeTimerBreakdown } = storeToRefs(timerStore)
+const timeBreakdown = computed(() => activeTimerBreakdown.value)
 
-// Update all time calculations at once
-const updateTimeCalculations = () => {
-  if (!timerStore.publicTimer?.reset_timestamp) {
-    timeBreakdown.value = { years: 0, months: 0, weeks: 0, days: 0, hours: 0, minutes: 0, seconds: 0 }
-    return
-  }
-
-  const now = new Date()
-  const resetTime = new Date(timerStore.publicTimer.reset_timestamp)
-  const diffMs = now.getTime() - resetTime.getTime()
-  
-  if (diffMs < 0) {
-    timeBreakdown.value = { years: 0, months: 0, weeks: 0, days: 0, hours: 0, minutes: 0, seconds: 0 }
-    return
-  }
-  
-  // Calculate time breakdown with weeks
-  let totalSeconds = Math.floor(diffMs / 1000)
-  
-  const years = Math.floor(totalSeconds / (365 * 24 * 60 * 60))
-  totalSeconds %= (365 * 24 * 60 * 60)
-  
-  const months = Math.floor(totalSeconds / (30 * 24 * 60 * 60))
-  totalSeconds %= (30 * 24 * 60 * 60)
-  
-  const weeks = Math.floor(totalSeconds / (7 * 24 * 60 * 60))
-  totalSeconds %= (7 * 24 * 60 * 60)
-  
-  const days = Math.floor(totalSeconds / (24 * 60 * 60))
-  totalSeconds %= (24 * 60 * 60)
-  
-  const hours = Math.floor(totalSeconds / (60 * 60))
-  totalSeconds %= (60 * 60)
-  
-  const minutes = Math.floor(totalSeconds / 60)
-  const seconds = totalSeconds % 60
-  
-  timeBreakdown.value = { years, months, weeks, days, hours, minutes, seconds }
-}
-
-// Utility formatting functions
-const formatDate = (dateString) => {
-  return new Date(dateString).toLocaleDateString('en-US', {
-    year: 'numeric',
-    month: 'long',
-    day: 'numeric',
-    hour: '2-digit',
-    minute: '2-digit',
-  })
-}
-
-const formatTime = (date) => {
-  return date.toLocaleTimeString('en-US', {
-    hour: '2-digit',
-    minute: '2-digit',
-    second: '2-digit',
-  })
-}
+// Utility formatting functions (kept for potential future use)
 
 // Load public timer data
 onMounted(async () => {
   await timerStore.fetchPublicTimer(userSlug)
   
-  // Calculate initial time values
-  updateTimeCalculations()
-  
-  // Set up live updates every second
-  const updateInterval = setInterval(() => {
-    if (timerStore.publicTimer) {
-      updateTimeCalculations()
-    }
-  }, 1000)
-
   // Refresh timer data every 5 minutes to catch updates
   const refreshInterval = setInterval(() => {
     if (!timerStore.loading) {
-      timerStore.fetchPublicTimer(userSlug).then(() => {
-        updateTimeCalculations()
-      })
+      timerStore.fetchPublicTimer(userSlug)
     }
   }, 5 * 60 * 1000) // 5 minutes
 
   onUnmounted(() => {
-    clearInterval(updateInterval)
     if (refreshInterval) {
       clearInterval(refreshInterval)
     }
+    // Stop live timer when component unmounts
+    timerStore.stopLiveTimerUpdates()
   })
 })
 </script>

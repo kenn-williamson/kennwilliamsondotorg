@@ -28,7 +28,12 @@ interface TimerState {
   publicTimer: PublicIncidentTimer | null
   loading: boolean
   error: string | undefined
+  // Reactive timer breakdown that updates every second
+  activeTimerBreakdown: { years: number, months: number, weeks: number, days: number, hours: number, minutes: number, seconds: number }
 }
+
+// Global timer update interval - shared across all store instances
+let globalTimerInterval: NodeJS.Timeout | null = null
 
 export const useIncidentTimerStore = defineStore('incident-timers', {
   state: (): TimerState => ({
@@ -37,6 +42,7 @@ export const useIncidentTimerStore = defineStore('incident-timers', {
     publicTimer: null,
     loading: false,
     error: undefined,
+    activeTimerBreakdown: { years: 0, months: 0, weeks: 0, days: 0, hours: 0, minutes: 0, seconds: 0 },
   }),
 
   getters: {
@@ -48,8 +54,8 @@ export const useIncidentTimerStore = defineStore('incident-timers', {
       return Math.floor((now - startTime) / 1000)
     },
 
-    // Calculate elapsed time breakdown using hybrid approach
-    // Years/months via date arithmetic, remaining time via milliseconds
+    // Calculate elapsed time breakdown using proper calendar arithmetic
+    // This matches how humans actually count time intervals
     getElapsedTimeBreakdown: (state) => (timer: IncidentTimer) => {
       if (!timer?.reset_timestamp) return { 
         years: 0, months: 0, weeks: 0, days: 0, 
@@ -63,37 +69,62 @@ export const useIncidentTimerStore = defineStore('incident-timers', {
         return { years: 0, months: 0, weeks: 0, days: 0, hours: 0, minutes: 0, seconds: 0 }
       }
       
-      // Step 1: Calculate years and months using date arithmetic
+      // Step 1: Calculate years and months properly
       let years = now.getFullYear() - startDate.getFullYear()
       let months = now.getMonth() - startDate.getMonth()
+      let days = now.getDate() - startDate.getDate()
       
-      // Adjust for negative months
+      // Adjust if the current day is before the start day
+      if (days < 0) {
+        months--
+        // Add the days from the previous month
+        const prevMonth = new Date(now.getFullYear(), now.getMonth(), 0)
+        days += prevMonth.getDate()
+      }
+      
+      // Adjust if months is negative
       if (months < 0) {
         years--
         months += 12
       }
       
-      // Step 2: Create adjusted start date after subtracting years and months
-      const adjustedStart = new Date(startDate)
-      adjustedStart.setFullYear(startDate.getFullYear() + years)
-      adjustedStart.setMonth(startDate.getMonth() + months)
+      // Step 2: Calculate remaining time (hours, minutes, seconds)
+      let hours = now.getHours() - startDate.getHours()
+      let minutes = now.getMinutes() - startDate.getMinutes()
+      let seconds = now.getSeconds() - startDate.getSeconds()
       
-      // Step 3: Calculate remaining time in milliseconds
-      const remainingMs = now.getTime() - adjustedStart.getTime()
-      const remainingTotalSeconds = Math.floor(remainingMs / 1000)
+      // Adjust seconds
+      if (seconds < 0) {
+        minutes--
+        seconds += 60
+      }
       
-      // Step 4: Break down remaining seconds into weeks, days, hours, minutes, seconds
-      const weeks = Math.floor(remainingTotalSeconds / (7 * 24 * 60 * 60))
-      const remainingAfterWeeks = remainingTotalSeconds % (7 * 24 * 60 * 60)
+      // Adjust minutes
+      if (minutes < 0) {
+        hours--
+        minutes += 60
+      }
       
-      const days = Math.floor(remainingAfterWeeks / (24 * 60 * 60))
-      const remainingAfterDays = remainingAfterWeeks % (24 * 60 * 60)
+      // Adjust hours
+      if (hours < 0) {
+        days--
+        hours += 24
+      }
       
-      const hours = Math.floor(remainingAfterDays / (60 * 60))
-      const remainingAfterHours = remainingAfterDays % (60 * 60)
+      // Adjust days again if needed
+      if (days < 0) {
+        months--
+        if (months < 0) {
+          years--
+          months += 12
+        }
+        const prevMonth = new Date(now.getFullYear(), now.getMonth(), 0)
+        days += prevMonth.getDate()
+      }
       
-      const minutes = Math.floor(remainingAfterHours / 60)
-      const seconds = remainingAfterHours % 60
+      // Calculate weeks from remaining days
+      const weeks = Math.floor(days / 7)
+      days = days % 7
       
       return { years, months, weeks, days, hours, minutes, seconds }
     },
@@ -172,16 +203,80 @@ export const useIncidentTimerStore = defineStore('incident-timers', {
   },
 
   actions: {
+    // Start live timer updates for the active timer (public or latest user timer)
+    startLiveTimerUpdates() {
+      // Clear any existing interval
+      if (globalTimerInterval) {
+        clearInterval(globalTimerInterval)
+        globalTimerInterval = null
+      }
+
+      // Determine which timer to track - prioritize public timer, fallback to latest user timer
+      const activeTimer = this.publicTimer || this.latestTimer
+      if (!activeTimer?.reset_timestamp) {
+        console.log('🔴 No active timer to track')
+        this.activeTimerBreakdown = { years: 0, months: 0, weeks: 0, days: 0, hours: 0, minutes: 0, seconds: 0 }
+        return
+      }
+
+      console.log('🟢 Starting live timer updates for:', {
+        id: activeTimer.id,
+        reset_timestamp: activeTimer.reset_timestamp,
+        isPublic: !!this.publicTimer
+      })
+
+      // Update immediately
+      this.activeTimerBreakdown = this.getElapsedTimeBreakdown(activeTimer)
+      console.log('⏱️ Initial breakdown:', this.activeTimerBreakdown)
+
+      // Set up interval to update every second
+      globalTimerInterval = setInterval(() => {
+        const currentActiveTimer = this.publicTimer || this.latestTimer
+        if (currentActiveTimer?.reset_timestamp) {
+          this.activeTimerBreakdown = this.getElapsedTimeBreakdown(currentActiveTimer)
+          console.log('🔄 Timer tick:', {
+            seconds: this.activeTimerBreakdown.seconds,
+            total: `${this.activeTimerBreakdown.years}y ${this.activeTimerBreakdown.months}m ${this.activeTimerBreakdown.weeks}w ${this.activeTimerBreakdown.days}d ${this.activeTimerBreakdown.hours}h ${this.activeTimerBreakdown.minutes}min ${this.activeTimerBreakdown.seconds}s`
+          })
+        } else {
+          console.log('🔴 No active timer found, stopping updates')
+          this.stopLiveTimerUpdates()
+        }
+      }, 1000)
+    },
+
+    // Stop live timer updates
+    stopLiveTimerUpdates() {
+      if (globalTimerInterval) {
+        console.log('⏹️ Stopping live timer updates')
+        clearInterval(globalTimerInterval)
+        globalTimerInterval = null
+      }
+      this.activeTimerBreakdown = { years: 0, months: 0, weeks: 0, days: 0, hours: 0, minutes: 0, seconds: 0 }
+    },
+
     // Fetch user's timers
     async fetchUserTimers(): Promise<{ success: boolean; error?: string }> {
       try {
         this.loading = true
         this.error = undefined
+        console.log('🔍 Fetching user timers...')
 
         const incidentTimerService = useIncidentTimerService()
         const data = await incidentTimerService.getUserTimers()
+        console.log('📦 User timers data:', data)
 
         this.timers = data
+        console.log('🎯 Latest timer:', this.latestTimer)
+        
+        // Start live updates if we have timers
+        if (this.latestTimer) {
+          console.log('📊 Loaded user timers, starting live updates')
+          this.startLiveTimerUpdates()
+        } else {
+          console.log('❌ No latest timer found')
+        }
+        
         return { success: true }
       } catch (error: any) {
         console.error('Fetch timers error:', error)
@@ -205,6 +300,11 @@ export const useIncidentTimerStore = defineStore('incident-timers', {
         const data = await incidentTimerService.getPublicTimer(userSlug)
 
         this.publicTimer = data
+        
+        // Start live updates for public timer
+        console.log('🌐 Loaded public timer, starting live updates')
+        this.startLiveTimerUpdates()
+        
         return { success: true }
       } catch (error: any) {
         console.error('Fetch public timer error:', error)
@@ -332,6 +432,7 @@ export const useIncidentTimerStore = defineStore('incident-timers', {
 
     // Clear all state
     clearState(): void {
+      this.stopLiveTimerUpdates()
       this.timers = []
       this.currentTimer = null
       this.publicTimer = null
