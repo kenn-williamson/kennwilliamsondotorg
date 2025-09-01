@@ -156,6 +156,21 @@ npm install --save-dev @vitest/ui # Optional test UI
 
 ## Technical Debt and Improvements
 
+### Security and DDoS Protection
+**Status**: Deferred - requires investigation
+**Issue**: Nginx rate limiting with `limit_req_zone` fails in Docker containers with "zero size shared memory zone" error
+**Attempted Solutions**:
+- Increased Docker memory limits (100MB → 256MB)
+- Explicit shared memory allocation (`shm_size: 128m`)
+- Various zone size configurations
+- Different zone naming strategies
+
+**Next Steps**:
+- Investigate alternative DDoS protection methods (Cloudflare, AWS WAF)
+- Research nginx shared memory allocation in containerized environments
+- Consider application-level rate limiting in Rust backend
+- Evaluate third-party security services
+
 ### Code Quality
 - Comprehensive test coverage (currently backend only)
 - Frontend unit and integration tests

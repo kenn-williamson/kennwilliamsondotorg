@@ -1,84 +1,95 @@
-# Production Deployment Guide - KennWilliamson.org
+# Production Deployment Implementation
 
 ## Overview
-Complete step-by-step guide for deploying the KennWilliamson.org application to AWS EC2 with production-ready configuration.
+Complete production deployment process for KennWilliamson.org from EC2 provisioning through SSL certificate setup and service health verification. This guide covers the entire infrastructure setup and application deployment.
 
-## Infrastructure Specifications
-- **Instance**: t3.small (2 vCPU, 2GB RAM) - $15.18/month
-- **OS**: Ubuntu 24.04 LTS
-- **Domain**: kennwilliamson.org (existing Route 53 setup)
-- **SSL**: Let's Encrypt with automatic renewal
-- **Database**: PostgreSQL 17 in Docker with UUIDv7 support
+## Prerequisites
 
-## Pre-Deployment Requirements
+- AWS account with appropriate permissions
+- Domain name registered (e.g., kennwilliamson.org)
+- SSH key pair for EC2 access
+- Basic familiarity with AWS services
 
-### Local Testing
-Before deploying to production, test the production build locally:
+## Deployment Process
 
+### 1. EC2 Instance Provisioning
+
+#### Launch EC2 Instance
 ```bash
-# 1. Create production environment file
-cp .env.development .env.production
-
-# 2. Edit production values (see Environment Configuration section below)
-nano .env.production
-
-# 3. Test production build locally
-docker-compose -f docker-compose.yml --env-file .env.production build
-docker-compose -f docker-compose.yml --env-file .env.production up -d
-
-# 4. Test functionality at https://localhost
-# 5. Stop test environment
-docker-compose -f docker-compose.yml --env-file .env.production down
+# Recommended instance specifications
+Instance Type: t3.micro (free tier) or t3.small
+AMI: Ubuntu Server 24.04 LTS
+Storage: 20GB GP3 (minimum)
+Security Group: Custom (see below)
+Key Pair: Your existing SSH key pair
 ```
 
-## Step 1: Launch EC2 Instance
+#### Security Group Configuration
+Create a security group with the following rules:
 
-### AWS Console Setup
-1. **EC2 Dashboard → Launch Instance**
-   - Name: `kennwilliamson-prod`
-   - AMI: Ubuntu Server 24.04 LTS (HVM), SSD Volume Type
-   - Instance type: `t3.small`
-   - Key pair: Create new or use existing
-   - Storage: 8GB gp3 (default is sufficient)
+**Inbound Rules:**
+- SSH (22): Your IP address only
+- HTTP (80): 0.0.0.0/0 (for Let's Encrypt validation)
+- HTTPS (443): 0.0.0.0/0 (for application access)
 
-2. **Security Group Configuration**
-   - Name: `kennwilliamson-web-sg`
-   - Rules:
-     - SSH (22): Your IP only
-     - HTTP (80): Anywhere (0.0.0.0/0)
-     - HTTPS (443): Anywhere (0.0.0.0/0)
+**Outbound Rules:**
+- All traffic: 0.0.0.0/0 (default)
 
-3. **Launch Instance**
+### 2. Elastic IP Assignment
 
-### Elastic IP Setup
-1. **EC2 → Elastic IPs → Allocate Elastic IP**
-2. **Actions → Associate Elastic IP Address**
-   - Select your instance
-   - Associate
-
-## Step 2: Update DNS Configuration
-
-### Route 53 Changes
-1. **Route 53 → Hosted zones → kennwilliamson.org**
-2. **Delete existing A record** (currently pointing to S3)
-3. **Create new A record**:
-   - Name: (blank for root domain)
-   - Type: A
-   - Value: Your Elastic IP address
-4. **Create www CNAME record**:
-   - Name: www
-   - Type: CNAME
-   - Value: kennwilliamson.org
-
-## Step 3: Server Initial Setup
-
-SSH into your EC2 instance and run initial setup:
-
+#### Allocate and Associate Elastic IP
 ```bash
-# Connect to instance
-ssh -i your-key.pem ubuntu@YOUR-ELASTIC-IP
+# In AWS Console:
+# 1. Go to EC2 → Elastic IPs
+# 2. Click "Allocate Elastic IP address"
+# 3. Click "Associate Elastic IP address"
+# 4. Select your EC2 instance
+# 5. Note the Elastic IP address (e.g., 54.204.92.123)
+```
 
-# Update system
+### 3. Route 53 DNS Configuration
+
+#### Create Hosted Zone
+```bash
+# In AWS Console:
+# 1. Go to Route 53 → Hosted zones
+# 2. Click "Create hosted zone"
+# 3. Domain name: kennwilliamson.org
+# 4. Type: Public hosted zone
+```
+
+#### Configure DNS Records
+```bash
+# Create A record for main domain:
+Name: kennwilliamson.org
+Type: A
+Value: [Your Elastic IP address]
+TTL: 300
+
+# Create A record alias for www subdomain:
+Name: www.kennwilliamson.org
+Type: A - Alias
+Value: kennwilliamson.org
+TTL: 300
+```
+
+#### Update Domain Nameservers
+```bash
+# Copy the 4 nameservers from Route 53 hosted zone
+# Update your domain registrar's nameservers to point to Route 53
+# Wait for DNS propagation (5-30 minutes)
+```
+
+### 4. Server Setup and Software Installation
+
+#### Connect to EC2 Instance
+```bash
+ssh -i your-key.pem ubuntu@[Elastic-IP-Address]
+```
+
+#### Update System and Install Dependencies
+```bash
+# Update system packages
 sudo apt update && sudo apt upgrade -y
 
 # Install Docker
@@ -87,318 +98,234 @@ sudo sh get-docker.sh
 sudo usermod -aG docker ubuntu
 
 # Install Docker Compose
-sudo curl -L "https://github.com/docker/compose/releases/latest/download/docker-compose-$(uname -s)-$(uname -m)" -o /usr/local/bin/docker-compose
-sudo chmod +x /usr/local/bin/docker-compose
+sudo apt install -y docker-compose-plugin
 
-# Logout and back in to apply docker group
+# Install additional tools
+sudo apt install -y git curl wget unzip
+
+# Logout and login again to apply docker group membership
 exit
-ssh -i your-key.pem ubuntu@YOUR-ELASTIC-IP
+ssh -i your-key.pem ubuntu@[Elastic-IP-Address]
+```
 
-# Verify Docker installation
-docker --version
-docker-compose --version
+#### Install Certbot for SSL Management
+```bash
+sudo apt install -y certbot
+```
 
+### 5. Application Deployment
+
+#### Clone Repository
+```bash
 # Create application directory
 sudo mkdir -p /opt/kennwilliamson
 sudo chown ubuntu:ubuntu /opt/kennwilliamson
 cd /opt/kennwilliamson
-```
 
-## Step 4: Deploy Application Code
-
-### Git-Based Deployment (Recommended)
-Using git provides version control, easy updates, and prepares for CI/CD automation.
-
-```bash
-# Install git
-sudo apt install git -y
-
-# Clone the repository into /opt/kennwilliamson
-cd /opt/kennwilliamson
-git clone https://github.com/kenn-williamson/kennwilliamsondotorg.git
+# Clone the repository
+git clone https://github.com/your-username/kennwilliamsondotorg.git
 cd kennwilliamsondotorg
-
-# Verify repository contents
-ls -la
-git log --oneline -5
-
-# Check current branch and status
-git branch
-git status
 ```
 
-**Benefits of Git Deployment:**
-- ✅ **Easy Updates**: `git pull origin master` to deploy latest changes
-- ✅ **Version Control**: Track what's deployed, easy rollbacks with `git checkout`
-- ✅ **CI/CD Ready**: Prepares for GitHub Actions automation
-- ✅ **Incremental**: Only downloads changes, not entire codebase
-- ✅ **Reproducible**: Same code everywhere, no packaging artifacts
-
-## Step 5: Environment Configuration
-
-Create production environment file on EC2:
-
+#### Generate Production Environment
 ```bash
-cat > /opt/kennwilliamson/.env.production << 'EOF'
-# Database Configuration
-DB_USER=postgres
-DB_PASSWORD=YOUR_SECURE_DATABASE_PASSWORD_HERE
-DATABASE_URL=postgresql://postgres:YOUR_SECURE_DATABASE_PASSWORD_HERE@postgres:5432/kennwilliamson
+# Generate production environment file
+./scripts/setup-production-env.sh
 
-# JWT Configuration
-JWT_SECRET=YOUR_SECURE_JWT_SECRET_64_CHARS_MINIMUM_HERE
-
-# Backend Configuration
-HOST=0.0.0.0
-PORT=8080
-RUST_LOG=backend=info,actix_web=info
-CORS_ORIGIN=https://kennwilliamson.org
-
-# Frontend Configuration
-NUXT_PUBLIC_API_BASE=https://kennwilliamson.org/api
-
-# SSL Configuration
-DOMAIN_NAME=kennwilliamson.org
-CERTBOT_EMAIL=your-email@example.com
-
-# Optional: Additional domains
-# ADDITIONAL_DOMAINS=www.kennwilliamson.org
-EOF
+# Verify environment file was created
+ls -la .env.production
 ```
 
-**Security Note**: Replace the placeholder values with strong, random passwords and secrets.
+### 6. SSL Certificate Setup (Before Starting Services)
 
-## Step 6: Build and Deploy Services
-
+#### Verify DNS Resolution
 ```bash
-cd /opt/kennwilliamson/kennwilliamsondotorg
+# Check that domain points to your server
+nslookup kennwilliamson.org
 
-# Build all services
-docker-compose --env-file .env.production build
+# Verify server IP matches your Elastic IP
+curl -s ifconfig.me
+```
 
-# Start all services (migrations run automatically)
+#### Create Temporary SSL Certificates
+```bash
+# Create temporary self-signed certificates to get nginx running
+sudo ./scripts/ssl-manager.sh fake
+```
+
+#### Start Application Services
+```bash
+# Start all services with production configuration
 docker-compose --env-file .env.production up -d
 
-# Check service status
+# Verify all containers are running
 docker-compose --env-file .env.production ps
-
-# View migration logs if needed
-docker-compose --env-file .env.production logs migrations
 ```
 
-**How Automatic Migrations Work:**
-- Database migrations run automatically when services start
-- The `migrations` container runs after PostgreSQL is healthy
-- Migrations are skipped if `SKIP_MIGRATIONS=true` is set
-- The migration container exits after completing (one-time run)
-
-**Manual Migration Control (if needed):**
+#### Generate Let's Encrypt Certificates
 ```bash
-# Skip automatic migrations
-echo "SKIP_MIGRATIONS=true" >> .env.production
-docker-compose --env-file .env.production up -d
+# Generate real Let's Encrypt certificates (replaces fake ones)
+sudo ./scripts/ssl-manager.sh generate
 
-# Run migrations manually later
-docker-compose --env-file .env.production --profile migrations run --rm migrations
+# Set up automatic renewal
+sudo ./scripts/ssl-manager.sh setup-cron
 ```
 
-## Step 7: SSL Certificate Setup
-
-### Initial Certificate Request
+#### Verify SSL Setup
 ```bash
-cd /opt/kennwilliamson/kennwilliamsondotorg
-
-# First, start nginx for ACME challenge (without SSL)
-docker-compose --env-file .env.production up -d nginx
-
-# Request SSL certificate (uses DOMAIN_NAME and CERTBOT_EMAIL from .env.production)
-docker-compose --env-file .env.production --profile ssl-setup run --rm certbot
-
-# Restart nginx to load SSL certificate
-docker-compose --env-file .env.production restart nginx
-
-# Verify certificate installation
-docker-compose --env-file .env.production logs nginx
+# Check certificate status
+sudo ./scripts/ssl-manager.sh check
 
 # Test HTTPS access
 curl -I https://kennwilliamson.org
 ```
 
-### Verify SSL Configuration
-```bash
-# Check certificate details
-docker-compose --env-file .env.production --profile ssl-setup run --rm certbot certificates
+### 7. Service Health Verification
 
-# Test automatic renewal (dry run)
-docker-compose --env-file .env.production --profile ssl-setup run --rm certbot renew --dry-run
+#### Run Comprehensive Health Check
+```bash
+# Verify all services are healthy
+./scripts/health-check.sh
+
+# Expected output:
+# ✅ PostgreSQL is accepting connections
+# ✅ Backend health endpoint responding
+# ✅ Frontend is serving HTTP requests
+# 🚀 All health checks passed!
 ```
 
-## Step 8: Verify Deployment
-
-### Health Checks
+#### Test Application Functionality
 ```bash
-# Check service health
-curl http://localhost/health
-curl https://localhost/health
+# Test frontend access
+curl -I https://kennwilliamson.org
 
-# Check database connectivity
-curl http://localhost/health/db
+# Test API endpoint
+curl -I https://kennwilliamson.org/api/health
+
+# Test database connectivity (if needed)
+docker-compose --env-file .env.production exec postgres psql -U postgres -d kennwilliamson -c "SELECT 1;"
 ```
 
-### Functionality Testing
-1. Visit https://kennwilliamson.org
-2. Test user registration
-3. Test login functionality
-4. Create and test incident timer
-5. Test public timer access
 
-## Step 9: Basic Monitoring Setup
-
-### Health Check Script
-```bash
-cat > /opt/kennwilliamson/health-monitor.sh << 'EOF'
-#!/bin/bash
-LOG_FILE="/opt/kennwilliamson/health-check.log"
-DATE=$(date '+%Y-%m-%d %H:%M:%S')
-
-# Check main site
-if curl -f -s https://kennwilliamson.org/health > /dev/null; then
-    echo "[$DATE] Health check: PASS" >> $LOG_FILE
-else
-    echo "[$DATE] Health check: FAIL - Restarting services" >> $LOG_FILE
-    cd /opt/kennwilliamson
-    docker-compose --env-file .env.production restart
-fi
-
-# Rotate log file if it gets too large (>1MB)
-if [ -f "$LOG_FILE" ] && [ $(stat -c%s "$LOG_FILE") -gt 1048576 ]; then
-    mv "$LOG_FILE" "${LOG_FILE}.old"
-fi
-EOF
-
-chmod +x /opt/kennwilliamson/health-monitor.sh
-
-# Add to cron (every 5 minutes)
-(crontab -l 2>/dev/null; echo "*/5 * * * * /opt/kennwilliamson/health-monitor.sh") | crontab -
-```
-
-### SSL Certificate Auto-Renewal
-```bash
-# Add SSL renewal to cron (daily at 2 AM)
-(crontab -l 2>/dev/null; echo "0 2 * * * cd /opt/kennwilliamson && docker-compose --env-file .env.production --profile ssl-setup run --rm certbot renew && docker-compose --env-file .env.production restart nginx") | crontab -
-
-# Verify cron jobs
-crontab -l
-```
-
-## Step 10: Security Hardening
-
-### Basic Server Security
-```bash
-# Configure UFW firewall
-sudo ufw default deny incoming
-sudo ufw default allow outgoing
-sudo ufw allow ssh
-sudo ufw allow http
-sudo ufw allow https
-sudo ufw enable
-
-# Install fail2ban for SSH protection
-sudo apt install fail2ban -y
-sudo systemctl enable fail2ban
-sudo systemctl start fail2ban
-```
-
-### Log Rotation
-```bash
-cat > /etc/logrotate.d/kennwilliamson << 'EOF'
-/opt/kennwilliamson/*.log {
-    daily
-    missingok
-    rotate 7
-    compress
-    delaycompress
-    notifempty
-    copytruncate
-}
-EOF
-```
 
 ## Troubleshooting
 
 ### Common Issues and Solutions
 
-#### Services Not Starting
+#### 1. DNS Resolution Problems
 ```bash
-# Check logs
-docker-compose --env-file .env.production logs
+# Check DNS propagation
+nslookup kennwilliamson.org
+dig kennwilliamson.org
 
-# Check individual service
-docker-compose --env-file .env.production logs backend
-docker-compose --env-file .env.production logs frontend
-docker-compose --env-file .env.production logs nginx
+# If domain doesn't resolve:
+# - Verify Route 53 nameservers are set at domain registrar
+# - Wait for DNS propagation (up to 48 hours)
+# - Check Route 53 hosted zone configuration
 ```
 
-#### SSL Certificate Issues
+#### 2. SSL Certificate Generation Fails
+```bash
+# Check Let's Encrypt logs
+sudo tail -f /var/log/letsencrypt/letsencrypt.log
+
+# Common causes:
+# - Domain not pointing to server
+# - Port 80 blocked by firewall
+# - Nginx not stopped during certificate generation
+
+# Fallback to temporary certificates
+sudo ./scripts/ssl-manager.sh fake
+```
+
+#### 3. Services Not Starting
+```bash
+# Check container logs
+docker-compose --env-file .env.production logs
+
+# Check specific service logs
+docker-compose --env-file .env.production logs nginx
+docker-compose --env-file .env.production logs backend
+docker-compose --env-file .env.production logs frontend
+docker-compose --env-file .env.production logs postgres
+
+# Restart services
+docker-compose --env-file .env.production restart
+```
+
+#### 4. Database Connection Issues
+```bash
+# Check database container
+docker-compose --env-file .env.production ps postgres
+
+# Check database logs
+docker-compose --env-file .env.production logs postgres
+
+# Test database connection
+docker-compose --env-file .env.production exec postgres psql -U postgres -d kennwilliamson -c "SELECT 1;"
+
+# Run database migrations if needed
+docker-compose --env-file .env.production exec backend ./backend migrate
+```
+
+#### 5. Nginx Configuration Issues
 ```bash
 # Check nginx configuration
 docker-compose --env-file .env.production exec nginx nginx -t
 
-# Manual certificate request
-docker-compose --env-file .env.production --profile ssl-setup run --rm certbot certonly --webroot --webroot-path=/var/www/certbot --email your-email@example.com --agree-tos --no-eff-email -d kennwilliamson.org
+# Reload nginx configuration
+docker-compose --env-file .env.production exec nginx nginx -s reload
+
+# Check nginx logs
+docker-compose --env-file .env.production logs nginx
 ```
 
-#### Database Connection Issues
-```bash
-# Check database status
-docker-compose --env-file .env.production exec postgres pg_isready -U postgres
+### SSL Certificate Renewal Issues
 
-# Access database directly
-docker-compose --env-file .env.production exec postgres psql -U postgres -d kennwilliamson
+#### Manual Certificate Renewal
+```bash
+# Stop nginx to free port 80
+docker-compose --env-file .env.production stop nginx
+
+# Renew certificates
+sudo ./scripts/ssl-manager.sh renew
+
+# Start nginx
+docker-compose --env-file .env.production start nginx
 ```
 
-## Maintenance Tasks
-
-### Regular Updates
+#### Check Renewal Logs
 ```bash
-# Update system packages
-sudo apt update && sudo apt upgrade -y
+# View renewal logs
+sudo tail -f /var/log/ssl-renewal.log
 
-# Update application code
-cd /opt/kennwilliamson/kennwilliamsondotorg
-git pull origin master
+# Check cron job status
+sudo crontab -l
+```
 
-# Update Docker images and restart services (migrations run automatically)
-docker-compose --env-file .env.production pull
-docker-compose --env-file .env.production up -d --build
+## Basic Maintenance
 
-# Verify deployment
+### Service Health Monitoring
+```bash
+# Check service health
 ./scripts/health-check.sh
 
-# Note: Database migrations run automatically during service startup
-# View migration logs if needed: docker-compose --env-file .env.production logs migrations
+# Check SSL certificate status
+sudo ./scripts/ssl-manager.sh check
 ```
 
-### Backup Recommendations
-While automated backups are not configured initially, consider implementing:
-- Database dumps to S3
-- Application files backup
-- SSL certificate backup
+### Service Management
+```bash
+# View service logs
+docker-compose --env-file .env.production logs
 
-## Cost Estimation
-- **EC2 t3.small**: ~$15.18/month
-- **EBS Storage (8GB)**: ~$0.80/month
-- **Elastic IP**: Free when associated with running instance
-- **Data Transfer**: Minimal for personal site
-- **Total**: ~$16/month
+# Restart services if needed
+docker-compose --env-file .env.production restart
 
-## Success Criteria
-- ✅ Site accessible at https://kennwilliamson.org
-- ✅ SSL certificate valid and auto-renewing
-- ✅ All application features working
-- ✅ Health monitoring active
-- ✅ Basic security hardening complete
+# Check container status
+docker-compose --env-file .env.production ps
+```
 
 ---
 
-*This deployment guide provides a comprehensive production setup for the KennWilliamson.org application on AWS EC2.*
+*This deployment guide provides a complete production setup process. For future enhancements and planned features, see [ROADMAP.md](ROADMAP.md).*

@@ -51,11 +51,21 @@ Nginx Reverse Proxy (Port 443)
 - **Request Logging**: Detailed access and error logging
 
 ### SSL Certificate Management
+
+#### Development and Local Production
 - **Development Certificates**: `nginx/ssl/localhost.crt/key` for pure localhost development
 - **Local Production Certificates**: `nginx/ssl-local/nginx-selfsigned.crt/key` for domain testing
 - **Certificate Generation**: Managed by unified `./scripts/generate-ssl.sh` script
 - **Domain Testing**: Support for testing production domain configurations locally
 - **DH Parameters**: Production-grade Diffie-Hellman parameters for enhanced security
+
+#### Production SSL (Let's Encrypt)
+- **Certificate Storage**: Let's Encrypt certificates stored in `/etc/letsencrypt/live/kennwilliamson.org/`
+- **Docker Volume Integration**: Certificates automatically copied to `kennwilliamsondotorg_certbot_certs` volume
+- **Automatic Renewal**: Cron job configured for twice-daily certificate renewal checks
+- **Certificate Management**: Handled by `./scripts/ssl-manager.sh` script
+- **Fallback Support**: Temporary self-signed certificates created if Let's Encrypt fails
+- **Certificate Detection**: Automatically detects and replaces self-signed certificates with Let's Encrypt certificates
 
 ## Current Environment Setup
 
@@ -86,8 +96,9 @@ Nginx Reverse Proxy (Port 443)
 - Rate limiting and security header configuration
 
 **Production**: `docker-compose.yml`
-- Let's Encrypt SSL integration (planned)
+- Let's Encrypt SSL integration with automatic certificate management
 - Production security and performance optimization
+- Docker volume integration for certificate persistence
 
 ## Current Capabilities
 
@@ -140,7 +151,7 @@ location / {
 
 ### Environment-Specific Configuration
 - **Development**: Self-signed SSL, permissive CORS, detailed logging
-- **Production**: Let's Encrypt SSL, security headers, optimized caching (planned)
+- **Production**: Let's Encrypt SSL, security headers, optimized caching, automatic certificate renewal
 
 ### Maintenance and Updates
 - **Configuration Updates**: Modify files in nginx/ directory
@@ -149,4 +160,4 @@ location / {
 
 ---
 
-*This document describes the current Nginx implementation. For production deployment enhancements including Let's Encrypt SSL automation, see [ROADMAP.md](ROADMAP.md).*
+*This document describes the current Nginx implementation. For production deployment process, see [IMPLEMENTATION-DEPLOYMENT.md](IMPLEMENTATION-DEPLOYMENT.md).*

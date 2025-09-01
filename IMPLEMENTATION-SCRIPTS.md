@@ -63,7 +63,9 @@ For detailed usage instructions, see [DEVELOPMENT-WORKFLOW.md](DEVELOPMENT-WORKF
 - **Security Notes**: Includes warnings about file protection and version control exclusion
 - **Domain Configuration**: Ready for production domain setup
 
-### SSL Certificate Management (`generate-ssl.sh`)
+### SSL Certificate Management
+
+#### Development SSL (`generate-ssl.sh`)
 - **Unified Script**: Single script handles both development and local production modes
 - **Development Mode**: Generates localhost certificates in `nginx/ssl/` for pure development
 - **Local Production Mode**: Generates domain certificates in `nginx/ssl-local/` for production testing
@@ -72,6 +74,26 @@ For detailed usage instructions, see [DEVELOPMENT-WORKFLOW.md](DEVELOPMENT-WORKF
 - **Usage Modes**:
   - `./scripts/generate-ssl.sh` or `./scripts/generate-ssl.sh dev` - Development certificates
   - `./scripts/generate-ssl.sh local-prod` - Local production domain certificates
+
+#### Production SSL Management (`ssl-manager.sh`)
+- **Let's Encrypt Integration**: Automated certificate generation and renewal
+- **Certificate Detection**: Automatically detects and replaces self-signed certificates
+- **Docker Integration**: Seamless integration with Docker volumes and nginx containers
+- **Automatic Renewal**: Cron job setup for twice-daily certificate renewal checks
+- **Fallback Support**: Creates temporary self-signed certificates if Let's Encrypt fails
+- **Comprehensive Logging**: All operations logged with timestamps and status indicators
+- **Commands**:
+  - `generate` - Generate Let's Encrypt certificates (replaces existing fake certs)
+  - `fake` - Create temporary self-signed certificates for initial nginx startup
+  - `renew` - Manually renew existing certificates
+  - `check` - Check certificate status and expiry
+  - `setup-cron` - Set up automatic renewal cron job
+  - `remove-cron` - Remove automatic renewal cron job
+- **Safety Features**:
+  - Validates domain DNS resolution before certificate generation
+  - Stops nginx during certificate generation to free port 80
+  - Automatically restarts nginx with new certificates
+  - Verifies certificate installation in Docker volumes
 
 ### Local Production Environment (`setup-local-prod.sh`)
 - **One-Command Setup**: Complete local production environment initialization
