@@ -349,7 +349,7 @@ All API endpoints are prefixed with `/api/`
 - `/api/auth/register` - User registration
 - `/api/auth/login` - User login
 - `/api/auth/preview-slug` - Slug preview
-- `/api/{user_slug}/incident-timer` - Public timer display
+- `/api/{user_slug}/incident-timer` - Public timer display with user display name
 
 ### Protected Routes
 All require `Authorization: Bearer {token}` header:
