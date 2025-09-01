@@ -121,14 +121,14 @@ onMounted(() => {
     0 2px 4px rgba(0, 0, 0, 0.3);
 }
 
-.label-text {
-  font-family: 'Georgia', serif;
-  font-size: 18px;
-  font-weight: bold;
-  color: #FFD700;
-  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.5);
-  letter-spacing: 1px;
-}
+  .label-text {
+    font-family: 'Georgia', serif;
+    font-size: 14px;
+    font-weight: bold;
+    color: #FFD700;
+    text-shadow: 0 1px 2px rgba(0, 0, 0, 0.5);
+    letter-spacing: 0.5px;
+  }
 
 .digits-container {
   display: flex;
@@ -147,7 +147,7 @@ onMounted(() => {
 }
 
 .mechanical-slide-enter-from {
-  transform: translateX(-120px) scaleX(0.3);
+  transform: translateX(120px) scaleX(0.3);
   opacity: 0;
 }
 
@@ -166,14 +166,14 @@ onMounted(() => {
 
 @keyframes slide-in {
   0% {
-    transform: translateX(-120px) scaleX(0.3) rotateY(-20deg);
+    transform: translateX(120px) scaleX(0.3) rotateY(20deg);
     opacity: 0;
   }
   30% {
     opacity: 0.6;
   }
   70% {
-    transform: translateX(10px) scaleX(1.05) rotateY(5deg);
+    transform: translateX(-10px) scaleX(1.05) rotateY(-5deg);
   }
   100% {
     transform: translateX(0) scaleX(1) rotateY(0deg);
@@ -187,7 +187,7 @@ onMounted(() => {
     opacity: 1;
   }
   30% {
-    transform: translateX(10px) scaleX(1.05) rotateY(5deg);
+    transform: translateX(-10px) scaleX(1.05) rotateY(-5deg);
     opacity: 0.6;
   }
   100% {
@@ -208,7 +208,7 @@ onMounted(() => {
   }
   
   .label-text {
-    font-size: 16px;
+    font-size: 12px;
   }
   
   .digits-container {
@@ -227,12 +227,12 @@ onMounted(() => {
   }
   
   .label-text {
-    font-size: 14px;
+    font-size: 10px;
   }
   
   .mechanical-slide-enter-from,
   .slide-in {
-    transform: translateX(-80px) scaleX(0.3);
+    transform: translateX(80px) scaleX(0.3);
   }
   
   .mechanical-slide-leave-to,

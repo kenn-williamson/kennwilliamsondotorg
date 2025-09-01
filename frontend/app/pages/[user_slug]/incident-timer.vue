@@ -47,15 +47,7 @@
         <!-- Main Steam Clock -->
         <SteamClock :time-breakdown="timeBreakdown" />
         
-        <!-- Timer Started Info -->
-        <div class="timer-info">
-          <p class="started-text">
-            Timer Reset: {{ formatDate(timerStore.publicTimer.reset_timestamp) }}
-          </p>
-          <p class="last-updated">
-            Last Updated: {{ formatTime(new Date()) }}
-          </p>
-        </div>
+
 
         <!-- Vintage Note Card -->
         <VintageNoteCard 
@@ -359,39 +351,7 @@ onMounted(async () => {
   text-shadow: 0 0 8px rgba(255, 215, 0, 0.3);
 }
 
-/* Timer Info Styling */
-.timer-info {
-  margin: 32px 0;
-  padding: 20px;
-  background: 
-    linear-gradient(145deg, 
-      rgba(139, 69, 19, 0.3) 0%, 
-      rgba(160, 82, 45, 0.2) 50%, 
-      rgba(139, 69, 19, 0.3) 100%);
-  border: 2px solid rgba(212, 175, 55, 0.4);
-  border-radius: 12px;
-  box-shadow: 
-    inset 0 2px 4px rgba(255, 255, 255, 0.1),
-    0 4px 8px rgba(0, 0, 0, 0.3);
-}
 
-.started-text {
-  font-family: 'Georgia', serif;
-  font-size: 18px;
-  color: #FFD700;
-  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.5);
-  margin: 0 0 8px 0;
-  font-weight: bold;
-}
-
-.last-updated {
-  font-family: 'Georgia', serif;
-  font-size: 14px;
-  color: #D4AF37;
-  opacity: 0.8;
-  font-style: italic;
-  margin: 0;
-}
 
 /* Responsive Design */
 @media (max-width: 768px) {
@@ -432,13 +392,7 @@ onMounted(async () => {
     font-size: 18px;
   }
   
-  .started-text {
-    font-size: 16px;
-  }
-  
-  .timer-info {
-    padding: 16px;
-  }
+
 }
 
 @media (max-width: 480px) {
@@ -468,12 +422,6 @@ onMounted(async () => {
     font-size: 16px;
   }
   
-  .started-text {
-    font-size: 14px;
-  }
-  
-  .last-updated {
-    font-size: 12px;
-  }
+
 }
 </style>

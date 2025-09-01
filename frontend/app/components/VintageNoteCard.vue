@@ -2,27 +2,14 @@
   <div v-if="notes" class="vintage-note-card">
     <!-- Card Background -->
     <div class="card-body">
-      <!-- Decorative Corner Elements -->
-      <div class="corner-decoration top-left"></div>
-      <div class="corner-decoration top-right"></div>
-      <div class="corner-decoration bottom-left"></div>
-      <div class="corner-decoration bottom-right"></div>
+
       
-      <!-- Wax Seal -->
-      <div class="wax-seal">
-        <div class="seal-inner">
-          <svg viewBox="0 0 24 24" class="seal-icon">
-            <path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z" 
-                  fill="currentColor"/>
-          </svg>
-        </div>
-      </div>
+
       
       <!-- Note Content -->
       <div class="note-content">
         <div class="note-header">
           <span class="note-title">Incident Log</span>
-          <div class="underline"></div>
         </div>
         
         <div class="note-text">
@@ -35,8 +22,7 @@
       </div>
     </div>
     
-    <!-- Paper texture overlay -->
-    <div class="paper-texture"></div>
+
   </div>
 </template>
 
@@ -68,8 +54,8 @@ const formattedDate = computed(() => {
 <style scoped>
 .vintage-note-card {
   position: relative;
-  max-width: 500px;
-  margin: 0 auto;
+  max-width: 800px;
+  margin: 0 auto 40px auto;
   transform: rotate(-1deg);
   transition: transform 0.3s ease;
 }
@@ -80,26 +66,17 @@ const formattedDate = computed(() => {
 
 .card-body {
   position: relative;
-  background: 
-    linear-gradient(135deg, 
-      #f7f3e9 0%, 
-      #f0ead6 25%,
-      #e8dcc0 50%,
-      #f0ead6 75%,
-      #f7f3e9 100%);
+  background-image: url('~/assets/images/scroll.png');
+  background-size: contain;
+  background-position: center;
+  background-repeat: no-repeat;
   
-  border: 2px solid #d4af37;
-  border-radius: 8px;
-  padding: 32px 28px 24px 28px;
-  box-shadow: 
-    0 4px 8px rgba(0, 0, 0, 0.2),
-    inset 0 1px 0 rgba(255, 255, 255, 0.5),
-    0 8px 32px rgba(0, 0, 0, 0.1);
-  
-  /* Subtle paper aging */
-  background-image: 
-    radial-gradient(circle at 20% 20%, rgba(139, 69, 19, 0.03) 0%, transparent 50%),
-    radial-gradient(circle at 80% 80%, rgba(139, 69, 19, 0.02) 0%, transparent 50%);
+  border: none;
+  border-radius: 0;
+  padding: 50px 40px 40px 40px;
+  box-shadow: none;
+  min-height: 300px;
+  aspect-ratio: 4/3;
 }
 
 .paper-texture {
@@ -187,6 +164,12 @@ const formattedDate = computed(() => {
 .note-content {
   position: relative;
   z-index: 2;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  height: 100%;
+  min-height: 200px;
 }
 
 .note-header {
@@ -195,11 +178,22 @@ const formattedDate = computed(() => {
 }
 
 .note-title {
-  font-family: 'Georgia', serif;
-  font-size: 24px;
-  font-weight: bold;
-  color: #4a3c28;
-  text-shadow: 0 1px 2px rgba(255, 255, 255, 0.5);
+  font-family: 'Brush Script MT', 'Lucida Handwriting', cursive;
+  font-size: 42px;
+  font-weight: normal;
+  color: #000000;
+  text-shadow: 
+    /* Engraved effect like the bracelet */
+    /* Top-left highlight (light catching the upper lip) */
+    -1px -1px 0px rgba(255, 255, 255, 0.3),
+    -0.5px -0.5px 0px rgba(255, 255, 255, 0.2),
+    
+    /* Bottom-right shadow (depth of the cut) */
+    1px 1px 0px rgba(0, 0, 0, 0.4),
+    0.5px 0.5px 0px rgba(0, 0, 0, 0.3),
+    
+    /* Subtle depth shadow */
+    0px 1px 1px rgba(0, 0, 0, 0.2);
   letter-spacing: 1px;
 }
 
@@ -212,31 +206,60 @@ const formattedDate = computed(() => {
 }
 
 .note-text {
-  font-family: 'Georgia', serif;
-  font-size: 18px;
+  font-family: 'Brush Script MT', 'Lucida Handwriting', cursive;
+  font-size: 32px;
   line-height: 1.6;
-  color: #2c2416;
+  color: #000000;
   text-align: center;
   font-style: italic;
-  margin: 20px 0;
+  font-weight: normal;
+  margin: 15px 0;
   padding: 0 12px;
+  max-width: 100%;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
   
-  /* Ink-like text appearance */
-  text-shadow: 0 0 1px rgba(44, 36, 22, 0.3);
+  /* Engraved effect */
+  text-shadow: 
+    /* Engraved effect like the bracelet */
+    /* Top-left highlight (light catching the upper lip) */
+    -1px -1px 0px rgba(255, 255, 255, 0.3),
+    -0.5px -0.5px 0px rgba(255, 255, 255, 0.2),
+    
+    /* Bottom-right shadow (depth of the cut) */
+    1px 1px 0px rgba(0, 0, 0, 0.4),
+    0.5px 0.5px 0px rgba(0, 0, 0, 0.3),
+    
+    /* Subtle depth shadow */
+    0px 1px 1px rgba(0, 0, 0, 0.2);
 }
 
 .note-footer {
-  margin-top: 24px;
-  text-align: right;
-  padding-top: 12px;
-  border-top: 1px solid rgba(212, 175, 55, 0.3);
+  margin-top: 15px;
+  text-align: center;
+  padding-top: 0;
+  border-top: none;
 }
 
 .timestamp {
-  font-family: 'Georgia', serif;
-  font-size: 14px;
-  color: #6b5b47;
+  font-family: 'Brush Script MT', 'Lucida Handwriting', cursive;
+  font-size: 26px;
+  color: #000000;
   font-style: italic;
+  font-weight: normal;
+  text-shadow: 
+    /* Engraved effect like the bracelet */
+    /* Top-left highlight (light catching the upper lip) */
+    -1px -1px 0px rgba(255, 255, 255, 0.3),
+    -0.5px -0.5px 0px rgba(255, 255, 255, 0.2),
+    
+    /* Bottom-right shadow (depth of the cut) */
+    1px 1px 0px rgba(0, 0, 0, 0.4),
+    0.5px 0.5px 0px rgba(0, 0, 0, 0.3),
+    
+    /* Subtle depth shadow */
+    0px 1px 1px rgba(0, 0, 0, 0.2);
 }
 
 /* Responsive design */

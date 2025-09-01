@@ -7,47 +7,43 @@
         <!-- Time Groups Container -->
         <div class="time-groups-container">
           <SlidingTimeGroup
-            v-if="timeBreakdown.years > 0"
-            label="Y"
+            label="Years"
             :value="timeBreakdown.years"
             key="years"
           />
           
           <SlidingTimeGroup
-            v-if="timeBreakdown.months > 0 || timeBreakdown.years > 0"
-            label="M"
+            label="Months"
             :value="timeBreakdown.months"
             key="months"
           />
           
           <SlidingTimeGroup
-            v-if="timeBreakdown.weeks > 0 || timeBreakdown.months > 0 || timeBreakdown.years > 0"
-            label="W"
+            label="Weeks"
             :value="timeBreakdown.weeks"
             key="weeks"
           />
           
           <SlidingTimeGroup
-            v-if="timeBreakdown.days > 0 || timeBreakdown.weeks > 0 || timeBreakdown.months > 0 || timeBreakdown.years > 0"
-            label="D"
+            label="Days"
             :value="timeBreakdown.days"
             key="days"
           />
           
           <SlidingTimeGroup
-            label="H"
+            label="Hours"
             :value="timeBreakdown.hours"
             key="hours"
           />
           
           <SlidingTimeGroup
-            label="M"
+            label="Minutes"
             :value="timeBreakdown.minutes"
             key="minutes"
           />
           
           <SlidingTimeGroup
-            label="S"
+            label="Seconds"
             :value="timeBreakdown.seconds"
             key="seconds"
           />
@@ -61,21 +57,29 @@
           <div class="rivet bottom-left"></div>
           <div class="rivet bottom-right"></div>
           
-          <!-- Side Gauges -->
-          <div class="gauge gauge-left">
-            <div class="gauge-needle" :style="{ transform: `rotate(${gaugeAngle}deg)` }"></div>
+          <!-- Clockwork Gears - Only Tick -->
+          <div class="gear gear-left">
+            <div class="gear-teeth" :style="{ transform: `rotate(${tickAngle}deg)` }"></div>
+            <div class="gear-center"></div>
           </div>
-          <div class="gauge gauge-right">
-            <div class="gauge-needle" :style="{ transform: `rotate(${gaugeAngle + 45}deg)` }"></div>
+          <div class="gear gear-right">
+            <div class="gear-teeth" :style="{ transform: `rotate(${tickAngle + 45}deg)` }"></div>
+            <div class="gear-center"></div>
+          </div>
+          
+          <!-- Minute Gears - Only Spin on Minute Changes -->
+          <div class="minute-gear minute-gear-top">
+            <div class="gear-teeth" :style="{ transform: `rotate(${spinAngle}deg)` }"></div>
+            <div class="gear-center"></div>
+          </div>
+          <div class="minute-gear minute-gear-bottom">
+            <div class="gear-teeth" :style="{ transform: `rotate(${-spinAngle}deg)` }"></div>
+            <div class="gear-center"></div>
           </div>
         </div>
       </div>
       
-      <!-- Steam Pipes -->
-      <div class="steam-pipes">
-        <div class="pipe pipe-left"></div>
-        <div class="pipe pipe-right"></div>
-      </div>
+
     </div>
   </div>
 </template>
@@ -97,14 +101,19 @@ const props = defineProps({
   }
 })
 
-// Animated gauge needle based on total seconds
-const gaugeAngle = computed(() => {
-  const totalSeconds = props.timeBreakdown.seconds + 
-                      (props.timeBreakdown.minutes * 60) + 
-                      (props.timeBreakdown.hours * 3600)
-  
-  // Oscillate the gauge based on seconds for a "living" feel
-  return (totalSeconds % 60) * 6 // 360 degrees / 60 seconds = 6 degrees per second
+// Left/right gears - tick with seconds from time breakdown
+const tickAngle = computed(() => {
+  const seconds = props.timeBreakdown.seconds
+  // Oscillate based on seconds for a "ticking" feel
+  return (seconds % 60) * 6 // 360 degrees / 60 seconds = 6 degrees per second
+})
+
+// Top/bottom gears - spin based on time breakdown changes
+const spinAngle = computed(() => {
+  const minutes = props.timeBreakdown.minutes
+  const seconds = props.timeBreakdown.seconds
+  // Spin continuously with seconds, but make a full rotation each minute
+  return (minutes * 360) + (seconds * 6)
 })
 </script>
 
@@ -120,20 +129,15 @@ const gaugeAngle = computed(() => {
   position: relative;
   padding: 40px;
   background: 
-    linear-gradient(145deg, #8B4513 0%, #A0522D 25%, #CD853F 50%, #A0522D 75%, #8B4513 100%);
-  border: 6px solid #C0C0C0;
+    linear-gradient(145deg, #E5E5E5 0%, #C0C0C0 25%, #A8A8A8 50%, #C0C0C0 75%, #E5E5E5 100%);
+  border: 12px solid #C0C0C0;
   border-radius: 20px;
   box-shadow: 
-    inset 0 4px 8px rgba(255, 255, 255, 0.2),
-    inset 0 -4px 8px rgba(0, 0, 0, 0.4),
-    0 8px 32px rgba(0, 0, 0, 0.5),
-    0 0 0 2px #FFD700;
+    inset 0 4px 8px rgba(255, 255, 255, 0.4),
+    inset 0 -4px 8px rgba(0, 0, 0, 0.2),
+    0 8px 32px rgba(0, 0, 0, 0.5);
   
-  /* Wood grain texture */
-  background-image: 
-    repeating-linear-gradient(90deg, 
-      transparent, transparent 2px, 
-      rgba(0,0,0,0.1) 2px, rgba(0,0,0,0.1) 4px);
+  /* Solid silver - no texture */
 }
 
 .clock-face {
@@ -144,7 +148,7 @@ const gaugeAngle = computed(() => {
       #1e40af 30%, 
       #1e3a8a 70%, 
       #0f172a 100%);
-  border: 4px solid #C0C0C0;
+  border: none;
   border-radius: 12px;
   padding: 32px 24px;
   min-height: 200px;
@@ -208,14 +212,11 @@ const gaugeAngle = computed(() => {
 .rivet.bottom-left { bottom: 8px; left: 8px; }
 .rivet.bottom-right { bottom: 8px; right: 8px; }
 
-.gauge {
+/* Clockwork Gears */
+.gear {
   position: absolute;
-  width: 40px;
-  height: 40px;
-  border: 3px solid #C0C0C0;
-  border-radius: 50%;
-  background: 
-    radial-gradient(circle at center, #2a2a2a 0%, #1a1a1a 100%);
+  width: 50px;
+  height: 50px;
   top: 50%;
   transform: translateY(-50%);
   
@@ -224,46 +225,128 @@ const gaugeAngle = computed(() => {
   justify-content: center;
 }
 
-.gauge-left { left: -20px; }
-.gauge-right { right: -20px; }
+.gear-left { left: -25px; }
+.gear-right { right: -25px; }
 
-.gauge-needle {
-  width: 2px;
-  height: 14px;
-  background: #FFD700;
-  border-radius: 1px;
-  transform-origin: center bottom;
+.gear-teeth {
+  position: absolute;
+  width: 50px;
+  height: 50px;
+  border: 3px solid #8B4513;
+  border-radius: 50%;
+  background: 
+    radial-gradient(circle at center, #2a2a2a 0%, #1a1a1a 100%);
   transition: transform 1s ease-in-out;
-  box-shadow: 0 0 4px rgba(255, 215, 0, 0.5);
+  
+  /* Create gear teeth */
+  box-shadow: 
+    /* Top teeth */
+    0 -25px 0 -20px #8B4513,
+    0 -25px 0 -18px #2a2a2a,
+    /* Bottom teeth */
+    0 25px 0 -20px #8B4513,
+    0 25px 0 -18px #2a2a2a,
+    /* Left teeth */
+    -25px 0 0 -20px #8B4513,
+    -25px 0 0 -18px #2a2a2a,
+    /* Right teeth */
+    25px 0 0 -20px #8B4513,
+    25px 0 0 -18px #2a2a2a,
+    /* Diagonal teeth */
+    -18px -18px 0 -20px #8B4513,
+    -18px -18px 0 -18px #2a2a2a,
+    18px -18px 0 -20px #8B4513,
+    18px -18px 0 -18px #2a2a2a,
+    -18px 18px 0 -20px #8B4513,
+    -18px 18px 0 -18px #2a2a2a,
+    18px 18px 0 -20px #8B4513,
+    18px 18px 0 -18px #2a2a2a;
 }
 
-.steam-pipes {
+.gear-center {
   position: absolute;
-  top: 50%;
-  transform: translateY(-50%);
-  width: 100%;
-  height: 8px;
-  pointer-events: none;
+  width: 12px;
+  height: 12px;
+  background: #FFD700;
+  border: 2px solid #8B4513;
+  border-radius: 50%;
+  z-index: 2;
+  box-shadow: 
+    inset 0 1px 2px rgba(255, 255, 255, 0.3),
+    0 0 4px rgba(255, 215, 0, 0.5);
 }
 
-.pipe {
+/* Minute Gears */
+.minute-gear {
   position: absolute;
-  width: 60px;
-  height: 8px;
-  background: linear-gradient(to bottom, #C0C0C0, #A0A0A0);
-  border: 1px solid #808080;
-  border-radius: 4px;
+  width: 50px;
+  height: 50px;
+  
+  display: flex;
+  align-items: center;
+  justify-content: center;
 }
 
-.pipe-left { 
-  left: -50px;
-  transform: rotate(-15deg);
+.minute-gear-top { 
+  top: 15px; 
+  left: 40%;
+  transform: translateX(-50%);
 }
 
-.pipe-right { 
-  right: -50px;
-  transform: rotate(15deg);
+.minute-gear-bottom { 
+  bottom: 15px; 
+  left: 60%;
+  transform: translateX(-50%);
 }
+
+.minute-gear .gear-teeth {
+  position: absolute;
+  width: 50px;
+  height: 50px;
+  border: 3px solid #8B4513;
+  border-radius: 50%;
+  background: 
+    radial-gradient(circle at center, #2a2a2a 0%, #1a1a1a 100%);
+  transition: transform 1s ease-in-out;
+  
+  /* Create gear teeth */
+  box-shadow: 
+    /* Top teeth */
+    0 -25px 0 -20px #8B4513,
+    0 -25px 0 -18px #2a2a2a,
+    /* Bottom teeth */
+    0 25px 0 -20px #8B4513,
+    0 25px 0 -18px #2a2a2a,
+    /* Left teeth */
+    -25px 0 0 -20px #8B4513,
+    -25px 0 0 -18px #2a2a2a,
+    /* Right teeth */
+    25px 0 0 -20px #8B4513,
+    25px 0 0 -18px #2a2a2a,
+    /* Diagonal teeth */
+    -18px -18px 0 -20px #8B4513,
+    -18px -18px 0 -18px #2a2a2a,
+    18px -18px 0 -20px #8B4513,
+    18px -18px 0 -18px #2a2a2a,
+    -18px 18px 0 -20px #8B4513,
+    -18px 18px 0 -18px #2a2a2a,
+    18px 18px 0 -20px #8B4513,
+    18px 18px 0 -18px #2a2a2a;
+}
+
+.minute-gear .gear-center {
+  width: 12px;
+  height: 12px;
+  background: #FFD700;
+  border: 2px solid #8B4513;
+  border-radius: 50%;
+  z-index: 2;
+  box-shadow: 
+    inset 0 1px 2px rgba(255, 255, 255, 0.3),
+    0 0 4px rgba(255, 215, 0, 0.5);
+}
+
+
 
 /* Responsive design */
 @media (max-width: 1024px) {
@@ -297,14 +380,7 @@ const gaugeAngle = computed(() => {
     gap: 6px;
   }
   
-  .gauge {
-    width: 32px;
-    height: 32px;
-  }
-  
-  .gauge-needle {
-    height: 12px;
-  }
+
   
   .rivet {
     width: 12px;
@@ -328,18 +404,8 @@ const gaugeAngle = computed(() => {
     gap: 4px;
   }
   
-  .gauge {
-    width: 28px;
-    height: 28px;
-  }
+
   
-  .gauge-needle {
-    height: 10px;
-  }
-  
-  .pipe {
-    width: 40px;
-    height: 6px;
-  }
+
 }
 </style>

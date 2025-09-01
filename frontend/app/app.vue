@@ -16,6 +16,11 @@ useHead({
     { name: 'description', content: 'Personal website of Kenn Williamson - A man of the margins exploring truth, beauty, and love through technology and tradition.' },
     { name: 'viewport', content: 'width=device-width, initial-scale=1' },
   ],
+  link: [
+    { rel: 'icon', type: 'image/png', sizes: '32x32', href: '/favicon-small.png' },
+    { rel: 'icon', type: 'image/png', sizes: '192x192', href: '/favicon-large.png' },
+    { rel: 'apple-touch-icon', sizes: '192x192', href: '/favicon-large.png' }
+  ]
 })
 </script>
 

@@ -167,12 +167,12 @@ const props = defineProps({
 .enamel-plaque {
   position: relative;
   background: 
-    linear-gradient(145deg, 
-      #1e40af 0%, 
-      #2563eb 25%,
-      #3b82f6 50%,
-      #2563eb 75%,
-      #1e40af 100%);
+    linear-gradient(to left, 
+      #FFD700 0%, 
+      #FFA500 25%,
+      #DAA520 50%,
+      #B8860B 75%,
+      #FFD700 100%);
   
   border: 4px solid #C0C0C0;
   border-radius: 8px;
@@ -184,10 +184,6 @@ const props = defineProps({
     inset 0 -2px 4px rgba(0, 0, 0, 0.2),
     0 4px 8px rgba(0, 0, 0, 0.2);
   
-  /* Subtle enamel texture */
-  background-image: 
-    radial-gradient(circle at 25% 25%, rgba(255, 255, 255, 0.2) 0%, transparent 50%),
-    radial-gradient(circle at 75% 75%, rgba(0, 0, 0, 0.1) 0%, transparent 50%);
 }
 
 .plaque-content {
@@ -199,12 +195,20 @@ const props = defineProps({
   font-family: 'Georgia', serif;
   font-size: 20px;
   font-weight: bold;
-  color: #FFD700;
+  color: #8B7355;
   text-align: center;
   text-shadow: 
-    0 1px 0 rgba(0, 0, 0, 0.5),
-    0 2px 4px rgba(0, 0, 0, 0.3),
-    0 0 8px rgba(255, 215, 0, 0.3);
+    /* Engraved effect like the bracelet */
+    /* Top-left highlight (light catching the upper lip) */
+    -1px -1px 0px rgba(255, 255, 255, 0.3),
+    -0.5px -0.5px 0px rgba(255, 255, 255, 0.2),
+    
+    /* Bottom-right shadow (depth of the cut) */
+    1px 1px 0px rgba(0, 0, 0, 0.4),
+    0.5px 0.5px 0px rgba(0, 0, 0, 0.3),
+    
+    /* Subtle depth shadow */
+    0px 1px 1px rgba(0, 0, 0, 0.2);
   
   letter-spacing: 1px;
   line-height: 1.3;

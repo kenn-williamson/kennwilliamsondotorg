@@ -78,8 +78,8 @@ onMounted(() => {
 .card {
   display: block;
   position: relative;
-  padding-bottom: 0.72em;
-  font-size: 3rem;
+  padding-bottom: 0.45em;
+  font-size: 4.8rem;
   line-height: 0.95;
 }
 
@@ -88,66 +88,77 @@ onMounted(() => {
 .card__back::before,
 .card__back::after {
   display: block;
-  height: 0.72em;
-  color: #2c1810;
+  height: 0.45em;
+  color: #8B7355;
   background: 
-    linear-gradient(145deg, 
+    linear-gradient(to left, 
       #FFD700 0%, 
       #FFA500 25%,
-      #FFD700 50%,
-      #DAA520 75%,
+      #DAA520 50%,
+      #B8860B 75%,
       #FFD700 100%);
-  padding: 0.25em 0.25em;
+  padding: 0.15em 0.15em;
   border-radius: 0.15em 0.15em 0 0;
   backface-visibility: hidden;
   transform-style: preserve-3d;
-  width: 1.8em;
+  width: 1.04em;
   transform: translateZ(0);
-  border: 2px solid #C0C0C0;
+  border: 1px solid #C0C0C0;
   box-shadow: 
-    inset 0 2px 4px rgba(255, 255, 255, 0.3),
-    inset 0 -2px 4px rgba(0, 0, 0, 0.2),
-    0 4px 8px rgba(0, 0, 0, 0.4);
+    inset 0 2px 4px rgba(255, 255, 255, 0.4),
+    inset 0 -2px 4px rgba(0, 0, 0, 0.3),
+    inset 0 0 8px rgba(0, 0, 0, 0.1),
+    0 4px 8px rgba(0, 0, 0, 0.4),
+    0 0 0 1px rgba(0, 0, 0, 0.1);
   
-  font-family: 'Georgia', serif;
+  font-family: 'Times New Roman', 'Times', serif;
   font-weight: bold;
+  font-style: italic;
+  letter-spacing: 0.05em;
+  font-variant-numeric: tabular-nums;
   text-shadow: 
-    /* Dark top shadow to create the "cut-in" effect */
-    0px -2px 2px rgba(0, 0, 0, 0.4), 
+    /* Subtle engraved effect like the bracelet */
+    /* Top-left highlight (light catching the upper lip) */
+    -1px -1px 0px rgba(255, 255, 255, 0.3),
+    -0.5px -0.5px 0px rgba(255, 255, 255, 0.2),
     
-    /* Bright bottom highlight to simulate light catching the edge */
-    0px 2px 2px rgba(255, 255, 255, 0.3);
+    /* Bottom-right shadow (depth of the cut) */
+    1px 1px 0px rgba(0, 0, 0, 0.4),
+    0.5px 0.5px 0px rgba(0, 0, 0, 0.3),
+    
+    /* Subtle depth shadow */
+    0px 1px 1px rgba(0, 0, 0, 0.2);
   
   /* Remove flexbox centering - use text-align instead for proper centering */
   text-align: center;
-  line-height: 0.72em;
+  line-height: 0.45em;
 }
 
 .card__bottom {
-  color: #2c1810;
+  color: #8B7355;
   position: absolute;
   top: 50%;
   left: 0;
-  border-top: solid 1px rgba(0, 0, 0, 0.3);
+  border-top: none;
   background: 
-    linear-gradient(145deg, 
+    linear-gradient(to left, 
       #FFD700 0%, 
       #FFA500 25%,
-      #FFD700 50%,
-      #DAA520 75%,
+      #DAA520 50%,
+      #B8860B 75%,
       #FFD700 100%);
   border-radius: 0 0 0.15em 0.15em;
   pointer-events: none;
   overflow: hidden;
   text-align: center;
-  line-height: 0.72em;
+  line-height: 0.45em;
 }
 
 .card__bottom::after {
   display: block;
-  margin-top: -0.72em;
+  margin-top: -0.45em;
   text-align: center;
-  line-height: 0.72em;
+  line-height: 0.45em;
 }
 
 .card__back::before,
@@ -168,7 +179,7 @@ onMounted(() => {
   z-index: -1;
   overflow: hidden;
   text-align: center;
-  line-height: 0.72em;
+  line-height: 0.45em;
 }
 
 .flip .card__back::before {

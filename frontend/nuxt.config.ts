@@ -70,7 +70,12 @@ export default defineNuxtConfig({
   app: {
     head: {
       charset: 'utf-8',
-      viewport: 'width=device-width, initial-scale=1'
+      viewport: 'width=device-width, initial-scale=1',
+      link: [
+        { rel: 'icon', type: 'image/png', sizes: '32x32', href: '/favicon-small.png' },
+        { rel: 'icon', type: 'image/png', sizes: '192x192', href: '/favicon-large.png' },
+        { rel: 'apple-touch-icon', sizes: '192x192', href: '/favicon-large.png' }
+      ]
     }
   }
 })
