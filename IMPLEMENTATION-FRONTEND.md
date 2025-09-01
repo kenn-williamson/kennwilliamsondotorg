@@ -21,8 +21,21 @@ frontend/
 │   ├── assets/            # Assets directory
 │   │   ├── css/           # TailwindCSS configuration
 │   │   └── images/        # Image assets (construction-castle.jpg)
-│   ├── components/        # Vue components
-│   │   └── AppHeader.vue  # Responsive header with auth states
+│   ├── components/        # Vue components (feature-based organization)
+│   │   ├── Layout/        # Layout and navigation components
+│   │   │   └── AppHeader.vue # Responsive header with auth states
+│   │   ├── Timer/         # Timer feature components
+│   │   │   ├── TimerStats.vue     # Current timer display with SteamClock
+│   │   │   ├── TimerListItem.vue  # Individual timer row component
+│   │   │   ├── TimerEditModal.vue # Edit timer modal with validation
+│   │   │   └── TimerResetModal.vue# Quick reset modal
+│   │   └── Steampunk/     # Steampunk design system components
+│   │       ├── SteamClock.vue     # Main steampunk timer display
+│   │       ├── FlippingDigit.vue  # Animated flip-digit component
+│   │       ├── SlidingTimeGroup.vue # Time unit group container
+│   │       ├── SteampunkBackground.vue # Mahogany wood + gears background
+│   │       ├── SteampunkBanner.vue # Gold enamel motto plaque
+│   │       └── VintageNoteCard.vue # Vintage scroll note display
 │   ├── pages/             # File-based routing
 │   │   ├── index.vue      # Homepage with gothic construction theme
 │   │   ├── about.vue      # About page (placeholder)
@@ -92,6 +105,35 @@ Page-specific aesthetic themes per [UX-LAYOUT.md](UX-LAYOUT.md):
 - **Color Palette**: Sky blue primary with gold/silver accents, mahogany wood for steampunk
 - **Typography**: Ornate headers, clean body text, engraved gold text for steampunk
 - **Responsive Breakpoints**: Content-first approach (320px, 480px, 768px, 1024px, 1440px)
+
+## Component Architecture
+
+### Feature-Based Organization
+Components are organized by domain/feature following Vue 3/Nuxt best practices:
+
+**Layout Components** (`components/Layout/`)
+- **AppHeader.vue**: Responsive header with authentication states, mobile hamburger menu, and user avatar dropdown
+
+**Timer Feature Components** (`components/Timer/`)
+- **TimerStats.vue**: Current timer display integrating the SteamClock component for beautiful time visualization
+- **TimerListItem.vue**: Individual timer row with edit/delete actions and live time display
+- **TimerEditModal.vue**: Modal for editing timers with VeeValidate + Yup validation and datetime conversion
+- **TimerResetModal.vue**: Quick reset modal with optional notes input
+
+**Steampunk Design System** (`components/Steampunk/`)
+- **SteamClock.vue**: Main steampunk timer display with animated gears and flip-digit mechanics
+- **FlippingDigit.vue**: Individual animated split-flap digits with gold engraved styling
+- **SlidingTimeGroup.vue**: Time unit containers with mechanical slide animations
+- **SteampunkBackground.vue**: Mahogany wood texture with rotating gear overlays
+- **SteampunkBanner.vue**: Gold enamel plaque with etched motto
+- **VintageNoteCard.vue**: Scroll-style note display with aging effects
+
+### Refactored Page Architecture
+The incidents page has been refactored from a monolithic 425+ line component into orchestrated, focused components:
+- **Main incidents.vue** (~180 lines): Orchestrates components and manages state
+- **Component Communication**: Clean props/emits interfaces between components
+- **Single Responsibility**: Each component has one focused purpose
+- **Improved Maintainability**: Easier to test, debug, and extend individual features
 
 ## Steampunk Component Architecture
 
@@ -174,6 +216,7 @@ Located in `frontend/.env` and Nuxt configuration:
 - API base URL configuration
 - Development vs production settings
 - TailwindCSS and build optimization settings
+- **Component auto-import**: Configured for nested directories with `pathPrefix: false`
 
 ## Integration with Backend
 
