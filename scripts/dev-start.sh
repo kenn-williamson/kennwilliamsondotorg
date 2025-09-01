@@ -28,6 +28,21 @@ if [ ! -f "$ENV_FILE" ]; then
     exit 1
 fi
 
+# Check and generate SSL certificates if needed
+SSL_CERT="nginx/ssl/localhost.crt"
+SSL_KEY="nginx/ssl/localhost.key"
+if [ ! -f "$SSL_CERT" ] || [ ! -f "$SSL_KEY" ]; then
+    echo -e "${YELLOW}🔒 SSL certificates not found, generating development certificates...${NC}"
+    if [ -f "scripts/generate-ssl.sh" ]; then
+        ./scripts/generate-ssl.sh dev
+        echo -e "${GREEN}✅ Development SSL certificates generated${NC}"
+    else
+        echo -e "${RED}❌ Error: scripts/generate-ssl.sh not found${NC}"
+        echo "   Cannot generate SSL certificates automatically"
+        exit 1
+    fi
+fi
+
 # Parse command line arguments
 SERVICES=""
 BUILD_FLAG=""

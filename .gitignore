@@ -44,3 +44,10 @@ Thumbs.db
 # Temporary files
 *.tmp
 *.temp
+
+# SSL Certificates and Keys
+*.crt
+*.key
+*.pem
+nginx/ssl/
+nginx/ssl-local/
