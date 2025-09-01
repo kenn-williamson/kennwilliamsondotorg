@@ -14,8 +14,15 @@ NC='\033[0m' # No Color
 
 # Script directory for relative paths
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-PROJECT_ROOT="$(dirname "$SCRIPT_DIR")"
-BACKEND_DIR="$PROJECT_ROOT/backend"
+
+# Use environment variables if set (for container usage), otherwise calculate from script location
+if [[ -z "$PROJECT_ROOT" ]]; then
+    PROJECT_ROOT="$(dirname "$SCRIPT_DIR")"
+fi
+
+if [[ -z "$BACKEND_DIR" ]]; then
+    BACKEND_DIR="$PROJECT_ROOT/backend"
+fi
 
 log() {
     echo -e "${GREEN}[$(date +'%H:%M:%S')] $1${NC}"
@@ -88,7 +95,12 @@ fi
 COMPOSE_CMD="docker-compose"
 
 # Load environment based on mode
-if [[ "$DEV_MODE" == true ]]; then
+# Check if we're running in container context
+if [[ "$CONTAINER_CONTEXT" == "true" ]]; then
+    log "Using environment variables provided by container runtime"
+    # In container context, we don't need to load files or use docker-compose
+    COMPOSE_CMD=""
+elif [[ "$DEV_MODE" == true ]]; then
     # Development mode - load dev environment
     if [[ -f "$PROJECT_ROOT/.env.development" ]]; then
         export $(grep -v '^#' "$PROJECT_ROOT/.env.development" | xargs) 2>/dev/null || true
@@ -114,17 +126,25 @@ fi
 
 # Note: Backend .env file is not used - Docker Compose provides all environment variables
 
-# Verify DATABASE_URL is set
+# Construct DATABASE_URL if not provided (for host-side execution)
 if [[ -z "$DATABASE_URL" ]]; then
-    error "DATABASE_URL not set. Check environment files:
+    if [[ -n "$DB_USER" && -n "$DB_PASSWORD" ]]; then
+        DATABASE_URL="postgresql://${DB_USER}:${DB_PASSWORD}@localhost:5432/kennwilliamson"
+        log "Constructed DATABASE_URL from environment variables"
+    else
+        error "DATABASE_URL not set and cannot construct from DB_USER/DB_PASSWORD. Check environment files:
   - $PROJECT_ROOT/.env.development
-  - $PROJECT_ROOT/.env.production
+  - $PROJECT_ROOT/.env.production  
   - $PROJECT_ROOT/.env"
+    fi
 fi
 
 # Convert Docker network hostname to localhost for host-side script execution
 # Docker containers use 'postgres' hostname, but host scripts need 'localhost'
-if [[ "$DATABASE_URL" == *"@postgres:"* ]]; then
+if [[ "$CONTAINER_CONTEXT" == "true" ]]; then
+    # Container context - use DATABASE_URL as-is (postgres hostname is correct)
+    SCRIPT_DATABASE_URL="$DATABASE_URL"
+elif [[ "$DATABASE_URL" == *"@postgres:"* ]]; then
     SCRIPT_DATABASE_URL="${DATABASE_URL/@postgres:/@localhost:}"
     info "Converting DATABASE_URL for host-side execution: postgres -> localhost"
 else
@@ -191,7 +211,12 @@ export DATABASE_URL="$SCRIPT_DATABASE_URL"
 
 # Choose migration method based on environment
 USE_DOCKER_MIGRATIONS=false
-if ! command -v sqlx >/dev/null 2>&1; then
+
+# If we're in container context, use local SQLx CLI
+if [[ "$CONTAINER_CONTEXT" == "true" ]]; then
+    log "Running in container context, using local SQLx CLI"
+    USE_DOCKER_MIGRATIONS=false
+elif ! command -v sqlx >/dev/null 2>&1; then
     if command -v cargo >/dev/null 2>&1; then
         log "SQLx CLI not found, installing locally..."
         cargo install sqlx-cli --no-default-features --features postgres

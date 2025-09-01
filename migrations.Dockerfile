@@ -20,10 +20,12 @@ WORKDIR /app
 COPY scripts/setup-db.sh /app/setup-db.sh
 RUN chmod +x /app/setup-db.sh
 
-# Copy migrations directory (will be overridden by volume mount)
+# Copy backend structure needed by setup-db.sh (migrations and Cargo.toml)
+COPY backend/Cargo.toml /app/backend/Cargo.toml
 COPY backend/migrations /app/backend/migrations
 
 # Set environment variables that the script expects
+# These will override the script's automatic calculation since we're in a container
 ENV PROJECT_ROOT=/app
 ENV BACKEND_DIR=/app/backend
 
