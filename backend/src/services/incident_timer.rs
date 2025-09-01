@@ -68,6 +68,12 @@ impl IncidentTimerService {
             sqlx::types::chrono::Utc::now()
         });
 
+        // Validate that reset_timestamp is not in the future
+        let now = sqlx::types::chrono::Utc::now();
+        if reset_timestamp > now {
+            return Err(anyhow::anyhow!("Reset timestamp cannot be in the future"));
+        }
+
         let timer = sqlx::query_as!(
             IncidentTimer,
             r#"
@@ -86,6 +92,14 @@ impl IncidentTimerService {
     }
 
     pub async fn update(&self, id: Uuid, user_id: Uuid, data: UpdateIncidentTimer) -> Result<Option<IncidentTimer>> {
+        // Validate that reset_timestamp is not in the future
+        if let Some(reset_timestamp) = &data.reset_timestamp {
+            let now = sqlx::types::chrono::Utc::now();
+            if reset_timestamp > &now {
+                return Err(anyhow::anyhow!("Reset timestamp cannot be in the future"));
+            }
+        }
+
         let timer = sqlx::query_as!(
             IncidentTimer,
             r#"
