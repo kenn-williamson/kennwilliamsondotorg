@@ -106,29 +106,33 @@ cd /opt/kennwilliamson
 
 ## Step 4: Deploy Application Code
 
-### From Local Machine
-```bash
-# Create deployment package (from project root)
-tar -czf kennwilliamson-prod.tar.gz \
-  --exclude='.git' \
-  --exclude='node_modules' \
-  --exclude='target' \
-  --exclude='.env.development' \
-  --exclude='frontend/.nuxt' \
-  --exclude='frontend/.output' \
-  --exclude='backend/target' \
-  backend/ frontend/ nginx/ docker-compose.yml scripts/
+### Git-Based Deployment (Recommended)
+Using git provides version control, easy updates, and prepares for CI/CD automation.
 
-# Upload to EC2
-scp -i your-key.pem kennwilliamson-prod.tar.gz ubuntu@YOUR-ELASTIC-IP:/opt/kennwilliamson/
-```
-
-### On EC2 Instance
 ```bash
+# Install git
+sudo apt install git -y
+
+# Clone the repository into /opt/kennwilliamson
 cd /opt/kennwilliamson
-tar -xzf kennwilliamson-prod.tar.gz
-ls -la  # Verify files extracted
+git clone https://github.com/kenn-williamson/kennwilliamsondotorg.git
+cd kennwilliamsondotorg
+
+# Verify repository contents
+ls -la
+git log --oneline -5
+
+# Check current branch and status
+git branch
+git status
 ```
+
+**Benefits of Git Deployment:**
+- ✅ **Easy Updates**: `git pull origin master` to deploy latest changes
+- ✅ **Version Control**: Track what's deployed, easy rollbacks with `git checkout`
+- ✅ **CI/CD Ready**: Prepares for GitHub Actions automation
+- ✅ **Incremental**: Only downloads changes, not entire codebase
+- ✅ **Reproducible**: Same code everywhere, no packaging artifacts
 
 ## Step 5: Environment Configuration
 
@@ -190,8 +194,14 @@ docker-compose --env-file .env.production ps
 
 ## Step 7: SSL Certificate Setup
 
+### Initial Certificate Request
 ```bash
-# Request SSL certificate
+cd /opt/kennwilliamson/kennwilliamsondotorg
+
+# First, start nginx for ACME challenge (without SSL)
+docker-compose --env-file .env.production up -d nginx
+
+# Request SSL certificate (uses DOMAIN_NAME and CERTBOT_EMAIL from .env.production)
 docker-compose --env-file .env.production --profile ssl-setup run --rm certbot
 
 # Restart nginx to load SSL certificate
@@ -199,6 +209,18 @@ docker-compose --env-file .env.production restart nginx
 
 # Verify certificate installation
 docker-compose --env-file .env.production logs nginx
+
+# Test HTTPS access
+curl -I https://kennwilliamson.org
+```
+
+### Verify SSL Configuration
+```bash
+# Check certificate details
+docker-compose --env-file .env.production --profile ssl-setup run --rm certbot certificates
+
+# Test automatic renewal (dry run)
+docker-compose --env-file .env.production --profile ssl-setup run --rm certbot renew --dry-run
 ```
 
 ## Step 8: Verify Deployment
@@ -332,10 +354,19 @@ docker-compose --env-file .env.production exec postgres psql -U postgres -d kenn
 # Update system packages
 sudo apt update && sudo apt upgrade -y
 
-# Update Docker images
-cd /opt/kennwilliamson
+# Update application code
+cd /opt/kennwilliamson/kennwilliamsondotorg
+git pull origin master
+
+# Update Docker images and restart services
 docker-compose --env-file .env.production pull
 docker-compose --env-file .env.production up -d --build
+
+# Run any new database migrations
+./scripts/setup-db.sh
+
+# Verify deployment
+./scripts/health-check.sh
 ```
 
 ### Backup Recommendations
