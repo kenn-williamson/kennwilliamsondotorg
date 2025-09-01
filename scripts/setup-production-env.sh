@@ -134,6 +134,9 @@ NUXT_PUBLIC_API_BASE=https://$DOMAIN/api
 DOMAIN_NAME=$DOMAIN
 CERTBOT_EMAIL=$EMAIL
 
+# Database Migration Configuration
+SKIP_MIGRATIONS=false
+
 # Optional: Additional domains (uncomment if needed)
 # ADDITIONAL_DOMAINS=www.$DOMAIN
 

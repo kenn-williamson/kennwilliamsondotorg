@@ -85,6 +85,23 @@ services:
         reservations:
           memory: 50m
 
+  # Database Migration Service
+  # Runs automatically in production unless SKIP_MIGRATIONS=true
+  # Skipped in development via SKIP_MIGRATIONS=true in .env.development
+  migrations:
+    build:
+      context: .
+      dockerfile: migrations.Dockerfile
+    environment:
+      DATABASE_URL: postgresql://${DB_USER:-postgres}:${DB_PASSWORD:-password}@postgres:5432/kennwilliamson
+      SKIP_MIGRATIONS: ${SKIP_MIGRATIONS:-false}
+    volumes:
+      - ./backend/migrations:/app/backend/migrations
+    depends_on:
+      postgres:
+        condition: service_healthy
+    restart: "no"
+
   # SSL Certificate Management
   certbot:
     image: certbot/certbot

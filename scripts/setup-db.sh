@@ -189,20 +189,35 @@ cd "$BACKEND_DIR"
 # Set DATABASE_URL for SQLx operations (using the host-accessible version)
 export DATABASE_URL="$SCRIPT_DATABASE_URL"
 
-# Check if sqlx-cli is installed
+# Choose migration method based on environment
+USE_DOCKER_MIGRATIONS=false
 if ! command -v sqlx >/dev/null 2>&1; then
-    log "SQLx CLI not found, installing..."
-    cargo install sqlx-cli --no-default-features --features postgres
+    if command -v cargo >/dev/null 2>&1; then
+        log "SQLx CLI not found, installing locally..."
+        cargo install sqlx-cli --no-default-features --features postgres
+    else
+        log "Using Docker migration container (cargo not available)"
+        USE_DOCKER_MIGRATIONS=true
+    fi
 fi
 
 # Show current migration status
 log "Checking current migration status..."
-if ! sqlx migrate info >/dev/null 2>&1; then
-    error "Cannot check migration status. Ensure DATABASE_URL is correct."
+if [[ "$USE_DOCKER_MIGRATIONS" == true ]]; then
+    # Use Docker migration container for status check
+    if ! $COMPOSE_CMD --profile migrations run --rm migrations migrate info >/dev/null 2>&1; then
+        error "Cannot check migration status. Ensure DATABASE_URL is correct and postgres is running."
+    fi
+    PENDING_COUNT=$($COMPOSE_CMD --profile migrations run --rm migrations migrate info | grep -c "pending" || true)
+    APPLIED_COUNT=$($COMPOSE_CMD --profile migrations run --rm migrations migrate info | grep -c "applied" || true)
+else
+    # Use local SQLx CLI
+    if ! sqlx migrate info >/dev/null 2>&1; then
+        error "Cannot check migration status. Ensure DATABASE_URL is correct."
+    fi
+    PENDING_COUNT=$(sqlx migrate info | grep -c "pending" || true)
+    APPLIED_COUNT=$(sqlx migrate info | grep -c "applied" || true)
 fi
-
-PENDING_COUNT=$(sqlx migrate info | grep -c "pending" || true)
-APPLIED_COUNT=$(sqlx migrate info | grep -c "applied" || true)
 
 info "Migration Status:"
 echo "  - Applied: $APPLIED_COUNT migrations"
@@ -210,15 +225,30 @@ if [[ "$PENDING_COUNT" -gt 0 ]]; then
     echo "  - Pending: $PENDING_COUNT migrations"
     
     log "Running pending migrations..."
-    if sqlx migrate run; then
-        log "✅ Migrations completed successfully"
-        
-        # Show new status
-        NEW_APPLIED=$(sqlx migrate info | grep -c "applied" || true)
-        COMPLETED=$((NEW_APPLIED - APPLIED_COUNT))
-        info "Applied $COMPLETED new migrations"
+    if [[ "$USE_DOCKER_MIGRATIONS" == true ]]; then
+        # Use Docker migration container
+        if $COMPOSE_CMD --profile migrations run --rm migrations migrate run; then
+            log "✅ Migrations completed successfully"
+            
+            # Show new status
+            NEW_APPLIED=$($COMPOSE_CMD --profile migrations run --rm migrations migrate info | grep -c "applied" || true)
+            COMPLETED=$((NEW_APPLIED - APPLIED_COUNT))
+            info "Applied $COMPLETED new migrations"
+        else
+            error "Migration failed. Check database logs and connection."
+        fi
     else
-        error "Migration failed. Check database logs and connection."
+        # Use local SQLx CLI
+        if sqlx migrate run; then
+            log "✅ Migrations completed successfully"
+            
+            # Show new status
+            NEW_APPLIED=$(sqlx migrate info | grep -c "applied" || true)
+            COMPLETED=$((NEW_APPLIED - APPLIED_COUNT))
+            info "Applied $COMPLETED new migrations"
+        else
+            error "Migration failed. Check database logs and connection."
+        fi
     fi
 else
     log "✅ All migrations are already applied"

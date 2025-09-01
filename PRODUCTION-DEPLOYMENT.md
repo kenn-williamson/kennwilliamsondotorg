@@ -171,25 +171,35 @@ EOF
 ## Step 6: Build and Deploy Services
 
 ```bash
-cd /opt/kennwilliamson
+cd /opt/kennwilliamson/kennwilliamsondotorg
 
 # Build all services
 docker-compose --env-file .env.production build
 
-# Start database first
-docker-compose --env-file .env.production up -d postgres
-
-# Wait for database to be ready
-sleep 30
-
-# Run database migrations
-docker-compose --env-file .env.production run --rm backend sqlx migrate run
-
-# Start remaining services
+# Start all services (migrations run automatically)
 docker-compose --env-file .env.production up -d
 
 # Check service status
 docker-compose --env-file .env.production ps
+
+# View migration logs if needed
+docker-compose --env-file .env.production logs migrations
+```
+
+**How Automatic Migrations Work:**
+- Database migrations run automatically when services start
+- The `migrations` container runs after PostgreSQL is healthy
+- Migrations are skipped if `SKIP_MIGRATIONS=true` is set
+- The migration container exits after completing (one-time run)
+
+**Manual Migration Control (if needed):**
+```bash
+# Skip automatic migrations
+echo "SKIP_MIGRATIONS=true" >> .env.production
+docker-compose --env-file .env.production up -d
+
+# Run migrations manually later
+docker-compose --env-file .env.production --profile migrations run --rm migrations
 ```
 
 ## Step 7: SSL Certificate Setup
@@ -358,15 +368,15 @@ sudo apt update && sudo apt upgrade -y
 cd /opt/kennwilliamson/kennwilliamsondotorg
 git pull origin master
 
-# Update Docker images and restart services
+# Update Docker images and restart services (migrations run automatically)
 docker-compose --env-file .env.production pull
 docker-compose --env-file .env.production up -d --build
 
-# Run any new database migrations
-./scripts/setup-db.sh
-
 # Verify deployment
 ./scripts/health-check.sh
+
+# Note: Database migrations run automatically during service startup
+# View migration logs if needed: docker-compose --env-file .env.production logs migrations
 ```
 
 ### Backup Recommendations
