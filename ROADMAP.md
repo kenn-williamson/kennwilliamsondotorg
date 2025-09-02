@@ -1,48 +1,90 @@
 # KennWilliamson.org Roadmap
 
 ## Current Status
-**Full-stack application with end-to-end functionality complete**. Core features implemented and working with comprehensive development tooling and hot reload environment.
+**Production deployment complete at kennwilliamson.org**. Full-stack application live with SSL, production infrastructure, and comprehensive development tooling. Now focusing on post-deployment optimization and feature expansion.
 
-## Features In Progress
+## Immediate Priorities
 
-### 🚧 Documentation Overhaul
-**Status**: Active development
+### 🚨 Critical Bug Fixes
+**Priority**: Critical
+**Goal**: Fix post-deployment issues affecting user experience
+
+**Authentication & Navigation Issues**:
+- **Timer State Sync Issue**: Timer updates/starts on private `/incidents` page don't reflect in UI until page refresh
+- **Authentication Redirect Flow**: Refreshing on `/incidents` page briefly shows signin page then redirects to home instead of staying on incidents page
+- **Signin/Signup Redirect Failure**: Post-authentication redirect not working properly - users not being directed back to intended page
+- **Double Redirect Issue**: Logged-in users refreshing pages experience unnecessary redirects instead of staying on current page
+- **Public Timer No-Data State**: Need to test and fix what displays on public page when user has no timer set (should show appropriate message like private page)
+
+### 🎯 Motivational Phrases & User Management System
 **Priority**: High
-**Goal**: Comprehensive documentation review and standardization
+**Goal**: Replace hardcoded phrases with dynamic system and add comprehensive user management
 
-**Scope**:
-- Establish documentation guidelines and standards
-- Separate current state from future planning
-- Remove code duplication from documentation
-- Implement cross-referencing system
-- Create specialized documentation (workflow, testing, coding rules)
+**Phrases System**:
+- **Dynamic Phrase Display**: Replace hardcoded "Vigilance Maintained" with randomly selected phrases from database
+- **Global Phrase Pool**: Database-driven phrases that all users can see
+- **Display Locations**: Show phrases in header on both public (`/{user_slug}/incident-timer`) and private (`/incidents`) pages
+- **Reusable Component**: Extend existing header component for phrase display
 
-**Deliverables**:
-- [DOCUMENTATION-GUIDELINES.md](DOCUMENTATION-GUIDELINES.md) ✓
-- ROADMAP.md (this document) ✓
-- Clean separation of implementation vs planning docs
-- Lightweight [CLAUDE.md](CLAUDE.md) as tool entry point
-- Specialized docs: CODING-RULES.md, DEVELOPMENT-WORKFLOW.md, IMPLEMENTATION-TESTING.md
+**User Profile Management**:
+- **Profile Page**: New page for users to update display name and slug (unlimited changes allowed)
+- **Slug Collision Handling**: Apply same collision-handling logic as registration
+- **Email Immutable**: Email cannot be changed (will be OAuth integration anchor point)
+- **Phrase Selection Interface**: Allow users to select which phrases they want to see from global pool
+
+**User Suggestion Workflow**:
+- **Suggest Phrases**: Users can suggest new phrases for admin approval
+- **Suggestion Status Tracking**: Users see status of their suggestions (pending/approved/rejected)
+- **Rejection with Reason**: Rejected suggestions include admin-provided reason
+- **Suggestion History**: Track who suggested phrases for admin reference
+
+**Admin User Management**:
+- **Promote to Admin**: Admins can promote other users to admin role
+- **User Deactivation**: Add active/inactive flag to user table
+- **Deactivated User Behavior**: 
+  - Public pages show 404 when user is deactivated
+  - Login shows "contact admin" message for correct email/password of deactivated user
+- **Admin Password Reset**: Admins can reset user passwords
+- **Temporary Password System**: Admin-reset passwords should be temporary, forcing user to change on next login
+- **Future-Ready**: Design password reset to work with future email integration
+
+**Admin Phrases Management**:
+- **Suggestion Review Interface**: Admins see pending user suggestions with approve/reject actions
+- **Direct Phrase Addition**: Admins can add phrases directly without suggestion process
+- **Rejection Management**: Admins can reject suggestions with reason (visible to suggesting user)
+- **Phrase Lifecycle**: Phrases can be deactivated (hidden but kept) or fully deleted
+- **Suggestion Tracking**: Track suggestion status and history
+
+**Database Schema Extensions**:
+- **phrases table**: id, phrase_text, active, created_by, created_at, updated_at
+- **user_phrases table**: user_id, phrase_id (many-to-many for user selections)
+- **phrase_suggestions table**: id, user_id, phrase_text, status (pending/approved/rejected), admin_id, admin_reason, created_at, updated_at
+- **users table**: Add active boolean field for user deactivation
+
+**Technical Requirements**:
+- New API endpoints for phrase CRUD, user management, suggestions
+- New frontend components for profile management, admin interfaces
+- Database migrations for new tables and user table modification
+- Role-based route protection for admin features
 
 ## Next Priorities
 
-### Production Deployment
-**Goal**: Deploy the application to AWS EC2 with production-ready infrastructure
+### Production Infrastructure Completion
+**Goal**: Complete missing production infrastructure components
 
-**Features**:
-- AWS EC2 deployment automation
-- Let's Encrypt SSL certificate setup
-- Production Docker Compose configuration
-- Database backup and recovery procedures
-- Health monitoring and alerting
+**Missing Infrastructure**:
+- **Rate Limiting & DDoS Protection**: Fix nginx rate limiting configuration (currently failing with "zero size shared memory zone" error)
+- **Service Health Monitoring**: Implement automated health checks and alerting
+- **Auto-Restart Capabilities**: Configure automatic service restart on failure
+- **Log Aggregation**: Set up centralized logging and rotation
 
-**Technical Requirements**:
-- Nginx reverse proxy with SSL termination
-- PostgreSQL data persistence strategy
-- Service health checks and auto-restart
-- Log aggregation and rotation
+**Alternative Solutions**:
+- Investigate Cloudflare or AWS WAF for DDoS protection
+- Consider application-level rate limiting in Rust backend
+- Evaluate third-party monitoring services (Datadog, New Relic)
 
-### Quality Assurance
+
+### Quality Assurance & Testing Expansion
 **Goal**: Comprehensive testing coverage and code quality improvements
 
 **Frontend Testing Implementation:**
@@ -89,13 +131,13 @@ npm install --save-dev @vitest/ui # Optional test UI
 - Utility coverage for helper functions and composables
 - Integration coverage for key user workflows
 
-### Authentication Enhancement
+### Authentication Enhancement  
 **Goal**: Extended authentication options and improved security
 
 **OAuth Integration**:
 - Google OAuth 2.0 provider
-- GitHub OAuth provider
-- Account linking for existing users
+- GitHub OAuth provider  
+- Account linking for existing users (email as anchor point)
 - Multi-provider authentication support
 
 **Database Extensions**:
@@ -107,6 +149,7 @@ npm install --save-dev @vitest/ui # Optional test UI
 - Enhanced session management
 - Account security settings
 - Login history and monitoring
+- Email integration for password reset notifications
 
 ### Feature Expansion
 **Goal**: Enhanced application functionality and user experience
