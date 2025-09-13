@@ -3,13 +3,13 @@
     <div class="max-w-md w-full">
       <!-- Header -->
       <div class="text-center mb-8">
-        <h1 class="text-3xl font-bold text-gray-900 mb-2">Sign In</h1>
+        <h1 class="text-3xl font-bold text-gray-900 mb-2">Sign In - TEST CHANGE</h1>
         <p class="text-gray-600">Welcome back to your digital sanctuary</p>
       </div>
 
       <!-- Login Form -->
       <div class="bg-white/80 backdrop-blur-sm rounded-lg shadow-lg border border-sky-200 p-8">
-        <form @submit.prevent="handleLogin" class="space-y-6">
+        <form @submit="onSubmit" class="space-y-6">
           <!-- Email Field -->
           <div>
             <label for="email" class="block text-sm font-medium text-gray-700 mb-2">
@@ -102,12 +102,13 @@ useHead({
 })
 
 // Redirect if already authenticated
-const authStore = useAuthStore()
+const { loggedIn } = useUserSession()
 const router = useRouter()
 
-if (authStore.isAuthenticated) {
-  await navigateTo('/')
-}
+// Comment out the redirect to see if this is causing the issue
+// if (loggedIn.value) {
+//   await navigateTo('/')
+// }
 
 // Form validation schema
 const validationSchema = yup.object({
@@ -131,7 +132,7 @@ const isLoading = ref(false)
 const serverError = ref('')
 
 // Form validation composable
-const { errors, meta } = useForm({
+const { errors, meta, handleSubmit } = useForm({
   validationSchema,
   initialValues: form,
 })
@@ -142,24 +143,42 @@ const handleLogin = async () => {
     isLoading.value = true
     serverError.value = ''
 
-    const result = await authStore.login({
+    const authService = useAuthService()
+    const result = await authService.login({
       email: form.email,
       password: form.password,
     })
 
     if (result.success) {
-      // Redirect to homepage after successful login
-      await router.push('/')
-    } else {
-      serverError.value = result.error || 'Login failed. Please try again.'
+      // Get redirect parameter from URL or default to homepage
+      const route = useRoute()
+      const redirectTo = String(route.query.redirect || '/')
+      
+      // Validate redirect to prevent open redirects
+      const isValidRedirect = redirectTo.startsWith('/') && !redirectTo.startsWith('//')
+      const targetPath = isValidRedirect ? redirectTo : '/'
+      
+      console.log('Login successful, redirecting to:', targetPath)
+      await router.push(targetPath)
     }
   } catch (error) {
     console.error('Login error:', error)
-    serverError.value = 'An unexpected error occurred. Please try again.'
+    
+    // Handle specific error types
+    if (error.statusCode === 401) {
+      serverError.value = 'Invalid email or password. Please try again.'
+    } else if (error.data?.statusMessage) {
+      serverError.value = error.data.statusMessage
+    } else {
+      serverError.value = error.message || 'Login failed. Please try again.'
+    }
   } finally {
     isLoading.value = false
   }
 }
+
+// Create the submit handler using vee-validate's handleSubmit
+const onSubmit = handleSubmit(handleLogin)
 
 // Auto-focus email field
 onMounted(() => {

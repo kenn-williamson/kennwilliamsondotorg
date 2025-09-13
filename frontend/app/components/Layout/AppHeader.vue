@@ -35,7 +35,7 @@
         <!-- Authentication Section (Right) -->
         <div class="hidden md:flex items-center space-x-4">
           <!-- Authenticated State -->
-          <div v-if="authStore.isAuthenticated" class="relative">
+          <div v-if="loggedIn" class="relative">
             <button 
               @click="toggleUserMenu"
               class="flex items-center justify-center w-10 h-10 rounded-full bg-sky-600 text-white font-medium hover:bg-sky-700 transition-colors duration-200"
@@ -134,9 +134,9 @@
           <hr class="border-sky-200 my-2">
           
           <!-- Authentication Links -->
-          <div v-if="authStore.isAuthenticated" class="flex flex-col space-y-3">
+          <div v-if="loggedIn" class="flex flex-col space-y-3">
             <div class="px-3 py-2 text-sm text-gray-600">
-              Signed in as <span class="font-medium">{{ authStore.user?.email }}</span>
+              Signed in as <span class="font-medium">{{ user?.email }}</span>
             </div>
             <button 
               @click="goToAccountSettings"
@@ -174,7 +174,7 @@
 </template>
 
 <script setup>
-const authStore = useAuthStore()
+const { loggedIn, user, clear } = useUserSession()
 const router = useRouter()
 
 // Reactive state
@@ -183,8 +183,8 @@ const showUserMenu = ref(false)
 
 // Computed properties
 const userInitial = computed(() => {
-  if (!authStore.user?.email) return 'U'
-  return authStore.user.email.charAt(0).toUpperCase()
+  if (!user.value?.email) return 'U'
+  return user.value.email.charAt(0).toUpperCase()
 })
 
 // Methods
@@ -203,7 +203,7 @@ const toggleUserMenu = () => {
 }
 
 const logout = async () => {
-  await authStore.logout()
+  await clear()
   showUserMenu.value = false
   showMobileMenu.value = false
   await router.push('/')

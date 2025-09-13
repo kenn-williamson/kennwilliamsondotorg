@@ -1,9 +1,11 @@
 /**
- * useIncidentTimerService - Incident timer operations using composable pattern
+ * useIncidentTimerService - Incident timer operations using hybrid fetch pattern
  * 
- * Replaces IncidentTimerService class with composable function.
- * Uses useAuthFetch for automatic authentication handling.
+ * Uses SSR proxy for initial data loading and direct backend fetch for mutations.
+ * This provides optimal performance with SSR data and fast client mutations.
  */
+
+import { useBackendFetch } from './useBackendFetch'
 
 interface IncidentTimer {
   id: string
@@ -28,46 +30,43 @@ interface UpdateTimerRequest {
 }
 
 export function useIncidentTimerService() {
-  const config = useRuntimeConfig()
-  const authFetch = useAuthFetch()
-
-  // Helper to create full API URL
-  const apiUrl = (endpoint: string) => `${config.public.apiBase}${endpoint}`
+  const backendFetch = useBackendFetch()
 
   return {
-    // Get all timers for current user (protected)
+    // Get all timers for current user (protected) - uses SSR proxy for initial load
     async getUserTimers(): Promise<IncidentTimer[]> {
-      return authFetch<IncidentTimer[]>(apiUrl('/incident-timers'), {
-        method: 'GET',
-      })
+      return $fetch<IncidentTimer[]>('/api/incident-timers')
     },
 
-    // Get public timer by user slug (no auth required)
+    // Refresh timers (client-side) - direct backend call for better performance
+    async refreshUserTimers(): Promise<IncidentTimer[]> {
+      return backendFetch<IncidentTimer[]>('/incident-timers')
+    },
+
+    // Get public timer by user slug (no auth required) - uses SSR proxy
     async getPublicTimer(userSlug: string): Promise<PublicIncidentTimer> {
-      return authFetch<PublicIncidentTimer>(apiUrl(`/${userSlug}/incident-timer`), {
-        method: 'GET',
-      })
+      return $fetch<PublicIncidentTimer>(`/api/${userSlug}/incident-timer`)
     },
 
-    // Create new timer (protected)
+    // Create new timer (protected) - direct backend call
     async createTimer(timerData: CreateTimerRequest): Promise<IncidentTimer> {
-      return authFetch<IncidentTimer>(apiUrl('/incident-timers'), {
+      return backendFetch<IncidentTimer>('/incident-timers', {
         method: 'POST',
         body: timerData,
       })
     },
 
-    // Update existing timer (protected)
+    // Update existing timer (protected) - direct backend call
     async updateTimer(id: string, updates: UpdateTimerRequest): Promise<IncidentTimer> {
-      return authFetch<IncidentTimer>(apiUrl(`/incident-timers/${id}`), {
+      return backendFetch<IncidentTimer>(`/incident-timers/${id}`, {
         method: 'PUT',
         body: updates,
       })
     },
 
-    // Delete timer (protected)
+    // Delete timer (protected) - direct backend call
     async deleteTimer(id: string): Promise<void> {
-      return authFetch<void>(apiUrl(`/incident-timers/${id}`), {
+      return backendFetch<void>(`/incident-timers/${id}`, {
         method: 'DELETE',
       })
     },

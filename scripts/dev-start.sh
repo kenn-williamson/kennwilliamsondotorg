@@ -83,7 +83,7 @@ while [[ $# -gt 0 ]]; do
             echo "Build Options:"
             echo "  --build         Force rebuild of containers"
             echo "  --rebuild       Force recreate containers (--force-recreate)"
-            echo "  --no-cache      Build without using cache"
+            echo "  --no-cache      Build without using cache (removes frontend node_modules volume if frontend is targeted)"
             echo "  --restart       Restart existing containers"
             echo ""
             echo "Runtime Options:"
@@ -135,6 +135,30 @@ else
     # Handle no-cache builds (requires separate build step)
     if [ -n "$NO_CACHE_FLAG" ]; then
         echo -e "${YELLOW}🏗️  Building without cache...${NC}"
+        
+        # Remove frontend node_modules volume if frontend is being rebuilt with --no-cache
+        if [[ "$SERVICES" == *"frontend"* ]] || [ -z "$SERVICES" ]; then
+            FRONTEND_VOLUME="kennwilliamsondotorg_frontend_node_modules_dev"
+            if docker volume ls -q | grep -q "^${FRONTEND_VOLUME}$"; then
+                echo -e "${YELLOW}🗑️  Removing frontend node_modules volume for clean rebuild...${NC}"
+                
+                # Stop and remove frontend container if running
+                FRONTEND_CONTAINER="kennwilliamson-frontend-dev"
+                if docker ps -a --format "table {{.Names}}" | grep -q "^${FRONTEND_CONTAINER}$"; then
+                    echo "   Stopping and removing frontend container..."
+                    docker stop "$FRONTEND_CONTAINER" 2>/dev/null || true
+                    docker rm "$FRONTEND_CONTAINER" 2>/dev/null || true
+                fi
+                
+                # Remove the volume
+                if docker volume rm "$FRONTEND_VOLUME" 2>/dev/null; then
+                    echo -e "${GREEN}✅ Frontend node_modules volume removed${NC}"
+                else
+                    echo -e "${YELLOW}⚠️  Could not remove frontend node_modules volume (may not exist)${NC}"
+                fi
+            fi
+        fi
+        
         BUILD_CMD="docker-compose --env-file $ENV_FILE $COMPOSE_FILES build --no-cache $SERVICES"
         echo "   Running: $BUILD_CMD"
         

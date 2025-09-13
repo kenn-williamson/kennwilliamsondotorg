@@ -15,7 +15,7 @@
       </div>
 
       <!-- Authentication Check -->
-      <div v-if="!authStore.isAuthenticated" class="text-center py-16">
+      <div v-if="!user" class="text-center py-16">
         <div class="bg-white/80 backdrop-blur-sm rounded-lg shadow-lg border border-blue-200 p-8 max-w-md mx-auto">
           <svg class="w-16 h-16 text-blue-500 mx-auto mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"/>
@@ -61,7 +61,7 @@
               </button>
               
               <NuxtLink 
-                :to="`/${authStore.user?.slug || 'user'}/incident-timer`"
+                :to="`/${user?.slug || 'user'}/incident-timer`"
                 target="_blank"
                 class="px-6 py-3 border border-blue-600 text-blue-600 rounded-md hover:bg-blue-50 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 transition-colors duration-200 font-medium text-center"
               >
@@ -147,7 +147,7 @@ useHead({
 })
 
 // Stores
-const authStore = useAuthStore()
+const { user } = useUserSession()
 const timerStore = useIncidentTimerStore()
 const { activeTimerBreakdown } = storeToRefs(timerStore)
 
@@ -220,7 +220,7 @@ const confirmDelete = (timer) => {
 
 // Load timers on mount
 onMounted(async () => {
-  if (authStore.isAuthenticated) {
+  if (user.value) {
     await timerStore.fetchUserTimers()
   }
 })
@@ -231,8 +231,8 @@ onUnmounted(() => {
 })
 
 // Watch for authentication changes
-watch(() => authStore.isAuthenticated, (isAuth) => {
-  if (isAuth) {
+watch(() => user.value, (currentUser) => {
+  if (currentUser) {
     timerStore.fetchUserTimers()
   } else {
     timerStore.clearState()

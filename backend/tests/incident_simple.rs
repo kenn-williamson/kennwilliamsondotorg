@@ -30,7 +30,7 @@ async fn test_get_timer_by_user_slug_public() {
             .app_data(web::Data::new(pool.clone()))
             .app_data(web::Data::new(incident_service))
             .service(
-                web::scope("/api")
+                web::scope("/backend")
                     .configure(routes::incident_timers::configure_public_routes)
             )
     ).await;
@@ -55,7 +55,7 @@ async fn test_get_timer_by_user_slug_public() {
 
     // Step 3: Test the public endpoint to get timer by user slug (NO AUTH REQUIRED)
     let public_req = test::TestRequest::get()
-        .uri(&format!("/api/incident-timers/{}", user_slug))
+        .uri(&format!("/backend/incident-timers/{}", user_slug))
         .to_request();
 
     let public_resp = test::call_service(&app, public_req).await;
@@ -101,7 +101,7 @@ async fn test_create_timer_protected_endpoint() {
             .app_data(web::Data::new(auth_service.clone()))
             .app_data(web::Data::new(incident_service))
             .service(
-                web::scope("/api")
+                web::scope("/backend")
                     .service(
                         web::scope("")
                             .wrap(actix_web::middleware::from_fn(middleware::auth::jwt_auth_middleware))
@@ -138,7 +138,7 @@ async fn test_create_timer_protected_endpoint() {
     };
 
     let create_req = test::TestRequest::post()
-        .uri("/api/incident-timers")
+        .uri("/backend/incident-timers")
         .append_header(("Authorization", format!("Bearer {}", token)))
         .set_json(&timer_data)
         .to_request();
@@ -184,7 +184,7 @@ async fn test_get_user_timers_protected() {
             .app_data(web::Data::new(auth_service.clone()))
             .app_data(web::Data::new(incident_service))
             .service(
-                web::scope("/api")
+                web::scope("/backend")
                     .service(
                         web::scope("")
                             .wrap(actix_web::middleware::from_fn(middleware::auth::jwt_auth_middleware))
@@ -228,9 +228,9 @@ async fn test_get_user_timers_protected() {
         Some("Second timer"),
     ).await.expect("Failed to create second timer");
 
-    // Test GET /api/incident-timers (get user's timers)
+    // Test GET /backend/incident-timers (get user's timers)
     let get_req = test::TestRequest::get()
-        .uri("/api/incident-timers")
+        .uri("/backend/incident-timers")
         .append_header(("Authorization", format!("Bearer {}", token)))
         .to_request();
 
@@ -280,7 +280,7 @@ async fn test_update_timer_protected() {
             .app_data(web::Data::new(auth_service.clone()))
             .app_data(web::Data::new(incident_service))
             .service(
-                web::scope("/api")
+                web::scope("/backend")
                     .service(
                         web::scope("")
                             .wrap(actix_web::middleware::from_fn(middleware::auth::jwt_auth_middleware))
@@ -317,14 +317,14 @@ async fn test_update_timer_protected() {
         Some("Original notes"),
     ).await.expect("Failed to create timer");
 
-    // Test PUT /api/incident-timers/{id} (update timer)
+    // Test PUT /backend/incident-timers/{id} (update timer)
     let update_data = UpdateIncidentTimer {
         reset_timestamp: None, // Keep existing
         notes: Some("Updated notes".to_string()),
     };
 
     let update_req = test::TestRequest::put()
-        .uri(&format!("/api/incident-timers/{}", timer.id))
+        .uri(&format!("/backend/incident-timers/{}", timer.id))
         .append_header(("Authorization", format!("Bearer {}", token)))
         .set_json(&update_data)
         .to_request();
@@ -368,7 +368,7 @@ async fn test_delete_timer_protected() {
             .app_data(web::Data::new(auth_service.clone()))
             .app_data(web::Data::new(incident_service))
             .service(
-                web::scope("/api")
+                web::scope("/backend")
                     .service(
                         web::scope("")
                             .wrap(actix_web::middleware::from_fn(middleware::auth::jwt_auth_middleware))
@@ -405,9 +405,9 @@ async fn test_delete_timer_protected() {
         Some("Timer to delete"),
     ).await.expect("Failed to create timer");
 
-    // Test DELETE /api/incident-timers/{id}
+    // Test DELETE /backend/incident-timers/{id}
     let delete_req = test::TestRequest::delete()
-        .uri(&format!("/api/incident-timers/{}", timer.id))
+        .uri(&format!("/backend/incident-timers/{}", timer.id))
         .append_header(("Authorization", format!("Bearer {}", token)))
         .to_request();
 

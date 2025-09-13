@@ -128,7 +128,7 @@ RUST_LOG=backend=info,actix_web=info
 CORS_ORIGIN=https://$DOMAIN
 
 # Frontend Configuration
-NUXT_PUBLIC_API_BASE=https://$DOMAIN/api
+NUXT_PUBLIC_API_BASE=https://$DOMAIN/backend
 
 # SSL Configuration
 DOMAIN_NAME=$DOMAIN

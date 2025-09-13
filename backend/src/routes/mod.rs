@@ -7,9 +7,9 @@ use crate::middleware;
 
 pub fn configure_app_routes(cfg: &mut web::ServiceConfig) {
     cfg
-        // API routes with selective middleware application
+        // Backend API routes with selective middleware application
         .service(
-            web::scope("/api")
+            web::scope("/backend")
                 // Public health endpoints
                 .route("/health", web::get().to(health::health))
                 .route("/health/db", web::get().to(health::health_db))

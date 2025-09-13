@@ -68,11 +68,11 @@ async fn test_health_db_endpoint() {
     let app = test::init_service(
         App::new()
             .app_data(web::Data::new(pool))
-            .route("/api/health/db", web::get().to(health_db))
+            .route("/backend/health/db", web::get().to(health_db))
     ).await;
 
     let req = test::TestRequest::get()
-        .uri("/api/health/db")
+        .uri("/backend/health/db")
         .to_request();
 
     let resp = test::call_service(&app, req).await;

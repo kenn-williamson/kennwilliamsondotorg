@@ -48,10 +48,10 @@ echo "📋 Listing database tables..."
 docker-compose exec -T postgres psql -U postgres -d kennwilliamson -c "\dt"
 
 echo "👤 Creating test user..."
-# Generate hash for "TestPassword1" using our utility (cost 4 for faster development)
+# Generate hash for "Password123!" using our utility (cost 4 for faster development)
 echo "🔑 Generating password hash..."
 cd utils/hash_gen
-if ! TEST_PASSWORD_HASH=$(cargo run --quiet TestPassword1 2>/dev/null); then
+if ! TEST_PASSWORD_HASH=$(cargo run --quiet Password123! 2>/dev/null); then
     echo "❌ Failed to generate password hash"
     cd ../..
     exit 1

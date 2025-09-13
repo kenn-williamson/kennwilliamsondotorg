@@ -9,11 +9,8 @@
 **Priority**: Critical
 **Goal**: Fix post-deployment issues affecting user experience
 
-**Authentication & Navigation Issues**:
+**Remaining Issues**:
 - **Timer State Sync Issue**: Timer updates/starts on private `/incidents` page don't reflect in UI until page refresh
-- **Authentication Redirect Flow**: Refreshing on `/incidents` page briefly shows signin page then redirects to home instead of staying on incidents page
-- **Signin/Signup Redirect Failure**: Post-authentication redirect not working properly - users not being directed back to intended page
-- **Double Redirect Issue**: Logged-in users refreshing pages experience unnecessary redirects instead of staying on current page
 - **Public Timer No-Data State**: Need to test and fix what displays on public page when user has no timer set (should show appropriate message like private page)
 
 ### 🎯 Motivational Phrases & User Management System
@@ -68,6 +65,18 @@
 - Role-based route protection for admin features
 
 ## Next Priorities
+
+### SSR vs CSR Data Fetching Optimization
+**Priority**: Low
+**Goal**: Optimize data fetching patterns for better performance and user experience
+
+**Current State**: Hybrid architecture implemented with basic SSR/CSR separation
+**Remaining Work**:
+- **SSR Data Loading**: Ensure all initial page loads use server-side data fetching for optimal performance
+- **CSR Interactions**: Optimize client-side data fetching for user interactions and real-time updates
+- **Caching Strategy**: Implement proper caching for both SSR and CSR data
+- **Type Safety**: Ensure consistent TypeScript types across SSR and CSR data flows
+- **Performance Monitoring**: Add metrics to measure SSR vs CSR performance impact
 
 ### Production Infrastructure Completion
 **Goal**: Complete missing production infrastructure components

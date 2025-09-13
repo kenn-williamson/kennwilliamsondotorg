@@ -1,18 +1,11 @@
 /**
- * useAuthService - Authentication operations using composable pattern
+ * useAuthService - Authentication operations using Nuxt Auth Utils
  * 
- * Replaces AuthService class with composable function.
- * Uses useAuthFetch for automatic authentication handling.
+ * Handles login/register operations via Nuxt API routes that manage sessions.
+ * For reactive state, use useUserSession() directly in components.
  */
 
-interface User {
-  id: string
-  email: string
-  display_name: string
-  slug: string
-  roles: string[]
-  created_at: string
-}
+import { useBackendFetch } from './useBackendFetch'
 
 interface LoginRequest {
   email: string
@@ -25,62 +18,65 @@ interface RegisterRequest {
   display_name: string
 }
 
-interface SlugPreviewRequest {
-  display_name: string
-}
-
 interface SlugPreviewResponse {
   slug: string
   available: boolean
   final_slug: string
 }
 
-interface AuthResponse {
-  token: string
-  user: User
-}
-
 export function useAuthService() {
-  const config = useRuntimeConfig()
-  const authFetch = useAuthFetch()
-
-  // Helper to create full API URL
-  const apiUrl = (endpoint: string) => `${config.public.apiBase}${endpoint}`
+  const { clear, fetch: refreshSession } = useUserSession()
+  const backendFetch = useBackendFetch()
 
   return {
-    async login(credentials: LoginRequest): Promise<AuthResponse> {
-      return authFetch<AuthResponse>(apiUrl('/auth/login'), {
-        method: 'POST',
-        body: credentials,
-      })
+    async login(credentials: LoginRequest): Promise<{ success: boolean }> {
+      try {
+        // Call Nuxt API route that handles session creation
+        await $fetch('/api/auth/login', {
+          method: 'POST',
+          body: credentials,
+        })
+        
+        // Refresh session state on client-side
+        await refreshSession()
+        
+        return { success: true }
+      } catch (error: any) {
+        throw new Error(error.data?.statusMessage || 'Login failed')
+      }
     },
 
-    async register(userData: RegisterRequest): Promise<AuthResponse> {
-      return authFetch<AuthResponse>(apiUrl('/auth/register'), {
-        method: 'POST',
-        body: userData,
-      })
-    },
-
-    async me(): Promise<User> {
-      return authFetch<User>(apiUrl('/auth/me'), {
-        method: 'GET',
-      })
+    async register(userData: RegisterRequest): Promise<{ success: boolean }> {
+      try {
+        // Call Nuxt API route that handles session creation  
+        await $fetch('/api/auth/register', {
+          method: 'POST',
+          body: userData,
+        })
+        
+        // Refresh session state on client-side
+        await refreshSession()
+        return { success: true }
+      } catch (error: any) {
+        throw new Error(error.data?.statusMessage || 'Registration failed')
+      }
     },
 
     async previewSlug(displayName: string): Promise<SlugPreviewResponse> {
-      return authFetch<SlugPreviewResponse>(apiUrl('/auth/preview-slug'), {
+      // Direct call to backend (no session needed)
+      return backendFetch('/auth/preview-slug', {
         method: 'POST',
         body: { display_name: displayName },
       })
     },
 
-    // Future: logout endpoint when implemented
     async logout(): Promise<void> {
-      // Optional: implement backend logout endpoint when available
-      // return authFetch(apiUrl('/auth/logout'), {
-      //   method: 'POST',
-      // })
+      // Clear the JWT token first
+      const jwtManager = useJwtManager()
+      jwtManager.clearToken()
+      
+      // Clear the session
+      await clear()
     },
   }
 }

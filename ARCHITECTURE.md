@@ -37,7 +37,7 @@ Development Environment (https://localhost)
 #### Nginx Reverse Proxy
 - **Purpose**: SSL termination, static file serving, request routing
 - **SSL**: Self-signed certificates for development HTTPS
-- **Routing**: Frontend (/*), API (/api/*), WebSocket support for HMR
+- **Routing**: Frontend (/*), Backend API (/backend/*), WebSocket support for HMR
 - **Configuration**: nginx/conf.d/default.conf
 
 #### Nuxt.js Frontend
@@ -62,7 +62,7 @@ Development Environment (https://localhost)
 
 ### Authentication Flow
 1. User registration/login → Frontend form validation
-2. Frontend → API (/api/auth/register, /api/auth/login)
+2. Frontend → Backend API (/backend/auth/register, /backend/auth/login)
 3. API → PostgreSQL (user validation/creation with bcrypt hashing)
 4. API → JWT token generation with role claims
 5. Frontend → Store JWT in httpOnly cookies
@@ -70,13 +70,13 @@ Development Environment (https://localhost)
 
 ### Application Data Flow
 1. Browser → HTTPS request to https://localhost
-2. Nginx → Route to Frontend (SSR) or API (/api/*)
+2. Nginx → Route to Frontend (SSR) or Backend API (/backend/*)
 3. Frontend SSR → Generate HTML with initial data
 4. Client-side hydration → Single Page Application behavior
 5. API calls → Rust backend → PostgreSQL with SQLx
 
 ### Timer Feature Flow
-1. User creates timer → Frontend form → API /api/incident-timers
+1. User creates timer → Frontend form → Backend API /backend/incident-timers
 2. Timer data stored → PostgreSQL with UUIDv7 and timestamps
 3. Real-time updates → Frontend polls/refreshes timer display
 4. Public access → /{user_slug}/incident-timer (no auth required)

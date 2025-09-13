@@ -212,19 +212,23 @@ check_backend() {
         return 1
     fi
     
-    # Check health endpoint
-    if curl -f -s http://localhost:8080/api/health >/dev/null 2>&1; then
-        success "Backend health endpoint responding"
+    # Check health endpoint (nginx proxy first, fallback to direct)
+    if curl -f -s -k https://localhost/backend/health >/dev/null 2>&1; then
+        success "Backend health endpoint responding (via nginx proxy)"
+    elif curl -f -s http://localhost:8080/backend/health >/dev/null 2>&1; then
+        warn "Backend health endpoint responding (direct access only - nginx proxy issue)"
     else
-        failure "Backend health endpoint not responding"
+        failure "Backend health endpoint not responding (both proxy and direct failed)"
         return 1
     fi
     
-    # Check database health endpoint
-    if curl -f -s http://localhost:8080/api/health/db >/dev/null 2>&1; then
-        success "Backend database connectivity OK"
+    # Check database health endpoint (nginx proxy first, fallback to direct)
+    if curl -f -s -k https://localhost/backend/health/db >/dev/null 2>&1; then
+        success "Backend database connectivity OK (via nginx proxy)"
+    elif curl -f -s http://localhost:8080/backend/health/db >/dev/null 2>&1; then
+        warn "Backend database connectivity OK (direct access only - nginx proxy issue)"
     else
-        failure "Backend cannot connect to database"
+        failure "Backend cannot connect to database (both proxy and direct failed)"
         return 1
     fi
     
@@ -241,11 +245,13 @@ check_frontend() {
         return 1
     fi
     
-    # Check HTTP response
-    if curl -f -s -o /dev/null http://localhost:3000/; then
-        success "Frontend is serving HTTP requests"
+    # Check HTTP response (nginx proxy first, fallback to direct)
+    if curl -f -s -k -o /dev/null https://localhost/; then
+        success "Frontend is serving HTTP requests (via nginx proxy)"
+    elif curl -f -s -o /dev/null http://localhost:3000/; then
+        warn "Frontend is serving HTTP requests (direct access only - nginx proxy issue)"
     else
-        failure "Frontend is not responding to HTTP requests"
+        failure "Frontend is not responding to HTTP requests (both proxy and direct failed)"
         return 1
     fi
     

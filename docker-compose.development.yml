@@ -54,12 +54,16 @@ services:
       - "24678:24678" # Nuxt DevTools port
     environment:
       - NODE_ENV=development
-      - NUXT_PUBLIC_API_BASE=https://localhost/api  # Use nginx proxy
+      - NUXT_PUBLIC_API_BASE=https://localhost/backend  # Use nginx proxy for client-side
+      - NUXT_API_BASE=http://backend:8080/backend  # Use internal Docker network for server-side
+      - NUXT_SESSION_PASSWORD=${NUXT_SESSION_PASSWORD}  # For Nuxt Auth Utils
       - JWT_SECRET=${JWT_SECRET}
       - CHOKIDAR_USEPOLLING=true  # For file watching in containers
       - NODE_OPTIONS=--max-old-space-size=1536  # Set Node.js heap size to 1.5GB
     volumes:
       - ./frontend/app:/app/app:ro              # Mount source code (read-only)
+      - ./frontend/server:/app/server:ro        # Mount server directory (read-only)
+      - ./frontend/shared:/app/shared:ro        # Mount shared directory (read-only)
       - ./frontend/package.json:/app/package.json:ro
       - ./frontend/package-lock.json:/app/package-lock.json:ro
       - ./frontend/nuxt.config.ts:/app/nuxt.config.ts:ro

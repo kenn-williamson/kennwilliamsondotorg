@@ -1,6 +1,9 @@
 // https://nuxt.com/docs/api/configuration/nuxt-config
 export default defineNuxtConfig({
   compatibilityDate: '2025-07-15',
+  future: {
+    compatibilityVersion: 4
+  },
   devtools: { enabled: true },
   
   // TypeScript configuration
@@ -21,20 +24,24 @@ export default defineNuxtConfig({
   ],
   
   // Modules
-  modules: [
-    '@nuxtjs/tailwindcss',
-    '@pinia/nuxt',
-    '@vueuse/nuxt'
-  ],
+  modules: ['@nuxtjs/tailwindcss', '@pinia/nuxt', '@vueuse/nuxt', 'nuxt-auth-utils'],
+
+  // Server configuration
+  serverDir: 'server',
 
   // Runtime config
   runtimeConfig: {
     // Server-side environment variables
     jwtSecret: process.env.JWT_SECRET,
+    session: {
+      maxAge: 60 * 60 * 24 * 7 // 1 week
+    },
+    // Server-side API base URL (for internal Docker network)
+    apiBase: process.env.NUXT_API_BASE || 'http://localhost:8080/backend',
     
     public: {
       // Client-side environment variables
-      apiBase: process.env.NUXT_PUBLIC_API_BASE || 'http://localhost:8080/api',
+      apiBase: process.env.NUXT_PUBLIC_API_BASE || 'http://localhost:8080/backend',
       appName: 'KennWilliamson.org'
     }
   },
@@ -46,7 +53,13 @@ export default defineNuxtConfig({
     minify: false,
     experimental: {
       wasm: false
-    }
+    },
+    // Ensure API routes are properly handled
+    routeRules: {
+      '/api/**': { cors: true }
+    },
+    // Standard logging level
+    logLevel: 2 // 0=silent, 1=error, 2=warn, 3=info, 4=verbose
   },
 
   // Build optimization for Docker
@@ -59,6 +72,7 @@ export default defineNuxtConfig({
     host: '0.0.0.0',  // Required for container access
     port: 3000
   },
+
 
   // Vite configuration for hot reload in containers
   vite: {

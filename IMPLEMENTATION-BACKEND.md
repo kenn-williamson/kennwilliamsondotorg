@@ -77,13 +77,13 @@ backend/
 - `POST /auth/register` - User registration
 - `POST /auth/login` - User login
 - `POST /auth/preview-slug` - Slug preview for registration form
-- `GET /api/{user_slug}/incident-timer` - Get latest timer by user slug
+- `GET /backend/{user_slug}/incident-timer` - Get latest timer by user slug
 
 ### Protected Endpoints (JWT Authentication Required)
-- `POST /api/incident-timers` - Create new timer
-- `GET /api/incident-timers` - List current user's timers
-- `PUT /api/incident-timers/{id}` - Update timer entry
-- `DELETE /api/incident-timers/{id}` - Delete timer entry
+- `POST /backend/incident-timers` - Create new timer
+- `GET /backend/incident-timers` - List current user's timers
+- `PUT /backend/incident-timers/{id}` - Update timer entry
+- `DELETE /backend/incident-timers/{id}` - Delete timer entry
 
 For detailed API contracts, see [IMPLEMENTATION-DATA-CONTRACTS.md](IMPLEMENTATION-DATA-CONTRACTS.md).
 

@@ -192,7 +192,7 @@ Follow this troubleshooting hierarchy:
 #### 3. Test Direct Service Access
 ```bash
 # Test backend API directly
-curl http://localhost:8080/api/health
+curl http://localhost:8080/backend/health
 
 # Test frontend directly (bypassing nginx)
 curl http://localhost:3000
@@ -364,13 +364,13 @@ docker-compose --env-file .env.production -f docker-compose.yml -f docker-compos
 ### Primary Development URLs
 - **Main Application:** `https://localhost` (recommended - full nginx proxy)
 - **Frontend Direct:** `http://localhost:3000` (fallback for debugging)
-- **Backend API:** `http://localhost:8080/api/` (direct API access)
+- **Backend API:** `http://localhost:8080/backend/` (direct API access)
 - **PostgreSQL:** `localhost:5432` (for database tools)
 
 ### Service Endpoints
-- **Health Check:** `http://localhost:8080/api/health`
-- **Database Health:** `http://localhost:8080/api/health/db`
-- **Public Timer Example:** `http://localhost:8080/api/user-slug/incident-timer`
+- **Health Check:** `http://localhost:8080/backend/health`
+- **Database Health:** `http://localhost:8080/backend/health/db`
+- **Public Timer Example:** `http://localhost:8080/backend/user-slug/incident-timer`
 
 ## Integration with Development Tools
 
@@ -384,6 +384,34 @@ docker-compose --env-file .env.production -f docker-compose.yml -f docker-compos
 - **pgAdmin, DBeaver, etc.:** Can connect to local PostgreSQL instance
 - **Migrations:** Always use `./scripts/setup-db.sh` instead of direct SQLx commands
 
+
+## Troubleshooting
+
+### Docker Configuration Issues
+**Important**: If you're following a clear tutorial or documentation and something isn't working as expected, **always check the Docker configuration first**.
+
+Common issues:
+- **TypeScript types not recognized**: Check if required directories are mounted in `docker-compose.development.yml`
+- **File changes not detected**: Verify volume mounts include all necessary directories
+- **Import errors**: Ensure all source directories are properly mounted
+- **Build failures**: Check if all required files are included in the build context
+
+**Example**: When setting up nuxt-auth-utils types, the `shared/` directory wasn't mounted in Docker, causing TypeScript to not recognize the type definitions in the container.
+
+### Quick Docker Checks
+```bash
+# Check if containers are running
+docker ps
+
+# Check volume mounts
+docker inspect kennwilliamson-frontend-dev | grep -A 10 "Mounts"
+
+# Restart containers after config changes
+docker-compose down && docker-compose up -d
+```
+
+### Reviewing Our Work
+- If asked to review git diff `git diff --staged | cat` so that you can correctly see the work staged.
 ---
 
 *This workflow guide should be your primary reference for daily development activities. It emphasizes using the project's automated scripts and established patterns for consistency and reliability.*

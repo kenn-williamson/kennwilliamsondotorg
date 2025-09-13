@@ -155,10 +155,10 @@ useHead({
 })
 
 // Redirect if already authenticated
-const authStore = useAuthStore()
+const { loggedIn } = useUserSession()
 const router = useRouter()
 
-if (authStore.isAuthenticated) {
+if (loggedIn.value) {
   await navigateTo('/')
 }
 
@@ -236,22 +236,29 @@ const onSubmit = handleSubmit(async (values) => {
     isLoading.value = true
     serverError.value = ''
 
-    // Get services from composable where it's safe to use
-    const result = await authStore.register({
+    // Use auth service for registration
+    const authService = useAuthService()
+    const result = await authService.register({
       email: values.email,
       display_name: values.displayName,
       password: values.password,
     })
 
     if (result.success) {
-      // Redirect to homepage after successful registration
-      await router.push('/')
-    } else {
-      serverError.value = result.error || 'Registration failed. Please try again.'
+      // Get redirect parameter from URL or default to homepage
+      const route = useRoute()
+      const redirectTo = String(route.query.redirect || '/')
+      
+      // Validate redirect to prevent open redirects
+      const isValidRedirect = redirectTo.startsWith('/') && !redirectTo.startsWith('//')
+      const targetPath = isValidRedirect ? redirectTo : '/'
+      
+      console.log('Registration successful, redirecting to:', targetPath)
+      await router.push(targetPath)
     }
   } catch (error) {
     console.error('Registration error:', error)
-    serverError.value = 'An unexpected error occurred. Please try again.'
+    serverError.value = error.message || 'Registration failed. Please try again.'
   } finally {
     isLoading.value = false
   }

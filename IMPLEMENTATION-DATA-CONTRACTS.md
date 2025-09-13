@@ -6,7 +6,7 @@ This document defines the exact API contracts between the Nuxt.js frontend and R
 ## Authentication Contracts
 
 ### User Registration
-**Endpoint:** `POST /api/auth/register`
+**Endpoint:** `POST /backend/auth/register`
 
 **Request:**
 ```json
@@ -51,7 +51,7 @@ This document defines the exact API contracts between the Nuxt.js frontend and R
 ```
 
 ### User Login
-**Endpoint:** `POST /api/auth/login`
+**Endpoint:** `POST /backend/auth/login`
 
 **Request:**
 ```json
@@ -85,7 +85,7 @@ This document defines the exact API contracts between the Nuxt.js frontend and R
 ```
 
 ### Slug Preview
-**Endpoint:** `POST /api/auth/preview-slug`
+**Endpoint:** `POST /backend/auth/preview-slug`
 
 **Request:**
 ```json
@@ -112,7 +112,7 @@ This document defines the exact API contracts between the Nuxt.js frontend and R
 ```
 
 ### Current User Info
-**Endpoint:** `GET /api/auth/me`  
+**Endpoint:** `GET /backend/auth/me`  
 **Authentication:** Required (Bearer token)
 
 **Response (200 OK):**
@@ -130,7 +130,7 @@ This document defines the exact API contracts between the Nuxt.js frontend and R
 ## Incident Timer Contracts
 
 ### Get User's Timers
-**Endpoint:** `GET /api/incident-timers`  
+**Endpoint:** `GET /backend/incident-timers`  
 **Authentication:** Required (Bearer token)
 
 **Response (200 OK):**
@@ -154,7 +154,7 @@ This document defines the exact API contracts between the Nuxt.js frontend and R
 ```
 
 ### Create Timer
-**Endpoint:** `POST /api/incident-timers`  
+**Endpoint:** `POST /backend/incident-timers`  
 **Authentication:** Required (Bearer token)
 
 **Request:**
@@ -185,7 +185,7 @@ This document defines the exact API contracts between the Nuxt.js frontend and R
 ```
 
 ### Update Timer
-**Endpoint:** `PUT /api/incident-timers/{id}`  
+**Endpoint:** `PUT /backend/incident-timers/{id}`  
 **Authentication:** Required (Bearer token)
 
 **Request:**
@@ -213,13 +213,13 @@ This document defines the exact API contracts between the Nuxt.js frontend and R
 ```
 
 ### Delete Timer
-**Endpoint:** `DELETE /api/incident-timers/{id}`  
+**Endpoint:** `DELETE /backend/incident-timers/{id}`  
 **Authentication:** Required (Bearer token)
 
 **Response (204 No Content):** Empty body
 
 ### Get Public Timer
-**Endpoint:** `GET /api/{user_slug}/incident-timer`  
+**Endpoint:** `GET /backend/{user_slug}/incident-timer`  
 **Authentication:** Not required
 
 **Response (200 OK):**
@@ -245,7 +245,7 @@ This document defines the exact API contracts between the Nuxt.js frontend and R
 ## Health Check Contracts
 
 ### Basic Health Check
-**Endpoint:** `GET /api/health`
+**Endpoint:** `GET /backend/health`
 
 **Response (200 OK):**
 ```json
@@ -255,7 +255,7 @@ This document defines the exact API contracts between the Nuxt.js frontend and R
 ```
 
 ### Database Health Check
-**Endpoint:** `GET /api/health/db`
+**Endpoint:** `GET /backend/health/db`
 
 **Response (200 OK):**
 ```json
@@ -341,21 +341,21 @@ Optional fields are either included with a value or `null`:
 ## Route Structure
 
 ### API Base
-All API endpoints are prefixed with `/api/`
+All backend API endpoints are prefixed with `/backend/`
 
 ### Public Routes
-- `/api/health` - Service health
-- `/api/health/db` - Database health  
-- `/api/auth/register` - User registration
-- `/api/auth/login` - User login
-- `/api/auth/preview-slug` - Slug preview
-- `/api/{user_slug}/incident-timer` - Public timer display with user display name
+- `/backend/health` - Service health
+- `/backend/health/db` - Database health  
+- `/backend/auth/register` - User registration
+- `/backend/auth/login` - User login
+- `/backend/auth/preview-slug` - Slug preview
+- `/backend/{user_slug}/incident-timer` - Public timer display with user display name
 
 ### Protected Routes
 All require `Authorization: Bearer {token}` header:
-- `/api/auth/me` - Current user info
-- `/api/incident-timers` - Timer CRUD operations
-- `/api/incident-timers/{id}` - Specific timer operations
+- `/backend/auth/me` - Current user info
+- `/backend/incident-timers` - Timer CRUD operations
+- `/backend/incident-timers/{id}` - Specific timer operations
 
 ---
 

@@ -5,9 +5,9 @@
 
 set -e
 
-API_BASE="http://localhost:8080/api"
+API_BASE="http://localhost:8080/backend"
 TEST_EMAIL="kenn@seqtek.com"
-TEST_PASSWORD="TestPassword1"
+TEST_PASSWORD="Password123!"
 
 echo "🔐 Testing Authentication Endpoints"
 echo "=================================="

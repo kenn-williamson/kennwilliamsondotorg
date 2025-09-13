@@ -32,7 +32,7 @@ async fn test_user_registration_success() {
             .app_data(web::Data::new(pool.clone()))
             .app_data(web::Data::new(auth_service))
             .service(
-                web::scope("/api")
+                web::scope("/backend")
                     .configure(routes::auth::configure_routes)
             )
     ).await;
@@ -44,7 +44,7 @@ async fn test_user_registration_success() {
     };
 
     let req = test::TestRequest::post()
-        .uri("/api/auth/register")
+        .uri("/backend/auth/register")
         .set_json(&user_data)
         .to_request();
 
@@ -95,7 +95,7 @@ async fn test_user_login_success() {
             .app_data(web::Data::new(pool.clone()))
             .app_data(web::Data::new(auth_service))
             .service(
-                web::scope("/api")
+                web::scope("/backend")
                     .configure(routes::auth::configure_routes)
             )
     ).await;
@@ -108,7 +108,7 @@ async fn test_user_login_success() {
     };
 
     let register_req = test::TestRequest::post()
-        .uri("/api/auth/register")
+        .uri("/backend/auth/register")
         .set_json(&user_data)
         .to_request();
 
@@ -122,7 +122,7 @@ async fn test_user_login_success() {
     };
 
     let login_req = test::TestRequest::post()
-        .uri("/api/auth/login")
+        .uri("/backend/auth/login")
         .set_json(&login_data)
         .to_request();
 
@@ -172,7 +172,7 @@ async fn test_user_login_invalid_credentials() {
             .app_data(web::Data::new(pool.clone()))
             .app_data(web::Data::new(auth_service))
             .service(
-                web::scope("/api")
+                web::scope("/backend")
                     .configure(routes::auth::configure_routes)
             )
     ).await;
@@ -185,7 +185,7 @@ async fn test_user_login_invalid_credentials() {
     };
 
     let register_req = test::TestRequest::post()
-        .uri("/api/auth/register")
+        .uri("/backend/auth/register")
         .set_json(&user_data)
         .to_request();
 
@@ -199,7 +199,7 @@ async fn test_user_login_invalid_credentials() {
     };
 
     let login_req = test::TestRequest::post()
-        .uri("/api/auth/login")
+        .uri("/backend/auth/login")
         .set_json(&invalid_login_data)
         .to_request();
 
@@ -241,7 +241,7 @@ async fn test_slug_preview_available() {
             .app_data(web::Data::new(pool.clone()))
             .app_data(web::Data::new(auth_service))
             .service(
-                web::scope("/api")
+                web::scope("/backend")
                     .configure(routes::auth::configure_routes)
             )
     ).await;
@@ -251,7 +251,7 @@ async fn test_slug_preview_available() {
     };
 
     let req = test::TestRequest::post()
-        .uri("/api/auth/preview-slug")
+        .uri("/backend/auth/preview-slug")
         .set_json(&preview_data)
         .to_request();
 
@@ -276,7 +276,7 @@ async fn test_slug_preview_available() {
     };
 
     let register_req = test::TestRequest::post()
-        .uri("/api/auth/register")
+        .uri("/backend/auth/register")
         .set_json(&user_data)
         .to_request();
 
@@ -285,7 +285,7 @@ async fn test_slug_preview_available() {
 
     // Test slug preview again - should now suggest alternative
     let req2 = test::TestRequest::post()
-        .uri("/api/auth/preview-slug")
+        .uri("/backend/auth/preview-slug")
         .set_json(&preview_data)
         .to_request();
 
