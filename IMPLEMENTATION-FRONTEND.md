@@ -168,13 +168,24 @@ The incidents page has been refactored from a monolithic 425+ line component int
 
 ## Architecture Implementation
 
-### HTTP Client Architecture
-Modern composable-based HTTP client following Vue 3 conventions:
-- **`useAuthFetch()`**: Composable with request/response interceptors
-- **Automatic Authentication**: Headers injected automatically from Pinia store
-- **Error Handling**: 401 error handling with automatic logout and redirect
-- **Service Composables**: `useAuthService()` and `useIncidentTimerService()`
-- **Token Management**: Interceptor architecture prepared for token refresh
+### HTTP Client Architecture - Hybrid API Pattern
+Modern composable-based HTTP client with dual API call patterns:
+
+**SSR Proxy Pattern** (`$fetch('/api/...')`):
+- **Initial Data Loading**: Uses Nuxt server proxy for SSR optimization
+- **Public Endpoints**: Non-authenticated calls routed through server
+- **Examples**: `getUserTimers()`, `getPublicTimer()`
+
+**Direct Backend Pattern** (`backendFetch('/...')`):
+- **Client Mutations**: Direct calls to backend with JWT in Authorization header
+- **Real-time Operations**: POST/PUT/DELETE operations bypass proxy for performance
+- **Examples**: `createTimer()`, `updateTimer()`, `deleteTimer()`
+
+**Authentication Architecture**:
+- **JWT (Access Token)**: Stored in client memory via `jwtManager.getToken()`
+- **Refresh Token**: Secure httpOnly cookie managed by Nuxt server
+- **Token Refresh**: Client calls `/api/auth/refresh` endpoint when needed
+- **Direct Backend Auth**: `useBackendFetch()` automatically adds `Authorization: Bearer` header
 
 ### State Management
 - **Pinia Integration**: Modern Vue 3 state management

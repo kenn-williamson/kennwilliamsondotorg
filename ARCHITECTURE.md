@@ -60,20 +60,30 @@ Development Environment (https://localhost)
 
 ## Data Flow Architecture
 
-### Authentication Flow
+### Authentication Flow - Hybrid Token Architecture
 1. User registration/login → Frontend form validation
 2. Frontend → Backend API (/backend/auth/register, /backend/auth/login)
 3. API → PostgreSQL (user validation/creation with bcrypt hashing)
-4. API → JWT token generation with role claims
-5. Frontend → Store JWT in httpOnly cookies
-6. Protected requests → JWT validation middleware
+4. API → JWT + Refresh token generation
+5. Frontend → JWT stored in client memory, Refresh token in Nuxt server httpOnly cookies
+6. **SSR Proxy calls**: Nuxt server automatically includes JWT
+7. **Direct Backend calls**: Client includes JWT in Authorization header
+8. **Token Refresh**: Client calls `/api/auth/refresh` when JWT expires
 
-### Application Data Flow
+### Application Data Flow - Hybrid API Architecture
+
+**SSR Proxy Pattern**:
 1. Browser → HTTPS request to https://localhost
-2. Nginx → Route to Frontend (SSR) or Backend API (/backend/*)
-3. Frontend SSR → Generate HTML with initial data
+2. Nginx → Route to Frontend (SSR)
+3. Frontend SSR → Generate HTML with initial data via `/api/*` proxy calls
 4. Client-side hydration → Single Page Application behavior
-5. API calls → Rust backend → PostgreSQL with SQLx
+5. Proxy calls → Nuxt server → Backend API → PostgreSQL
+
+**Direct Backend Pattern**:
+1. Client JavaScript → Direct HTTPS calls to backend via nginx (`/backend/*`)
+2. Nginx → Route directly to Backend API (Rust:8080)
+3. Backend → JWT validation → PostgreSQL with SQLx
+4. Used for: Mutations (POST/PUT/DELETE), real-time operations
 
 ### Timer Feature Flow
 1. User creates timer → Frontend form → Backend API /backend/incident-timers
@@ -91,9 +101,11 @@ Development Environment (https://localhost)
 - **Input Validation**: Request/response validation on both frontend and backend
 
 ### Authorization Model
-- **JWT Claims**: User ID, email, roles array, issued/expiry timestamps
+- **JWT Claims**: Minimal payload (User ID only) for reduced size
+- **User Profile**: Full user data retrieved via `/api/auth/me` endpoint
+- **Refresh Tokens**: Rolling 30-day expiration with 6-month hard limit from last login
 - **Route Protection**: Middleware-based authentication for protected endpoints
-- **Role-Based Access**: User/admin roles with middleware extraction
+- **Role-Based Access**: User/admin roles retrieved from profile endpoint
 - **Data Isolation**: Users can only access their own timer data
 
 ## Development Environment

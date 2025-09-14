@@ -5,13 +5,21 @@
 
 ## Immediate Priorities
 
-### 🚨 Critical Bug Fixes
-**Priority**: Critical
-**Goal**: Fix post-deployment issues affecting user experience
+### 🔑 JWT Refresh Token System
+**Priority**: High
+**Goal**: Implement rolling refresh tokens with secure session management
 
-**Remaining Issues**:
-- **Timer State Sync Issue**: Timer updates/starts on private `/incidents` page don't reflect in UI until page refresh
-- **Public Timer No-Data State**: Need to test and fix what displays on public page when user has no timer set (should show appropriate message like private page)
+**Core Features**:
+- **Rolling 30-day refresh tokens** with 6-month hard limit from last username/password login
+- **Minimal JWT payload** (user ID only) for reduced size and faster transmission
+- **Multiple device support** with separate refresh tokens per session
+- **Automatic token refresh** via `/api/auth/refresh` endpoint
+- **Simple revocation** by deleting refresh token records
+
+**Implementation**:
+- **Database**: `refresh_tokens` table (high priority), `user_sessions` table (lower priority)
+- **New endpoint**: `GET /api/auth/me` for user profile data
+- **Frontend**: Seamless token renewal with proper error handling
 
 ### 🎯 Motivational Phrases & User Management System
 **Priority**: High

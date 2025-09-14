@@ -35,6 +35,11 @@ interface TimerState {
 // Global timer update interval - shared across all store instances
 let globalTimerInterval: NodeJS.Timeout | null = null
 
+// Global page visibility handler - shared across all store instances
+let visibilityHandlerAttached = false
+let visibilityChangeHandler: (() => void) | null = null
+let windowFocusHandler: (() => void) | null = null
+
 export const useIncidentTimerStore = defineStore('incident-timers', {
   state: (): TimerState => ({
     timers: [],
@@ -193,11 +198,11 @@ export const useIncidentTimerStore = defineStore('incident-timers', {
       return `${hours.toString().padStart(2, '0')}:${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`
     },
 
-    // Get the most recent timer
+    // Get the most recent timer (by reset_timestamp - most recently started incident-free period)
     latestTimer: (state): IncidentTimer | null => {
       if (state.timers.length === 0) return null
-      return state.timers.reduce((latest, timer) => 
-        new Date(timer.created_at) > new Date(latest.created_at) ? timer : latest
+      return state.timers.reduce((latest, timer) =>
+        new Date(timer.reset_timestamp) > new Date(latest.reset_timestamp) ? timer : latest
       )
     },
   },
@@ -209,6 +214,35 @@ export const useIncidentTimerStore = defineStore('incident-timers', {
       if (globalTimerInterval) {
         clearInterval(globalTimerInterval)
         globalTimerInterval = null
+      }
+
+      // Set up page visibility handling (only once globally)
+      if (typeof document !== 'undefined' && !visibilityHandlerAttached) {
+        visibilityHandlerAttached = true
+
+        visibilityChangeHandler = () => {
+          if (!document.hidden) {
+            console.log('👁️ Page visible again, restarting timer with fresh interval')
+            // Get current store instance and restart timer updates
+            const timerStore = useIncidentTimerStore()
+            const activeTimer = timerStore.publicTimer || timerStore.latestTimer
+            if (activeTimer?.reset_timestamp) {
+              timerStore.startLiveTimerUpdates()
+            }
+          }
+        }
+
+        windowFocusHandler = () => {
+          console.log('🎯 Window focused, restarting timer with fresh interval')
+          const timerStore = useIncidentTimerStore()
+          const activeTimer = timerStore.publicTimer || timerStore.latestTimer
+          if (activeTimer?.reset_timestamp) {
+            timerStore.startLiveTimerUpdates()
+          }
+        }
+
+        document.addEventListener('visibilitychange', visibilityChangeHandler)
+        window.addEventListener('focus', windowFocusHandler)
       }
 
       // Determine which timer to track - prioritize public timer, fallback to latest user timer
@@ -225,11 +259,11 @@ export const useIncidentTimerStore = defineStore('incident-timers', {
         isPublic: !!this.publicTimer
       })
 
-      // Update immediately
+      // Update immediately (this recalculates from actual timestamps, so catches up automatically)
       this.activeTimerBreakdown = this.getElapsedTimeBreakdown(activeTimer)
       console.log('⏱️ Initial breakdown:', this.activeTimerBreakdown)
 
-      // Set up interval to update every second
+      // Set up fresh interval to update every second
       globalTimerInterval = setInterval(() => {
         const currentActiveTimer = this.publicTimer || this.latestTimer
         if (currentActiveTimer?.reset_timestamp) {
@@ -253,6 +287,25 @@ export const useIncidentTimerStore = defineStore('incident-timers', {
         globalTimerInterval = null
       }
       this.activeTimerBreakdown = { years: 0, months: 0, weeks: 0, days: 0, hours: 0, minutes: 0, seconds: 0 }
+    },
+
+    // Clean up global event listeners (call when completely done with timers)
+    cleanupGlobalEventListeners() {
+      if (typeof document !== 'undefined' && visibilityHandlerAttached) {
+        console.log('🧹 Cleaning up page visibility event listeners')
+
+        if (visibilityChangeHandler) {
+          document.removeEventListener('visibilitychange', visibilityChangeHandler)
+          visibilityChangeHandler = null
+        }
+
+        if (windowFocusHandler) {
+          window.removeEventListener('focus', windowFocusHandler)
+          windowFocusHandler = null
+        }
+
+        visibilityHandlerAttached = false
+      }
     },
 
     // Fetch user's timers
@@ -332,6 +385,10 @@ export const useIncidentTimerStore = defineStore('incident-timers', {
         this.timers.unshift(data)
         this.currentTimer = data
 
+        // Start live updates for the new timer
+        console.log('✅ Created new timer, starting live updates')
+        this.startLiveTimerUpdates()
+
         return { success: true }
       } catch (error: any) {
         console.error('Create timer error:', error)
@@ -365,6 +422,12 @@ export const useIncidentTimerStore = defineStore('incident-timers', {
           this.currentTimer = data
         }
 
+        // If this is the latest timer, restart live updates to reflect changes
+        if (this.latestTimer?.id === id) {
+          console.log('✅ Updated latest timer, restarting live updates')
+          this.startLiveTimerUpdates()
+        }
+
         return { success: true }
       } catch (error: any) {
         console.error('Update timer error:', error)
@@ -393,6 +456,15 @@ export const useIncidentTimerStore = defineStore('incident-timers', {
         // Clear current timer if it was the deleted one
         if (this.currentTimer?.id === id) {
           this.currentTimer = null
+        }
+
+        // Restart live updates with the new latest timer (or stop if no timers left)
+        if (this.latestTimer) {
+          console.log('✅ Timer deleted, restarting live updates with new latest timer')
+          this.startLiveTimerUpdates()
+        } else {
+          console.log('❌ No timers left after deletion, stopping live updates')
+          this.stopLiveTimerUpdates()
         }
 
         return { success: true }
@@ -433,6 +505,7 @@ export const useIncidentTimerStore = defineStore('incident-timers', {
     // Clear all state
     clearState(): void {
       this.stopLiveTimerUpdates()
+      this.cleanupGlobalEventListeners()
       this.timers = []
       this.currentTimer = null
       this.publicTimer = null
