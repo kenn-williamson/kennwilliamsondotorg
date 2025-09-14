@@ -21,6 +21,7 @@ This document defines the exact API contracts between the Nuxt.js frontend and R
 ```json
 {
   "token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...",
+  "refresh_token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...",
   "user": {
     "id": "01234567-89ab-cdef-0123-456789abcdef",
     "email": "user@example.com",
@@ -65,6 +66,7 @@ This document defines the exact API contracts between the Nuxt.js frontend and R
 ```json
 {
   "token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...",
+  "refresh_token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...",
   "user": {
     "id": "01234567-89ab-cdef-0123-456789abcdef",
     "email": "user@example.com",
@@ -124,6 +126,70 @@ This document defines the exact API contracts between the Nuxt.js frontend and R
   "slug": "john-doe",
   "roles": ["user"],
   "created_at": "2024-01-01T12:00:00Z"
+}
+```
+
+### Token Refresh
+**Endpoint:** `POST /backend/auth/refresh`
+**Authentication:** Not required (uses refresh token from request body)
+
+**Request:**
+```json
+{
+  "refresh_token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."
+}
+```
+
+**Response (200 OK):**
+```json
+{
+  "token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...",
+  "refresh_token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...",
+  "user": {
+    "id": "01234567-89ab-cdef-0123-456789abcdef",
+    "email": "user@example.com",
+    "display_name": "John Doe",
+    "slug": "john-doe",
+    "roles": ["user"],
+    "created_at": "2024-01-01T12:00:00Z"
+  }
+}
+```
+
+**Error Responses:**
+```json
+// 401 Unauthorized (invalid or expired refresh token)
+{
+  "error": "Invalid refresh token"
+}
+```
+
+### Token Revocation
+**Endpoint:** `POST /backend/auth/revoke`
+**Authentication:** Required (Bearer token)
+
+**Request:**
+```json
+{
+  "refresh_token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."
+}
+```
+
+**Response (200 OK):**
+```json
+{
+  "message": "Token revoked successfully"
+}
+```
+
+### Revoke All Tokens
+**Endpoint:** `POST /backend/auth/revoke-all`
+**Authentication:** Required (Bearer token)
+
+**Response (200 OK):**
+```json
+{
+  "message": "All tokens revoked successfully"
 }
 ```
 
@@ -354,8 +420,13 @@ All backend API endpoints are prefixed with `/backend/`
 ### Protected Routes
 All require `Authorization: Bearer {token}` header:
 - `/backend/auth/me` - Current user info
+- `/backend/auth/revoke` - Revoke specific refresh token
+- `/backend/auth/revoke-all` - Revoke all user's refresh tokens
 - `/backend/incident-timers` - Timer CRUD operations
 - `/backend/incident-timers/{id}` - Specific timer operations
+
+### Refresh Token Routes
+- `/backend/auth/refresh` - Token refresh (uses refresh token in request body)
 
 ---
 

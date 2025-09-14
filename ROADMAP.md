@@ -3,23 +3,26 @@
 ## Current Status
 **Production deployment complete at kennwilliamson.org**. Full-stack application live with SSL, production infrastructure, and comprehensive development tooling. Now focusing on post-deployment optimization and feature expansion.
 
-## Immediate Priorities
+## Recently Completed
 
-### 🔑 JWT Refresh Token System
-**Priority**: High
+### ✅ JWT Refresh Token System
+**Status**: **COMPLETED**
 **Goal**: Implement rolling refresh tokens with secure session management
 
-**Core Features**:
-- **Rolling 30-day refresh tokens** with 6-month hard limit from last username/password login
-- **Minimal JWT payload** (user ID only) for reduced size and faster transmission
-- **Multiple device support** with separate refresh tokens per session
-- **Automatic token refresh** via `/api/auth/refresh` endpoint
-- **Simple revocation** by deleting refresh token records
+**Implemented Features**:
+- **Rolling 1-week refresh tokens** aligned with session expiration (simplified from 30-day)
+- **Minimal JWT payload** (user ID only) with 1-hour expiration for reduced size and faster transmission
+- **Multiple device support** with separate refresh tokens per session via SHA-256 hashing
+- **Automatic token refresh** via pre-request expiration checking (1-minute threshold)
+- **Simple revocation** via `/backend/auth/revoke` and `/backend/auth/revoke-all` endpoints
 
-**Implementation**:
-- **Database**: `refresh_tokens` table (high priority), `user_sessions` table (lower priority)
-- **New endpoint**: `GET /api/auth/me` for user profile data
-- **Frontend**: Seamless token renewal with proper error handling
+**Completed Implementation**:
+- **Database**: `refresh_tokens` table with SHA-256 hashing and CASCADE cleanup
+- **Backend Endpoints**: `/auth/refresh`, `/auth/me`, `/auth/revoke`, `/auth/revoke-all`
+- **Frontend**: Simplified JWT manager with pre-request checking system
+- **Security**: SHA-256 token hashing, automatic cleanup, rolling expiration
+
+## Immediate Priorities
 
 ### 🎯 Motivational Phrases & User Management System
 **Priority**: High

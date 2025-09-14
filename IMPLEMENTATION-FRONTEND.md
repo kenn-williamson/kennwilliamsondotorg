@@ -54,6 +54,8 @@ frontend/
 │   ├── composables/       # Composition API logic
 │   │   ├── useAuthFetch.ts # HTTP client with auth interceptors
 │   │   ├── useAuthService.ts # Authentication operations
+│   │   ├── useBackendFetch.ts # Direct backend client with automatic JWT management
+│   │   ├── useJwtManager.ts # JWT token management with automatic refresh
 │   │   └── useIncidentTimerService.ts # Timer CRUD operations
 │   ├── layouts/           # Application layouts
 │   └── types/             # TypeScript definitions
@@ -68,10 +70,11 @@ frontend/
 ### Authentication System
 - **Registration Page** (`/register`): Email, display name, password with VeeValidate validation
 - **Login Page** (`/login`): Email/password authentication with error handling
-- **JWT Token Management**: httpOnly cookies with automatic refresh capability
+- **JWT Token Management**: Rolling refresh tokens with simplified pre-request checking system
 - **Route Protection**: Middleware-based authentication for protected pages
 - **Authentication Store**: Complete Pinia store with login/register/logout operations
 - **Auth Plugin**: Client-side initialization after Pinia is ready
+- **Token Refresh**: Automatic refresh when token expires within 1-minute threshold
 
 ### User Interface & Navigation
 - **Responsive Header**: Sticky navigation with mobile hamburger menu
@@ -181,10 +184,11 @@ Modern composable-based HTTP client with dual API call patterns:
 - **Real-time Operations**: POST/PUT/DELETE operations bypass proxy for performance
 - **Examples**: `createTimer()`, `updateTimer()`, `deleteTimer()`
 
-**Authentication Architecture**:
-- **JWT (Access Token)**: Stored in client memory via `jwtManager.getToken()`
-- **Refresh Token**: Secure httpOnly cookie managed by Nuxt server
-- **Token Refresh**: Client calls `/api/auth/refresh` endpoint when needed
+**Authentication Architecture - Simplified Refresh System**:
+- **JWT (Access Token)**: Stored in client memory via `jwtManager.getToken()` with 1-hour expiration
+- **Refresh Token**: Secure httpOnly cookie managed by Nuxt server with 1-week expiration (rolling)
+- **Pre-Request Check**: JWT manager checks token expiration before each API call (1-minute threshold)
+- **Automatic Refresh**: Seamless token renewal via `/api/auth/refresh` endpoint when needed
 - **Direct Backend Auth**: `useBackendFetch()` automatically adds `Authorization: Bearer` header
 
 ### State Management

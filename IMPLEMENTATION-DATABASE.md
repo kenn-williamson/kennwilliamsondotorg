@@ -69,7 +69,8 @@ migrations/
 ├── 20250829024919_create_users_table.sql         # Users table with auth fields ✅
 ├── 20250829025210_create_roles_table.sql         # Roles + user_roles junction ✅
 ├── 20250829095648_add_user_slug_to_users.sql     # Added user_slug for public URLs ✅
-└── 20250829095731_create_incident_timers_table.sql # Timer tracking table ✅
+├── 20250829095731_create_incident_timers_table.sql # Timer tracking table ✅
+└── 20250914193647_create_refresh_tokens_table.sql # Refresh tokens with SHA-256 hashing ✅
 ```
 
 ## Schema Implementation
@@ -79,6 +80,7 @@ migrations/
 - **roles**: Role-based authorization system (user, admin)
 - **user_roles**: Many-to-many user-role relationships
 - **incident_timers**: Timer tracking with user association and notes
+- **refresh_tokens**: Rolling refresh tokens with SHA-256 hashing and expiration tracking
 
 ### Key Features
 - **UUIDv7 Primary Keys**: Time-ordered UUIDs for better indexing performance
@@ -88,7 +90,17 @@ migrations/
 - **Migration-Driven**: All schema details documented in migration files
 
 ### Current Schema
-All database schema details are documented in migration files located in `backend/migrations/`. For planned schema extensions, see [ROADMAP.md](ROADMAP.md).
+All database schema details are documented in migration files located in `backend/migrations/`.
+
+#### Refresh Tokens Table Schema
+The `refresh_tokens` table implements secure refresh token management:
+- **id**: UUIDv7 primary key for performance
+- **user_id**: Foreign key to users table with CASCADE delete
+- **token_hash**: SHA-256 hash of the refresh token (never stores plaintext)
+- **expires_at**: Token expiration timestamp (1-week rolling)
+- **created_at/updated_at**: Automatic timestamp tracking with triggers
+
+For planned schema extensions, see [ROADMAP.md](ROADMAP.md).
 
 ## Docker Configuration
 

@@ -178,8 +178,8 @@ impl AuthService {
         .execute(&mut *tx)
         .await?;
 
-        // Create new refresh token
-        let expires_at = Utc::now() + Duration::days(30);
+        // Create new refresh token (aligned with 1-week session expiration)
+        let expires_at = Utc::now() + Duration::days(7);
         sqlx::query!(
             r#"
             INSERT INTO refresh_tokens (user_id, token_hash, device_info, expires_at)
@@ -204,7 +204,7 @@ impl AuthService {
     pub async fn create_refresh_token(&self, user_id: Uuid, device_info: Option<serde_json::Value>) -> Result<String> {
         let refresh_token_string = self.generate_refresh_token_string();
         let token_hash = self.hash_token(&refresh_token_string);
-        let expires_at = Utc::now() + Duration::days(30);
+        let expires_at = Utc::now() + Duration::days(7); // Aligned with 1-week session expiration
 
         sqlx::query!(
             r#"
@@ -320,7 +320,7 @@ impl AuthService {
 
     fn generate_token(&self, user: &User) -> Result<String> {
         let now = Utc::now();
-        let exp = now + Duration::hours(1); // Reduced to 1 hour since we have refresh tokens
+        let exp = now + Duration::hours(1); // 1 hour expiration with refresh token system
 
         let claims = Claims {
             sub: user.id.to_string(),

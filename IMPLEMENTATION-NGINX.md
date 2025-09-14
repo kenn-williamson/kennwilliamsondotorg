@@ -17,7 +17,8 @@ Development Environment (https://localhost)
     ↓
 Nginx Reverse Proxy (Port 443)
     ├── Static files → Direct serving
-    ├── /api/* → Backend (Rust:8080)
+    ├── /api/* → Frontend SSR Proxy (Nuxt.js:3000) → Backend
+    ├── /backend/* → Backend Direct (Rust:8080)
     ├── /_nuxt/* → Frontend assets (Nuxt.js:3000)
     └── /* → Frontend (Nuxt.js:3000)
 ```
@@ -38,11 +39,16 @@ Nginx Reverse Proxy (Port 443)
 - `nginx/ssl/` - Development SSL certificates (localhost)
 - `nginx/ssl-local/` - Local production SSL certificates (domain testing)
 
-### Routing Implementation
-- **API Routes**: `/api/*` proxied to backend service on port 8080
+### Routing Implementation - Hybrid API Architecture
+- **SSR Proxy Routes**: `/api/*` proxied to frontend (Nuxt.js:3000) for server-side rendering and session-based auth
+- **Direct Backend Routes**: `/backend/*` proxied directly to backend service (Rust:8080) for client-side JWT calls
 - **Static Assets**: `/_nuxt/*` proxied to frontend for build assets
 - **Frontend Routes**: All other routes proxied to frontend service on port 3000
 - **WebSocket Support**: Configured for Nuxt.js Hot Module Replacement
+
+#### API Route Distinction
+- **`/api/*`**: Used for SSR data fetching, session-based operations, and refresh token management
+- **`/backend/*`**: Used for direct client-side API calls with JWT authentication headers
 
 ### Development Features
 - **HTTPS Development**: Self-signed certificates enable SSL testing locally
@@ -131,6 +137,11 @@ resolver 127.0.0.11 valid=30s ipv6=off;
 
 # Variable-based upstream addresses prevent emergency shutdown
 location /api/ {
+    set $frontend_upstream frontend:3000;
+    proxy_pass http://$frontend_upstream;
+}
+
+location /backend/ {
     set $backend_upstream backend:8080;
     proxy_pass http://$backend_upstream;
 }

@@ -9,20 +9,23 @@ JWT-based authentication system with email/password registration and secure sess
 1. Frontend form validation (VeeValidate + Yup)
 2. Password hashing with bcrypt (cost factor 12)
 3. User creation in database with UUIDv7 and auto-generated slug
-4. JWT token generation and return
-5. Frontend authentication state update
+4. JWT token + refresh token generation and return
+5. Frontend authentication state update with session storage
 
 ### Login Process
 1. Frontend login form submission
 2. Backend credential verification against database
 3. Password hash comparison with bcrypt
-4. JWT token generation with user claims
+4. JWT token + refresh token generation with minimal claims
 5. Frontend authentication state update and redirect
 
 ### Session Management
-- **Token Storage**: Client-side authentication state management
-- **Token Expiration**: 24-hour default
-- **Logout**: Token invalidation and state clearing
+- **JWT Storage**: Client-side memory via JWT manager
+- **Refresh Token Storage**: Secure httpOnly cookies via Nuxt session
+- **JWT Expiration**: 1-hour with automatic refresh
+- **Refresh Token Expiration**: 1-week rolling tokens (aligned with session)
+- **Session Expiration**: 1-week Nuxt session
+- **Logout**: Token revocation and state clearing
 
 ## Security Implementation
 
@@ -34,14 +37,23 @@ JWT-based authentication system with email/password registration and secure sess
 ### JWT Security
 - **Secret**: Environment variable configuration
 - **Algorithm**: HS256 (HMAC with SHA-256)
-- **Claims**: User ID, email, roles array, timestamps
+- **Claims**: Minimal payload (user ID only) for performance
+- **Expiration**: 1-hour with automatic refresh before expiry
 - **Validation**: Signature verification on protected routes
+
+### Refresh Token Security
+- **Storage**: SHA-256 hashed in database, never plaintext
+- **Rolling**: Each refresh generates new JWT + new refresh token
+- **Expiration**: 1-week aligned with session expiration
+- **Device Support**: Optional device_info JSONB field
+- **Clean Revocation**: Tokens deleted immediately, no cleanup needed
 
 ## Database Integration
 - User table with email uniqueness constraint
 - Role-based authorization with user and admin roles
 - UUIDv7 primary keys for performance
 - Automated timestamp triggers for audit tracking
+- **Refresh tokens table**: Stores hashed tokens with user association and expiration
 
 For complete schema details, see [IMPLEMENTATION-DATABASE.md](IMPLEMENTATION-DATABASE.md).
 

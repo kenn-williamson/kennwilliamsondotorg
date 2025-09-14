@@ -51,12 +51,13 @@ backend/
 
 ## Current Features
 - **Authentication System**: Full JWT-based auth with registration, login, and role-based middleware
+- **Refresh Token System**: Rolling refresh tokens with 1-week expiration and automatic cleanup
 - **User Management**: User creation with bcrypt password hashing and role assignment + automatic slug generation
 - **Slug System**: Real-time slug preview endpoint with collision handling and URL-safe generation
 - **Incident Timer CRUD**: Complete create, read, update, delete operations for authenticated users
 - **Public API**: User slug-based public timer access (no authentication required)
 - **Database Integration**: PostgreSQL with SQLx, UUIDv7 primary keys, automated timestamp triggers
-- **Security**: Proper JWT validation, password hashing, role extraction middleware
+- **Security**: Proper JWT validation, password hashing, role extraction middleware, SHA-256 hashed refresh tokens
 - **Testing**: Comprehensive integration tests (11 tests) with fast execution and proper isolation
 - **Clean Route Architecture**: Idiomatic Actix-web routing with selective middleware application
 - **Request Logging**: Comprehensive request logging middleware for debugging
@@ -76,10 +77,14 @@ backend/
 - `GET /health/db` - Database connectivity check
 - `POST /auth/register` - User registration
 - `POST /auth/login` - User login
+- `POST /auth/refresh` - Token refresh using refresh token
 - `POST /auth/preview-slug` - Slug preview for registration form
 - `GET /backend/{user_slug}/incident-timer` - Get latest timer by user slug
 
 ### Protected Endpoints (JWT Authentication Required)
+- `GET /auth/me` - Get current user profile information
+- `POST /auth/revoke` - Revoke specific refresh token
+- `POST /auth/revoke-all` - Revoke all user's refresh tokens
 - `POST /backend/incident-timers` - Create new timer
 - `GET /backend/incident-timers` - List current user's timers
 - `PUT /backend/incident-timers/{id}` - Update timer entry
@@ -165,9 +170,17 @@ For detailed database information, see [IMPLEMENTATION-DATABASE.md](IMPLEMENTATI
 ## Security Implementation
 
 ### Authentication & Authorization
-- JWT tokens with secure signing and validation
-- bcrypt password hashing with appropriate cost factor
+- JWT tokens with secure signing and validation (1-hour expiration)
+- Rolling refresh tokens with 1-week expiration and SHA-256 hashing
+- bcrypt password hashing with appropriate cost factor (12)
 - Role-based authorization middleware for future admin features
+
+### Refresh Token Security
+- **Secure Storage**: SHA-256 hashed tokens in database (never plaintext)
+- **Rolling Expiration**: Each refresh generates new JWT + new refresh token
+- **Automatic Cleanup**: Expired tokens automatically removed from database
+- **Multiple Device Support**: Separate refresh tokens per login session
+- **Simple Revocation**: Individual token revocation or revoke-all functionality
 
 ### Input Validation & Security
 - Request/response validation with Serde

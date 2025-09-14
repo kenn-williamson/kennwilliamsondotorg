@@ -1,8 +1,8 @@
 /**
- * useJwtManager - Client-side JWT token management with refresh token support
+ * useJwtManager - Simplified JWT token management with pre-request refresh
  *
- * Handles JWT token lifecycle with 1-hour expiration and automatic refresh.
- * Tokens are refreshed proactively and on-demand when expired.
+ * Simple approach: Check token expiration before each API call.
+ * If token expires within 1 minute, refresh it automatically.
  */
 
 import { parseJwtToken, isJwtExpired, isJwtExpiringSoon } from '#shared/utils/jwt'
@@ -14,111 +14,41 @@ interface JwtToken {
 
 export function useJwtManager() {
   const jwtToken = ref<string | null>(null)
-  const expiresAt = ref<Date | null>(null)
   const isLoading = ref(false)
-  const refreshTimeout = ref<NodeJS.Timeout | null>(null)
 
-  // Check if the current token is expired or expiring soon
+  // Check if the current token is expired
   const isExpired = computed(() => {
     if (!jwtToken.value) return true
     return isJwtExpired(jwtToken.value)
   })
 
-  // Check if token is expiring within 5 minutes
-  const isExpiringSoon = computed(() => {
-    if (!jwtToken.value) return true
-    return isJwtExpiringSoon(jwtToken.value, 5)
-  })
-
-  // Check if we have a valid token that's not expiring soon
+  // Check if we have a valid token (not expired)
   const hasValidToken = computed(() => {
-    return jwtToken.value && !isExpired.value && !isExpiringSoon.value
+    return jwtToken.value && !isExpired.value
   })
 
-  // Parse JWT token to extract expiration using shared utility
-  const parseJwtExpiration = (token: string): Date | null => {
-    const result = parseJwtToken(token)
-    if (!result.isValid) {
-      console.error('❌ [JWT Manager] Failed to parse JWT token:', result.error)
-      return null
-    }
-    return result.expiration
+  // Check if token expires within specified minutes
+  const isExpiringSoon = (minutes: number = 1): boolean => {
+    if (!jwtToken.value) return true
+    return isJwtExpiringSoon(jwtToken.value, minutes)
   }
 
-  // Schedule proactive token refresh
-  const scheduleTokenRefresh = (token: string) => {
-    // Clear existing timeout
-    if (refreshTimeout.value) {
-      clearTimeout(refreshTimeout.value)
-    }
-
-    const expirationTime = parseJwtExpiration(token)
-    if (!expirationTime) return
-
-    // Schedule refresh 5 minutes before expiration
-    const refreshTime = expirationTime.getTime() - 5 * 60 * 1000
-    const timeUntilRefresh = refreshTime - Date.now()
-
-    if (timeUntilRefresh > 0) {
-      console.log(`⏰ [JWT Manager] Scheduling proactive refresh in ${Math.round(timeUntilRefresh / 1000 / 60)} minutes`)
-
-      refreshTimeout.value = setTimeout(() => {
-        console.log('🔄 [JWT Manager] Proactive token refresh triggered')
-        $fetch('/api/auth/refresh', { method: 'POST' }).catch((error) => {
-          console.warn('⚠️ [JWT Manager] Proactive refresh failed:', error.message)
-        })
-      }, timeUntilRefresh)
-    }
-  }
-
-  // Get a fresh JWT token from the server
-  const getJwtToken = async (): Promise<string | null> => {
-    // If we have a valid token that's not expiring soon, return it
-    if (hasValidToken.value) {
-      console.log('✅ [JWT Manager] Using cached valid token')
-      return jwtToken.value
-    }
-
-    // If we're already loading, wait for it
-    if (isLoading.value) {
-      console.log('⏳ [JWT Manager] Waiting for token refresh...')
-      // Wait for loading to complete
-      while (isLoading.value) {
-        await new Promise(resolve => setTimeout(resolve, 100))
-      }
-      return jwtToken.value
-    }
-
-    isLoading.value = true
-    console.log('🔄 [JWT Manager] Fetching fresh JWT token...')
-
+  // Refresh token via the refresh endpoint
+  const refreshToken = async (): Promise<boolean> => {
     try {
-      // Try to refresh the token first if we have a session
-      const { user } = useUserSession()
-      if (user.value && (isExpired.value || isExpiringSoon.value)) {
-        try {
-          await $fetch('/api/auth/refresh', { method: 'POST' })
-          console.log('✅ [JWT Manager] Token refreshed via refresh endpoint')
-        } catch (refreshError) {
-          console.warn('⚠️ [JWT Manager] Refresh failed, falling back to JWT endpoint')
-        }
-      }
+      console.log('🔄 [JWT Manager] Refreshing token via refresh endpoint')
+      await $fetch('/api/auth/refresh', { method: 'POST' })
 
-      // Get the current token from the session
+      // Get the new token from session
       const response = await $fetch<JwtToken>('/api/auth/jwt')
-
       jwtToken.value = response.token
-      expiresAt.value = new Date(response.expiresAt)
 
-      // Schedule proactive refresh for this token
-      scheduleTokenRefresh(response.token)
-
-      console.log('✅ [JWT Manager] Got fresh JWT token, expires at:', expiresAt.value)
-      return response.token
+      console.log('✅ [JWT Manager] Token refreshed successfully')
+      return true
     } catch (error: any) {
-      console.error('❌ [JWT Manager] Failed to get JWT token:', error.message)
+      console.error('❌ [JWT Manager] Token refresh failed:', error.message)
 
-      // If it's a 401, the session might be invalid
+      // If refresh fails with 401, session is invalid
       if (error.statusCode === 401) {
         const { clear } = useUserSession()
         await clear()
@@ -132,7 +62,66 @@ export function useJwtManager() {
         }
       }
 
-      return null
+      return false
+    }
+  }
+
+  // Get token from session (initial load)
+  const fetchTokenFromSession = async (): Promise<boolean> => {
+    try {
+      console.log('🔄 [JWT Manager] Fetching token from session')
+      const response = await $fetch<JwtToken>('/api/auth/jwt')
+      jwtToken.value = response.token
+      console.log('✅ [JWT Manager] Got token from session')
+      return true
+    } catch (error: any) {
+      console.warn('⚠️ [JWT Manager] No token available in session:', error.message)
+      return false
+    }
+  }
+
+  // Main token getter with pre-request refresh logic
+  const getToken = async (): Promise<string | null> => {
+    // If we're already loading, wait for it
+    if (isLoading.value) {
+      console.log('⏳ [JWT Manager] Waiting for token operation...')
+      while (isLoading.value) {
+        await new Promise(resolve => setTimeout(resolve, 100))
+      }
+      return jwtToken.value
+    }
+
+    isLoading.value = true
+
+    try {
+      // If no token, try to get from session first
+      if (!jwtToken.value) {
+        await fetchTokenFromSession()
+      }
+
+      // If still no token, user needs to login
+      if (!jwtToken.value) {
+        console.log('❌ [JWT Manager] No token available')
+        return null
+      }
+
+      // Check if token is expired or expires within 1 minute
+      if (isExpired.value) {
+        console.log('🔄 [JWT Manager] Token is expired, refreshing...')
+        const refreshed = await refreshToken()
+        if (!refreshed) return null
+      } else if (isExpiringSoon(1)) {
+        console.log('🔄 [JWT Manager] Token expires within 1 minute, refreshing...')
+        const refreshed = await refreshToken()
+        if (!refreshed) {
+          // If refresh failed but token isn't fully expired yet, use it
+          console.warn('⚠️ [JWT Manager] Refresh failed, using existing token')
+        }
+      } else {
+        console.log('✅ [JWT Manager] Using valid cached token')
+      }
+
+      return jwtToken.value
     } finally {
       isLoading.value = false
     }
@@ -142,26 +131,12 @@ export function useJwtManager() {
   const clearToken = () => {
     console.log('🧹 [JWT Manager] Clearing JWT token')
     jwtToken.value = null
-    expiresAt.value = null
-
-    // Clear any scheduled refresh
-    if (refreshTimeout.value) {
-      clearTimeout(refreshTimeout.value)
-      refreshTimeout.value = null
-    }
-  }
-
-  // Get token with automatic refresh
-  const getToken = async (): Promise<string | null> => {
-    return await getJwtToken()
   }
 
   return {
     jwtToken: readonly(jwtToken),
-    expiresAt: readonly(expiresAt),
     isLoading: readonly(isLoading),
     isExpired,
-    isExpiringSoon,
     hasValidToken,
     getToken,
     clearToken
