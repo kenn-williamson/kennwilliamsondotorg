@@ -4,26 +4,8 @@ use actix_web::{
     HttpMessage, Error, Result,
 };
 use uuid::Uuid;
-use std::collections::HashSet;
 
 use crate::services::auth::AuthService;
-
-#[derive(Debug, Clone)]
-pub struct AuthUser {
-    pub id: Uuid,
-    pub email: String,
-    pub roles: HashSet<String>,
-}
-
-impl AuthUser {
-    pub fn has_role(&self, role: &str) -> bool {
-        self.roles.contains(role)
-    }
-    
-    pub fn is_admin(&self) -> bool {
-        self.has_role("admin")
-    }
-}
 
 pub async fn jwt_auth_middleware(
     req: ServiceRequest,
@@ -62,23 +44,16 @@ pub async fn jwt_auth_middleware(
     log::debug!("Verifying token for request");
     match auth_service.verify_token(token).await {
         Ok(Some(claims)) => {
-            log::debug!("Token verified successfully for user: {}", claims.email);
             // Parse user ID from claims
             let user_id = claims.sub.parse::<Uuid>().map_err(|_| {
                 actix_web::error::ErrorUnauthorized("Invalid user ID in token")
             })?;
 
-            // Create AuthUser with roles
-            let roles: HashSet<String> = claims.roles.into_iter().collect();
-            let auth_user = AuthUser {
-                id: user_id,
-                email: claims.email,
-                roles,
-            };
+            log::debug!("Token verified successfully for user: {}", user_id);
 
-            // Store both user ID and full AuthUser in request extensions
+            // Store only user ID in request extensions
+            // Route handlers can fetch full user details when needed
             req.extensions_mut().insert(user_id);
-            req.extensions_mut().insert(auth_user);
 
             // Continue to the handler
             let res = next.call(req).await?;
@@ -95,5 +70,6 @@ pub async fn jwt_auth_middleware(
     }
 }
 
-// TODO: Add role-based authorization middleware later
-// For now, check roles in individual route handlers using AuthUser.has_role()
+// Note: Route handlers should fetch full user details when needed:
+// let user_id = req.extensions().get::<Uuid>().cloned().unwrap();
+// let user_details = auth_service.get_current_user(user_id).await?;

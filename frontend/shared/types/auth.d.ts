@@ -15,6 +15,7 @@ declare module '#auth-utils' {
 
   interface SecureSessionData {
     jwtToken?: string
+    refreshToken?: string
   }
 }
 

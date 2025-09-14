@@ -30,6 +30,7 @@ pub struct UserResponse {
 #[derive(Debug, Serialize)]
 pub struct AuthResponse {
     pub token: String,
+    pub refresh_token: String,
     pub user: UserResponse,
 }
 
@@ -43,6 +44,22 @@ pub struct SlugPreviewResponse {
     pub slug: String,
     pub available: bool,
     pub final_slug: String,
+}
+
+#[derive(Debug, Deserialize)]
+pub struct RefreshTokenRequest {
+    pub refresh_token: String,
+}
+
+#[derive(Debug, Serialize)]
+pub struct RefreshTokenResponse {
+    pub token: String,
+    pub refresh_token: String,
+}
+
+#[derive(Debug, Deserialize)]
+pub struct RevokeTokenRequest {
+    pub refresh_token: String,
 }
 
 impl UserResponse {

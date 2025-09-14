@@ -1,7 +1,6 @@
 use actix_web::{web, HttpMessage, HttpRequest, HttpResponse, Result as ActixResult};
 use uuid::Uuid;
 
-use crate::middleware::auth::AuthUser;
 use crate::models::api::{
     CreateIncidentTimer, IncidentTimerResponse, PublicIncidentTimerResponse, UpdateIncidentTimer,
 };
@@ -51,14 +50,14 @@ pub async fn get_user_timers(
     req: HttpRequest,
     service: web::Data<IncidentTimerService>,
 ) -> ActixResult<HttpResponse> {
-    let auth_user = req.extensions().get::<AuthUser>().cloned().unwrap();
-    match service.get_all_by_user(auth_user.id).await {
+    let user_id = req.extensions().get::<Uuid>().cloned().unwrap();
+    match service.get_all_by_user(user_id).await {
         Ok(timers) => {
             let response: Vec<IncidentTimerResponse> = timers.into_iter().map(|t| t.into()).collect();
             Ok(HttpResponse::Ok().json(response))
         }
         Err(err) => {
-            log::error!("Failed to get timers for user {}: {}", auth_user.id, err);
+            log::error!("Failed to get timers for user {}: {}", user_id, err);
             Ok(HttpResponse::InternalServerError().json(serde_json::json!({
                 "error": "Internal server error"
             })))
@@ -72,14 +71,14 @@ pub async fn create_timer(
     data: web::Json<CreateIncidentTimer>,
     service: web::Data<IncidentTimerService>,
 ) -> ActixResult<HttpResponse> {
-    let auth_user = req.extensions().get::<AuthUser>().cloned().unwrap();
-    match service.create(auth_user.id, data.into_inner()).await {
+    let user_id = req.extensions().get::<Uuid>().cloned().unwrap();
+    match service.create(user_id, data.into_inner()).await {
         Ok(timer) => {
             let response: IncidentTimerResponse = timer.into();
             Ok(HttpResponse::Created().json(response))
         }
         Err(err) => {
-            log::error!("Failed to create timer for user {}: {}", auth_user.id, err);
+            log::error!("Failed to create timer for user {}: {}", user_id, err);
             Ok(HttpResponse::InternalServerError().json(serde_json::json!({
                 "error": "Internal server error"
             })))
@@ -94,8 +93,8 @@ pub async fn update_timer(
     data: web::Json<UpdateIncidentTimer>,
     service: web::Data<IncidentTimerService>,
 ) -> ActixResult<HttpResponse> {
-    let auth_user = req.extensions().get::<AuthUser>().cloned().unwrap();
-    match service.update(path.id, auth_user.id, data.into_inner()).await {
+    let user_id = req.extensions().get::<Uuid>().cloned().unwrap();
+    match service.update(path.id, user_id, data.into_inner()).await {
         Ok(Some(timer)) => {
             let response: IncidentTimerResponse = timer.into();
             Ok(HttpResponse::Ok().json(response))
@@ -104,7 +103,7 @@ pub async fn update_timer(
             "error": "Timer not found"
         }))),
         Err(err) => {
-            log::error!("Failed to update timer {} for user {}: {}", path.id, auth_user.id, err);
+            log::error!("Failed to update timer {} for user {}: {}", path.id, user_id, err);
             Ok(HttpResponse::InternalServerError().json(serde_json::json!({
                 "error": "Internal server error"
             })))
@@ -118,14 +117,14 @@ pub async fn delete_timer(
     req: HttpRequest,
     service: web::Data<IncidentTimerService>,
 ) -> ActixResult<HttpResponse> {
-    let auth_user = req.extensions().get::<AuthUser>().cloned().unwrap();
-    match service.delete(path.id, auth_user.id).await {
+    let user_id = req.extensions().get::<Uuid>().cloned().unwrap();
+    match service.delete(path.id, user_id).await {
         Ok(true) => Ok(HttpResponse::NoContent().finish()),
         Ok(false) => Ok(HttpResponse::NotFound().json(serde_json::json!({
             "error": "Timer not found"
         }))),
         Err(err) => {
-            log::error!("Failed to delete timer {} for user {}: {}", path.id, auth_user.id, err);
+            log::error!("Failed to delete timer {} for user {}: {}", path.id, user_id, err);
             Ok(HttpResponse::InternalServerError().json(serde_json::json!({
                 "error": "Internal server error"
             })))

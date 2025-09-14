@@ -15,6 +15,7 @@ export default defineEventHandler(async (event: any) => {
     const config = useRuntimeConfig()
     const response = await $fetch<{
       token: string
+      refresh_token: string
       user: {
         id: string
         email: string
@@ -39,8 +40,9 @@ export default defineEventHandler(async (event: any) => {
         created_at: response.user.created_at
       },
       secure: {
-        // Store the JWT token for backend API calls
-        jwtToken: response.token
+        // Store the JWT token and refresh token for backend API calls
+        jwtToken: response.token,
+        refreshToken: response.refresh_token
       },
       loggedInAt: new Date()
     })

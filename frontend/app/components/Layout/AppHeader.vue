@@ -175,6 +175,7 @@
 
 <script setup>
 const { loggedIn, user, clear } = useUserSession()
+const { logout: authLogout } = useAuthService()
 const router = useRouter()
 
 // Reactive state
@@ -203,7 +204,7 @@ const toggleUserMenu = () => {
 }
 
 const logout = async () => {
-  await clear()
+  await authLogout()
   showUserMenu.value = false
   showMobileMenu.value = false
   await router.push('/')

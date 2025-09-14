@@ -3,7 +3,7 @@ use sqlx::PgPool;
 use std::env;
 use chrono;
 
-use backend::models::user::{CreateUserRequest, LoginRequest, SlugPreviewRequest};
+use backend::models::api::{CreateUserRequest, LoginRequest, SlugPreviewRequest};
 use backend::services::auth::AuthService;
 use backend::routes;
 
@@ -23,6 +23,7 @@ async fn test_user_registration_success() {
     let auth_service = AuthService::new(pool.clone(), jwt_secret);
 
     // Clean up any existing test data first
+    let _ = sqlx::query!("DELETE FROM refresh_tokens").execute(&pool).await;
     let _ = sqlx::query!("DELETE FROM user_roles").execute(&pool).await;
     let _ = sqlx::query!("DELETE FROM incident_timers").execute(&pool).await;
     let _ = sqlx::query!("DELETE FROM users").execute(&pool).await;
@@ -31,10 +32,7 @@ async fn test_user_registration_success() {
         App::new()
             .app_data(web::Data::new(pool.clone()))
             .app_data(web::Data::new(auth_service))
-            .service(
-                web::scope("/backend")
-                    .configure(routes::auth::configure_routes)
-            )
+            .configure(routes::configure_app_routes)
     ).await;
 
     let user_data = CreateUserRequest {
@@ -58,6 +56,7 @@ async fn test_user_registration_success() {
 
     let body: serde_json::Value = test::read_body_json(resp).await;
     assert!(body["token"].is_string(), "Response should contain JWT token");
+    assert!(body["refresh_token"].is_string(), "Response should contain refresh token");
     assert_eq!(body["user"]["email"], user_data.email, "Response should contain user email");
     assert_eq!(body["user"]["display_name"], user_data.display_name, "Response should contain display name");
     assert!(body["user"]["slug"].is_string(), "Response should contain user slug");
@@ -65,6 +64,7 @@ async fn test_user_registration_success() {
     assert!(body["user"]["roles"].is_array(), "Response should contain roles array");
 
     // Cleanup
+    let _ = sqlx::query!("DELETE FROM refresh_tokens").execute(&pool).await;
     let _ = sqlx::query!("DELETE FROM user_roles").execute(&pool).await;
     let _ = sqlx::query!("DELETE FROM incident_timers").execute(&pool).await;
     let _ = sqlx::query!("DELETE FROM users").execute(&pool).await;
@@ -86,6 +86,7 @@ async fn test_user_login_success() {
     let auth_service = AuthService::new(pool.clone(), jwt_secret);
 
     // Clean up any existing test data first
+    let _ = sqlx::query!("DELETE FROM refresh_tokens").execute(&pool).await;
     let _ = sqlx::query!("DELETE FROM user_roles").execute(&pool).await;
     let _ = sqlx::query!("DELETE FROM incident_timers").execute(&pool).await;
     let _ = sqlx::query!("DELETE FROM users").execute(&pool).await;
@@ -94,10 +95,7 @@ async fn test_user_login_success() {
         App::new()
             .app_data(web::Data::new(pool.clone()))
             .app_data(web::Data::new(auth_service))
-            .service(
-                web::scope("/backend")
-                    .configure(routes::auth::configure_routes)
-            )
+            .configure(routes::configure_app_routes)
     ).await;
 
     // First, register a user
@@ -136,12 +134,14 @@ async fn test_user_login_success() {
 
     let login_body: serde_json::Value = test::read_body_json(login_resp).await;
     assert!(login_body["token"].is_string(), "Response should contain JWT token");
+    assert!(login_body["refresh_token"].is_string(), "Response should contain refresh token");
     assert_eq!(login_body["user"]["email"], user_data.email, "Response should contain user email");
     assert_eq!(login_body["user"]["display_name"], user_data.display_name, "Response should contain display name");
     assert!(login_body["user"]["slug"].is_string(), "Response should contain user slug");
     assert!(login_body["user"]["roles"].is_array(), "Response should contain roles array");
 
     // Cleanup
+    let _ = sqlx::query!("DELETE FROM refresh_tokens").execute(&pool).await;
     let _ = sqlx::query!("DELETE FROM user_roles").execute(&pool).await;
     let _ = sqlx::query!("DELETE FROM incident_timers").execute(&pool).await;
     let _ = sqlx::query!("DELETE FROM users").execute(&pool).await;
@@ -163,6 +163,7 @@ async fn test_user_login_invalid_credentials() {
     let auth_service = AuthService::new(pool.clone(), jwt_secret);
 
     // Clean up any existing test data first
+    let _ = sqlx::query!("DELETE FROM refresh_tokens").execute(&pool).await;
     let _ = sqlx::query!("DELETE FROM user_roles").execute(&pool).await;
     let _ = sqlx::query!("DELETE FROM incident_timers").execute(&pool).await;
     let _ = sqlx::query!("DELETE FROM users").execute(&pool).await;
@@ -171,10 +172,7 @@ async fn test_user_login_invalid_credentials() {
         App::new()
             .app_data(web::Data::new(pool.clone()))
             .app_data(web::Data::new(auth_service))
-            .service(
-                web::scope("/backend")
-                    .configure(routes::auth::configure_routes)
-            )
+            .configure(routes::configure_app_routes)
     ).await;
 
     // First, register a user
@@ -211,6 +209,7 @@ async fn test_user_login_invalid_credentials() {
            "Error message should indicate invalid credentials");
 
     // Cleanup
+    let _ = sqlx::query!("DELETE FROM refresh_tokens").execute(&pool).await;
     let _ = sqlx::query!("DELETE FROM user_roles").execute(&pool).await;
     let _ = sqlx::query!("DELETE FROM incident_timers").execute(&pool).await;
     let _ = sqlx::query!("DELETE FROM users").execute(&pool).await;
@@ -232,6 +231,7 @@ async fn test_slug_preview_available() {
     let auth_service = AuthService::new(pool.clone(), jwt_secret);
 
     // Clean up any existing test data first
+    let _ = sqlx::query!("DELETE FROM refresh_tokens").execute(&pool).await;
     let _ = sqlx::query!("DELETE FROM user_roles").execute(&pool).await;
     let _ = sqlx::query!("DELETE FROM incident_timers").execute(&pool).await;
     let _ = sqlx::query!("DELETE FROM users").execute(&pool).await;
@@ -240,10 +240,7 @@ async fn test_slug_preview_available() {
         App::new()
             .app_data(web::Data::new(pool.clone()))
             .app_data(web::Data::new(auth_service))
-            .service(
-                web::scope("/backend")
-                    .configure(routes::auth::configure_routes)
-            )
+            .configure(routes::configure_app_routes)
     ).await;
 
     let preview_data = SlugPreviewRequest {
@@ -296,6 +293,7 @@ async fn test_slug_preview_available() {
     assert_eq!(body2["final_slug"], "john-doe-test-2", "Final slug should have collision suffix");
 
     // Cleanup
+    let _ = sqlx::query!("DELETE FROM refresh_tokens").execute(&pool).await;
     let _ = sqlx::query!("DELETE FROM user_roles").execute(&pool).await;
     let _ = sqlx::query!("DELETE FROM incident_timers").execute(&pool).await;
     let _ = sqlx::query!("DELETE FROM users").execute(&pool).await;

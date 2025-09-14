@@ -37,19 +37,34 @@ fi
 # Change to backend directory
 cd "$BACKEND_DIR"
 
-# Check if DATABASE_URL is set
+# Load environment and construct DATABASE_URL
+if [[ -f "$PROJECT_ROOT/.env.development" ]]; then
+    log "Loading environment from .env.development file"
+    source "$PROJECT_ROOT/.env.development"
+elif [[ -f "$PROJECT_ROOT/.env" ]]; then
+    log "Loading environment from .env file"
+    source "$PROJECT_ROOT/.env"
+else
+    error "No environment file found (.env or .env.development required)"
+fi
+
+# Construct DATABASE_URL if not provided (for host-side execution)
 if [[ -z "$DATABASE_URL" ]]; then
-    # Try to load from .env
-    if [[ -f "$PROJECT_ROOT/.env" ]]; then
-        log "Loading environment from .env file"
-        export $(grep -v '^#' "$PROJECT_ROOT/.env" | xargs)
-    elif [[ -f "$PROJECT_ROOT/.env.development" ]]; then
-        log "Loading environment from .env.development file"
-        export $(grep -v '^#' "$PROJECT_ROOT/.env.development" | xargs)
+    if [[ -n "$DB_USER" && -n "$DB_PASSWORD" ]]; then
+        DATABASE_URL="postgresql://${DB_USER}:${DB_PASSWORD}@localhost:5432/kennwilliamson"
+        log "Constructed DATABASE_URL from environment variables"
     else
-        error "DATABASE_URL not set and no .env file found"
+        error "DATABASE_URL not set and cannot construct from DB_USER/DB_PASSWORD"
     fi
 fi
+
+# Convert Docker network hostname to localhost for host-side script execution
+if [[ "$DATABASE_URL" == *"@postgres:"* ]]; then
+    DATABASE_URL="${DATABASE_URL/@postgres:/@localhost:}"
+    log "Converting DATABASE_URL for host-side execution: postgres -> localhost"
+fi
+
+export DATABASE_URL
 
 # Check if database is accessible
 log "Verifying database connectivity..."

@@ -1,3 +1,5 @@
+import { parseJwtToken } from '#shared/utils/jwt'
+
 export default defineEventHandler(async (event) => {
   try {
     // Get the user session to access the JWT token
@@ -18,11 +20,23 @@ export default defineEventHandler(async (event) => {
     }
     
     console.log('🔍 [JWT API] Providing JWT token for:', session.user.email)
+
+    // Extract expiration from JWT token using shared utility
+    const result = parseJwtToken(session.secure.jwtToken)
+    let expiresAt: string
     
+    if (result.isValid) {
+      expiresAt = result.expiration.toISOString()
+      console.log('🔍 [JWT API] Token expires at:', expiresAt)
+    } else {
+      console.warn('⚠️ [JWT API] Failed to parse JWT expiration:', result.error)
+      expiresAt = new Date(Date.now() + 60 * 60 * 1000).toISOString() // 1 hour from now
+    }
+
     // Return the JWT token to the client
     return {
       token: session.secure.jwtToken,
-      expiresAt: new Date(Date.now() + 15 * 60 * 1000).toISOString() // 15 minutes from now
+      expiresAt
     }
   } catch (error: any) {
     console.log('❌ [JWT API] Error providing JWT token:', error.message)

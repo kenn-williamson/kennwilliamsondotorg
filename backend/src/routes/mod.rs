@@ -19,11 +19,18 @@ pub fn configure_app_routes(cfg: &mut web::ServiceConfig) {
                         .route("/register", web::post().to(auth::register))
                         .route("/login", web::post().to(auth::login))
                         .route("/preview-slug", web::post().to(auth::preview_slug))
-                        // Protected auth endpoint with middleware
+                        .route("/refresh", web::post().to(auth::refresh))
+                        .route("/revoke", web::post().to(auth::revoke))
+                        // Protected auth endpoints with middleware
                         .service(
                             web::resource("/me")
                                 .wrap(actix_web::middleware::from_fn(middleware::auth::jwt_auth_middleware))
                                 .route(web::get().to(auth::get_current_user))
+                        )
+                        .service(
+                            web::resource("/revoke-all")
+                                .wrap(actix_web::middleware::from_fn(middleware::auth::jwt_auth_middleware))
+                                .route(web::post().to(auth::revoke_all))
                         )
                 )
                 // Public incident timer endpoint
