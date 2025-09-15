@@ -23,6 +23,8 @@ Development automation scripts for workflow management, database operations, and
 - **`setup-db.sh`**: Safe database migration management with dev/prod modes (production-first with `--dev` flag)
 - **`prepare-sqlx.sh`**: SQLx query cache generation for Docker builds
 - **`reset-db.sh`**: Complete database reset for development
+- **`backup-db.sh`**: Database backup and restore with environment detection and local testing support
+- **`download-backup.sh`**: Download database backups from remote servers with local testing mode
 
 ### Health and Monitoring Scripts
 - **`health-check.sh`**: Comprehensive service health verification (production-first with `--dev` flag)
@@ -31,6 +33,9 @@ Development automation scripts for workflow management, database operations, and
 - **`setup-production-env.sh`**: Secure production environment generation with strong secrets
 - **`generate-ssl.sh`**: Unified SSL certificate generation for development and local production testing
 - **`setup-local-prod.sh`**: Complete local production environment setup with SSL certificates and health verification
+
+### Utility Scripts
+- **`detect-environment.sh`**: Shared environment detection logic for multi-environment scripts
 
 For detailed usage instructions, see [DEVELOPMENT-WORKFLOW.md](DEVELOPMENT-WORKFLOW.md).
 
@@ -48,6 +53,8 @@ For detailed usage instructions, see [DEVELOPMENT-WORKFLOW.md](DEVELOPMENT-WORKF
 - **Host Compatibility**: Converts Docker network hostnames to localhost for host-side script execution
 - **Validation**: Schema verification and health checking
 - **SQLx Integration**: Query cache management for Docker builds
+- **Backup Management**: `backup-db.sh` provides comprehensive backup and restore with environment detection
+- **Remote Backup Access**: `download-backup.sh` enables backup retrieval from remote servers with local testing support
 
 ### Health Monitoring (`health-check.sh`)
 - **Environment Modes**: Production-first with `--dev` and `--local-prod` flags
@@ -56,6 +63,28 @@ For detailed usage instructions, see [DEVELOPMENT-WORKFLOW.md](DEVELOPMENT-WORKF
 - Resource usage monitoring with configurable thresholds
 - Wait functionality for service startup scenarios
 - **Local Production Support**: Full integration with `docker-compose.local-prod.yml`
+- **Environment Detection**: Integrated environment validation with mismatch warnings
+
+### Database Backup and Restore (`backup-db.sh`)
+- **Environment Detection**: Automatic detection of development, local-prod, or production environments
+- **Backup Operations**: Compressed database backups with timestamp naming
+- **Restore Operations**: Safe database restoration with confirmation prompts
+- **Local Testing**: Support for localhost testing mode
+- **Container Integration**: Works with Docker PostgreSQL containers
+- **File Management**: Automatic backup file organization in `./backups/` directory
+
+### Remote Backup Access (`download-backup.sh`)
+- **Remote Download**: SCP-based backup retrieval from production servers
+- **Local Testing**: Localhost mode for testing download workflows
+- **SSH Key Support**: Optional SSH key authentication for secure access
+- **File Validation**: Comprehensive file existence and permission checking
+- **Error Handling**: Detailed error messages and troubleshooting guidance
+
+### Environment Detection (`detect-environment.sh`)
+- **Shared Logic**: Reusable environment detection for multiple scripts
+- **Container Analysis**: Docker container name pattern recognition
+- **Mismatch Handling**: User confirmation for environment mismatches
+- **Helpful Guidance**: Context-aware tips for correct script usage
 
 ### Environment Setup (`setup-production-env.sh`)
 - **Secure Secret Generation**: 384-bit JWT secrets and strong database passwords

@@ -94,6 +94,23 @@ fi
 # Initialize Docker Compose command
 COMPOSE_CMD="docker-compose"
 
+# Environment detection and validation (skip if in container context)
+if [[ "$CONTAINER_CONTEXT" != "true" ]]; then
+    source scripts/detect-environment.sh
+
+    # Check for environment mismatches
+    REQUESTED_ENV="production"  # Default to production (original behavior)
+    if [[ "$DEV_MODE" == true ]]; then
+        REQUESTED_ENV="development"
+    fi
+
+    if [[ "$REQUESTED_ENV" != "$DETECTED_ENV" ]]; then
+        if ! confirm_environment "$REQUESTED_ENV" "$DETECTED_ENV"; then
+            exit 1
+        fi
+    fi
+fi
+
 # Load environment based on mode
 # Check if we're running in container context
 if [[ "$CONTAINER_CONTEXT" == "true" ]]; then

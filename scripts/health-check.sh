@@ -112,6 +112,23 @@ if ! command -v docker-compose >/dev/null 2>&1; then
     error "docker-compose not found. Please install Docker Compose."
 fi
 
+# Environment detection and validation
+source scripts/detect-environment.sh
+
+# Check for environment mismatches
+REQUESTED_ENV="production"  # Default
+if [[ "$DEV_MODE" == true ]]; then
+    REQUESTED_ENV="development"
+elif [[ "$LOCAL_PROD_MODE" == true ]]; then
+    REQUESTED_ENV="local-prod"
+fi
+
+if [[ "$REQUESTED_ENV" != "$DETECTED_ENV" ]]; then
+    if ! confirm_environment "$REQUESTED_ENV" "$DETECTED_ENV"; then
+        exit 1
+    fi
+fi
+
 # Load environment based on mode
 if [[ "$DEV_MODE" == true ]]; then
     # Development mode - load dev environment
