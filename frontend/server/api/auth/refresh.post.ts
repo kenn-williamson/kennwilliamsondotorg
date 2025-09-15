@@ -1,5 +1,6 @@
 import { defineEventHandler, createError } from 'h3'
 import { useRuntimeConfig } from '#imports'
+import { getClientInfo } from '../../utils/client-ip'
 
 export default defineEventHandler(async (event) => {
   try {
@@ -25,12 +26,25 @@ export default defineEventHandler(async (event) => {
 
     // Call the backend refresh endpoint
     const config = useRuntimeConfig()
+    
+    // Extract client information for proper IP forwarding
+    const clientInfo = getClientInfo(event)
+    
+    console.log(`🔍 [Refresh API] Client IP: ${clientInfo.ip}, User-Agent: ${clientInfo.userAgent}`)
+    
     const response = await $fetch<{
       token: string
       refresh_token: string
     }>(`${config.apiBase}/auth/refresh`, {
       method: 'POST',
-      body: { refresh_token: refreshToken }
+      body: { refresh_token: refreshToken },
+      headers: {
+        // Forward the original client IP headers for proper refresh token tracking
+        'X-Real-IP': clientInfo.ip,
+        'X-Forwarded-For': clientInfo.ip,
+        'X-Forwarded-Proto': clientInfo.protocol,
+        'User-Agent': clientInfo.userAgent
+      }
     })
 
     console.log('✅ [Refresh API] Got new tokens, updating session')

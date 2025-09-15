@@ -1,6 +1,7 @@
 import { z } from 'zod'
 import { defineEventHandler, readValidatedBody, createError } from 'h3'
 import { useRuntimeConfig } from '#imports'
+import { getClientInfo } from '../../utils/client-ip'
 
 const bodySchema = z.object({
   email: z.string().email(),
@@ -14,6 +15,12 @@ export default defineEventHandler(async (event: any) => {
   try {
     // Call the Rust backend for registration
     const config = useRuntimeConfig()
+    
+    // Extract client information for proper IP forwarding
+    const clientInfo = getClientInfo(event)
+    
+    console.log(`🔍 [Register API] Client IP: ${clientInfo.ip}, User-Agent: ${clientInfo.userAgent}`)
+    
     const response = await $fetch<{
       token: string
       refresh_token: string
@@ -27,7 +34,14 @@ export default defineEventHandler(async (event: any) => {
       }
     }>(`${config.apiBase}/auth/register`, {
       method: 'POST',
-      body: { email, display_name, password }
+      body: { email, display_name, password },
+      headers: {
+        // Forward the original client IP headers for proper refresh token tracking
+        'X-Real-IP': clientInfo.ip,
+        'X-Forwarded-For': clientInfo.ip,
+        'X-Forwarded-Proto': clientInfo.protocol,
+        'User-Agent': clientInfo.userAgent
+      }
     })
     
     // Set the user session using Nuxt Auth Utils
