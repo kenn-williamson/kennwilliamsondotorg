@@ -21,24 +21,27 @@ backend/
 │   ├── models/           # Database models
 │   │   ├── mod.rs        # Module exports
 │   │   ├── user.rs       # User model + auth requests
-│   │   └── incident_timer.rs # Incident timer model
+│   │   ├── incident_timer.rs # Incident timer model
+│   │   └── phrase.rs     # Phrase and suggestion models
 │   ├── routes/           # API route handlers
 │   │   ├── mod.rs        # Route configuration
 │   │   ├── auth.rs       # Registration/login endpoints
-│   │   └── incident_timers.rs # CRUD + public endpoints
+│   │   ├── incident_timers.rs # CRUD + public endpoints
+│   │   ├── phrases.rs    # Phrase management endpoints
+│   │   └── admin.rs      # Admin-only endpoints
 │   ├── services/         # Business logic
 │   │   ├── mod.rs        # Service exports
 │   │   ├── auth.rs       # JWT + password validation
-│   │   └── incident_timer.rs # Timer business logic
+│   │   ├── incident_timer.rs # Timer business logic
+│   │   └── phrase.rs     # Phrase and suggestion business logic
 │   ├── middleware/       # Custom middleware
 │   │   ├── mod.rs        # Middleware exports
 │   │   └── auth.rs       # JWT validation with role extraction
 │   └── utils/            # Utility functions
 ├── migrations/           # SQLx migrations
-│   ├── 20250829024919_create_users_table.sql
-│   ├── 20250829025210_create_roles_table.sql
-│   ├── 20250829095648_add_user_slug_to_users.sql
-│   └── 20250829095731_create_incident_timers_table.sql
+│   ├── 20250914134643_initial_schema.sql
+│   ├── 20250914134654_add_refresh_tokens_and_user_active.sql
+│   └── 20250914134703_add_phrases_system.sql
 ├── tests/               # Integration tests
 │   ├── auth_simple.rs       # Authentication endpoint tests (3 tests)
 │   ├── incident_simple.rs   # Incident timer endpoint tests (5 tests)
@@ -50,45 +53,63 @@ backend/
 ```
 
 ## Current Features
-- **Authentication System**: Full JWT-based auth with registration, login, and role-based middleware
-- **Refresh Token System**: Rolling refresh tokens with 1-week expiration and automatic cleanup
-- **User Management**: User creation with bcrypt password hashing and role assignment + automatic slug generation
-- **Slug System**: Real-time slug preview endpoint with collision handling and URL-safe generation
+- **Authentication System**: JWT-based auth with registration, login, and role-based middleware
+- **Refresh Token System**: Rolling refresh tokens with 1-week expiration and 6-month hard limit
+- **User Management**: User creation with bcrypt password hashing and automatic slug generation
+- **Slug System**: Real-time slug preview endpoint with collision handling
 - **Incident Timer CRUD**: Complete create, read, update, delete operations for authenticated users
 - **Public API**: User slug-based public timer access (no authentication required)
+- **Phrases System**: Dynamic phrase management with user suggestions and admin approval workflow
+- **Phrase Exclusion System**: User-controlled phrase filtering
+- **Admin Phrase Management**: Admin endpoints for phrase CRUD and suggestion approval/rejection
 - **Database Integration**: PostgreSQL with SQLx, UUIDv7 primary keys, automated timestamp triggers
-- **Security**: Proper JWT validation, password hashing, role extraction middleware, SHA-256 hashed refresh tokens
-- **Testing**: Comprehensive integration tests (11 tests) with fast execution and proper isolation
-- **Clean Route Architecture**: Idiomatic Actix-web routing with selective middleware application
-- **Request Logging**: Comprehensive request logging middleware for debugging
+- **Security**: JWT validation, password hashing, SHA-256 hashed refresh tokens
+- **Testing**: Integration tests with proper isolation
+- **Route Architecture**: Actix-web routing with selective middleware application
 
 ## Architecture Highlights
-- **Modern Middleware**: Uses `actix_web::middleware::from_fn()` for clean JWT validation
+- **Middleware**: Uses `actix_web::middleware::from_fn()` for JWT validation
 - **Role-Based Auth**: Middleware extracts user + roles for authorization
-- **Idiomatic Routing**: Single `/api` scope with selective middleware application
-- **Clean Route Structure**: Sub-scopes prevent middleware duplication
-- **Request Logging**: Built-in debugging with comprehensive request/response logging
-- **Production Ready**: Proper error handling, logging, and security best practices
+- **Routing**: Single `/backend` scope with selective middleware application
+- **Route Structure**: Sub-scopes prevent middleware duplication
 
 ## API Endpoints
 
 ### Public Endpoints (No Authentication Required)
-- `GET /health` - Health check
-- `GET /health/db` - Database connectivity check
-- `POST /auth/register` - User registration
-- `POST /auth/login` - User login
-- `POST /auth/refresh` - Token refresh using refresh token
-- `POST /auth/preview-slug` - Slug preview for registration form
+- `GET /backend/health` - Health check
+- `GET /backend/health/db` - Database connectivity check
+- `POST /backend/auth/register` - User registration
+- `POST /backend/auth/login` - User login
+- `POST /backend/auth/refresh` - Token refresh using refresh token
+- `POST /backend/auth/preview-slug` - Slug preview for registration form
 - `GET /backend/{user_slug}/incident-timer` - Get latest timer by user slug
+- `GET /backend/{user_slug}/phrase` - Get random phrase for public display
 
 ### Protected Endpoints (JWT Authentication Required)
-- `GET /auth/me` - Get current user profile information
-- `POST /auth/revoke` - Revoke specific refresh token
-- `POST /auth/revoke-all` - Revoke all user's refresh tokens
+- `GET /backend/auth/me` - Get current user profile information
+- `POST /backend/auth/revoke` - Revoke specific refresh token
+- `POST /backend/auth/revoke-all` - Revoke all user's refresh tokens
 - `POST /backend/incident-timers` - Create new timer
 - `GET /backend/incident-timers` - List current user's timers
 - `PUT /backend/incident-timers/{id}` - Update timer entry
 - `DELETE /backend/incident-timers/{id}` - Delete timer entry
+
+### Phrases Endpoints (JWT Authentication Required)
+- `GET /backend/phrases/random` - Get random phrase for authenticated user
+- `GET /backend/phrases/user` - Get all phrases with user exclusion status
+- `POST /backend/phrases/exclude/{id}` - Exclude phrase from user's feed
+- `DELETE /backend/phrases/exclude/{id}` - Remove phrase exclusion
+- `POST /backend/phrases/suggestions` - Submit phrase suggestion
+- `GET /backend/phrases/suggestions` - Get user's phrase suggestions
+
+### Admin Endpoints (Admin Role Required)
+- `GET /backend/admin/phrases` - Get all phrases (admin view)
+- `POST /backend/admin/phrases` - Create new phrase (admin only)
+- `PUT /backend/admin/phrases/{id}` - Update phrase (admin only)
+- `DELETE /backend/admin/phrases/{id}` - Deactivate phrase (admin only)
+- `GET /backend/admin/suggestions` - Get all pending suggestions (admin only)
+- `POST /backend/admin/suggestions/{id}/approve` - Approve suggestion (admin only)
+- `POST /backend/admin/suggestions/{id}/reject` - Reject suggestion (admin only)
 
 For detailed API contracts, see [IMPLEMENTATION-DATA-CONTRACTS.md](IMPLEMENTATION-DATA-CONTRACTS.md).
 
@@ -130,7 +151,7 @@ cargo test
 ## Testing
 
 ### Test Architecture
-Comprehensive integration test suite with 11 tests covering all endpoints:
+Integration test suite covering all endpoints:
 - **Authentication Tests**: Registration, login, credential validation
 - **Timer Tests**: CRUD operations, public access, ownership validation
 - **Health Tests**: Service and database connectivity
@@ -170,10 +191,10 @@ For detailed database information, see [IMPLEMENTATION-DATABASE.md](IMPLEMENTATI
 ## Security Implementation
 
 ### Authentication & Authorization
-- JWT tokens with secure signing and validation (1-hour expiration)
-- Rolling refresh tokens with 1-week expiration and SHA-256 hashing
-- bcrypt password hashing with appropriate cost factor (12)
-- Role-based authorization middleware for future admin features
+- JWT tokens with 1-hour expiration
+- Rolling refresh tokens with 1-week expiration and 6-month hard limit
+- bcrypt password hashing with cost factor 12
+- Role-based authorization middleware
 
 ### Refresh Token Security
 - **Secure Storage**: SHA-256 hashed tokens in database (never plaintext)
@@ -186,24 +207,18 @@ For detailed database information, see [IMPLEMENTATION-DATABASE.md](IMPLEMENTATI
 - Request/response validation with Serde
 - SQL injection prevention through SQLx parameterized queries
 - CORS configuration for cross-origin requests
-- Comprehensive input sanitization
 
 ### Error Handling
 - Structured error responses with appropriate HTTP status codes
 - Security-conscious error messages (no information leakage)
-- Comprehensive logging for debugging without exposing sensitive data
 
 ## Docker Configuration
 
 ### Multi-Stage Build
-The Dockerfile implements efficient multi-stage building:
 - Build stage: Rust compilation with dependency caching
 - Runtime stage: Minimal Alpine Linux container
 - Security: Non-root user execution
 - Health checks: Built-in container health monitoring
-
-### Container Integration
-Designed to work seamlessly with Docker Compose development environment and production deployment.
 
 ---
 

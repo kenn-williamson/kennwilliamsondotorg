@@ -1,50 +1,36 @@
 # KennWilliamson.org Roadmap
 
 ## Current Status
-**Production deployment complete at kennwilliamson.org**. Full-stack application live with SSL, production infrastructure, and comprehensive development tooling. Now focusing on post-deployment optimization and feature expansion.
-
-## Recently Completed
-
-### ✅ JWT Refresh Token System
-**Status**: **COMPLETED**
-**Goal**: Implement rolling refresh tokens with secure session management
-
-**Implemented Features**:
-- **Rolling 1-week refresh tokens** aligned with session expiration (simplified from 30-day)
-- **Minimal JWT payload** (user ID only) with 1-hour expiration for reduced size and faster transmission
-- **Multiple device support** with separate refresh tokens per session via SHA-256 hashing
-- **Automatic token refresh** via pre-request expiration checking (1-minute threshold)
-- **Simple revocation** via `/backend/auth/revoke` and `/backend/auth/revoke-all` endpoints
-
-**Completed Implementation**:
-- **Database**: `refresh_tokens` table with SHA-256 hashing and CASCADE cleanup
-- **Backend Endpoints**: `/auth/refresh`, `/auth/me`, `/auth/revoke`, `/auth/revoke-all`
-- **Frontend**: Simplified JWT manager with pre-request checking system
-- **Security**: SHA-256 token hashing, automatic cleanup, rolling expiration
+**Production deployment complete at kennwilliamson.org**. Full-stack application live with SSL, production infrastructure, and comprehensive development tooling. Motivational Phrases & User Management System complete. Currently implementing admin user management features.
 
 ## Immediate Priorities
 
-### 🎯 Motivational Phrases & User Management System
+### 🎯 Admin User Management System
 **Priority**: High
-**Goal**: Replace hardcoded phrases with dynamic system and add comprehensive user management
+**Goal**: Complete admin functionality for user management and password reset
+**Status**: Backend admin endpoints for phrases complete, user management pending
 
-**Phrases System**:
-- **Dynamic Phrase Display**: Replace hardcoded "Vigilance Maintained" with randomly selected phrases from database
-- **Global Phrase Pool**: Database-driven phrases that all users can see
-- **Display Locations**: Show phrases in header on both public (`/{user_slug}/incident-timer`) and private (`/incidents`) pages
-- **Reusable Component**: Extend existing header component for phrase display
+### 🧪 Test Suite Restoration & Expansion
+**Priority**: High
+**Goal**: Fix broken existing tests and implement comprehensive testing coverage
+**Status**: Existing tests broken due to authentication system changes, needs immediate attention
+
+**Current Issues**:
+- Existing backend tests fail due to JWT authentication changes
+- SQLx query cache missing test queries
+- Login method signature changes require test updates
+- New phrase system needs comprehensive test coverage
+
+**Immediate Actions**:
+- Fix existing auth and incident timer tests
+- Update test helpers for new database schema
+- Add phrase system endpoint tests
+- Ensure all tests pass before frontend integration
 
 **User Profile Management**:
 - **Profile Page**: New page for users to update display name and slug (unlimited changes allowed)
 - **Slug Collision Handling**: Apply same collision-handling logic as registration
 - **Email Immutable**: Email cannot be changed (will be OAuth integration anchor point)
-- **Phrase Selection Interface**: Allow users to select which phrases they want to see from global pool
-
-**User Suggestion Workflow**:
-- **Suggest Phrases**: Users can suggest new phrases for admin approval
-- **Suggestion Status Tracking**: Users see status of their suggestions (pending/approved/rejected)
-- **Rejection with Reason**: Rejected suggestions include admin-provided reason
-- **Suggestion History**: Track who suggested phrases for admin reference
 
 **Admin User Management**:
 - **Promote to Admin**: Admins can promote other users to admin role
@@ -56,53 +42,18 @@
 - **Temporary Password System**: Admin-reset passwords should be temporary, forcing user to change on next login
 - **Future-Ready**: Design password reset to work with future email integration
 
-**Admin Phrases Management**:
-- **Suggestion Review Interface**: Admins see pending user suggestions with approve/reject actions
-- **Direct Phrase Addition**: Admins can add phrases directly without suggestion process
-- **Rejection Management**: Admins can reject suggestions with reason (visible to suggesting user)
-- **Phrase Lifecycle**: Phrases can be deactivated (hidden but kept) or fully deleted
-- **Suggestion Tracking**: Track suggestion status and history
-
-**Database Schema Extensions**:
-- **phrases table**: id, phrase_text, active, created_by, created_at, updated_at
-- **user_phrases table**: user_id, phrase_id (many-to-many for user selections)
-- **phrase_suggestions table**: id, user_id, phrase_text, status (pending/approved/rejected), admin_id, admin_reason, created_at, updated_at
-- **users table**: Add active boolean field for user deactivation
+**Admin Interface**:
+- **User Management Dashboard**: Admin interface for user management and monitoring
+- **Password Reset Interface**: Admin interface for resetting user passwords
+- **User Promotion Interface**: Admin interface for promoting users to admin role
 
 **Technical Requirements**:
-- New API endpoints for phrase CRUD, user management, suggestions
-- New frontend components for profile management, admin interfaces
-- Database migrations for new tables and user table modification
+- New API endpoints for user management, password reset, user promotion
+- New frontend components for user profile editing, admin interfaces
+- Password reset functionality with temporary password generation
 - Role-based route protection for admin features
 
 ## Next Priorities
-
-### SSR vs CSR Data Fetching Optimization
-**Priority**: Low
-**Goal**: Optimize data fetching patterns for better performance and user experience
-
-**Current State**: Hybrid architecture implemented with basic SSR/CSR separation
-**Remaining Work**:
-- **SSR Data Loading**: Ensure all initial page loads use server-side data fetching for optimal performance
-- **CSR Interactions**: Optimize client-side data fetching for user interactions and real-time updates
-- **Caching Strategy**: Implement proper caching for both SSR and CSR data
-- **Type Safety**: Ensure consistent TypeScript types across SSR and CSR data flows
-- **Performance Monitoring**: Add metrics to measure SSR vs CSR performance impact
-
-### Production Infrastructure Completion
-**Goal**: Complete missing production infrastructure components
-
-**Missing Infrastructure**:
-- **Rate Limiting & DDoS Protection**: Fix nginx rate limiting configuration (currently failing with "zero size shared memory zone" error)
-- **Service Health Monitoring**: Implement automated health checks and alerting
-- **Auto-Restart Capabilities**: Configure automatic service restart on failure
-- **Log Aggregation**: Set up centralized logging and rotation
-
-**Alternative Solutions**:
-- Investigate Cloudflare or AWS WAF for DDoS protection
-- Consider application-level rate limiting in Rust backend
-- Evaluate third-party monitoring services (Datadog, New Relic)
-
 
 ### Quality Assurance & Testing Expansion
 **Goal**: Comprehensive testing coverage and code quality improvements
@@ -151,25 +102,17 @@ npm install --save-dev @vitest/ui # Optional test UI
 - Utility coverage for helper functions and composables
 - Integration coverage for key user workflows
 
-### Authentication Enhancement  
-**Goal**: Extended authentication options and improved security
+### SSR vs CSR Data Fetching Optimization
+**Priority**: Medium
+**Goal**: Optimize data fetching patterns for better performance and user experience
 
-**OAuth Integration**:
-- Google OAuth 2.0 provider
-- GitHub OAuth provider  
-- Account linking for existing users (email as anchor point)
-- Multi-provider authentication support
-
-**Database Extensions**:
-- OAuth provider tables
-- Account linking relationships
-- Enhanced user profile data
-
-**Security Improvements**:
-- Enhanced session management
-- Account security settings
-- Login history and monitoring
-- Email integration for password reset notifications
+**Current State**: Hybrid architecture implemented with basic SSR/CSR separation
+**Remaining Work**:
+- **SSR Data Loading**: Ensure all initial page loads use server-side data fetching for optimal performance
+- **CSR Interactions**: Optimize client-side data fetching for user interactions and real-time updates
+- **Caching Strategy**: Implement proper caching for both SSR and CSR data
+- **Type Safety**: Ensure consistent TypeScript types across SSR and CSR data flows
+- **Performance Monitoring**: Add metrics to measure SSR vs CSR performance impact
 
 ### Feature Expansion
 **Goal**: Enhanced application functionality and user experience
@@ -192,6 +135,26 @@ npm install --save-dev @vitest/ui # Optional test UI
 - Performance optimizations
 
 ## Future Architecture
+
+### Authentication Enhancement  
+**Goal**: Extended authentication options and improved security
+
+**OAuth Integration**:
+- Google OAuth 2.0 provider
+- GitHub OAuth provider  
+- Account linking for existing users (email as anchor point)
+- Multi-provider authentication support
+
+**Database Extensions**:
+- OAuth provider tables
+- Account linking relationships
+- Enhanced user profile data
+
+**Security Improvements**:
+- Enhanced session management
+- Account security settings
+- Login history and monitoring
+- Email integration for password reset notifications
 
 ### CI/CD Pipeline
 **Goal**: Automated testing and deployment
@@ -275,21 +238,23 @@ npm install --save-dev @vitest/ui # Optional test UI
 
 ## Success Metrics
 
-### Phase 3 (Production)
-- Site accessible at kennwilliamson.org with SSL
-- 99.9% uptime target
-- Sub-2s page load times
-- Automated backup verification
+### Admin User Management Phase
+- User profile editing interface complete
+- Admin user management dashboard functional
+- Password reset system operational
+- User promotion system functional
 
-### Phase 4 (Authentication)
-- OAuth login conversion rate >50%
-- Zero security incidents
-- Account linking success rate >95%
+### Testing & Quality Phase
+- Frontend testing suite implemented
+- 90%+ test coverage achieved
+- CI/CD pipeline operational
+- Performance monitoring in place
 
-### Phase 5 (Features)
+### Feature Expansion Phase
+- Content management system
+- Advanced timer features
 - User engagement metrics
-- Content creation tools adoption
-- Timer feature usage analytics
+- PWA functionality
 
 ## Risk Mitigation
 

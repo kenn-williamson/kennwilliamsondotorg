@@ -1,168 +1,104 @@
 # Scripts Implementation
 
 ## Overview
-Development automation scripts for workflow management, database operations, and Docker orchestration. Designed with single-responsibility principles and modular architecture.
+Development automation scripts for workflow management, database operations, and Docker orchestration.
 
-## Script Architecture
+## Scripts by Category
 
-### Design Philosophy
-- **Individual scripts**: Single responsibility, focused tasks
-- **Parameterized**: Scripts accept flags for different modes
-- **Idempotent**: Safe to run multiple times
-- **Error handling**: Fail fast with clear error messages
-- **Development focused**: Optimized for daily development workflows
-
-## Current Scripts
-
-### Core Development Scripts
+### Core Development
 - **`dev-start.sh`**: Service management with flexible startup options
 - **`dev-stop.sh`**: Clean service shutdown with removal options
 - **`dev-logs.sh`**: Log viewing with filtering and formatting
 
-### Database Management Scripts
-- **`setup-db.sh`**: Safe database migration management with dev/prod modes (production-first with `--dev` flag)
-- **`prepare-sqlx.sh`**: SQLx query cache generation for Docker builds
+### Database Management
+- **`setup-db.sh`**: Safe database migration management (preserves data)
 - **`reset-db.sh`**: Complete database reset for development
-- **`backup-db.sh`**: Database backup and restore with environment detection and local testing support
-- **`download-backup.sh`**: Download database backups from remote servers with local testing mode
+- **`backup-db.sh`**: Database backup and restore with environment detection
+- **`download-backup.sh`**: Download database backups from remote servers
+- **`prepare-sqlx.sh`**: SQLx query cache generation for Docker builds
+- **`update-migrations-table.sh`**: Update SQLx migrations table
 
-### Health and Monitoring Scripts
-- **`health-check.sh`**: Comprehensive service health verification (production-first with `--dev` flag)
+### Health & Monitoring
+- **`health-check.sh`**: Comprehensive service health verification
+- **`test-auth.sh`**: Test authentication endpoints
 
-### Environment Setup Scripts
-- **`setup-production-env.sh`**: Secure production environment generation with strong secrets
-- **`generate-ssl.sh`**: Unified SSL certificate generation for development and local production testing
-- **`setup-local-prod.sh`**: Complete local production environment setup with SSL certificates and health verification
+### Environment Setup
+- **`setup-production-env.sh`**: Secure production environment generation
+- **`generate-ssl.sh`**: SSL certificate generation for development and local production
+- **`setup-local-prod.sh`**: Complete local production environment setup
+- **`ssl-manager.sh`**: Let's Encrypt SSL certificate management
 
-### Utility Scripts
-- **`detect-environment.sh`**: Shared environment detection logic for multi-environment scripts
+### Deployment
+- **`deploy.sh`**: Production deployment script
 
-For detailed usage instructions, see [DEVELOPMENT-WORKFLOW.md](DEVELOPMENT-WORKFLOW.md).
+### Utilities
+- **`detect-environment.sh`**: Shared environment detection logic
 
-## Implementation Features
+## Key Features
 
-### Service Management (`dev-start.sh`)
-- Flexible service startup with build/restart options
-- Service-specific targeting
-- Build optimization with cache control
-- Integrated logging options
-
-### Database Operations
+### Database Management
 - **Migration Safety**: `setup-db.sh` preserves existing data
-- **Environment Modes**: Production-first with `--dev` flag for development environment
-- **Host Compatibility**: Converts Docker network hostnames to localhost for host-side script execution
-- **Validation**: Schema verification and health checking
+- **Environment Detection**: Automatic detection of dev/prod environments
+- **Backup/Restore**: `backup-db.sh` and `download-backup.sh` for data management
 - **SQLx Integration**: Query cache management for Docker builds
-- **Backup Management**: `backup-db.sh` provides comprehensive backup and restore with environment detection
-- **Remote Backup Access**: `download-backup.sh` enables backup retrieval from remote servers with local testing support
 
-### Health Monitoring (`health-check.sh`)
-- **Environment Modes**: Production-first with `--dev` and `--local-prod` flags
-- PostgreSQL connectivity and database access verification
-- Backend API endpoint validation  
-- Resource usage monitoring with configurable thresholds
-- Wait functionality for service startup scenarios
-- **Local Production Support**: Full integration with `docker-compose.local-prod.yml`
-- **Environment Detection**: Integrated environment validation with mismatch warnings
-
-### Database Backup and Restore (`backup-db.sh`)
-- **Environment Detection**: Automatic detection of development, local-prod, or production environments
-- **Backup Operations**: Compressed database backups with timestamp naming
-- **Restore Operations**: Safe database restoration with confirmation prompts
-- **Local Testing**: Support for localhost testing mode
-- **Container Integration**: Works with Docker PostgreSQL containers
-- **File Management**: Automatic backup file organization in `./backups/` directory
-
-### Remote Backup Access (`download-backup.sh`)
-- **Remote Download**: SCP-based backup retrieval from production servers
-- **Local Testing**: Localhost mode for testing download workflows
-- **SSH Key Support**: Optional SSH key authentication for secure access
-- **File Validation**: Comprehensive file existence and permission checking
-- **Error Handling**: Detailed error messages and troubleshooting guidance
-
-### Environment Detection (`detect-environment.sh`)
-- **Shared Logic**: Reusable environment detection for multiple scripts
-- **Container Analysis**: Docker container name pattern recognition
-- **Mismatch Handling**: User confirmation for environment mismatches
-- **Helpful Guidance**: Context-aware tips for correct script usage
-
-### Environment Setup (`setup-production-env.sh`)
-- **Secure Secret Generation**: 384-bit JWT secrets and strong database passwords
-- **Production Configuration**: Complete .env.production file generation
-- **Security Notes**: Includes warnings about file protection and version control exclusion
-- **Domain Configuration**: Ready for production domain setup
+### Health Monitoring
+- **Service Health**: PostgreSQL, backend API, and frontend verification
+- **Resource Monitoring**: Container resource usage tracking
+- **Environment Validation**: Mismatch detection and warnings
 
 ### SSL Certificate Management
+- **Development**: `generate-ssl.sh` for localhost certificates
+- **Local Production**: Domain certificates for production testing
+- **Production**: `ssl-manager.sh` for Let's Encrypt integration
 
-#### Development SSL (`generate-ssl.sh`)
-- **Unified Script**: Single script handles both development and local production modes
-- **Development Mode**: Generates localhost certificates in `nginx/ssl/` for pure development
-- **Local Production Mode**: Generates domain certificates in `nginx/ssl-local/` for production testing
-- **Smart Validation**: Checks existing certificates and regenerates only when needed
-- **DH Parameters**: Automatically generates Diffie-Hellman parameters for production-grade security
-- **Usage Modes**:
-  - `./scripts/generate-ssl.sh` or `./scripts/generate-ssl.sh dev` - Development certificates
-  - `./scripts/generate-ssl.sh local-prod` - Local production domain certificates
+### Environment Setup
+- **Production**: `setup-production-env.sh` for secure environment generation
+- **Local Production**: `setup-local-prod.sh` for complete local production setup
 
-#### Production SSL Management (`ssl-manager.sh`)
-- **Let's Encrypt Integration**: Automated certificate generation and renewal
-- **Certificate Detection**: Automatically detects and replaces self-signed certificates
-- **Docker Integration**: Seamless integration with Docker volumes and nginx containers
-- **Automatic Renewal**: Cron job setup for twice-daily certificate renewal checks
-- **Fallback Support**: Creates temporary self-signed certificates if Let's Encrypt fails
-- **Comprehensive Logging**: All operations logged with timestamps and status indicators
-- **Commands**:
-  - `generate` - Generate Let's Encrypt certificates (replaces existing fake certs)
-  - `fake` - Create temporary self-signed certificates for initial nginx startup
-  - `renew` - Manually renew existing certificates
-  - `check` - Check certificate status and expiry
-  - `setup-cron` - Set up automatic renewal cron job
-  - `remove-cron` - Remove automatic renewal cron job
-- **Safety Features**:
-  - Validates domain DNS resolution before certificate generation
-  - Stops nginx during certificate generation to free port 80
-  - Automatically restarts nginx with new certificates
-  - Verifies certificate installation in Docker volumes
+## Usage Examples
 
-### Local Production Environment (`setup-local-prod.sh`)
-- **One-Command Setup**: Complete local production environment initialization
-- **SSL Certificate Generation**: Automatic domain certificate creation with `generate-ssl.sh local-prod`
-- **Service Orchestration**: Proper startup order with Docker Compose dependency management
-- **Health Verification**: Integrated health checking with detailed service status reporting
-- **Environment Options**: `--build`, `--stop-first`, `--logs` flags for flexible workflow
-- **Access Points**: Configures both localhost and domain-based access (with /etc/hosts setup)
-- **Isolation**: Uses separate database volume (`postgres_data_local_prod`) to prevent dev/prod conflicts
-- **Documentation**: Comprehensive usage instructions and next steps guidance
+### Development Workflow
+```bash
+# Start development environment
+./scripts/dev-start.sh
 
-## Error Handling and Safety
+# Check service health
+./scripts/health-check.sh --dev
 
-### Common Safety Patterns
+# Run database migrations
+./scripts/setup-db.sh --dev
+
+# View logs
+./scripts/dev-logs.sh backend
+```
+
+### Database Operations
+```bash
+# Reset database
+./scripts/reset-db.sh
+
+# Backup database
+./scripts/backup-db.sh
+
+# Download backup from remote
+./scripts/download-backup.sh user@server:/path/to/backup.sql
+```
+
+### SSL Management
+```bash
+# Generate development certificates
+./scripts/generate-ssl.sh
+
+# Generate local production certificates
+./scripts/generate-ssl.sh local-prod
+
+# Manage production SSL
+./scripts/ssl-manager.sh generate
+```
+
+## Error Handling
 - Environment validation before execution
-- Service connectivity verification
 - Graceful failure with clear error messages
-- Rollback capabilities where appropriate
-
-### Logging and Debugging
 - Colored output for status indication
 - Comprehensive error reporting
-- Progress indicators for long-running operations
-- Debug mode options for troubleshooting
-
-## Integration Points
-
-### Docker Compose Integration
-- Designed to work with both development and production compose files
-- Service-specific targeting and management
-- Resource monitoring and container health checking
-
-### Development Environment
-- Environment file detection and loading
-- Database connectivity management
-- Hot reload and development server integration
-
-### CI/CD Preparation
-Scripts designed with automation in mind for future CI/CD pipeline integration.
-
----
-
-*This document describes the current script implementation. For detailed usage workflows, see [DEVELOPMENT-WORKFLOW.md](DEVELOPMENT-WORKFLOW.md). For planned script enhancements, see [ROADMAP.md](ROADMAP.md).*

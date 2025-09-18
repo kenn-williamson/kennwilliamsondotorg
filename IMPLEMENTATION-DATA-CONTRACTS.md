@@ -404,6 +404,265 @@ Optional fields are either included with a value or `null`:
 }
 ```
 
+## Phrases System Contracts
+
+### Get Random Phrase (Authenticated)
+**Endpoint:** `GET /backend/phrases/random`  
+**Authentication:** Required (Bearer token)
+
+**Response (200 OK):**
+```json
+"Vigilance Maintained - Until the Next Challenge Arises"
+```
+
+### Get Random Phrase (Public)
+**Endpoint:** `GET /backend/{user_slug}/phrase`  
+**Authentication:** Not required
+
+**Response (200 OK):**
+```json
+"Vigilance Maintained - Until the Next Challenge Arises"
+```
+
+### Get User's Phrases with Exclusion Status
+**Endpoint:** `GET /backend/phrases/user`  
+**Authentication:** Required (Bearer token)
+
+**Response (200 OK):**
+```json
+{
+  "phrases": [
+    {
+      "id": "01234567-89ab-cdef-0123-456789abcdef",
+      "phrase_text": "Vigilance Maintained - Until the Next Challenge Arises",
+      "active": true,
+      "created_by": "01234567-89ab-cdef-0123-456789abcdef",
+      "created_at": "2024-01-01T12:00:00Z",
+      "updated_at": "2024-01-01T12:00:00Z",
+      "is_excluded": false
+    }
+  ],
+  "total": 1
+}
+```
+
+### Exclude Phrase from User's Feed
+**Endpoint:** `POST /backend/phrases/exclude/{id}`  
+**Authentication:** Required (Bearer token)
+
+**Response (200 OK):**
+```json
+{
+  "message": "Phrase excluded successfully"
+}
+```
+
+### Remove Phrase Exclusion
+**Endpoint:** `DELETE /backend/phrases/exclude/{id}`  
+**Authentication:** Required (Bearer token)
+
+**Response (200 OK):**
+```json
+{
+  "message": "Phrase exclusion removed successfully"
+}
+```
+
+### Submit Phrase Suggestion
+**Endpoint:** `POST /backend/phrases/suggestions`  
+**Authentication:** Required (Bearer token)
+
+**Request:**
+```json
+{
+  "phrase_text": "A new motivational phrase suggestion"
+}
+```
+
+**Response (201 Created):**
+```json
+{
+  "suggestion": {
+    "id": "01234567-89ab-cdef-0123-456789abcdef",
+    "user_id": "01234567-89ab-cdef-0123-456789abcdef",
+    "phrase_text": "A new motivational phrase suggestion",
+    "status": "pending",
+    "admin_id": null,
+    "admin_reason": null,
+    "created_at": "2024-01-01T12:00:00Z",
+    "updated_at": "2024-01-01T12:00:00Z"
+  }
+}
+```
+
+### Get User's Phrase Suggestions
+**Endpoint:** `GET /backend/phrases/suggestions`  
+**Authentication:** Required (Bearer token)
+
+**Response (200 OK):**
+```json
+{
+  "suggestions": [
+    {
+      "id": "01234567-89ab-cdef-0123-456789abcdef",
+      "user_id": "01234567-89ab-cdef-0123-456789abcdef",
+      "phrase_text": "A new motivational phrase suggestion",
+      "status": "pending",
+      "admin_id": null,
+      "admin_reason": null,
+      "created_at": "2024-01-01T12:00:00Z",
+      "updated_at": "2024-01-01T12:00:00Z"
+    }
+  ],
+  "total": 1
+}
+```
+
+## Admin Phrases Contracts
+
+### Get All Phrases (Admin)
+**Endpoint:** `GET /backend/admin/phrases`  
+**Authentication:** Required (Admin role)
+
+**Query Parameters:**
+- `include_inactive` (optional): Include deactivated phrases
+- `limit` (optional): Number of phrases to return
+- `offset` (optional): Number of phrases to skip
+
+**Response (200 OK):**
+```json
+{
+  "phrases": [
+    {
+      "id": "01234567-89ab-cdef-0123-456789abcdef",
+      "phrase_text": "Vigilance Maintained - Until the Next Challenge Arises",
+      "active": true,
+      "created_by": "01234567-89ab-cdef-0123-456789abcdef",
+      "created_at": "2024-01-01T12:00:00Z",
+      "updated_at": "2024-01-01T12:00:00Z"
+    }
+  ],
+  "total": 1
+}
+```
+
+### Create Phrase (Admin)
+**Endpoint:** `POST /backend/admin/phrases`  
+**Authentication:** Required (Admin role)
+
+**Request:**
+```json
+{
+  "phrase_text": "A new phrase created by admin"
+}
+```
+
+**Response (201 Created):**
+```json
+{
+  "id": "01234567-89ab-cdef-0123-456789abcdef",
+  "phrase_text": "A new phrase created by admin",
+  "active": true,
+  "created_by": "01234567-89ab-cdef-0123-456789abcdef",
+  "created_at": "2024-01-01T12:00:00Z",
+  "updated_at": "2024-01-01T12:00:00Z"
+}
+```
+
+### Update Phrase (Admin)
+**Endpoint:** `PUT /backend/admin/phrases/{id}`  
+**Authentication:** Required (Admin role)
+
+**Request:**
+```json
+{
+  "phrase_text": "Updated phrase text",
+  "active": true
+}
+```
+
+**Response (200 OK):**
+```json
+{
+  "id": "01234567-89ab-cdef-0123-456789abcdef",
+  "phrase_text": "Updated phrase text",
+  "active": true,
+  "created_by": "01234567-89ab-cdef-0123-456789abcdef",
+  "created_at": "2024-01-01T12:00:00Z",
+  "updated_at": "2024-01-01T13:00:00Z"
+}
+```
+
+### Deactivate Phrase (Admin)
+**Endpoint:** `DELETE /backend/admin/phrases/{id}`  
+**Authentication:** Required (Admin role)
+
+**Response (200 OK):**
+```json
+{
+  "message": "Phrase deactivated successfully"
+}
+```
+
+### Get Pending Suggestions (Admin)
+**Endpoint:** `GET /backend/admin/suggestions`  
+**Authentication:** Required (Admin role)
+
+**Response (200 OK):**
+```json
+{
+  "suggestions": [
+    {
+      "id": "01234567-89ab-cdef-0123-456789abcdef",
+      "user_id": "01234567-89ab-cdef-0123-456789abcdef",
+      "phrase_text": "A new motivational phrase suggestion",
+      "status": "pending",
+      "admin_id": null,
+      "admin_reason": null,
+      "created_at": "2024-01-01T12:00:00Z",
+      "updated_at": "2024-01-01T12:00:00Z"
+    }
+  ],
+  "total": 1
+}
+```
+
+### Approve Suggestion (Admin)
+**Endpoint:** `POST /backend/admin/suggestions/{id}/approve`  
+**Authentication:** Required (Admin role)
+
+**Request:**
+```json
+{
+  "admin_reason": "Great suggestion! Approved."
+}
+```
+
+**Response (200 OK):**
+```json
+{
+  "message": "Suggestion approved successfully"
+}
+```
+
+### Reject Suggestion (Admin)
+**Endpoint:** `POST /backend/admin/suggestions/{id}/reject`  
+**Authentication:** Required (Admin role)
+
+**Request:**
+```json
+{
+  "admin_reason": "Phrase too similar to existing content"
+}
+```
+
+**Response (200 OK):**
+```json
+{
+  "message": "Suggestion rejected successfully"
+}
+```
+
 ## Route Structure
 
 ### API Base
@@ -416,6 +675,7 @@ All backend API endpoints are prefixed with `/backend/`
 - `/backend/auth/login` - User login
 - `/backend/auth/preview-slug` - Slug preview
 - `/backend/{user_slug}/incident-timer` - Public timer display with user display name
+- `/backend/{user_slug}/phrase` - Public phrase display
 
 ### Protected Routes
 All require `Authorization: Bearer {token}` header:
@@ -424,6 +684,18 @@ All require `Authorization: Bearer {token}` header:
 - `/backend/auth/revoke-all` - Revoke all user's refresh tokens
 - `/backend/incident-timers` - Timer CRUD operations
 - `/backend/incident-timers/{id}` - Specific timer operations
+- `/backend/phrases/random` - Get random phrase for authenticated user
+- `/backend/phrases/user` - Get user's phrases with exclusion status
+- `/backend/phrases/exclude/{id}` - Exclude/remove phrase exclusion
+- `/backend/phrases/suggestions` - Submit/get phrase suggestions
+
+### Admin Routes
+All require `Authorization: Bearer {token}` header with admin role:
+- `/backend/admin/phrases` - Admin phrase management
+- `/backend/admin/phrases/{id}` - Specific phrase operations
+- `/backend/admin/suggestions` - Get all pending suggestions
+- `/backend/admin/suggestions/{id}/approve` - Approve suggestion
+- `/backend/admin/suggestions/{id}/reject` - Reject suggestion
 
 ### Refresh Token Routes
 - `/backend/auth/refresh` - Token refresh (uses refresh token in request body)

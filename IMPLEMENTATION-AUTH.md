@@ -1,31 +1,31 @@
 # Authentication Implementation
 
 ## Overview
-JWT-based authentication system with email/password registration and secure session management. Integrates with [IMPLEMENTATION-FRONTEND.md](IMPLEMENTATION-FRONTEND.md), [IMPLEMENTATION-BACKEND.md](IMPLEMENTATION-BACKEND.md), and [IMPLEMENTATION-DATABASE.md](IMPLEMENTATION-DATABASE.md).
+JWT-based authentication system with email/password registration and secure session management using Nuxt Auth Utils. Integrates with [IMPLEMENTATION-FRONTEND.md](IMPLEMENTATION-FRONTEND.md), [IMPLEMENTATION-BACKEND.md](IMPLEMENTATION-BACKEND.md), and [IMPLEMENTATION-DATABASE.md](IMPLEMENTATION-DATABASE.md).
 
 ## Authentication Flow
 
 ### Registration Process
 1. Frontend form validation (VeeValidate + Yup)
-2. Password hashing with bcrypt (cost factor 12)
+2. Backend password hashing with bcrypt (cost factor 12)
 3. User creation in database with UUIDv7 and auto-generated slug
 4. JWT token + refresh token generation and return
-5. Frontend authentication state update with session storage
+5. Frontend session state update via Nuxt Auth Utils
 
 ### Login Process
 1. Frontend login form submission
 2. Backend credential verification against database
 3. Password hash comparison with bcrypt
 4. JWT token + refresh token generation with minimal claims
-5. Frontend authentication state update and redirect
+5. Frontend session state update and redirect
 
 ### Session Management
-- **JWT Storage**: Client-side memory via JWT manager
-- **Refresh Token Storage**: Secure httpOnly cookies via Nuxt session
+- **JWT Storage**: In-memory via Nuxt session (`session.secure.jwtToken`)
+- **Refresh Token Storage**: Server-side session via Nuxt Auth Utils (`session.secure.refreshToken`)
 - **JWT Expiration**: 1-hour with automatic refresh
-- **Refresh Token Expiration**: 1-week rolling tokens (aligned with session)
-- **Session Expiration**: 1-week Nuxt session
-- **Logout**: Token revocation and state clearing
+- **Refresh Token Expiration**: 1-week rolling tokens
+- **Hard Limit**: 6-month maximum token age
+- **Logout**: Token revocation and session clearing
 
 ## Security Implementation
 
@@ -38,15 +38,16 @@ JWT-based authentication system with email/password registration and secure sess
 - **Secret**: Environment variable configuration
 - **Algorithm**: HS256 (HMAC with SHA-256)
 - **Claims**: Minimal payload (user ID only) for performance
-- **Expiration**: 1-hour with automatic refresh before expiry
+- **Expiration**: 1-hour with automatic refresh
 - **Validation**: Signature verification on protected routes
 
 ### Refresh Token Security
 - **Storage**: SHA-256 hashed in database, never plaintext
 - **Rolling**: Each refresh generates new JWT + new refresh token
-- **Expiration**: 1-week aligned with session expiration
+- **Expiration**: 1-week rolling tokens
+- **Hard Limit**: 6-month maximum age from creation
 - **Device Support**: Optional device_info JSONB field
-- **Clean Revocation**: Tokens deleted immediately, no cleanup needed
+- **Clean Revocation**: Tokens deleted immediately on refresh
 
 ## Database Integration
 - User table with email uniqueness constraint
@@ -60,21 +61,26 @@ For complete schema details, see [IMPLEMENTATION-DATABASE.md](IMPLEMENTATION-DAT
 ## API Endpoints
 
 ### Authentication Endpoints
-- `POST /api/auth/register` - User registration with slug generation
-- `POST /api/auth/login` - User login with JWT response
-- `POST /api/auth/preview-slug` - Real-time slug preview for registration
+- `POST /backend/auth/register` - User registration with slug generation
+- `POST /backend/auth/login` - User login with JWT response
+- `POST /backend/auth/preview-slug` - Real-time slug preview for registration
+- `POST /backend/auth/refresh` - Token refresh using refresh token
+- `GET /backend/auth/me` - Get current user profile (protected)
+- `POST /backend/auth/revoke` - Revoke specific refresh token (protected)
+- `POST /backend/auth/revoke-all` - Revoke all user's refresh tokens (protected)
 
 ### Protected Routes
-- JWT validation middleware for `/api/incident-timers/*`
+- JWT validation middleware for `/backend/incident-timers/*`, `/backend/phrases/*`, `/backend/admin/*`
 - Automatic user context injection for protected handlers
-- Role-based authorization ready for future admin features
+- Role-based authorization for admin features
 
 ## Frontend Integration
 
-### Authentication Store (Pinia)
-- User state management with authentication status
+### Session Management (Nuxt Auth Utils)
+- User state management via `useUserSession()`
 - Login/register operations with error handling
-- Token management and logout functionality
+- Automatic token refresh via server-side API routes
+- Session-based logout functionality
 
 ### Route Protection
 - Middleware-based authentication for protected pages
@@ -98,6 +104,8 @@ For complete schema details, see [IMPLEMENTATION-DATABASE.md](IMPLEMENTATION-DAT
 - User registration with bcrypt password hashing
 - Login credential verification
 - JWT token generation with proper claims
+- Rolling refresh token management
+- Token revocation and cleanup
 
 ## Security Considerations
 

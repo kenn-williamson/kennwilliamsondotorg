@@ -1,17 +1,14 @@
 # Frontend Implementation
 
 ## Overview
-Full-featured Nuxt.js 4.0.3 frontend with authentication, incident timer features, responsive design, and proper UX/layout architecture. Built with Nuxt 4 directory structure and fully integrated with the Rust backend.
+Nuxt.js 4.0.3 frontend with authentication, incident timer features, and steampunk design system. Built with Nuxt 4 directory structure and integrated with Rust backend.
 
 ## Technology Stack
-- **Framework**: Nuxt.js 4.0.3 (latest stable)
-- **Node.js**: 20+ (even-numbered version)
-- **TypeScript**: Full support with strict mode
-- **State Management**: Pinia (built-in)
+- **Framework**: Nuxt.js 4.0.3 + Vue 3 + TypeScript
+- **State Management**: Pinia + nuxt-auth-utils
 - **Styling**: TailwindCSS 6.14.0
 - **Form Validation**: VeeValidate 4.15.1 + Yup 1.7.0
 - **Utilities**: VueUse 13.8.0
-- **HTTP Client**: Custom composables with interceptors (Vue 3 best practices)
 
 ## Project Structure
 ```
@@ -28,7 +25,15 @@ frontend/
 │   │   │   ├── TimerStats.vue     # Current timer display with SteamClock
 │   │   │   ├── TimerListItem.vue  # Individual timer row component
 │   │   │   ├── TimerEditModal.vue # Edit timer modal with validation
-│   │   │   └── TimerResetModal.vue# Quick reset modal
+│   │   │   ├── TimerResetModal.vue# Quick reset modal
+│   │   │   ├── TimerDisplayTab.vue # Timer display tab component
+│   │   │   ├── TimerControlsTab.vue # Timer controls tab component
+│   │   │   ├── PhraseSuggestionsTab.vue # Phrase suggestions tab component
+│   │   │   ├── PhraseFilterTab.vue # Phrase filtering tab component
+│   │   │   ├── SuggestionHistoryTab.vue # Suggestion history tab component
+│   │   │   └── TabNavigation.vue # Tab navigation component
+│   │   ├── Phrases/       # Phrases feature components
+│   │   │   └── RandomPhrase.vue  # Random phrase display component
 │   │   └── Steampunk/     # Steampunk design system components
 │   │       ├── SteamClock.vue     # Main steampunk timer display
 │   │       ├── FlippingDigit.vue  # Animated flip-digit component
@@ -45,20 +50,39 @@ frontend/
 │   │   └── [user_slug]/
 │   │       └── incident-timer.vue # Public timer display
 │   ├── stores/            # Pinia stores
-│   │   ├── auth.ts        # Authentication state
-│   │   └── incident-timers.ts # Timer management state
+│   │   ├── incident-timers.ts # Timer management state
+│   │   └── phrases.ts     # Phrases management state
 │   ├── middleware/        # Route middleware
 │   │   └── auth.ts        # Route protection
-│   ├── plugins/           # Nuxt plugins
-│   │   └── auth.client.ts # Client-side auth initialization
 │   ├── composables/       # Composition API logic
 │   │   ├── useAuthFetch.ts # HTTP client with auth interceptors
 │   │   ├── useAuthService.ts # Authentication operations
 │   │   ├── useBackendFetch.ts # Direct backend client with automatic JWT management
 │   │   ├── useJwtManager.ts # JWT token management with automatic refresh
-│   │   └── useIncidentTimerService.ts # Timer CRUD operations
-│   ├── layouts/           # Application layouts
-│   └── types/             # TypeScript definitions
+│   │   ├── useIncidentTimerService.ts # Timer CRUD operations
+│   │   ├── usePhraseService.ts # Phrases CRUD operations
+│   │   └── useBaseService.ts # Base service utilities
+│   ├── types/             # TypeScript definitions
+│   │   └── phrases.ts     # Phrases type definitions
+│   └── utils/             # Utility functions
+│       └── dateUtils.ts   # Date formatting utilities
+├── shared/                # Shared utilities and types
+│   ├── types/             # Shared type definitions
+│   │   └── auth.d.ts      # Authentication type definitions
+│   └── utils/             # Shared utility functions
+│       └── jwt.ts         # JWT token utilities
+├── server/                # Server API routes
+│   └── api/               # API endpoint handlers
+│       ├── auth/          # Authentication endpoints
+│       │   └── jwt.get.ts # Get current JWT token
+│       ├── phrases/       # Phrases endpoints
+│       │   └── random.get.ts # Get random phrase
+│       ├── [user_slug]/   # Dynamic user routes
+│       │   ├── incident-timer.get.ts # Public timer display
+│       │   └── phrase.get.ts # Public phrase display
+│       ├── incident-timers.get.ts # Get user timers
+│       ├── health.get.ts  # Health check
+│       └── test.get.ts    # Test endpoint
 ├── nuxt.config.ts         # Nuxt configuration
 ├── package.json           # Dependencies
 ├── Dockerfile             # Production container
@@ -67,36 +91,22 @@ frontend/
 
 ## Current Features
 
-### Authentication System
-- **Registration Page** (`/register`): Email, display name, password with VeeValidate validation
-- **Login Page** (`/login`): Email/password authentication with error handling
-- **JWT Token Management**: Rolling refresh tokens with simplified pre-request checking system
+### Authentication & Navigation
+- **Registration/Login**: Email/password with VeeValidate validation and JWT token management
 - **Route Protection**: Middleware-based authentication for protected pages
-- **Authentication Store**: Complete Pinia store with login/register/logout operations
-- **Auth Plugin**: Client-side initialization after Pinia is ready
-- **Token Refresh**: Automatic refresh when token expires within 1-minute threshold
+- **Responsive Header**: Sticky navigation with mobile hamburger menu and avatar dropdown
+- **Pages**: Homepage (gothic theme), About, Login/Register, Incidents management, Public timer display
 
-### User Interface & Navigation
-- **Responsive Header**: Sticky navigation with mobile hamburger menu
-- **Authentication States**: Different UI for authenticated vs unauthenticated users
-- **Avatar Dropdown**: User initial display with account menu
-- **Navigation Links**: About, Incidents with active state indicators
-- **Mobile-First Design**: Fully responsive across all breakpoints
+### Incident Timer System
+- **5-Tab Interface**: Timer display, controls, phrase suggestions, filtering, and history
+- **CRUD Operations**: Create, read, update, delete incident timers with real-time updates
+- **Public Sharing**: Shareable URLs with full steampunk aesthetic
+- **Steampunk Design**: Gold engraved flip cards, mahogany wood background, animated gears
 
-### Page Implementation
-- **Homepage** (`/`): Gothic construction theme with optimized image
-- **About Page** (`/about`): Placeholder with frontier/traditional aesthetic
-- **Login/Register**: Complete forms with VeeValidate + Yup validation
-- **Incidents Management** (`/incidents`): Protected CRUD interface
-- **Public Timer Display** (`/{user_slug}/incident-timer`): Real-time timer display
-
-### Incident Timer Features
-- **CRUD Operations**: Create, read, update, delete incident timers
-- **Real-time Display**: Live timer updates every second with steampunk flip-clock animation
-- **Public Access**: Shareable URLs for public timer viewing with full steampunk aesthetic
-- **Timer Management**: History, notes, reset functionality
-- **State Management**: Complete Pinia store for timer operations
-- **Steampunk Design**: Gold engraved flip cards, mahogany wood background, animated gears, vintage scroll notes
+### Phrases System
+- **Dynamic Display**: Random phrase selection from database with steampunk integration
+- **User Workflow**: Submit suggestions, filter phrases, track approval status
+- **State Management**: Pinia stores for timers and phrases management
 
 ### Design System
 Page-specific aesthetic themes per [UX-LAYOUT.md](UX-LAYOUT.md):
@@ -111,166 +121,61 @@ Page-specific aesthetic themes per [UX-LAYOUT.md](UX-LAYOUT.md):
 
 ## Component Architecture
 
-### Feature-Based Organization
-Components are organized by domain/feature following Vue 3/Nuxt best practices:
+**Layout**: AppHeader.vue (responsive header with auth states and mobile menu)
 
-**Layout Components** (`components/Layout/`)
-- **AppHeader.vue**: Responsive header with authentication states, mobile hamburger menu, and user avatar dropdown
+**Timer Components** (10 components):
+- TimerStats.vue, TimerListItem.vue, TimerEditModal.vue, TimerResetModal.vue
+- TimerDisplayTab.vue, TimerControlsTab.vue, PhraseSuggestionsTab.vue, PhraseFilterTab.vue, SuggestionHistoryTab.vue, TabNavigation.vue
 
-**Timer Feature Components** (`components/Timer/`)
-- **TimerStats.vue**: Current timer display integrating the SteamClock component for beautiful time visualization
-- **TimerListItem.vue**: Individual timer row with edit/delete actions and live time display
-- **TimerEditModal.vue**: Modal for editing timers with VeeValidate + Yup validation and datetime conversion
-- **TimerResetModal.vue**: Quick reset modal with optional notes input
+**Steampunk Design** (6 components):
+- SteamClock.vue, FlippingDigit.vue, SlidingTimeGroup.vue, SteampunkBackground.vue, SteampunkBanner.vue, VintageNoteCard.vue
 
-**Steampunk Design System** (`components/Steampunk/`)
-- **SteamClock.vue**: Main steampunk timer display with animated gears and flip-digit mechanics
-- **FlippingDigit.vue**: Individual animated split-flap digits with gold engraved styling
-- **SlidingTimeGroup.vue**: Time unit containers with mechanical slide animations
-- **SteampunkBackground.vue**: Mahogany wood texture with rotating gear overlays
-- **SteampunkBanner.vue**: Gold enamel plaque with etched motto
-- **VintageNoteCard.vue**: Scroll-style note display with aging effects
+**Phrases**: RandomPhrase.vue (random phrase display component)
 
-### Refactored Page Architecture
-The incidents page has been refactored from a monolithic 425+ line component into orchestrated, focused components:
-- **Main incidents.vue** (~180 lines): Orchestrates components and manages state
-- **Component Communication**: Clean props/emits interfaces between components
-- **Single Responsibility**: Each component has one focused purpose
-- **Improved Maintainability**: Easier to test, debug, and extend individual features
+**Page Structure**: 5-tab interface in incidents.vue with TimerDisplayTab, TimerControlsTab, PhraseSuggestionsTab, PhraseFilterTab, SuggestionHistoryTab
 
-## Steampunk Component Architecture
-
-### Flip Clock Components
-- **FlippingDigit.vue**: Individual split-flap digit with authentic mechanical animation
-  - Gold plate background with engraved dark text effects
-  - CSS-based flip animation using `data-value` attributes and pseudo-elements
-  - Perfect timing replicating real flip/flap clock mechanics
-- **SlidingTimeGroup.vue**: Container for time units with mechanical slide animations
-  - Handles Y/M/W/D/H/M/S labels with proper padding to 2-digit display
-  - Smooth slide-in/out animations when time units appear/disappear
-- **SteamClock.vue**: Main clock assembly with decorative elements
-  - Silver frame with rivets and animated clockwork gears
-  - Blue enamel face with proper time unit organization
-
-### Steampunk Visual Elements
-- **SteampunkBackground.vue**: Mahogany wood texture with rotating gear overlays
-  - Real mahogany wood image (`~/assets/images/mahogany-wood.jpg`) as tiled background
-  - Animated gears with proper teeth and mechanical timing
-- **SteampunkBanner.vue**: Gold enamel plaque with etched motto
-  - "Vigilance Maintained - Until the Next Challenge Arises"
-  - Wood-mounted plaque with brass screws and engraved text effects
-- **VintageNoteCard.vue**: Scroll-style note display
-  - Vintage scroll background image with handwritten-style text
-  - Proper aging effects and realistic paper texture
-
-### Animation System
-- **Split-flap Mechanics**: Authentic two-phase flip animation (top flips down, bottom slides up)
-- **Gear Synchronization**: Gears tick with seconds, spin with minutes
-- **Slide Transitions**: Mechanical slide-in/out for time units with 3D perspective
-- **Engraving Effects**: Multi-layer text shadows creating realistic etched metal appearance
+## Steampunk Design System
+- **Flip Clock**: FlippingDigit.vue (split-flap animation), SlidingTimeGroup.vue (time units), SteamClock.vue (main assembly)
+- **Visual Elements**: SteampunkBackground.vue (mahogany wood + gears), SteampunkBanner.vue (gold plaque with phrases), VintageNoteCard.vue (scroll notes)
+- **Animations**: Split-flap mechanics, gear synchronization, slide transitions, engraved text effects
 
 ## Architecture Implementation
 
-### HTTP Client Architecture - Hybrid API Pattern
-Modern composable-based HTTP client with dual API call patterns:
-
-**SSR Proxy Pattern** (`$fetch('/api/...')`):
-- **Initial Data Loading**: Uses Nuxt server proxy for SSR optimization
-- **Public Endpoints**: Non-authenticated calls routed through server
-- **Examples**: `getUserTimers()`, `getPublicTimer()`
-
-**Direct Backend Pattern** (`backendFetch('/...')`):
-- **Client Mutations**: Direct calls to backend with JWT in Authorization header
-- **Real-time Operations**: POST/PUT/DELETE operations bypass proxy for performance
-- **Examples**: `createTimer()`, `updateTimer()`, `deleteTimer()`
-
-**Authentication Architecture - Simplified Refresh System**:
-- **JWT (Access Token)**: Stored in client memory via `jwtManager.getToken()` with 1-hour expiration
-- **Refresh Token**: Secure httpOnly cookie managed by Nuxt server with 1-week expiration (rolling)
-- **Pre-Request Check**: JWT manager checks token expiration before each API call (1-minute threshold)
-- **Automatic Refresh**: Seamless token renewal via `/api/auth/refresh` endpoint when needed
-- **Direct Backend Auth**: `useBackendFetch()` automatically adds `Authorization: Bearer` header
+### HTTP Client - Hybrid API Pattern
+- **SSR Proxy**: Server API routes (`/api/*`) with session-based auth for initial data loading
+- **Direct Backend**: Client calls (`/backend/*`) with JWT headers for mutations and real-time operations
+- **Authentication**: JWT tokens in memory with automatic refresh, refresh tokens in httpOnly cookies
 
 ### State Management
-- **Pinia Integration**: Modern Vue 3 state management
-- **Authentication Store**: User state, token management, login/logout operations
-- **Timer Store**: CRUD operations, real-time updates, timer history
-- **Context Handling**: Proper initialization sequence to avoid Pinia context errors
-
-### Form Handling
-- **VeeValidate Integration**: Modern form validation with `useForm` and `handleSubmit`
-- **Yup Schema Validation**: Type-safe validation schemas
-- **Real-time Validation**: Instant feedback during form input
-- **Dynamic URL Preview**: Real-time slug generation preview during registration
+- **Pinia Stores**: incident-timers.ts, phrases.ts for state management
+- **Form Validation**: VeeValidate + Yup for real-time validation and error handling
 
 ## Development Environment
 
 ### Running the Frontend
-The frontend is typically run through development scripts:
 ```bash
-# Start with hot reload (recommended)
-./scripts/dev-start.sh frontend
-
-# View frontend logs
-./scripts/dev-logs.sh frontend
-
-# Direct npm commands (if needed)
-cd frontend
-npm run dev
-npm run build
+./scripts/dev-start.sh frontend    # Start with hot reload
+./scripts/dev-logs.sh frontend     # View logs
 ```
 
 ### Hot Module Replacement
-- **Vue/TypeScript Changes**: Update instantly without page refresh
-- **Component Updates**: Real-time component hot swapping
-- **Style Changes**: TailwindCSS updates apply immediately
-- **State Preservation**: Component state maintained during updates
-
-### Environment Configuration
-Located in `frontend/.env` and Nuxt configuration:
-- API base URL configuration
-- Development vs production settings
-- TailwindCSS and build optimization settings
-- **Component auto-import**: Configured for nested directories with `pathPrefix: false`
+- Vue/TypeScript changes update instantly
+- Component hot swapping with state preservation
+- TailwindCSS updates apply immediately
 
 ## Integration with Backend
 
-### API Integration
-- **Automatic Authentication**: JWT tokens handled transparently
-- **Error Handling**: Comprehensive error state management
-- **Type Safety**: TypeScript interfaces aligned with backend contracts
-- **Real-time Updates**: Timer displays update automatically
+### Server API Routes
+**Authentication**: `GET /api/auth/jwt` (get current JWT token)
+**Timers**: `GET /api/incident-timers`, `GET /api/[user_slug]/incident-timer`
+**Phrases**: `GET /api/phrases/random`, `GET /api/[user_slug]/phrase`
+**Health**: `GET /api/health`, `GET /api/test`
 
-### Route Structure
-- **Protected Routes**: `/incidents` requires authentication
-- **Public Routes**: Homepage, about, login, register, public timer display
-- **Dynamic Routes**: `/{user_slug}/incident-timer` for public timer access
+### Client API Integration
+- **Hybrid Pattern**: SSR uses `/api/*` routes, CSR uses direct `/backend/*` calls
+- **Authentication**: JWT tokens handled transparently via `useBackendFetch`
+- **Route Structure**: Protected (`/incidents`), Public (homepage, about, login, register), Dynamic (`/{user_slug}/incident-timer`)
 
-For detailed API contracts, see [IMPLEMENTATION-DATA-CONTRACTS.md](IMPLEMENTATION-DATA-CONTRACTS.md).
-
-## Docker Configuration
-
-### Production Build
-Multi-stage Dockerfile optimized for production:
-- **Node.js 20**: Even-numbered LTS version for stability
-- **Build Optimization**: Efficient production build process
-- **Security**: Non-root user execution
-- **Health Checks**: Container health monitoring
-
-### Development Integration
-Designed for seamless integration with Docker Compose development environment and hot reload functionality.
-
-## Asset Management
-
-### Image Assets
-- **Optimized Images**: Build-time optimization for web delivery
-- **Responsive Images**: Multiple sizes for different screen densities
-- **Nuxt 4 Asset Handling**: Proper `~/assets/` path resolution
-
-### CSS Architecture
-- **TailwindCSS**: Utility-first CSS framework
-- **Custom Design System**: Project-specific color palette and typography
-- **Responsive Design**: Mobile-first approach with content-driven breakpoints
 
 ---
 

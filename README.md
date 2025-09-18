@@ -1,18 +1,22 @@
 # KennWilliamson.org
 
-Full-stack web application with incident timer management, user authentication, and public sharing capabilities.
+Full-stack web application with incident timer management, dynamic motivational phrases, user authentication, and public sharing capabilities.
 
 ## Overview
 
-A modern web application built with Nuxt.js 4 and Rust, featuring JWT-based authentication, incident timer tracking with real-time updates, and shareable public timer displays. The application includes a comprehensive development environment with hot reload capabilities.
+A modern web application built with Nuxt.js 4 and Rust, featuring JWT-based authentication, incident timer tracking with real-time updates, and a dynamic motivational phrases system. The application includes beautiful steampunk-themed displays, user suggestion workflows, and a comprehensive development environment with hot reload capabilities.
 
 ## Features
 
-- **User Authentication**: Registration and login with JWT tokens
-- **Incident Timers**: Create, manage, and track incident timers with notes
-- **Public Sharing**: Share timer displays via public URLs (`/{user_slug}/incident-timer`)
-- **Real-time Updates**: Live timer displays that update every second
-- **Responsive Design**: Mobile-first design with Gothic construction theming
+- **User Authentication**: Registration and login with JWT tokens and rolling refresh tokens
+- **Incident Timers**: Create, manage, and track incident timers with notes and real-time updates
+- **Dynamic Motivational Phrases**: Beautiful steampunk-themed phrase display system with random selection
+- **User Suggestion Workflow**: Submit phrase suggestions for admin approval with status tracking
+- **Phrase Personalization**: Exclude phrases you don't want to see in your personal feed
+- **5-Tab Interface**: Organized incidents page with timer display, controls, suggestions, filtering, and history
+- **Public Sharing**: Share timer displays via public URLs (`/{user_slug}/incident-timer`) with dynamic phrases
+- **Real-time Updates**: Live timer displays that update every second with steampunk flip-clock animations
+- **Responsive Design**: Mobile-first design with Gothic construction theming and steampunk aesthetics
 - **Hot Reload Development**: Instant updates for both frontend and backend during development
 
 ## Technology Stack
@@ -87,11 +91,28 @@ kennwilliamsondotorg/
 
 ## API Endpoints
 
+### Authentication
 - `POST /api/auth/register` - User registration
 - `POST /api/auth/login` - User login
+- `POST /api/auth/refresh` - Token refresh
+
+### Incident Timers
 - `GET /api/incident-timers` - Get user's timers (protected)
 - `POST /api/incident-timers` - Create timer (protected)
 - `GET /{user_slug}/incident-timer` - Public timer display
+
+### Phrases System
+- `GET /api/phrases/random` - Get random phrase (protected)
+- `GET /{user_slug}/phrase` - Get random phrase (public)
+- `POST /api/phrases/suggestions` - Submit phrase suggestion (protected)
+- `GET /api/phrases/suggestions` - Get user's suggestions (protected)
+- `POST /api/phrases/exclude/{id}` - Exclude phrase from feed (protected)
+
+### Admin Endpoints
+- `GET /api/admin/phrases` - Manage phrases (admin only)
+- `GET /api/admin/suggestions` - Review suggestions (admin only)
+- `POST /api/admin/suggestions/{id}/approve` - Approve suggestion (admin only)
+- `POST /api/admin/suggestions/{id}/reject` - Reject suggestion (admin only)
 
 ## Documentation
 
