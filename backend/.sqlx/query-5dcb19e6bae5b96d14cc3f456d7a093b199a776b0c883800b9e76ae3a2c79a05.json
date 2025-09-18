@@ -1,0 +1,34 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "\n            SELECT uep.id, p.phrase_text, uep.excluded_at\n            FROM user_excluded_phrases uep\n            JOIN phrases p ON uep.phrase_id = p.id\n            WHERE uep.user_id = $1\n            ORDER BY uep.excluded_at DESC\n            ",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "id",
+        "type_info": "Uuid"
+      },
+      {
+        "ordinal": 1,
+        "name": "phrase_text",
+        "type_info": "Varchar"
+      },
+      {
+        "ordinal": 2,
+        "name": "excluded_at",
+        "type_info": "Timestamptz"
+      }
+    ],
+    "parameters": {
+      "Left": [
+        "Uuid"
+      ]
+    },
+    "nullable": [
+      false,
+      false,
+      false
+    ]
+  },
+  "hash": "5dcb19e6bae5b96d14cc3f456d7a093b199a776b0c883800b9e76ae3a2c79a05"
+}

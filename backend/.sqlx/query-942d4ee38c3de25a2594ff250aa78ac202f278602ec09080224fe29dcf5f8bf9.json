@@ -1,0 +1,15 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "\n            DELETE FROM user_excluded_phrases \n            WHERE user_id = $1 AND phrase_id = $2\n            ",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Left": [
+        "Uuid",
+        "Uuid"
+      ]
+    },
+    "nullable": []
+  },
+  "hash": "942d4ee38c3de25a2594ff250aa78ac202f278602ec09080224fe29dcf5f8bf9"
+}

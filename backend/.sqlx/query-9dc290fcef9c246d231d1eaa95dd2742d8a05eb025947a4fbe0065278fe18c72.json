@@ -1,0 +1,16 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "\n            INSERT INTO user_excluded_phrases (user_id, phrase_id, excluded_at)\n            VALUES ($1, $2, $3)\n            ON CONFLICT (user_id, phrase_id) DO NOTHING\n            ",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Left": [
+        "Uuid",
+        "Uuid",
+        "Timestamptz"
+      ]
+    },
+    "nullable": []
+  },
+  "hash": "9dc290fcef9c246d231d1eaa95dd2742d8a05eb025947a4fbe0065278fe18c72"
+}
