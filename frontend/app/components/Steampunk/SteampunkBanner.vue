@@ -18,7 +18,7 @@
           <!-- Plaque Content -->
           <div class="plaque-content">
             <div class="banner-text">
-              {{ bannerText }}
+              <RandomPhrase :user-slug="userSlug" />
             </div>
           </div>
           
@@ -61,6 +61,10 @@ const props = defineProps({
   bannerText: {
     type: String,
     default: 'Vigilance Maintained - Until the Next Challenge Arises'
+  },
+  userSlug: {
+    type: String,
+    default: null
   }
 })
 </script>

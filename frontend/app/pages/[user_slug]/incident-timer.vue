@@ -35,7 +35,7 @@
       <!-- Timer Display -->
       <div v-else-if="timerStore.publicTimer" class="space-y-8">
         <!-- Steampunk Banner -->
-        <SteampunkBanner />
+        <SteampunkBanner :user-slug="userSlug" />
         
         <!-- User Info -->
         <div class="user-info">
@@ -100,21 +100,12 @@ const timeBreakdown = computed(() => activeTimerBreakdown.value)
 // Load public timer data
 onMounted(async () => {
   await timerStore.fetchPublicTimer(userSlug)
-  
-  // Refresh timer data every 5 minutes to catch updates
-  const refreshInterval = setInterval(() => {
-    if (!timerStore.loading) {
-      timerStore.fetchPublicTimer(userSlug)
-    }
-  }, 5 * 60 * 1000) // 5 minutes
+})
 
-  onUnmounted(() => {
-    if (refreshInterval) {
-      clearInterval(refreshInterval)
-    }
-    // Stop live timer when component unmounts
-    timerStore.stopLiveTimerUpdates()
-  })
+// Cleanup on unmount
+onUnmounted(() => {
+  // Stop live timer when component unmounts
+  timerStore.stopLiveTimerUpdates()
 })
 </script>
 

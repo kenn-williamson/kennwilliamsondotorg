@@ -1,8 +1,8 @@
 /**
- * useIncidentTimerService - Incident timer operations using hybrid fetch pattern
+ * useIncidentTimerService - Incident timer operations for client-side use
  * 
- * Uses SSR proxy for initial data loading and direct backend fetch for mutations.
- * This provides optimal performance with SSR data and fast client mutations.
+ * Uses direct backend fetch for all operations with JWT authentication.
+ * For SSR prefetching, use $fetch('/api/*') directly in pages.
  */
 
 import { useBackendFetch } from './useBackendFetch'
@@ -33,9 +33,9 @@ export function useIncidentTimerService() {
   const backendFetch = useBackendFetch()
 
   return {
-    // Get all timers for current user (protected) - uses SSR proxy for initial load
+    // Get all timers for current user (protected) - direct backend call with JWT
     async getUserTimers(): Promise<IncidentTimer[]> {
-      return $fetch<IncidentTimer[]>('/api/incident-timers')
+      return backendFetch<IncidentTimer[]>('/incident-timers')
     },
 
     // Refresh timers (client-side) - direct backend call for better performance
@@ -43,9 +43,9 @@ export function useIncidentTimerService() {
       return backendFetch<IncidentTimer[]>('/incident-timers')
     },
 
-    // Get public timer by user slug (no auth required) - uses SSR proxy
+    // Get public timer by user slug (no auth required) - direct backend call
     async getPublicTimer(userSlug: string): Promise<PublicIncidentTimer> {
-      return $fetch<PublicIncidentTimer>(`/api/${userSlug}/incident-timer`)
+      return backendFetch<PublicIncidentTimer>(`/${userSlug}/incident-timer`)
     },
 
     // Create new timer (protected) - direct backend call

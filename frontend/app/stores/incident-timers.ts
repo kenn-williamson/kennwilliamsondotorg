@@ -26,6 +26,7 @@ interface TimerState {
   timers: IncidentTimer[]
   currentTimer: IncidentTimer | null
   publicTimer: PublicIncidentTimer | null
+  publicTimerUserSlug: string | null // Store the user slug for public timer refresh
   loading: boolean
   error: string | undefined
   // Reactive timer breakdown that updates every second
@@ -34,6 +35,7 @@ interface TimerState {
 
 // Global timer update interval - shared across all store instances
 let globalTimerInterval: NodeJS.Timeout | null = null
+
 
 // Global page visibility handler - shared across all store instances
 let visibilityHandlerAttached = false
@@ -45,6 +47,7 @@ export const useIncidentTimerStore = defineStore('incident-timers', {
     timers: [],
     currentTimer: null,
     publicTimer: null,
+    publicTimerUserSlug: null,
     loading: false,
     error: undefined,
     activeTimerBreakdown: { years: 0, months: 0, weeks: 0, days: 0, hours: 0, minutes: 0, seconds: 0 },
@@ -222,22 +225,28 @@ export const useIncidentTimerStore = defineStore('incident-timers', {
 
         visibilityChangeHandler = () => {
           if (!document.hidden) {
-            console.log('👁️ Page visible again, restarting timer with fresh interval')
-            // Get current store instance and restart timer updates
+            console.log('👁️ Page visible again, refreshing data and restarting timer')
+            // Get current store instance and refresh data
             const timerStore = useIncidentTimerStore()
-            const activeTimer = timerStore.publicTimer || timerStore.latestTimer
-            if (activeTimer?.reset_timestamp) {
-              timerStore.startLiveTimerUpdates()
+            if (timerStore.publicTimer && timerStore.publicTimerUserSlug) {
+              // Refresh public timer data
+              timerStore.fetchPublicTimer(timerStore.publicTimerUserSlug)
+            } else if (timerStore.latestTimer) {
+              // Refresh user timers data
+              timerStore.fetchUserTimers()
             }
           }
         }
 
         windowFocusHandler = () => {
-          console.log('🎯 Window focused, restarting timer with fresh interval')
+          console.log('🎯 Window focused, refreshing data and restarting timer')
           const timerStore = useIncidentTimerStore()
-          const activeTimer = timerStore.publicTimer || timerStore.latestTimer
-          if (activeTimer?.reset_timestamp) {
-            timerStore.startLiveTimerUpdates()
+          if (timerStore.publicTimer && timerStore.publicTimerUserSlug) {
+            // Refresh public timer data
+            timerStore.fetchPublicTimer(timerStore.publicTimerUserSlug)
+          } else if (timerStore.latestTimer) {
+            // Refresh user timers data
+            timerStore.fetchUserTimers()
           }
         }
 
@@ -343,6 +352,11 @@ export const useIncidentTimerStore = defineStore('incident-timers', {
       }
     },
 
+    // Alias for fetchUserTimers for tab components
+    async fetchTimers(): Promise<{ success: boolean; error?: string }> {
+      return this.fetchUserTimers()
+    },
+
     // Fetch public timer by user slug
     async fetchPublicTimer(userSlug: string): Promise<{ success: boolean; error?: string }> {
       try {
@@ -353,6 +367,7 @@ export const useIncidentTimerStore = defineStore('incident-timers', {
         const data = await incidentTimerService.getPublicTimer(userSlug)
 
         this.publicTimer = data
+        this.publicTimerUserSlug = userSlug // Store the user slug for refresh
         
         // Start live updates for public timer
         console.log('🌐 Loaded public timer, starting live updates')
@@ -363,6 +378,7 @@ export const useIncidentTimerStore = defineStore('incident-timers', {
         console.error('Fetch public timer error:', error)
         this.error = error.message || 'Failed to fetch public timer'
         this.publicTimer = null
+        this.publicTimerUserSlug = null
         return {
           success: false,
           error: this.error,
@@ -502,6 +518,7 @@ export const useIncidentTimerStore = defineStore('incident-timers', {
       this.error = undefined
     },
 
+
     // Clear all state
     clearState(): void {
       this.stopLiveTimerUpdates()
@@ -509,6 +526,7 @@ export const useIncidentTimerStore = defineStore('incident-timers', {
       this.timers = []
       this.currentTimer = null
       this.publicTimer = null
+      this.publicTimerUserSlug = null
       this.error = undefined
       this.loading = false
     },

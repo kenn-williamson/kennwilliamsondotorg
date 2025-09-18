@@ -1,38 +1,20 @@
 /**
- * useBackendFetch - Simplified composable for backend API calls with automatic token refresh
+ * useBackendFetch - Direct backend API calls with JWT authentication
  *
  * Architecture:
- * - SSR (page load): GET requests go through Nuxt server API (/api) for immediate hydration
- * - CSR (client loaded): GET requests go directly to Rust backend (/backend)
- * - Mutations: All POST/PUT/DELETE go directly to Rust backend (/backend)
- * - Token Management: JWT manager handles all refresh logic automatically
+ * - All requests go directly to Rust backend (/backend)
+ * - JWT tokens are added automatically for authenticated requests
+ * - Used for client-side operations and mutations
+ * - For SSR prefetching, use $fetch('/api/*') directly in pages
  */
 export function useBackendFetch() {
   const config = useRuntimeConfig()
   const jwtManager = useJwtManager()
 
   const backendFetch = async <T = any>(url: string, options: any = {}): Promise<T> => {
-    const isServer = process.server
-    const method = options.method?.toUpperCase() || 'GET'
-
-    // Determine the correct base URL and routing strategy
-    let baseURL: string
-    let targetUrl: string
-
-    if (isServer) {
-      // SSR: Use Nuxt server API for GET requests, direct backend for mutations
-      if (method === 'GET') {
-        baseURL = '' // Use relative URL for internal Nuxt API
-        targetUrl = `/api${url}` // Route through Nuxt server API
-      } else {
-        baseURL = config.public.apiBase // Direct to Rust backend
-        targetUrl = url
-      }
-    } else {
-      // CSR: Always go directly to Rust backend
-      baseURL = config.public.apiBase
-      targetUrl = url
-    }
+    // Always go directly to Rust backend
+    const baseURL = config.public.apiBase
+    const targetUrl = url
 
     // Get fresh token (JWT manager handles expiration check and refresh automatically)
     const token = await jwtManager.getToken()
@@ -47,12 +29,12 @@ export function useBackendFetch() {
       }
 
       requestOptions.headers.Authorization = `Bearer ${token}`
-      console.log(`✅ [useBackendFetch] Added JWT token to ${isServer ? 'SSR' : 'CSR'} request`)
+      console.log(`✅ [useBackendFetch] Added JWT token to request`)
     } else {
-      console.log(`❌ [useBackendFetch] No JWT token available for ${isServer ? 'SSR' : 'CSR'} request`)
+      console.log(`❌ [useBackendFetch] No JWT token available for request`)
     }
 
-    console.log(`🔄 [useBackendFetch] ${method} ${targetUrl} (${isServer ? 'SSR' : 'CSR'})`)
+    console.log(`🔄 [useBackendFetch] ${options.method || 'GET'} ${targetUrl}`)
     console.log(`🔍 [useBackendFetch] Full URL: ${baseURL}${targetUrl}`)
 
     // Make the request (no retry logic needed - JWT manager handles refresh)

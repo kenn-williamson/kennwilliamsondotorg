@@ -110,7 +110,7 @@ const handleEdit = handleEditSubmit(async (values) => {
       reset_timestamp: fromDatetimeLocalInput(values.reset_timestamp)
     }
     
-    emit('updated', props.timer.id, updateData)
+    emit('updated', { id: props.timer.id, ...updateData })
   } catch (error) {
     console.error('Failed to update timer:', error)
   }
