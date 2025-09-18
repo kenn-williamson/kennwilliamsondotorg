@@ -81,6 +81,9 @@ pub async fn create_test_timer_in_db(
 
 /// Clean up all test data
 pub async fn cleanup_test_db(pool: &PgPool) {
+    let _ = sqlx::query!("DELETE FROM user_excluded_phrases").execute(pool).await;
+    let _ = sqlx::query!("DELETE FROM phrase_suggestions").execute(pool).await;
+    let _ = sqlx::query!("DELETE FROM refresh_tokens").execute(pool).await;
     let _ = sqlx::query!("DELETE FROM user_roles").execute(pool).await;
     let _ = sqlx::query!("DELETE FROM incident_timers").execute(pool).await;
     let _ = sqlx::query!("DELETE FROM users").execute(pool).await;

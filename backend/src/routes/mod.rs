@@ -1,6 +1,8 @@
 pub mod auth;
 pub mod incident_timers;
 pub mod health;
+pub mod phrases;
+pub mod admin;
 
 use actix_web::web;
 use crate::middleware;
@@ -35,6 +37,8 @@ pub fn configure_app_routes(cfg: &mut web::ServiceConfig) {
                 )
                 // Public incident timer endpoint
                 .route("/{user_slug}/incident-timer", web::get().to(incident_timers::get_latest_by_user_slug))
+                // Public phrase endpoint (tied to user slug)
+                .route("/{user_slug}/phrase", web::get().to(phrases::get_random_phrase_for_user))
                 // Protected incident timer endpoints with shared middleware
                 .service(
                     web::scope("/incident-timers")
@@ -48,6 +52,64 @@ pub fn configure_app_routes(cfg: &mut web::ServiceConfig) {
                             web::resource("/{id}")
                                 .route(web::put().to(incident_timers::update_timer))
                                 .route(web::delete().to(incident_timers::delete_timer))
+                        )
+                )
+                // Protected phrase endpoints
+                .service(
+                    web::scope("/phrases")
+                        .wrap(actix_web::middleware::from_fn(middleware::auth::jwt_auth_middleware))
+                        .service(
+                            web::resource("")
+                                .route(web::get().to(phrases::get_user_phrases))
+                        )
+                        .service(
+                            web::resource("/user")
+                                .route(web::get().to(phrases::get_user_phrases_with_exclusions))
+                        )
+                        .service(
+                            web::resource("/random")
+                                .route(web::get().to(phrases::get_random_phrase_for_auth_user))
+                        )
+                        .service(
+                            web::resource("/exclude/{id}")
+                                .route(web::post().to(phrases::exclude_phrase))
+                                .route(web::delete().to(phrases::remove_phrase_exclusion))
+                        )
+                        .service(
+                            web::resource("/excluded")
+                                .route(web::get().to(phrases::get_excluded_phrases))
+                        )
+                        .service(
+                            web::resource("/suggestions")
+                                .route(web::get().to(phrases::get_user_suggestions))
+                                .route(web::post().to(phrases::submit_suggestion))
+                        )
+                )
+                // Admin endpoints (TODO: Add admin role middleware)
+                .service(
+                    web::scope("/admin")
+                        .wrap(actix_web::middleware::from_fn(middleware::auth::jwt_auth_middleware))
+                        .service(
+                            web::resource("/phrases")
+                                .route(web::get().to(admin::get_all_phrases))
+                                .route(web::post().to(admin::create_phrase))
+                        )
+                        .service(
+                            web::resource("/phrases/{id}")
+                                .route(web::put().to(admin::update_phrase))
+                                .route(web::delete().to(admin::deactivate_phrase))
+                        )
+                        .service(
+                            web::resource("/suggestions")
+                                .route(web::get().to(admin::get_pending_suggestions))
+                        )
+                        .service(
+                            web::resource("/suggestions/{id}/approve")
+                                .route(web::post().to(admin::approve_suggestion))
+                        )
+                        .service(
+                            web::resource("/suggestions/{id}/reject")
+                                .route(web::post().to(admin::reject_suggestion))
                         )
                 )
         );

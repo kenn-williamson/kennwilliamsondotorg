@@ -126,7 +126,7 @@ async fn test_create_timer_protected_endpoint() {
         password: "TestPassword123!".to_string(),
     };
     
-    let auth_response = auth_service.login(login_data).await
+    let auth_response = auth_service.login(login_data, None).await
         .expect("Failed to login")
         .expect("Login should succeed");
     let token = auth_response.token;
@@ -208,7 +208,7 @@ async fn test_get_user_timers_protected() {
         password: "TestPassword123!".to_string(),
     };
     
-    let auth_response = auth_service.login(login_data).await
+    let auth_response = auth_service.login(login_data, None).await
         .expect("Failed to login")
         .expect("Login should succeed");
     let token = auth_response.token;
@@ -304,7 +304,7 @@ async fn test_update_timer_protected() {
         password: "TestPassword123!".to_string(),
     };
     
-    let auth_response = auth_service.login(login_data).await
+    let auth_response = auth_service.login(login_data, None).await
         .expect("Failed to login")
         .expect("Login should succeed");
     let token = auth_response.token;
@@ -392,7 +392,7 @@ async fn test_delete_timer_protected() {
         password: "TestPassword123!".to_string(),
     };
     
-    let auth_response = auth_service.login(login_data).await
+    let auth_response = auth_service.login(login_data, None).await
         .expect("Failed to login")
         .expect("Login should succeed");
     let token = auth_response.token;

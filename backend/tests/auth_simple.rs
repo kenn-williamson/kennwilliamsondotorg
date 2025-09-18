@@ -6,6 +6,7 @@ use chrono;
 use backend::models::api::{CreateUserRequest, LoginRequest, SlugPreviewRequest};
 use backend::services::auth::AuthService;
 use backend::routes;
+use crate::test_helpers;
 
 #[actix_web::test]
 async fn test_user_registration_success() {
@@ -23,10 +24,7 @@ async fn test_user_registration_success() {
     let auth_service = AuthService::new(pool.clone(), jwt_secret);
 
     // Clean up any existing test data first
-    let _ = sqlx::query!("DELETE FROM refresh_tokens").execute(&pool).await;
-    let _ = sqlx::query!("DELETE FROM user_roles").execute(&pool).await;
-    let _ = sqlx::query!("DELETE FROM incident_timers").execute(&pool).await;
-    let _ = sqlx::query!("DELETE FROM users").execute(&pool).await;
+    test_helpers::cleanup_test_db(&pool).await;
 
     let app = test::init_service(
         App::new()
@@ -86,10 +84,7 @@ async fn test_user_login_success() {
     let auth_service = AuthService::new(pool.clone(), jwt_secret);
 
     // Clean up any existing test data first
-    let _ = sqlx::query!("DELETE FROM refresh_tokens").execute(&pool).await;
-    let _ = sqlx::query!("DELETE FROM user_roles").execute(&pool).await;
-    let _ = sqlx::query!("DELETE FROM incident_timers").execute(&pool).await;
-    let _ = sqlx::query!("DELETE FROM users").execute(&pool).await;
+    test_helpers::cleanup_test_db(&pool).await;
 
     let app = test::init_service(
         App::new()
@@ -163,10 +158,7 @@ async fn test_user_login_invalid_credentials() {
     let auth_service = AuthService::new(pool.clone(), jwt_secret);
 
     // Clean up any existing test data first
-    let _ = sqlx::query!("DELETE FROM refresh_tokens").execute(&pool).await;
-    let _ = sqlx::query!("DELETE FROM user_roles").execute(&pool).await;
-    let _ = sqlx::query!("DELETE FROM incident_timers").execute(&pool).await;
-    let _ = sqlx::query!("DELETE FROM users").execute(&pool).await;
+    test_helpers::cleanup_test_db(&pool).await;
 
     let app = test::init_service(
         App::new()
@@ -231,10 +223,7 @@ async fn test_slug_preview_available() {
     let auth_service = AuthService::new(pool.clone(), jwt_secret);
 
     // Clean up any existing test data first
-    let _ = sqlx::query!("DELETE FROM refresh_tokens").execute(&pool).await;
-    let _ = sqlx::query!("DELETE FROM user_roles").execute(&pool).await;
-    let _ = sqlx::query!("DELETE FROM incident_timers").execute(&pool).await;
-    let _ = sqlx::query!("DELETE FROM users").execute(&pool).await;
+    test_helpers::cleanup_test_db(&pool).await;
 
     let app = test::init_service(
         App::new()
