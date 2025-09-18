@@ -1,14 +1,14 @@
 # Frontend Implementation
 
 ## Overview
-Nuxt.js 4.0.3 frontend with authentication, incident timer features, and steampunk design system. Built with Nuxt 4 directory structure and integrated with Rust backend.
+Nuxt.js 4.0.3 frontend with Vue 3, TypeScript, and SSR support. Features authentication, incident timers, phrases system, and page-specific design aesthetics.
 
 ## Technology Stack
-- **Framework**: Nuxt.js 4.0.3 + Vue 3 + TypeScript
-- **State Management**: Pinia + nuxt-auth-utils
-- **Styling**: TailwindCSS 6.14.0
-- **Form Validation**: VeeValidate 4.15.1 + Yup 1.7.0
-- **Utilities**: VueUse 13.8.0
+- **Framework**: Nuxt.js 4.0.3, Vue 3, TypeScript
+- **State Management**: Pinia, nuxt-auth-utils
+- **Styling**: TailwindCSS
+- **Forms**: VeeValidate + Yup
+- **Utilities**: VueUse
 
 ## Project Structure
 ```
@@ -89,35 +89,32 @@ frontend/
 └── tsconfig.json          # TypeScript config
 ```
 
-## Current Features
+## Core Features
 
-### Authentication & Navigation
-- **Registration/Login**: Email/password with VeeValidate validation and JWT token management
-- **Route Protection**: Middleware-based authentication for protected pages
-- **Responsive Header**: Sticky navigation with mobile hamburger menu and avatar dropdown
-- **Pages**: Homepage (gothic theme), About, Login/Register, Incidents management, Public timer display
+### Authentication
+- **Implementation**: JWT-based with refresh tokens
+- **Session Management**: nuxt-auth-utils for secure session handling
+- **Route Protection**: Middleware-based authentication
+- **Details**: See [IMPLEMENTATION-SECURITY.md](IMPLEMENTATION-SECURITY.md#frontend-security)
 
 ### Incident Timer System
-- **5-Tab Interface**: Timer display, controls, phrase suggestions, filtering, and history
-- **CRUD Operations**: Create, read, update, delete incident timers with real-time updates
-- **Public Sharing**: Shareable URLs with full steampunk aesthetic
-- **Steampunk Design**: Gold engraved flip cards, mahogany wood background, animated gears
+- **Interface**: 5-tab dashboard (display, controls, suggestions, filtering, history)
+- **CRUD Operations**: Full timer management with ownership validation
+- **Public Sharing**: Shareable URLs at `/{user_slug}/incident-timer`
+- **Design**: Steampunk aesthetic with flip-clock animation
 
 ### Phrases System
-- **Dynamic Display**: Random phrase selection from database with steampunk integration
-- **User Workflow**: Submit suggestions, filter phrases, track approval status
-- **State Management**: Pinia stores for timers and phrases management
+- **Display**: Random motivational phrases
+- **User Features**: Submit suggestions, filter phrases, track status
+- **State Management**: Pinia stores for data management
 
 ### Design System
-Page-specific aesthetic themes per [UX-LAYOUT.md](UX-LAYOUT.md):
-- **Homepage**: Sacred/Gothic with construction motifs
-- **Authentication**: Clean, minimal with subtle sacred elements
-- **Incidents**: Technology theme with geometric patterns
-- **Public Timer**: Complete steampunk aesthetic with airship cabin theme
-- **About**: Frontier/Nature with Japanese traditional influences
-- **Color Palette**: Sky blue primary with gold/silver accents, mahogany wood for steampunk
-- **Typography**: Ornate headers, clean body text, engraved gold text for steampunk
-- **Responsive Breakpoints**: Content-first approach (320px, 480px, 768px, 1024px, 1440px)
+Page-specific aesthetics following [UX-LAYOUT.md](UX-LAYOUT.md):
+- **Homepage**: Sacred/Gothic construction theme
+- **Authentication**: Minimal with sacred elements
+- **Incidents**: Technology/geometric patterns
+- **Public Timer**: Full steampunk aesthetic
+- **About**: Frontier/Nature with Japanese influences
 
 ## Component Architecture
 
@@ -139,16 +136,17 @@ Page-specific aesthetic themes per [UX-LAYOUT.md](UX-LAYOUT.md):
 - **Visual Elements**: SteampunkBackground.vue (mahogany wood + gears), SteampunkBanner.vue (gold plaque with phrases), VintageNoteCard.vue (scroll notes)
 - **Animations**: Split-flap mechanics, gear synchronization, slide transitions, engraved text effects
 
-## Architecture Implementation
+## Architecture Patterns
 
-### HTTP Client - Hybrid API Pattern
-- **SSR Proxy**: Server API routes (`/api/*`) with session-based auth for initial data loading
-- **Direct Backend**: Client calls (`/backend/*`) with JWT headers for mutations and real-time operations
-- **Authentication**: JWT tokens in memory with automatic refresh, refresh tokens in httpOnly cookies
+### Hybrid API Architecture
+- **SSR Routes**: `/api/*` for server-side data fetching
+- **Direct API**: `/backend/*` for client-side mutations
+- **Authentication**: See [IMPLEMENTATION-SECURITY.md](IMPLEMENTATION-SECURITY.md#session-security)
+- **Details**: See [ARCHITECTURE.md](ARCHITECTURE.md#data-flow-architecture)
 
 ### State Management
-- **Pinia Stores**: incident-timers.ts, phrases.ts for state management
-- **Form Validation**: VeeValidate + Yup for real-time validation and error handling
+- **Stores**: Pinia for reactive state (timers, phrases)
+- **Forms**: VeeValidate + Yup validation
 
 ## Development Environment
 
@@ -158,25 +156,20 @@ Page-specific aesthetic themes per [UX-LAYOUT.md](UX-LAYOUT.md):
 ./scripts/dev-logs.sh frontend     # View logs
 ```
 
-### Hot Module Replacement
-- Vue/TypeScript changes update instantly
-- Component hot swapping with state preservation
-- TailwindCSS updates apply immediately
+### Development Features
+- **HMR**: Instant Vue/TypeScript updates
+- **State Preservation**: Component hot swapping
+- **Style Updates**: Real-time TailwindCSS changes
 
-## Integration with Backend
+## API Integration
 
-### Server API Routes
-**Authentication**: `GET /api/auth/jwt` (get current JWT token)
-**Timers**: `GET /api/incident-timers`, `GET /api/[user_slug]/incident-timer`
-**Phrases**: `GET /api/phrases/random`, `GET /api/[user_slug]/phrase`
-**Health**: `GET /api/health`, `GET /api/test`
+### Server Routes (SSR)
+Proxy routes in `server/api/` for server-side rendering:
+- **Authentication**: JWT token management
+- **Data Fetching**: Timer and phrase data
+- **Health Checks**: Service monitoring
 
-### Client API Integration
-- **Hybrid Pattern**: SSR uses `/api/*` routes, CSR uses direct `/backend/*` calls
-- **Authentication**: JWT tokens handled transparently via `useBackendFetch`
-- **Route Structure**: Protected (`/incidents`), Public (homepage, about, login, register), Dynamic (`/{user_slug}/incident-timer`)
-
-
----
-
-*This document describes the current frontend implementation. For future enhancements and planned features, see [ROADMAP.md](ROADMAP.md). For design guidelines, see [UX-LAYOUT.md](UX-LAYOUT.md).*
+### Backend Integration
+- **Endpoints**: See [IMPLEMENTATION-DATA-CONTRACTS.md](IMPLEMENTATION-DATA-CONTRACTS.md)
+- **Authentication**: See [IMPLEMENTATION-SECURITY.md](IMPLEMENTATION-SECURITY.md#frontend-security)
+- **Architecture**: See [ARCHITECTURE.md](ARCHITECTURE.md#data-flow-architecture)

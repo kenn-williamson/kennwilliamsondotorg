@@ -1,50 +1,72 @@
 # Documentation Guidelines
 
 ## Purpose
-This document establishes the standards and conventions for all documentation in the KennWilliamson.org project to ensure consistency, clarity, and maintainability.
+This document establishes the standards and conventions for all documentation in the KennWilliamson.org project. Our documentation serves a dual purpose: providing clear guidance for human developers and acting as an efficient knowledge base for AI coding assistants. These guidelines ensure consistency, clarity, and optimal token usage while maintaining readability.
 
 ## Core Principles
 
-### 1. Clear and Concise
-- Documentation should be clear and concise
+### 1. Dual Audience Design
+- **Human Developers**: Assume familiarity with web/CS concepts but explain framework-specific details
+- **AI Assistants**: Optimize for token efficiency while maintaining completeness
+- **Balance**: Write concisely but include necessary context for understanding architectural decisions
+
+### 2. Clear and Concise
 - Focus on essential information without unnecessary verbosity
-- Use simple language and avoid jargon when possible
+- Use simple language for concepts, technical language for specifics
+- Each sentence should add value - remove filler words and redundant explanations
 
-### 2. Separation of Concerns
-- Cleanly separate concerns as much as possible
-- Cross-reference documentation sections rather than repeat information
-- Avoid duplication between documents
+### 3. Aggressive Cross-Referencing
+- **Never duplicate information** - use markdown cross-references instead
+- Link format: `[Link Text](FILENAME.md#section-header)`
+- Always use relative paths for internal documentation
+- Create specific section anchors for precise linking
 
-### 3. Current State Focus
-- Implementation documents should focus on current implementation only
-- Future plans and features belong in the roadmap document
-- Avoid mixing planning with current state documentation
+### 4. Separation of Concerns
+- Each document should have a single, clear purpose
+- Implementation details in IMPLEMENTATION-*.md files
+- Architecture decisions in ARCHITECTURE.md
+- Future plans exclusively in ROADMAP.md
 
-### 4. No Code Duplication
+### 5. Current State Documentation
+- Implementation documents describe what IS, not what WILL BE
+- Remove all future tense and planning language from implementation docs
+- No TODO items or planned features in implementation documents
+
+### 6. No Code Duplication
 - **NEVER include code snippets in documentation**
-- Reference actual files instead of replicating code
-- Code examples should use file references with section names
+- Reference actual files: `backend/src/routes/auth.rs`
+- Reference sections: `See JWT validation in backend/src/middleware/auth.rs`
 - Exception: JSON schema representations for API contracts (language-agnostic)
 
-## File Naming Conventions
+## Document Organization Strategy
 
-### Document Categories
-- **CLAUDE.md**: Main project context for Claude Code tool (lightweight entry point)
-- **ARCHITECTURE.md**: System design and deployment strategy
-- **ROADMAP.md**: Future features and planned architecture
-- **UX-LAYOUT.md**: Design system and responsive guidelines
-- **PROJECT_HISTORY.md**: Completed phases and lessons learned
-- **README.md**: Public-facing project overview
-- **IMPLEMENTATION-\*.md**: Technical implementation details per component
-- **DOCUMENTATION-GUIDELINES.md**: This document (documentation standards)
+### Core Documentation Structure
+- **README.md**: Public-facing overview and getting started
+- **ARCHITECTURE.md**: System design, service architecture, infrastructure decisions
+- **DEVELOPMENT-WORKFLOW.md**: Daily development processes, scripts, troubleshooting
 - **CODING-RULES.md**: Development standards and conventions
-- **DEVELOPMENT-WORKFLOW.md**: Daily development processes and script usage
+- **DOCUMENTATION-GUIDELINES.md**: This document
+- **UX-LAYOUT.md**: Design system and UI/UX guidelines
+- **ROADMAP.md**: Future features and planned enhancements
+- **PROJECT_HISTORY.md**: Completed phases and lessons learned
 
-### Naming Standards
-- Use UPPERCASE for main category documents
-- Use hyphens to separate words
-- Implementation docs follow pattern: `IMPLEMENTATION-[COMPONENT].md`
-- Be descriptive but concise in file names
+### Implementation Documentation
+- **IMPLEMENTATION-BACKEND.md**: Rust/Actix-web API implementation
+- **IMPLEMENTATION-FRONTEND.md**: Nuxt.js/Vue frontend implementation
+- **IMPLEMENTATION-DATABASE.md**: PostgreSQL schema and management
+- **IMPLEMENTATION-SECURITY.md**: Authentication, authorization, and security measures
+- **IMPLEMENTATION-NGINX.md**: Reverse proxy and SSL configuration
+- **IMPLEMENTATION-DEPLOYMENT.md**: Production deployment process
+- **IMPLEMENTATION-SCRIPTS.md**: Development and deployment scripts
+- **IMPLEMENTATION-DATA-CONTRACTS.md**: API contracts and JSON schemas
+- **IMPLEMENTATION-TESTING.md**: Test architecture and coverage
+- **IMPLEMENTATION-UTILS.md**: Development utilities and tools
+
+### Feature Documentation Strategy
+- **Brief Descriptions Only**: Feature implementations should be briefly described in their component docs
+- **No Separate Feature Docs**: Avoid creating IMPLEMENTATION-FEATURE.md files
+- **Cross-Component Features**: Document in the primary component, reference from others
+- **Example**: Phrases system documented in IMPLEMENTATION-BACKEND.md, referenced from FRONTEND
 
 ## Markdown Formatting Standards
 
@@ -146,24 +168,58 @@ For deployment details, refer to [ARCHITECTURE.md](ARCHITECTURE.md#deployment-st
 - All links functional and pointing to correct locations
 - Consistent formatting and naming conventions
 
+## Writing for Efficiency
+
+### Token Optimization Techniques
+- **Remove Filler**: "It's important to note that" → Just state the fact
+- **Active Voice**: "The backend is implemented by Rust" → "Rust implements the backend"
+- **Combine Related Points**: Use semicolons and commas instead of multiple sentences
+- **Avoid Redundancy**: Don't repeat information available via cross-reference
+
+### Framework-Specific Documentation
+- **Assume Basic Knowledge**: Don't explain what React/Vue/Rust is
+- **Focus on Implementation**: How we use the framework, not what it does
+- **Highlight Unusual Patterns**: Document deviations from standard practices
+- **Version-Specific Features**: Note when using framework-specific features
+
+### Examples of Efficient Writing
+```
+❌ Poor: "The authentication system is implemented using JWT tokens. JWT tokens are used because they provide stateless authentication. The JWT tokens expire after 1 hour for security reasons."
+
+✅ Better: "JWT authentication with 1-hour expiration provides stateless security."
+
+❌ Poor: "To run the development environment, you need to execute the dev-start.sh script which is located in the scripts directory."
+
+✅ Better: "Run development: `./scripts/dev-start.sh`"
+```
+
 ## Special Document Rules
 
 ### CLAUDE.md
-- Keep lightweight - main purpose is Claude Code tool entry point
-- Use cross-references to other documents instead of duplicating content
-- Focus on project context and tool-specific information
+- Lightweight entry point for AI assistants
+- Project context and high-level overview only
+- Aggressive cross-referencing to detailed documentation
 
 ### README.md
-- Public-facing document for GitHub visitors
-- High-level overview without implementation details
-- Getting started guide for new developers
-- Link to relevant documentation for deeper information
+- Public-facing for GitHub visitors
+- Getting started guide with clear steps
+- Links to detailed documentation
+
+### ARCHITECTURE.md
+- System-wide design decisions
+- Service interaction patterns
+- Infrastructure and deployment architecture
+- Resource allocation strategies
 
 ### ROADMAP.md
-- Living document that changes as priorities shift
-- Include rationale for feature priorities
-- Cross-reference current implementation when relevant
-- Track features in progress vs planned
+- Future features with rationales
+- Priority tracking
+- No implementation details
+
+### IMPLEMENTATION-*.md
+- Current state only
+- Technical details for specific components
+- Cross-references for shared concepts
 
 ---
 

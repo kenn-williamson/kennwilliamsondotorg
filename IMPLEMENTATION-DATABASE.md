@@ -1,31 +1,22 @@
 # Database Implementation
 
 ## Overview
-PostgreSQL 17 database with UUIDv7 support, automated timestamp triggers, and comprehensive migration system.
+PostgreSQL 17 with pg_uuidv7 extension, automated timestamps, and SQLx migrations.
 
 ## Technology Stack
-- **Database**: PostgreSQL 17 running in Docker
-- **Extensions**: pg_uuidv7 for UUIDv7 support
-- **Migration Tool**: SQLx CLI with 3 migrations
-- **Connection**: SQLx connection pooling in Rust backend
-- **Development Tools**: Database management scripts
+- **Database**: PostgreSQL 17
+- **Extensions**: pg_uuidv7
+- **Migrations**: SQLx CLI
+- **Connection**: SQLx pooling
+- **Container**: Docker with health checks
 
-## Database Management Scripts
+## Database Management
+Scripts for database operations:
+- **Migrations**: `./scripts/setup-db.sh` (preserves data)
+- **Reset**: `./scripts/reset-db.sh` (fresh start)
+- **Backup**: `./scripts/backup-db.sh`
 
-### Core Operations
-```bash
-# Reset database with fresh migrations
-./scripts/reset-db.sh
-
-# Run migrations (preserves data)
-./scripts/setup-db.sh
-
-# Backup database
-./scripts/backup-db.sh
-
-# Download backup from remote
-./scripts/download-backup.sh
-```
+See [DEVELOPMENT-WORKFLOW.md](DEVELOPMENT-WORKFLOW.md#database-development-workflow) for usage.
 
 ## Timestamp Management
 All tables use PostgreSQL triggers for `updated_at` timestamps:
@@ -41,29 +32,28 @@ migrations/
 └── 20250914134703_add_phrases_system.up.sql      # Phrases system with initial data
 ```
 
-## Schema Implementation
+## Schema Design
 
-### Tables
-- **users**: Authentication, profile data, public user slugs, and active status
-- **roles**: Role-based authorization system (user, admin)
-- **user_roles**: Many-to-many user-role relationships
-- **incident_timers**: Timer tracking with user association and notes
-- **refresh_tokens**: Rolling refresh tokens with SHA-256 hashing and expiration tracking
-- **phrases**: Motivational phrases with active status and creator tracking
-- **user_excluded_phrases**: User phrase exclusion preferences (exclusion-based filtering)
-- **phrase_suggestions**: User phrase suggestions with admin approval workflow
+### Core Tables
+- **users**: User accounts with authentication data
+- **roles** & **user_roles**: Role-based access control
+- **incident_timers**: User timer entries
+- **refresh_tokens**: Secure token storage
+- **phrases**: Motivational phrase system
+- **user_excluded_phrases**: Phrase filtering preferences
+- **phrase_suggestions**: User submission workflow
 
-### Key Features
-- **UUIDv7 Primary Keys**: Time-ordered UUIDs for better indexing performance
-- **Automatic Timestamps**: Database triggers handle `updated_at` updates
-- **Foreign Key Constraints**: Proper referential integrity with cascades
-- **Unique Constraints**: Email and user_slug uniqueness enforced
+### Design Patterns
+- **Primary Keys**: UUIDv7 for time-ordered indexing
+- **Timestamps**: Automated via triggers
+- **Constraints**: Foreign keys, unique indexes
+- **Schema Definition**: See migration files in `backend/migrations/`
 
-### Schema Details
-All database schema details are documented in migration files located in `backend/migrations/`.
-
-## Docker Configuration
-PostgreSQL 17 container with UUIDv7 extension, health checks, and backup volume mounting.
+## Container Configuration
+- **Image**: PostgreSQL 17 official
+- **Health Checks**: Built-in connectivity verification
+- **Volumes**: Persistent data storage
+- **Network**: Internal Docker network only
 
 ## Connection Configuration
 ```env
@@ -79,14 +69,5 @@ DB_ACQUIRE_TIMEOUT=30
 - **Access Control**: Minimal privileges, Docker network isolation
 - **Backups**: Automated via `backup-db.sh` script
 
-## Development
-```bash
-# Start database
-docker-compose up postgres -d
-
-# Run migrations
-./scripts/setup-db.sh
-
-# Reset database
-./scripts/reset-db.sh
-```
+## Development Integration
+See [DEVELOPMENT-WORKFLOW.md](DEVELOPMENT-WORKFLOW.md#database-development-workflow) for database development workflows.

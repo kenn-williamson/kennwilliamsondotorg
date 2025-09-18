@@ -1,7 +1,7 @@
 # KennWilliamson.org Architecture
 
 ## System Overview
-Full-stack web application with containerized microservices architecture, designed for development environment with production deployment capabilities.
+Containerized microservices architecture with Nginx reverse proxy, Nuxt.js frontend, Rust backend, and PostgreSQL database.
 
 ## Current Architecture
 
@@ -32,95 +32,80 @@ Development Environment (https://localhost)
         └───────────┘
 ```
 
-### Current Service Definitions
+### Service Architecture
 
 #### Nginx Reverse Proxy
-- **Purpose**: SSL termination, static file serving, request routing
-- **SSL**: Self-signed certificates for development HTTPS
-- **Routing**: Frontend (/*), Backend API (/backend/*), WebSocket support for HMR
-- **Configuration**: nginx/conf.d/default.conf
+- **Purpose**: SSL termination, request routing, static file serving
+- **Ports**: 443 (HTTPS), 80 (HTTP redirect)
+- **Configuration**: Environment-specific nginx configs
+- **Details**: See [IMPLEMENTATION-NGINX.md](IMPLEMENTATION-NGINX.md)
 
 #### Nuxt.js Frontend
-- **Technology**: Nuxt.js 4.0.3 (Vue 3 + SSR + TypeScript)
+- **Framework**: Nuxt.js 4.0.3 with Vue 3 and TypeScript
 - **Port**: 3000 (internal)
-- **Features**: Server-side rendering, file-based routing, Pinia state management
-- **Hot Reload**: Vite HMR with WebSocket support through nginx proxy
+- **Architecture**: SSR with file-based routing
+- **Details**: See [IMPLEMENTATION-FRONTEND.md](IMPLEMENTATION-FRONTEND.md)
 
-#### Rust Backend
-- **Technology**: Actix-web 4.x + SQLx for database integration
+#### Rust Backend API
+- **Framework**: Actix-web 4.x
 - **Port**: 8080 (internal)
-- **Features**: REST API, JWT authentication, bcrypt password hashing
-- **Auto Reload**: cargo-watch for development hot reload
+- **Database**: SQLx for PostgreSQL integration
+- **Details**: See [IMPLEMENTATION-BACKEND.md](IMPLEMENTATION-BACKEND.md)
 
 #### PostgreSQL Database
-- **Technology**: PostgreSQL 17 with UUIDv7 extension
+- **Version**: PostgreSQL 17 with pg_uuidv7
 - **Port**: 5432 (internal only)
-- **Storage**: Docker volume for data persistence
-- **Features**: Automated timestamp triggers, role-based authorization
+- **Storage**: Persistent Docker volumes
+- **Details**: See [IMPLEMENTATION-DATABASE.md](IMPLEMENTATION-DATABASE.md)
 
 ## Data Flow Architecture
 
-### Authentication Flow - Hybrid Token Architecture
-1. User registration/login → Frontend form validation
-2. Frontend → Backend API (/backend/auth/register, /backend/auth/login)
-3. API → PostgreSQL (user validation/creation with bcrypt hashing)
-4. API → JWT + Refresh token generation
-5. Frontend → JWT stored in client memory, Refresh token in Nuxt server httpOnly cookies
-6. **SSR Proxy calls**: Nuxt server automatically includes JWT
-7. **Direct Backend calls**: Client includes JWT in Authorization header
-8. **Token Refresh**: Client calls `/api/auth/refresh` when JWT expires
+### Authentication Flow
+Hybrid JWT/refresh token architecture with secure session management. See [IMPLEMENTATION-SECURITY.md](IMPLEMENTATION-SECURITY.md#authentication-system) for details.
 
-### Application Data Flow - Hybrid API Architecture
+### Hybrid API Architecture
 
-**SSR Proxy Pattern**:
-1. Browser → HTTPS request to https://localhost
-2. Nginx → Route to Frontend (SSR)
-3. Frontend SSR → Generate HTML with initial data via `/api/*` proxy calls
-4. Client-side hydration → Single Page Application behavior
-5. Proxy calls → Nuxt server → Backend API → PostgreSQL
+**SSR Proxy Pattern** (`/api/*`):
+- Server-side data fetching for initial page loads
+- Session-based authentication handling
+- Nuxt server acts as proxy to backend
 
-**Direct Backend Pattern**:
-1. Client JavaScript → Direct HTTPS calls to backend via nginx (`/backend/*`)
-2. Nginx → Route directly to Backend API (Rust:8080)
-3. Backend → JWT validation → PostgreSQL with SQLx
-4. Used for: Mutations (POST/PUT/DELETE), real-time operations
+**Direct Backend Pattern** (`/backend/*`):
+- Client-side API calls for mutations
+- JWT authentication in request headers
+- Direct routing through nginx to backend
 
-### Timer Feature Flow
-1. User creates timer → Frontend form → Backend API /backend/incident-timers
-2. Timer data stored → PostgreSQL with UUIDv7 and timestamps
-3. Real-time updates → Frontend polls/refreshes timer display
-4. Public access → /{user_slug}/incident-timer (no auth required)
+See [IMPLEMENTATION-FRONTEND.md](IMPLEMENTATION-FRONTEND.md#architecture-patterns) for implementation details.
+
+### Data Flow Examples
+
+**Timer Creation**:
+1. Frontend form submission
+2. Backend API validation and storage
+3. PostgreSQL with automatic timestamps
+4. Response to frontend for display
+
+**Public Access**:
+- Direct URL access without authentication
+- Backend queries by user slug
+- Returns public-safe data only
 
 ## Security Architecture
-
-### Current Security Implementation
-- **SSL/TLS**: Self-signed certificates for development HTTPS
-- **Authentication**: JWT tokens with 24-hour expiration
-- **Password Security**: bcrypt hashing with cost factor 12
-- **Database Security**: Internal network only, no external access
-- **Input Validation**: Request/response validation on both frontend and backend
-
-### Authorization Model
-- **JWT Claims**: Minimal payload (User ID only) for reduced size
-- **User Profile**: Full user data retrieved via `/api/auth/me` endpoint
-- **Refresh Tokens**: Rolling 30-day expiration with 6-month hard limit from last login
-- **Route Protection**: Middleware-based authentication for protected endpoints
-- **Role-Based Access**: User/admin roles retrieved from profile endpoint
-- **Data Isolation**: Users can only access their own timer data
+Comprehensive security implementation across all layers. See [IMPLEMENTATION-SECURITY.md](IMPLEMENTATION-SECURITY.md) for detailed security measures including:
+- Authentication and authorization
+- Data protection and validation
+- Infrastructure security
+- API endpoint protection
 
 ## Development Environment
 
 ### Container Orchestration
-- **Docker Compose**: docker-compose.development.yml for development
-- **Service Dependencies**: Proper startup order and health checks
-- **Volume Mounts**: Code volumes for hot reload, config volumes for nginx
-- **Environment Variables**: .env.development for configuration
+- **Docker Compose**: Environment-specific compose files
+- **Service Dependencies**: Health checks and startup ordering
+- **Volume Mounts**: Code and configuration persistence
+- **Scripts**: Automated workflows via `scripts/`
 
-### Development Workflow
-- **Hot Reload**: All services support live code updates
-- **Development Scripts**: Automated service management via scripts/
-- **Health Monitoring**: Comprehensive service health checking
-- **Database Management**: Migration scripts and reset capabilities
+See [DEVELOPMENT-WORKFLOW.md](DEVELOPMENT-WORKFLOW.md) for detailed development processes.
 
 ## Resource Management
 
@@ -153,17 +138,15 @@ Development Environment (https://localhost)
 
 ## Scalability Considerations
 
-### Current Limitations
+### Current State
 - **Single Instance**: All services run as single containers
-- **Database**: Single PostgreSQL instance without replication
-- **State Management**: JWT tokens are stateless but no distributed session storage
+- **Database**: PostgreSQL without replication
+- **State**: JWT tokens provide stateless authentication
 
-### Architecture Scalability Features
-- **Stateless Backend**: Rust API can scale horizontally
-- **Database Connection Pooling**: SQLx connection pool ready for multiple backend instances
-- **Load Balancer Ready**: Nginx configuration supports upstream backend pools
-- **Container Architecture**: Services are independently scalable
+### Scalability Design
+- **Stateless API**: Horizontal scaling ready
+- **Connection Pooling**: Multi-instance support
+- **Load Balancing**: Nginx upstream configuration
+- **Container Independence**: Services scale individually
 
----
-
-*This document describes the current system architecture. For production deployment plans and infrastructure scaling, see [ROADMAP.md](ROADMAP.md).*
+For planned scalability enhancements, see [ROADMAP.md](ROADMAP.md#infrastructure-scaling).

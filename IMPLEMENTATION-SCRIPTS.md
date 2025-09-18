@@ -1,104 +1,63 @@
 # Scripts Implementation
 
 ## Overview
-Development automation scripts for workflow management, database operations, and Docker orchestration.
+Automation scripts for development, database management, deployment, and environment setup.
 
-## Scripts by Category
+## Script Inventory
 
-### Core Development
-- **`dev-start.sh`**: Service management with flexible startup options
-- **`dev-stop.sh`**: Clean service shutdown with removal options
-- **`dev-logs.sh`**: Log viewing with filtering and formatting
+### Development Scripts
+- **`dev-start.sh`**: Start services with build/rebuild options
+- **`dev-stop.sh`**: Stop services with optional container removal
+- **`dev-logs.sh`**: View and filter service logs
+- **`health-check.sh`**: Verify service health and connectivity
 
-### Database Management
-- **`setup-db.sh`**: Safe database migration management (preserves data)
-- **`reset-db.sh`**: Complete database reset for development
-- **`backup-db.sh`**: Database backup and restore with environment detection
-- **`download-backup.sh`**: Download database backups from remote servers
-- **`prepare-sqlx.sh`**: SQLx query cache generation for Docker builds
-- **`update-migrations-table.sh`**: Update SQLx migrations table
+### Database Scripts
+- **`setup-db.sh`**: Run migrations (preserves existing data)
+- **`reset-db.sh`**: Drop and recreate database with fresh data
+- **`backup-db.sh`**: Backup/restore database with environment detection
+- **`download-backup.sh`**: Download backups from remote servers
+- **`prepare-sqlx.sh`**: Generate SQLx query cache for builds
+- **`update-migrations-table.sh`**: Update migration tracking table
 
-### Health & Monitoring
-- **`health-check.sh`**: Comprehensive service health verification
-- **`test-auth.sh`**: Test authentication endpoints
+### Environment Scripts
+- **`setup-production-env.sh`**: Generate secure production configuration
+- **`generate-ssl.sh`**: Create SSL certificates (dev/local-prod)
+- **`setup-local-prod.sh`**: Configure local production testing
+- **`ssl-manager.sh`**: Manage Let's Encrypt certificates
+- **`detect-environment.sh`**: Shared environment detection utility
 
-### Environment Setup
-- **`setup-production-env.sh`**: Secure production environment generation
-- **`generate-ssl.sh`**: SSL certificate generation for development and local production
-- **`setup-local-prod.sh`**: Complete local production environment setup
-- **`ssl-manager.sh`**: Let's Encrypt SSL certificate management
+### Deployment Scripts
+- **`deploy.sh`**: Execute production deployment
+- **`test-auth.sh`**: Verify authentication endpoints
 
-### Deployment
-- **`deploy.sh`**: Production deployment script
+## Script Features
 
-### Utilities
-- **`detect-environment.sh`**: Shared environment detection logic
+### Safety and Intelligence
+- **Data Preservation**: Migration scripts protect existing data
+- **Environment Awareness**: Auto-detect dev/local-prod/production
+- **Error Handling**: Comprehensive validation and recovery
+- **Dependency Management**: Proper service startup ordering
 
-## Key Features
-
-### Database Management
-- **Migration Safety**: `setup-db.sh` preserves existing data
-- **Environment Detection**: Automatic detection of dev/prod environments
-- **Backup/Restore**: `backup-db.sh` and `download-backup.sh` for data management
-- **SQLx Integration**: Query cache management for Docker builds
-
-### Health Monitoring
-- **Service Health**: PostgreSQL, backend API, and frontend verification
-- **Resource Monitoring**: Container resource usage tracking
-- **Environment Validation**: Mismatch detection and warnings
-
-### SSL Certificate Management
-- **Development**: `generate-ssl.sh` for localhost certificates
-- **Local Production**: Domain certificates for production testing
-- **Production**: `ssl-manager.sh` for Let's Encrypt integration
-
-### Environment Setup
-- **Production**: `setup-production-env.sh` for secure environment generation
-- **Local Production**: `setup-local-prod.sh` for complete local production setup
-
-## Usage Examples
-
-### Development Workflow
-```bash
-# Start development environment
-./scripts/dev-start.sh
-
-# Check service health
-./scripts/health-check.sh --dev
-
-# Run database migrations
-./scripts/setup-db.sh --dev
-
-# View logs
-./scripts/dev-logs.sh backend
-```
+### SSL Certificate Support
+- **Multi-Environment**: Development, local production, and production certificates
+- **Automatic Renewal**: Cron integration for Let's Encrypt
+- **Fallback Support**: Temporary certificates if primary generation fails
 
 ### Database Operations
-```bash
-# Reset database
-./scripts/reset-db.sh
+- **Safe Migrations**: Non-destructive schema updates
+- **Backup Integration**: Environment-aware backup/restore
+- **SQLx Support**: Query verification for compiled builds
 
-# Backup database
-./scripts/backup-db.sh
+## Script Organization
 
-# Download backup from remote
-./scripts/download-backup.sh user@server:/path/to/backup.sql
-```
+### Location
+All scripts located in `scripts/` directory at project root.
 
-### SSL Management
-```bash
-# Generate development certificates
-./scripts/generate-ssl.sh
+### Conventions
+- **Executable**: All scripts have execute permissions
+- **Bash**: Written in bash for portability
+- **Error Handling**: Set -e for fail-fast behavior
+- **Output**: Colored output for clarity
 
-# Generate local production certificates
-./scripts/generate-ssl.sh local-prod
-
-# Manage production SSL
-./scripts/ssl-manager.sh generate
-```
-
-## Error Handling
-- Environment validation before execution
-- Graceful failure with clear error messages
-- Colored output for status indication
-- Comprehensive error reporting
+### Usage
+For detailed usage examples and workflows, see [DEVELOPMENT-WORKFLOW.md](DEVELOPMENT-WORKFLOW.md#development-scripts-reference).

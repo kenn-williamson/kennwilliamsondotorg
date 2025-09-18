@@ -1,27 +1,20 @@
 # Development Workflow Guide
 
 ## Overview
-This guide provides comprehensive workflows for daily development on the KennWilliamson.org project, focusing on using the automated development scripts and following established patterns.
+Daily development workflows using automated scripts and established patterns.
 
 ## Getting Started
 
-### Initial Setup
-For new developers setting up the project:
-
 ```bash
-# Clone the repository
+# Clone and setup
 git clone <repository-url>
 cd kennwilliamsondotorg
 
-# Start development environment
+# Start environment
 ./scripts/dev-start.sh
-
-# Verify services are healthy
 ./scripts/health-check.sh
 
-# Access the application
-# https://localhost (recommended - nginx proxy with SSL)
-# http://localhost:3000 (direct frontend access if needed)
+# Access: https://localhost
 ```
 
 ## Daily Development Workflows
@@ -40,44 +33,21 @@ cd kennwilliamsondotorg
 # - Backend: Rust changes trigger automatic recompilation
 ```
 
-### Making Code Changes
+### Code Changes
+- **Frontend**: Edit `frontend/app/` - HMR updates instantly
+- **Backend**: Edit `backend/src/` - cargo-watch rebuilds automatically
+- **Monitoring**: Use `./scripts/dev-logs.sh [service]` to track changes
 
-#### Frontend Development
-- Edit files in `frontend/app/`
-- Changes automatically trigger Hot Module Replacement (HMR)
-- No manual restart required for most changes
-- View changes instantly in browser at `https://localhost`
-
-#### Backend Development
-- Edit files in `backend/src/`
-- Cargo-watch detects changes and rebuilds automatically
-- Service restarts automatically after successful compilation
-- Monitor rebuild status with `./scripts/dev-logs.sh backend`
-
-### Database Development Workflow
-
-#### After Schema Changes
-When you've modified database migrations or SQL queries:
+### Database Workflow
 
 ```bash
-# Run new migrations (safe - preserves existing data)
-./scripts/setup-db.sh
-
-# Update SQLx query cache for Docker builds
-./scripts/prepare-sqlx.sh --clean
-
-# Restart backend to pick up schema changes
+# After schema changes
+./scripts/setup-db.sh              # Run migrations
+./scripts/prepare-sqlx.sh --clean  # Update query cache
 ./scripts/dev-start.sh --rebuild backend
-```
 
-#### Creating New Migrations
-```bash
-# Create a new migration file
-cd backend
-sqlx migrate add your_migration_name
-
-# Edit the generated migration file
-# Then follow the "After Schema Changes" workflow above
+# Create new migration
+cd backend && sqlx migrate add <name>
 ```
 
 ## Development Scripts Reference
@@ -263,23 +233,12 @@ docker system prune
 
 ## Development Best Practices
 
-### Script Usage Rules
-1. **Always use development scripts** instead of manual Docker commands
-2. **Update scripts** rather than falling back to direct CLI commands
-3. **Check service health** after major changes
-4. **Use `.env.development`** for all development work
-
-### Code Change Patterns
-1. **Backend changes:** Let cargo-watch handle rebuilds automatically
-2. **Schema changes:** Always run migrations and update SQLx cache
-3. **Frontend changes:** Rely on HMR for instant feedback
-4. **Environment changes:** Restart affected services
-
-### Debugging Workflow
-1. **Start with health checks** to identify problematic services
-2. **Use targeted logging** to focus on specific issues
-3. **Test direct access** to isolate networking vs application issues
-4. **Escalate systematically** from service restart to complete rebuild
+### Development Best Practices
+- Use scripts instead of manual Docker commands
+- Check health after major changes
+- Let auto-reload handle most restarts
+- Update SQLx cache after SQL changes
+- Use `.env.development` consistently
 
 ## Local Production Environment
 

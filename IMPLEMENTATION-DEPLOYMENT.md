@@ -1,84 +1,40 @@
 # Production Deployment Implementation
 
 ## Overview
-Complete production deployment process for KennWilliamson.org from EC2 provisioning through SSL certificate setup and service health verification. This guide covers the entire infrastructure setup and application deployment.
+Production deployment process for AWS EC2 with Route 53 DNS, Let's Encrypt SSL, and Docker-based application deployment.
 
 ## Prerequisites
-
-- AWS account with appropriate permissions
-- Domain name registered (e.g., kennwilliamson.org)
-- SSH key pair for EC2 access
-- Basic familiarity with AWS services
+- AWS account with EC2/Route 53 permissions
+- Registered domain name
+- SSH key pair
+- GitHub repository access
 
 ## Deployment Process
 
-### 1. EC2 Instance Provisioning
+### 1. EC2 Instance Setup
 
-#### Launch EC2 Instance
-```bash
-# Recommended instance specifications
-Instance Type: t3.micro (free tier) or t3.small
-AMI: Ubuntu Server 24.04 LTS
-Storage: 20GB GP3 (minimum)
-Security Group: Custom (see below)
-Key Pair: Your existing SSH key pair
-```
+**Instance Specifications:**
+- Type: t3.micro or t3.small
+- AMI: Ubuntu Server 24.04 LTS
+- Storage: 20GB GP3
+- Security Group:
+  - SSH (22): Your IP only
+  - HTTP (80): 0.0.0.0/0
+  - HTTPS (443): 0.0.0.0/0
 
-#### Security Group Configuration
-Create a security group with the following rules:
+### 2. Elastic IP
+1. Allocate Elastic IP in EC2 console
+2. Associate with instance
+3. Note IP address for DNS configuration
 
-**Inbound Rules:**
-- SSH (22): Your IP address only
-- HTTP (80): 0.0.0.0/0 (for Let's Encrypt validation)
-- HTTPS (443): 0.0.0.0/0 (for application access)
+### 3. Route 53 DNS
 
-**Outbound Rules:**
-- All traffic: 0.0.0.0/0 (default)
-
-### 2. Elastic IP Assignment
-
-#### Allocate and Associate Elastic IP
-```bash
-# In AWS Console:
-# 1. Go to EC2 → Elastic IPs
-# 2. Click "Allocate Elastic IP address"
-# 3. Click "Associate Elastic IP address"
-# 4. Select your EC2 instance
-# 5. Note the Elastic IP address (e.g., 54.204.92.123)
-```
-
-### 3. Route 53 DNS Configuration
-
-#### Create Hosted Zone
-```bash
-# In AWS Console:
-# 1. Go to Route 53 → Hosted zones
-# 2. Click "Create hosted zone"
-# 3. Domain name: kennwilliamson.org
-# 4. Type: Public hosted zone
-```
-
-#### Configure DNS Records
-```bash
-# Create A record for main domain:
-Name: kennwilliamson.org
-Type: A
-Value: [Your Elastic IP address]
-TTL: 300
-
-# Create A record alias for www subdomain:
-Name: www.kennwilliamson.org
-Type: A - Alias
-Value: kennwilliamson.org
-TTL: 300
-```
-
-#### Update Domain Nameservers
-```bash
-# Copy the 4 nameservers from Route 53 hosted zone
-# Update your domain registrar's nameservers to point to Route 53
-# Wait for DNS propagation (5-30 minutes)
-```
+**Hosted Zone Setup:**
+- Create public hosted zone for domain
+- Add A record pointing to Elastic IP
+- Add www alias record
+- Update domain registrar nameservers
+- Wait for DNS propagation
 
 ### 4. Server Setup and Software Installation
 
@@ -87,245 +43,106 @@ TTL: 300
 ssh -i your-key.pem ubuntu@[Elastic-IP-Address]
 ```
 
-#### Update System and Install Dependencies
+#### System Setup
 ```bash
-# Update system packages
+# Update and install dependencies
 sudo apt update && sudo apt upgrade -y
-
-# Install Docker
-curl -fsSL https://get.docker.com -o get-docker.sh
-sudo sh get-docker.sh
+curl -fsSL https://get.docker.com | sudo sh
 sudo usermod -aG docker ubuntu
+sudo apt install -y docker-compose-plugin certbot git
 
-# Install Docker Compose
-sudo apt install -y docker-compose-plugin
-
-# Install additional tools
-sudo apt install -y git curl wget unzip
-
-# Logout and login again to apply docker group membership
+# Re-login for docker permissions
 exit
-ssh -i your-key.pem ubuntu@[Elastic-IP-Address]
-```
-
-#### Install Certbot for SSL Management
-```bash
-sudo apt install -y certbot
+ssh -i your-key.pem ubuntu@[IP]
 ```
 
 ### 5. Application Deployment
 
-#### Clone Repository
 ```bash
-# Create application directory
+# Setup application
 sudo mkdir -p /opt/kennwilliamson
 sudo chown ubuntu:ubuntu /opt/kennwilliamson
 cd /opt/kennwilliamson
-
-# Clone the repository
-git clone https://github.com/your-username/kennwilliamsondotorg.git
+git clone [repository-url]
 cd kennwilliamsondotorg
-```
 
-#### Generate Production Environment
-```bash
-# Generate production environment file
+# Generate production config
 ./scripts/setup-production-env.sh
-
-# Verify environment file was created
-ls -la .env.production
 ```
 
-### 6. SSL Certificate Setup (Before Starting Services)
+### 6. SSL Certificate Setup
 
-#### Verify DNS Resolution
 ```bash
-# Check that domain points to your server
-nslookup kennwilliamson.org
+# Verify DNS points to server
+nslookup [your-domain]
 
-# Verify server IP matches your Elastic IP
-curl -s ifconfig.me
-```
-
-#### Create Temporary SSL Certificates
-```bash
-# Create temporary self-signed certificates to get nginx running
+# Create temporary certificates
 sudo ./scripts/ssl-manager.sh fake
-```
 
-#### Start Application Services
-```bash
-# Start all services with production configuration
+# Start services
 docker-compose --env-file .env.production up -d
 
-# Verify all containers are running
-docker-compose --env-file .env.production ps
-```
-
-#### Generate Let's Encrypt Certificates
-```bash
-# Generate real Let's Encrypt certificates (replaces fake ones)
+# Generate Let's Encrypt certificates
 sudo ./scripts/ssl-manager.sh generate
-
-# Set up automatic renewal
 sudo ./scripts/ssl-manager.sh setup-cron
-```
 
-#### Verify SSL Setup
-```bash
-# Check certificate status
+# Verify SSL
 sudo ./scripts/ssl-manager.sh check
-
-# Test HTTPS access
-curl -I https://kennwilliamson.org
 ```
 
-### 7. Service Health Verification
+### 7. Health Verification
 
-#### Run Comprehensive Health Check
 ```bash
-# Verify all services are healthy
+# Run health checks
 ./scripts/health-check.sh
 
-# Expected output:
-# ✅ PostgreSQL is accepting connections
-# ✅ Backend health endpoint responding
-# ✅ Frontend is serving HTTP requests
-# 🚀 All health checks passed!
-```
-
-#### Test Application Functionality
-```bash
-# Test frontend access
-curl -I https://kennwilliamson.org
-
-# Test API endpoint
-curl -I https://kennwilliamson.org/api/health
-
-# Test database connectivity (if needed)
-docker-compose --env-file .env.production exec postgres psql -U postgres -d kennwilliamson -c "SELECT 1;"
+# Test endpoints
+curl -I https://[your-domain]
+curl -I https://[your-domain]/api/health
 ```
 
 
 
 ## Troubleshooting
 
-### Common Issues and Solutions
+### Common Issues
 
-#### 1. DNS Resolution Problems
+**DNS Not Resolving:**
+- Verify Route 53 nameservers at registrar
+- Wait for propagation (up to 48h)
+- Check with: `nslookup [domain]`
+
+**SSL Certificate Fails:**
+- Check domain points to server
+- Ensure port 80 is open
+- View logs: `sudo tail -f /var/log/letsencrypt/letsencrypt.log`
+- Fallback: `sudo ./scripts/ssl-manager.sh fake`
+
+**Service Issues:**
+- Check logs: `docker-compose --env-file .env.production logs [service]`
+- Restart: `docker-compose --env-file .env.production restart`
+- Database: `docker-compose --env-file .env.production exec postgres psql -U postgres`
+
+### Certificate Renewal
+
 ```bash
-# Check DNS propagation
-nslookup kennwilliamson.org
-dig kennwilliamson.org
-
-# If domain doesn't resolve:
-# - Verify Route 53 nameservers are set at domain registrar
-# - Wait for DNS propagation (up to 48 hours)
-# - Check Route 53 hosted zone configuration
-```
-
-#### 2. SSL Certificate Generation Fails
-```bash
-# Check Let's Encrypt logs
-sudo tail -f /var/log/letsencrypt/letsencrypt.log
-
-# Common causes:
-# - Domain not pointing to server
-# - Port 80 blocked by firewall
-# - Nginx not stopped during certificate generation
-
-# Fallback to temporary certificates
-sudo ./scripts/ssl-manager.sh fake
-```
-
-#### 3. Services Not Starting
-```bash
-# Check container logs
-docker-compose --env-file .env.production logs
-
-# Check specific service logs
-docker-compose --env-file .env.production logs nginx
-docker-compose --env-file .env.production logs backend
-docker-compose --env-file .env.production logs frontend
-docker-compose --env-file .env.production logs postgres
-
-# Restart services
-docker-compose --env-file .env.production restart
-```
-
-#### 4. Database Connection Issues
-```bash
-# Check database container
-docker-compose --env-file .env.production ps postgres
-
-# Check database logs
-docker-compose --env-file .env.production logs postgres
-
-# Test database connection
-docker-compose --env-file .env.production exec postgres psql -U postgres -d kennwilliamson -c "SELECT 1;"
-
-# Run database migrations if needed
-docker-compose --env-file .env.production exec backend ./backend migrate
-```
-
-#### 5. Nginx Configuration Issues
-```bash
-# Check nginx configuration
-docker-compose --env-file .env.production exec nginx nginx -t
-
-# Reload nginx configuration
-docker-compose --env-file .env.production exec nginx nginx -s reload
-
-# Check nginx logs
-docker-compose --env-file .env.production logs nginx
-```
-
-### SSL Certificate Renewal Issues
-
-#### Manual Certificate Renewal
-```bash
-# Stop nginx to free port 80
+# Manual renewal if needed
 docker-compose --env-file .env.production stop nginx
-
-# Renew certificates
 sudo ./scripts/ssl-manager.sh renew
-
-# Start nginx
 docker-compose --env-file .env.production start nginx
-```
 
-#### Check Renewal Logs
-```bash
-# View renewal logs
+# Check renewal status
 sudo tail -f /var/log/ssl-renewal.log
-
-# Check cron job status
 sudo crontab -l
 ```
 
-## Basic Maintenance
+## Maintenance
 
-### Service Health Monitoring
-```bash
-# Check service health
-./scripts/health-check.sh
+### Regular Tasks
+- Health monitoring: `./scripts/health-check.sh`
+- SSL status: `sudo ./scripts/ssl-manager.sh check`
+- Service logs: `docker-compose --env-file .env.production logs`
+- Container status: `docker-compose --env-file .env.production ps`
 
-# Check SSL certificate status
-sudo ./scripts/ssl-manager.sh check
-```
-
-### Service Management
-```bash
-# View service logs
-docker-compose --env-file .env.production logs
-
-# Restart services if needed
-docker-compose --env-file .env.production restart
-
-# Check container status
-docker-compose --env-file .env.production ps
-```
-
----
-
-*This deployment guide provides a complete production setup process. For future enhancements and planned features, see [ROADMAP.md](ROADMAP.md).*
+### Security Updates
+See [IMPLEMENTATION-SECURITY.md](IMPLEMENTATION-SECURITY.md#production-security) for security maintenance procedures.
