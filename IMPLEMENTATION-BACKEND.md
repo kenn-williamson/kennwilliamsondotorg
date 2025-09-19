@@ -54,7 +54,8 @@ backend/
 
 ## Core Features
 - **Authentication**: JWT-based with refresh tokens (see [IMPLEMENTATION-SECURITY.md](IMPLEMENTATION-SECURITY.md#authentication-system))
-- **User Management**: Registration, login, slug generation
+- **User Management**: Registration, login, slug generation, profile updates
+- **Profile Management**: Display name and slug editing, password changes
 - **Incident Timers**: CRUD operations with user ownership
 - **Phrases System**: Dynamic phrases with user suggestions and admin approval
 - **Public API**: Unauthenticated access to user timers and phrases

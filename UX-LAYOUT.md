@@ -104,6 +104,12 @@
 - **Form Design:** Traditional yet modern input styling
 - **Validation:** Inline validation with gentle error states
 
+### Profile Management Page
+- **Layout:** Two-form architecture with clean sections
+- **Aesthetic:** Clean, minimal following authentication page styling
+- **Form Design:** Account information and security forms with real-time validation
+- **Navigation:** Accessible via avatar dropdown → "Profile Settings"
+
 ### Incidents Feature Page
 - **Layout:** Dashboard-style interface for CRUD operations
 - **Aesthetic:** Technology theme with geometric patterns and metallic textures
@@ -173,9 +179,11 @@
 
 ### Account Management Flow
 1. Click avatar → Dropdown appears
-2. "Account Settings" → Settings page (future)
-3. "Sign Out" → Logout process
-4. Return to homepage → Unauthenticated state
+2. "Profile Settings" → Profile management page
+3. Edit display name/slug → Real-time validation and preview
+4. Change password → Current password verification required
+5. "Sign Out" → Logout process
+6. Return to homepage → Unauthenticated state
 
 ## Technical Considerations
 

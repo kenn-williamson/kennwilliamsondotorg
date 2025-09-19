@@ -193,6 +193,75 @@ This document defines the exact API contracts between the Nuxt.js frontend and R
 }
 ```
 
+### Profile Update
+**Endpoint:** `PUT /backend/auth/profile`
+**Authentication:** Required (Bearer token)
+
+**Request:**
+```json
+{
+  "display_name": "John Doe",
+  "slug": "john-doe"
+}
+```
+
+**Response (200 OK):**
+```json
+{
+  "id": "01234567-89ab-cdef-0123-456789abcdef",
+  "email": "user@example.com",
+  "display_name": "John Doe",
+  "slug": "john-doe",
+  "roles": ["user"],
+  "created_at": "2024-01-01T12:00:00Z"
+}
+```
+
+**Error Responses:**
+```json
+// 400 Bad Request (invalid slug format)
+{
+  "error": "Invalid slug format"
+}
+
+// 409 Conflict (slug already taken)
+{
+  "error": "Username already taken"
+}
+```
+
+### Password Change
+**Endpoint:** `PUT /backend/auth/change-password`
+**Authentication:** Required (Bearer token)
+
+**Request:**
+```json
+{
+  "current_password": "oldPassword123",
+  "new_password": "newPassword456"
+}
+```
+
+**Response (200 OK):**
+```json
+{
+  "message": "Password changed successfully"
+}
+```
+
+**Error Responses:**
+```json
+// 400 Bad Request (incorrect current password)
+{
+  "error": "Current password is incorrect"
+}
+
+// 404 Not Found (user not found)
+{
+  "error": "User not found"
+}
+```
+
 ## Incident Timer Contracts
 
 ### Get User's Timers

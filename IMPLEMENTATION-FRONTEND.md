@@ -34,6 +34,9 @@ frontend/
 │   │   │   └── TabNavigation.vue # Tab navigation component
 │   │   ├── Phrases/       # Phrases feature components
 │   │   │   └── RandomPhrase.vue  # Random phrase display component
+│   │   ├── Profile/       # Profile management components
+│   │   │   ├── AccountInformationForm.vue # Account info editing form
+│   │   │   └── SecurityForm.vue # Password change form
 │   │   └── Steampunk/     # Steampunk design system components
 │   │       ├── SteamClock.vue     # Main steampunk timer display
 │   │       ├── FlippingDigit.vue  # Animated flip-digit component
@@ -46,6 +49,7 @@ frontend/
 │   │   ├── about.vue      # About page (placeholder)
 │   │   ├── login.vue      # Authentication login page
 │   │   ├── register.vue   # User registration with dynamic URL preview
+│   │   ├── profile.vue    # User profile management page
 │   │   ├── incidents.vue  # Protected CRUD management
 │   │   └── [user_slug]/
 │   │       └── incident-timer.vue # Public timer display
@@ -124,6 +128,10 @@ Page-specific aesthetics following [UX-LAYOUT.md](UX-LAYOUT.md):
 - TimerStats.vue, TimerListItem.vue, TimerEditModal.vue, TimerResetModal.vue
 - TimerDisplayTab.vue, TimerControlsTab.vue, PhraseSuggestionsTab.vue, PhraseFilterTab.vue, SuggestionHistoryTab.vue, TabNavigation.vue
 
+**Profile Components** (2 components):
+- AccountInformationForm.vue (display name and slug editing with validation)
+- SecurityForm.vue (password change with current password verification)
+
 **Steampunk Design** (6 components):
 - SteamClock.vue, FlippingDigit.vue, SlidingTimeGroup.vue, SteampunkBackground.vue, SteampunkBanner.vue, VintageNoteCard.vue
 
@@ -146,7 +154,12 @@ Page-specific aesthetics following [UX-LAYOUT.md](UX-LAYOUT.md):
 
 ### State Management
 - **Stores**: Pinia for reactive state (timers, phrases)
-- **Forms**: VeeValidate + Yup validation
+- **Forms**: All forms use VeeValidate + Yup validation
+
+### Form Validation Standards
+- **Required**: All forms must use VeeValidate + Yup for validation
+- **Consistency**: Standardized validation patterns across authentication, timers, and phrases
+- **User Experience**: Real-time validation with clear error messaging
 
 ## Development Environment
 

@@ -8,29 +8,7 @@
 ### 🎯 Admin User Management System
 **Priority**: High
 **Goal**: Complete admin functionality for user management and password reset
-**Status**: Backend admin endpoints for phrases complete, user management pending
-
-### 🧪 Test Suite Restoration & Expansion
-**Priority**: High
-**Goal**: Fix broken existing tests and implement comprehensive testing coverage
-**Status**: Existing tests broken due to authentication system changes, needs immediate attention
-
-**Current Issues**:
-- Existing backend tests fail due to JWT authentication changes
-- SQLx query cache missing test queries
-- Login method signature changes require test updates
-- New phrase system needs comprehensive test coverage
-
-**Immediate Actions**:
-- Fix existing auth and incident timer tests
-- Update test helpers for new database schema
-- Add phrase system endpoint tests
-- Ensure all tests pass before frontend integration
-
-**User Profile Management**:
-- **Profile Page**: New page for users to update display name and slug (unlimited changes allowed)
-- **Slug Collision Handling**: Apply same collision-handling logic as registration
-- **Email Immutable**: Email cannot be changed (will be OAuth integration anchor point)
+**Status**: User profile management complete, admin user management pending
 
 **Admin User Management**:
 - **Promote to Admin**: Admins can promote other users to admin role
@@ -49,9 +27,26 @@
 
 **Technical Requirements**:
 - New API endpoints for user management, password reset, user promotion
-- New frontend components for user profile editing, admin interfaces
+- New frontend components for admin interfaces
 - Password reset functionality with temporary password generation
 - Role-based route protection for admin features
+
+### 🧪 Test Suite Restoration & Expansion
+**Priority**: High
+**Goal**: Fix broken existing tests and implement comprehensive testing coverage
+**Status**: Existing tests broken due to authentication system changes, needs immediate attention
+
+**Current Issues**:
+- Existing backend tests fail due to JWT authentication changes
+- SQLx query cache missing test queries
+- Login method signature changes require test updates
+- New phrase system needs comprehensive test coverage
+
+**Immediate Actions**:
+- Fix existing auth and incident timer tests
+- Update test helpers for new database schema
+- Add phrase system endpoint tests
+- Ensure all tests pass before frontend integration
 
 ## Next Priorities
 
