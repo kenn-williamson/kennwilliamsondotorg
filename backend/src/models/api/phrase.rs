@@ -56,10 +56,6 @@ pub struct SuggestionListResponse {
     pub total: i64,
 }
 
-#[derive(Debug, Deserialize)]
-pub struct AdminSuggestionActionRequest {
-    pub admin_reason: Option<String>,
-}
 
 #[derive(Debug, Serialize)]
 pub struct UserExcludedPhraseResponse {

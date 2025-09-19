@@ -22,8 +22,11 @@ impl RefreshTokenService {
     }
 
     pub async fn refresh_token(&self, request: RefreshTokenRequest) -> Result<Option<RefreshTokenResponse>> {
+        log::debug!("Starting token refresh process");
+        
         // Hash the provided token to lookup in database
         let token_hash = self.hash_token(&request.refresh_token);
+        log::debug!("Token hashed for database lookup");
 
         // Get the refresh token from database
         let refresh_token = sqlx::query_as!(
@@ -39,13 +42,21 @@ impl RefreshTokenService {
         .await?;
 
         let refresh_token = match refresh_token {
-            Some(token) => token,
-            None => return Ok(None), // Token not found or expired
+            Some(token) => {
+                log::debug!("Refresh token found for user: {}", token.user_id);
+                token
+            },
+            None => {
+                log::warn!("Refresh token not found or expired");
+                return Ok(None);
+            }
         };
 
         // Check 6-month hard limit
         let six_months_ago = Utc::now() - Duration::days(180);
         if refresh_token.created_at < six_months_ago {
+            log::info!("Refresh token exceeded 6-month hard limit for user: {}, created: {}", 
+                      refresh_token.user_id, refresh_token.created_at);
             // Delete the expired token
             self.delete_refresh_token_by_hash(&token_hash).await?;
             return Ok(None);
@@ -54,17 +65,25 @@ impl RefreshTokenService {
         // Get user
         let user = self.get_user_by_id(refresh_token.user_id).await?;
         let user = match user {
-            Some(user) => user,
-            None => return Ok(None), // User no longer exists
+            Some(user) => {
+                log::debug!("User found for token refresh: {}", user.id);
+                user
+            },
+            None => {
+                log::warn!("User no longer exists for refresh token: {}", refresh_token.user_id);
+                return Ok(None);
+            }
         };
 
         // Generate new JWT and refresh token
+        log::debug!("Generating new JWT and refresh token for user: {}", user.id);
         let new_jwt = self.jwt_service.generate_token(&user)?;
         let new_refresh_token = self.generate_refresh_token_string();
         let new_token_hash = self.hash_token(&new_refresh_token);
 
         // Delete old token and create new token in transaction
         let mut tx = self.pool.begin().await?;
+        log::debug!("Starting database transaction for token refresh");
 
         // Delete old token (rolling token system)
         sqlx::query!(
@@ -73,6 +92,7 @@ impl RefreshTokenService {
         )
         .execute(&mut *tx)
         .await?;
+        log::debug!("Old refresh token deleted");
 
         // Create new refresh token (aligned with 1-week session expiration)
         let expires_at = Utc::now() + Duration::days(7);
@@ -88,8 +108,10 @@ impl RefreshTokenService {
         )
         .execute(&mut *tx)
         .await?;
+        log::debug!("New refresh token created");
 
         tx.commit().await?;
+        log::info!("Token refresh completed successfully for user: {}", user.id);
 
         Ok(Some(RefreshTokenResponse {
             token: new_jwt,

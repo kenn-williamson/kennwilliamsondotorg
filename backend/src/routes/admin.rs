@@ -3,8 +3,8 @@ use sqlx::PgPool;
 use uuid::Uuid;
 
 use crate::models::api::{
-    CreatePhraseRequest, UpdatePhraseRequest, AdminSuggestionActionRequest,
-    PhraseListResponse, SuggestionListResponse, UserListResponse, SystemStatsResponse,
+    CreatePhraseRequest, UpdatePhraseRequest,
+    PhraseListResponse, UserListResponse, SystemStatsResponse,
     PendingSuggestionsResponse, PasswordResetResponse, UserSearchQuery, AdminActionRequest
 };
 use crate::services::phrase::PhraseService;
@@ -102,76 +102,6 @@ pub async fn deactivate_phrase(
     }
 }
 
-/// Get all pending suggestions (admin only)
-pub async fn get_pending_suggestions(
-    pool: web::Data<PgPool>,
-    _req: HttpRequest,
-) -> Result<HttpResponse> {
-    match PhraseService::get_pending_suggestions(&pool).await {
-        Ok(suggestions) => {
-            let total = suggestions.len() as i64;
-            let response = SuggestionListResponse {
-                suggestions: suggestions.into_iter().map(|s| s.into()).collect(),
-                total,
-            };
-            Ok(HttpResponse::Ok().json(response))
-        }
-        Err(e) => {
-            log::error!("Failed to get pending suggestions: {}", e);
-            Ok(HttpResponse::InternalServerError().json(serde_json::json!({
-                "error": "Failed to get pending suggestions"
-            })))
-        }
-    }
-}
-
-/// Approve a phrase suggestion (admin only)
-pub async fn approve_suggestion(
-    pool: web::Data<PgPool>,
-    req: HttpRequest,
-    path: web::Path<Uuid>,
-    request: Option<web::Json<AdminSuggestionActionRequest>>,
-) -> Result<HttpResponse> {
-    let user_id = req.extensions().get::<Uuid>().cloned().unwrap();
-    let suggestion_id = path.into_inner();
-    let admin_reason = request.and_then(|r| r.admin_reason.clone());
-
-    match PhraseService::approve_suggestion(&pool, suggestion_id, user_id, admin_reason).await {
-        Ok(_) => Ok(HttpResponse::Ok().json(serde_json::json!({
-            "message": "Suggestion approved successfully"
-        }))),
-        Err(e) => {
-            log::error!("Failed to approve suggestion: {}", e);
-            Ok(HttpResponse::InternalServerError().json(serde_json::json!({
-                "error": "Failed to approve suggestion"
-            })))
-        }
-    }
-}
-
-/// Reject a phrase suggestion (admin only)
-pub async fn reject_suggestion(
-    pool: web::Data<PgPool>,
-    req: HttpRequest,
-    path: web::Path<Uuid>,
-    request: Option<web::Json<AdminSuggestionActionRequest>>,
-) -> Result<HttpResponse> {
-    let user_id = req.extensions().get::<Uuid>().cloned().unwrap();
-    let suggestion_id = path.into_inner();
-    let admin_reason = request.and_then(|r| r.admin_reason.clone());
-
-    match PhraseService::reject_suggestion(&pool, suggestion_id, user_id, admin_reason).await {
-        Ok(_) => Ok(HttpResponse::Ok().json(serde_json::json!({
-            "message": "Suggestion rejected successfully"
-        }))),
-        Err(e) => {
-            log::error!("Failed to reject suggestion: {}", e);
-            Ok(HttpResponse::InternalServerError().json(serde_json::json!({
-                "error": "Failed to reject suggestion"
-            })))
-        }
-    }
-}
 
 // Query parameters for admin endpoints
 #[derive(serde::Deserialize)]
@@ -319,7 +249,7 @@ pub async fn promote_user_to_admin(
 }
 
 /// Get pending phrase suggestions (admin only)
-pub async fn get_pending_suggestions_new(
+pub async fn get_pending_suggestions(
     pool: web::Data<PgPool>,
     _req: HttpRequest,
 ) -> Result<HttpResponse> {
@@ -342,7 +272,7 @@ pub async fn get_pending_suggestions_new(
 }
 
 /// Approve phrase suggestion (admin only)
-pub async fn approve_suggestion_new(
+pub async fn approve_suggestion(
     pool: web::Data<PgPool>,
     req: HttpRequest,
     path: web::Path<Uuid>,
@@ -366,7 +296,7 @@ pub async fn approve_suggestion_new(
 }
 
 /// Reject phrase suggestion (admin only)
-pub async fn reject_suggestion_new(
+pub async fn reject_suggestion(
     pool: web::Data<PgPool>,
     req: HttpRequest,
     path: web::Path<Uuid>,

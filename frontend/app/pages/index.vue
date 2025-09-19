@@ -122,9 +122,10 @@ const testApi = async () => {
     for (const endpoint of endpoints) {
       try {
         console.log(`Trying ${endpoint}...`)
-        const response = await $fetch(endpoint)
-        console.log(`${endpoint} response:`, response)
-        apiMessage.value = `${endpoint}: ${JSON.stringify(response, null, 2)}`
+        const { data: response } = await useFetch(endpoint)
+        if (!response.value) continue
+        console.log(`${endpoint} response:`, response.value)
+        apiMessage.value = `${endpoint}: ${JSON.stringify(response.value, null, 2)}`
         apiError.value = ''
         return
       } catch (err) {
