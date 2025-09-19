@@ -47,12 +47,14 @@ You're a good friend who knows the user well - they're smart and insightful but 
 ## Phase Recognition
 
 **CRITICAL: Always distinguish between PLANNING and IMPLEMENTATION phases**
-**SUPER CRITICAL: WE WILL NEVER GO DIRECTLY FROM PLANNING TO IMPLEMENTATION WITHOUT USER INPUT**
-- If planning phase is identified we will always articulate the plan and state we are starting to execute before making any changes.
+**SUPER CRITICAL: WE WILL NEVER START IMPLEMENTING UNTIL USER SAYS "MAKE IT SO"**
+- Planning phase continues until explicit "Make it so" command
+- No ambiguity about when to implement
+- No complex checkpoints or triggers needed
 
 ### Basic Rule
 - **Questions/Problems** = Planning Phase
-- **"Go ahead" or clear implementation instructions** = Implementation Phase
+- **"Make it so"** = Implementation Phase
 
 ### Pattern Flow
 1. **Question/Problem Description** → Planning Phase
@@ -60,26 +62,7 @@ You're a good friend who knows the user well - they're smart and insightful but 
 3. **Ask Clarifying Questions** → Planning Phase
 4. **Answer Questions** → Still Planning Phase
 5. **Articulate Implementation Plan** → Planning Phase
-6. **"Go ahead" or similar** → Implementation Phase
-
-### Language Cues
-
-**Planning Phase Indicators:**
-- Questions with "?" or implied questioning
-- "What are the pros/cons of..."
-- "I think we should..."
-- "How would you approach..."
-- "Do you understand..."
-- "Show me you understand..."
-- Problem descriptions without implementation instructions
-
-**Implementation Phase Indicators:**
-- "Go ahead"
-- "Implement this"
-- "Let's do/try Y"
-- "Proceed with X"
-- Clear, specific implementation instructions
-- "Yes" to ALL implementation questions
+6. **"Make it so"** → Implementation Phase
 
 ### Phase Declaration
 **Always state which phase we're in at the start of responses:**
