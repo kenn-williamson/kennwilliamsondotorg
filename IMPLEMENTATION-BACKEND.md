@@ -27,12 +27,17 @@ backend/
 │   │   ├── auth.rs       # Registration/login endpoints
 │   │   ├── incident_timers.rs # CRUD + public endpoints
 │   │   ├── phrases.rs    # Phrase management endpoints
-│   │   └── admin.rs      # Admin-only endpoints
+│   │   └── admin.rs      # Admin user management and phrase moderation endpoints
 │   ├── services/         # Business logic
 │   │   ├── mod.rs        # Service exports
 │   │   ├── auth.rs       # JWT + password validation
 │   │   ├── incident_timer.rs # Timer business logic
-│   │   └── phrase.rs     # Phrase and suggestion business logic
+│   │   ├── phrase.rs     # Phrase and suggestion business logic
+│   │   └── admin/        # Admin services
+│   │       ├── mod.rs    # Admin service exports
+│   │       ├── user_management.rs # User management operations
+│   │       ├── phrase_moderation.rs # Phrase suggestion moderation
+│   │       └── stats.rs  # System statistics
 │   ├── middleware/       # Custom middleware
 │   │   ├── mod.rs        # Middleware exports
 │   │   └── auth.rs       # JWT validation with role extraction
@@ -56,6 +61,7 @@ backend/
 - **Authentication**: JWT-based with refresh tokens (see [IMPLEMENTATION-SECURITY.md](IMPLEMENTATION-SECURITY.md#authentication-system))
 - **User Management**: Registration, login, slug generation, profile updates
 - **Profile Management**: Display name and slug editing, password changes
+- **Admin Management**: User deactivation, password reset, user promotion, system statistics
 - **Incident Timers**: CRUD operations with user ownership
 - **Phrases System**: Dynamic phrases with user suggestions and admin approval
 - **Public API**: Unauthenticated access to user timers and phrases
@@ -64,9 +70,10 @@ backend/
 
 ## Architecture Patterns
 - **Middleware**: JWT validation via `actix_web::middleware::from_fn()`
-- **Routing**: Single `/backend` scope with sub-scopes for middleware control
+- **Routing**: Clean public/protected route separation with admin infrastructure
 - **Service Layer**: Business logic separated from route handlers
 - **Error Handling**: Consistent error responses across endpoints
+- **Route Structure**: Public routes (no auth) and protected routes (JWT required) with clear separation
 
 ## API Endpoints
 

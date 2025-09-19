@@ -9,6 +9,8 @@ A modern web application built with Nuxt.js 4 and Rust, featuring JWT-based auth
 ## Features
 
 - **User Authentication**: Registration and login with JWT tokens and rolling refresh tokens
+- **User Profile Management**: Edit display name, username, and change passwords
+- **Admin Panel**: Complete user management system with deactivation, password reset, and user promotion
 - **Incident Timers**: Create, manage, and track incident timers with notes and real-time updates
 - **Dynamic Motivational Phrases**: Beautiful steampunk-themed phrase display system with random selection
 - **User Suggestion Workflow**: Submit phrase suggestions for admin approval with status tracking
@@ -109,6 +111,11 @@ kennwilliamsondotorg/
 - `POST /api/phrases/exclude/{id}` - Exclude phrase from feed (protected)
 
 ### Admin Endpoints
+- `GET /api/admin/stats` - System statistics (admin only)
+- `GET /api/admin/users` - User management (admin only)
+- `POST /api/admin/users/{id}/deactivate` - Deactivate user (admin only)
+- `POST /api/admin/users/{id}/reset-password` - Reset user password (admin only)
+- `POST /api/admin/users/{id}/promote` - Promote to admin (admin only)
 - `GET /api/admin/phrases` - Manage phrases (admin only)
 - `GET /api/admin/suggestions` - Review suggestions (admin only)
 - `POST /api/admin/suggestions/{id}/approve` - Approve suggestion (admin only)

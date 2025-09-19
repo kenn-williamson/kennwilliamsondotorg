@@ -93,7 +93,8 @@ Comprehensive security implementation covering authentication, authorization, da
 
 3. **Admin Endpoints** (Admin role required):
    - Admin panel: `/backend/admin/*`
-   - User management (future)
+   - User management: `/backend/admin/users/*`
+   - Phrase moderation: `/backend/admin/suggestions/*`
 
 ### Error Handling
 - **Generic Responses**: No information leakage in errors

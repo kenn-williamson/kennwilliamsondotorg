@@ -37,6 +37,13 @@ frontend/
 │   │   ├── Profile/       # Profile management components
 │   │   │   ├── AccountInformationForm.vue # Account info editing form
 │   │   │   └── SecurityForm.vue # Password change form
+│   │   ├── Admin/         # Admin panel components
+│   │   │   ├── AdminPanel.vue           # Main admin panel with tabs
+│   │   │   ├── AdminTabNavigation.vue   # Tab navigation component
+│   │   │   ├── OverviewTab.vue          # System statistics display
+│   │   │   ├── UsersTab.vue             # User management interface
+│   │   │   ├── PhraseSuggestionApprovalTab.vue # Phrase moderation interface
+│   │   │   └── UserSearchBox.vue        # User search component
 │   │   └── Steampunk/     # Steampunk design system components
 │   │       ├── SteamClock.vue     # Main steampunk timer display
 │   │       ├── FlippingDigit.vue  # Animated flip-digit component
@@ -51,13 +58,16 @@ frontend/
 │   │   ├── register.vue   # User registration with dynamic URL preview
 │   │   ├── profile.vue    # User profile management page
 │   │   ├── incidents.vue  # Protected CRUD management
+│   │   ├── admin/         # Admin panel pages
+│   │   │   └── index.vue  # Admin panel main page
 │   │   └── [user_slug]/
 │   │       └── incident-timer.vue # Public timer display
 │   ├── stores/            # Pinia stores
 │   │   ├── incident-timers.ts # Timer management state
 │   │   └── phrases.ts     # Phrases management state
 │   ├── middleware/        # Route middleware
-│   │   └── auth.ts        # Route protection
+│   │   ├── auth.ts        # Route protection
+│   │   └── admin.ts       # Admin route protection
 │   ├── composables/       # Composition API logic
 │   │   ├── useAuthFetch.ts # HTTP client with auth interceptors
 │   │   ├── useAuthService.ts # Authentication operations
@@ -65,6 +75,7 @@ frontend/
 │   │   ├── useJwtManager.ts # JWT token management with automatic refresh
 │   │   ├── useIncidentTimerService.ts # Timer CRUD operations
 │   │   ├── usePhraseService.ts # Phrases CRUD operations
+│   │   ├── useAdminService.ts # Admin panel operations
 │   │   └── useBaseService.ts # Base service utilities
 │   ├── types/             # TypeScript definitions
 │   │   └── phrases.ts     # Phrases type definitions
@@ -110,7 +121,16 @@ frontend/
 ### Phrases System
 - **Display**: Random motivational phrases
 - **User Features**: Submit suggestions, filter phrases, track status
+- **Admin Features**: Approve/reject suggestions, manage phrases
 - **State Management**: Pinia stores for data management
+
+### Admin Panel System
+- **User Management**: Search users, deactivate accounts, reset passwords, promote to admin
+- **Phrase Moderation**: Review and approve/reject user suggestions
+- **System Statistics**: Overview of users, phrases, and pending suggestions
+- **Access Control**: Admin-only routes with role validation via admin middleware
+- **Tab Navigation**: URL-synchronized tab navigation with state persistence
+- **Admin Interface**: Clean, minimal design following authentication page styling
 
 ### Design System
 Page-specific aesthetics following [UX-LAYOUT.md](UX-LAYOUT.md):
@@ -131,6 +151,14 @@ Page-specific aesthetics following [UX-LAYOUT.md](UX-LAYOUT.md):
 **Profile Components** (2 components):
 - AccountInformationForm.vue (display name and slug editing with validation)
 - SecurityForm.vue (password change with current password verification)
+
+**Admin Components** (6 components):
+- AdminPanel.vue (main admin interface with tabbed navigation and URL state management)
+- AdminTabNavigation.vue (tab navigation with URL synchronization)
+- OverviewTab.vue (system statistics dashboard)
+- UsersTab.vue (user management with search and actions)
+- PhraseSuggestionApprovalTab.vue (phrase suggestion moderation)
+- UserSearchBox.vue (user search functionality)
 
 **Steampunk Design** (6 components):
 - SteamClock.vue, FlippingDigit.vue, SlidingTimeGroup.vue, SteampunkBackground.vue, SteampunkBanner.vue, VintageNoteCard.vue
@@ -165,6 +193,19 @@ All services use `useBaseService()` which provides:
 - `executeRequest()` - Wraps API calls with loading/error handling
 - `executeRequestWithSuccess()` - Wraps with success messaging
 - `isLoading`, `error`, `hasError` - Unified state management
+- **Simplified Architecture**: Removed caching complexity (lastFetchTime, isStale, invalidateCache) for cleaner, more maintainable code
+
+**Centralized API Routes:**
+- **Configuration**: `frontend/shared/config/api-routes.ts` - Single source of truth for all endpoints
+- **Categorization**: PUBLIC (no auth), PROTECTED (JWT required), API (SSR passthrough)
+- **Type Safety**: TypeScript support with route parameter functions
+- **Maintainability**: Centralized route definitions eliminate duplication
+
+**JWT Management:**
+- **Server-Side**: `frontend/server/utils/jwt-handler.ts` - Centralized JWT handling with automatic refresh
+- **Client-Side**: `useBackendFetch()` automatically adds JWT tokens to protected routes
+- **Refresh Logic**: Server-side refresh with session delegation and refresh locks
+- **Error Handling**: Automatic token refresh on expiration with fallback to login
 
 **API Route Usage:**
 - `API_ROUTES.PUBLIC.*` - Public endpoints (no auth needed)

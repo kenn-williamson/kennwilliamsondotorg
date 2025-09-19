@@ -587,6 +587,91 @@ Optional fields are either included with a value or `null`:
 }
 ```
 
+## Admin User Management Contracts
+
+### System Statistics
+**Endpoint:** `GET /backend/admin/stats`
+**Authentication:** Required (Admin role)
+
+**Response (200 OK):**
+```json
+{
+  "total_users": 25,
+  "active_users": 23,
+  "pending_suggestions": 3,
+  "total_phrases": 15
+}
+```
+
+### User Management
+**Endpoint:** `GET /backend/admin/users`
+**Authentication:** Required (Admin role)
+
+**Query Parameters:**
+- `search` (optional): Search by display name or email
+
+**Response (200 OK):**
+```json
+{
+  "users": [
+    {
+      "id": "01234567-89ab-cdef-0123-456789abcdef",
+      "email": "user@example.com",
+      "display_name": "User Name",
+      "slug": "user-name",
+      "active": true,
+      "roles": ["user"],
+      "created_at": "2024-01-01T12:00:00Z"
+    }
+  ],
+  "total": 1
+}
+```
+
+### Deactivate User
+**Endpoint:** `POST /backend/admin/users/{id}/deactivate`
+**Authentication:** Required (Admin role)
+
+**Response (200 OK):**
+```json
+{
+  "message": "User deactivated successfully"
+}
+```
+
+### Activate User
+**Endpoint:** `POST /backend/admin/users/{id}/activate`
+**Authentication:** Required (Admin role)
+
+**Response (200 OK):**
+```json
+{
+  "message": "User activated successfully"
+}
+```
+
+### Reset User Password
+**Endpoint:** `POST /backend/admin/users/{id}/reset-password`
+**Authentication:** Required (Admin role)
+
+**Response (200 OK):**
+```json
+{
+  "new_password": "generatedPassword123"
+}
+```
+
+### Promote User to Admin
+**Endpoint:** `POST /backend/admin/users/{id}/promote`
+**Authentication:** Required (Admin role)
+
+**Response (200 OK):**
+```json
+{
+  "message": "User promoted to admin successfully"
+}
+```
+
 ## Admin Phrases Contracts
 
 ### Get All Phrases (Admin)
@@ -760,6 +845,12 @@ All require `Authorization: Bearer {token}` header:
 
 ### Admin Routes
 All require `Authorization: Bearer {token}` header with admin role:
+- `/backend/admin/stats` - System statistics
+- `/backend/admin/users` - User list with search
+- `/backend/admin/users/{id}/deactivate` - Deactivate user
+- `/backend/admin/users/{id}/activate` - Activate user
+- `/backend/admin/users/{id}/reset-password` - Reset user password
+- `/backend/admin/users/{id}/promote` - Promote to admin
 - `/backend/admin/phrases` - Admin phrase management
 - `/backend/admin/phrases/{id}` - Specific phrase operations
 - `/backend/admin/suggestions` - Get all pending suggestions
