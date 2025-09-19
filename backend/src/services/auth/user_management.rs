@@ -99,7 +99,9 @@ impl UserManagementService {
     pub async fn update_profile(&self, user_id: Uuid, request: ProfileUpdateRequest) -> Result<UserResponse> {
         // Validate slug format using the slug utils
         use super::slug_utils::SlugUtils;
-        let generated_slug = SlugUtils::generate_slug(&request.display_name);
+        
+        // Validate that the slug follows proper format (but doesn't need to match display name)
+        let generated_slug = SlugUtils::generate_slug(&request.slug);
         if generated_slug != request.slug {
             return Err(anyhow::anyhow!("Invalid slug format"));
         }

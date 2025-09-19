@@ -52,19 +52,19 @@ export const profileUpdateSchema = yup.object({
     .trim(),
   slug: yup
     .string()
-    .required('Username is required')
-    .min(2, 'Username must be at least 2 characters')
-    .max(50, 'Username must be no more than 50 characters')
-    .matches(/^[a-z0-9-]+$/, 'Username can only contain lowercase letters, numbers, and hyphens')
-    .test('no-consecutive-hyphens', 'Username cannot have consecutive hyphens', (value) => {
+    .required('URL slug is required')
+    .min(2, 'URL slug must be at least 2 characters')
+    .max(50, 'URL slug must be no more than 50 characters')
+    .matches(/^[a-z0-9-]+$/, 'URL slug can only contain lowercase letters, numbers, and hyphens')
+    .test('no-consecutive-hyphens', 'URL slug cannot have consecutive hyphens', (value) => {
       if (!value) return true
       return !value.includes('--')
     })
-    .test('no-leading-trailing-hyphens', 'Username cannot start or end with hyphens', (value) => {
+    .test('no-leading-trailing-hyphens', 'URL slug cannot start or end with hyphens', (value) => {
       if (!value) return true
       return !value.startsWith('-') && !value.endsWith('-')
     })
-    .test('not-empty-after-cleanup', 'Username cannot be empty', (value) => {
+    .test('not-empty-after-cleanup', 'URL slug cannot be empty', (value) => {
       if (!value) return true
       return value.trim().length > 0
     }),

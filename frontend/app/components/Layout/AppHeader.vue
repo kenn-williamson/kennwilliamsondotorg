@@ -213,8 +213,7 @@ const logout = async () => {
 const goToAccountSettings = () => {
   showUserMenu.value = false
   showMobileMenu.value = false
-  // TODO: Navigate to account settings when implemented
-  console.log('Navigate to account settings')
+  router.push('/profile')
 }
 
 // Click outside to close menus
