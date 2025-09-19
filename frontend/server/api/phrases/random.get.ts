@@ -1,34 +1,22 @@
+import { API_ROUTES } from '#shared/config/api-routes'
+import { requireValidJwtToken } from '../../utils/jwt-handler'
+
 export default defineEventHandler(async (event) => {
   try {
-    // Get the user session to access the JWT token
-    const session = await getUserSession(event)
-    
-    if (!session?.user) {
-      throw createError({
-        statusCode: 401,
-        statusMessage: 'Authentication required'
-      })
-    }
-    
-    if (!session.secure?.jwtToken) {
-      throw createError({
-        statusCode: 401,
-        statusMessage: 'No JWT token available in session'
-      })
-    }
+    // Get valid JWT token (with automatic refresh if needed)
+    const jwtToken = await requireValidJwtToken(event)
 
     // Get the backend URL from runtime config
     const config = useRuntimeConfig()
-    const backendUrl = config.apiBase
 
-    console.log('🔍 [Phrases API] Fetching random phrase for user:', session.user.email)
+    console.log('🔍 [Phrases API] Fetching random phrase')
     console.log('🔍 [Phrases API] Server config apiBase:', config.apiBase)
     console.log('🔍 [Phrases API] Public config apiBase:', config.public.apiBase)
 
-    // Forward the request to the backend with the JWT token from session
-    const response = await $fetch(`${backendUrl}/phrases/random`, {
+    // Forward the request to the backend with the JWT token
+    const response = await $fetch(`${config.apiBase}${API_ROUTES.PROTECTED.PHRASES.RANDOM}`, {
       headers: {
-        'Authorization': `Bearer ${session.secure.jwtToken}`,
+        'Authorization': `Bearer ${jwtToken}`,
         'Content-Type': 'application/json'
       }
     })

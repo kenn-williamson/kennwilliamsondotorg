@@ -1,7 +1,8 @@
 import type { Phrase, UserExcludedPhrase, PhraseSuggestion } from '#shared/types/phrases'
+import { API_ROUTES } from '#shared/config/api-routes'
 
 export const usePhraseService = () => {
-  const backendFetch = useBackendFetch()
+  const { executeRequest, executeRequestWithSuccess, backendFetch, isLoading, error, hasError } = useBaseService()
 
   /**
    * Fetch a random phrase for a specific user (SSR-friendly)
@@ -9,7 +10,7 @@ export const usePhraseService = () => {
    */
   const fetchRandomPhrase = async (userSlug: string) => {
     try {
-      const response = await $fetch<string>(`/api/${userSlug}/phrase`)
+      const response = await $fetch<string>(API_ROUTES.API.PHRASES.BY_USER_SLUG(userSlug))
       return response
     } catch (error: any) {
       console.error('Failed to fetch random phrase:', error)
@@ -24,7 +25,7 @@ export const usePhraseService = () => {
   const fetchRandomPhraseClient = async (userSlug: string) => {
     try {
       const config = useRuntimeConfig()
-      const response = await $fetch<string>(`${config.public.apiBase}/${userSlug}/phrase`)
+      const response = await $fetch<string>(`${config.public.apiBase}${API_ROUTES.PUBLIC.PHRASES.BY_USER_SLUG(userSlug)}`)
       return response
     } catch (error: any) {
       console.error('Failed to fetch random phrase (client):', error)
@@ -37,27 +38,32 @@ export const usePhraseService = () => {
    * Uses direct backend pattern with JWT authentication
    */
   const fetchAllPhrases = async () => {
-    try {
-      const response = await backendFetch<{ phrases: Phrase[] }>('/phrases')
-      return response
-    } catch (error: any) {
-      console.error('Failed to fetch all phrases:', error)
-      throw error
-    }
+    return executeRequest(
+      () => backendFetch<{ phrases: Phrase[] }>(API_ROUTES.PROTECTED.PHRASES.LIST),
+      'fetchAllPhrases'
+    )
   }
 
   /**
-   * Get user's excluded phrases
+   * Get user's phrases with exclusion status
+   * Uses direct backend pattern with JWT authentication
+   */
+  const fetchUserPhrases = async () => {
+    return executeRequest(
+      () => backendFetch<{ phrases: PhraseWithExclusion[] }>(API_ROUTES.PROTECTED.PHRASES.USER),
+      'fetchUserPhrases'
+    )
+  }
+
+  /**
+   * Get user's excluded phrases (legacy endpoint)
    * Uses direct backend pattern with JWT authentication
    */
   const fetchExcludedPhrases = async () => {
-    try {
-      const response = await backendFetch<{ excluded_phrases: UserExcludedPhrase[] }>('/phrases/excluded')
-      return response
-    } catch (error: any) {
-      console.error('Failed to fetch excluded phrases:', error)
-      throw error
-    }
+    return executeRequest(
+      () => backendFetch<{ excluded_phrases: UserExcludedPhrase[] }>(API_ROUTES.PROTECTED.PHRASES.EXCLUDED),
+      'fetchExcludedPhrases'
+    )
   }
 
   /**
@@ -65,15 +71,13 @@ export const usePhraseService = () => {
    * Uses direct backend pattern with JWT authentication
    */
   const excludePhrase = async (phraseId: string) => {
-    try {
-      const response = await backendFetch<{ message: string }>(`/phrases/exclude/${phraseId}`, {
+    return executeRequestWithSuccess(
+      () => backendFetch<{ message: string }>(API_ROUTES.PROTECTED.PHRASES.EXCLUDE(phraseId), {
         method: 'POST'
-      })
-      return response
-    } catch (error: any) {
-      console.error('Failed to exclude phrase:', error)
-      throw error
-    }
+      }),
+      'Phrase excluded successfully',
+      'excludePhrase'
+    )
   }
 
   /**
@@ -81,15 +85,13 @@ export const usePhraseService = () => {
    * Uses direct backend pattern with JWT authentication
    */
   const removePhraseExclusion = async (phraseId: string) => {
-    try {
-      const response = await backendFetch<{ message: string }>(`/phrases/exclude/${phraseId}`, {
+    return executeRequestWithSuccess(
+      () => backendFetch<{ message: string }>(API_ROUTES.PROTECTED.PHRASES.EXCLUDE(phraseId), {
         method: 'DELETE'
-      })
-      return response
-    } catch (error: any) {
-      console.error('Failed to remove phrase exclusion:', error)
-      throw error
-    }
+      }),
+      'Phrase exclusion removed successfully',
+      'removePhraseExclusion'
+    )
   }
 
   /**
@@ -97,16 +99,14 @@ export const usePhraseService = () => {
    * Uses direct backend pattern with JWT authentication
    */
   const submitPhraseSuggestion = async (phraseText: string) => {
-    try {
-      const response = await backendFetch<{ suggestion: PhraseSuggestion }>('/phrases/suggestions', {
+    return executeRequestWithSuccess(
+      () => backendFetch<{ suggestion: PhraseSuggestion }>(API_ROUTES.PROTECTED.PHRASES.SUGGESTIONS, {
         method: 'POST',
         body: { phrase_text: phraseText }
-      })
-      return response
-    } catch (error: any) {
-      console.error('Failed to submit phrase suggestion:', error)
-      throw error
-    }
+      }),
+      'Phrase suggestion submitted successfully',
+      'submitPhraseSuggestion'
+    )
   }
 
   /**
@@ -114,13 +114,10 @@ export const usePhraseService = () => {
    * Uses direct backend pattern with JWT authentication
    */
   const fetchPhraseSuggestions = async () => {
-    try {
-      const response = await backendFetch<{ suggestions: PhraseSuggestion[] }>('/phrases/suggestions')
-      return response
-    } catch (error: any) {
-      console.error('Failed to fetch phrase suggestions:', error)
-      throw error
-    }
+    return executeRequest(
+      () => backendFetch<{ suggestions: PhraseSuggestion[] }>(API_ROUTES.PROTECTED.PHRASES.SUGGESTIONS),
+      'fetchPhraseSuggestions'
+    )
   }
 
   /**
@@ -128,13 +125,10 @@ export const usePhraseService = () => {
    * Uses direct backend pattern with JWT authentication
    */
   const fetchRandomPhraseAuth = async () => {
-    try {
-      const response = await backendFetch<string>('/phrases/random')
-      return response
-    } catch (error: any) {
-      console.error('Failed to fetch random phrase (auth):', error)
-      throw error
-    }
+    return executeRequest(
+      () => backendFetch<string>(API_ROUTES.PROTECTED.PHRASES.RANDOM),
+      'fetchRandomPhraseAuth'
+    )
   }
 
   return {
@@ -142,10 +136,16 @@ export const usePhraseService = () => {
     fetchRandomPhraseClient,
     fetchRandomPhraseAuth,
     fetchAllPhrases,
+    fetchUserPhrases,
     fetchExcludedPhrases,
     excludePhrase,
     removePhraseExclusion,
     submitPhraseSuggestion,
-    fetchPhraseSuggestions
+    fetchPhraseSuggestions,
+    
+    // Expose base service state for components
+    isLoading,
+    error,
+    hasError,
   }
 }

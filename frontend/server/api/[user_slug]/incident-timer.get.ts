@@ -1,3 +1,5 @@
+import { API_ROUTES } from '#shared/config/api-routes'
+
 export default defineEventHandler(async (event) => {
   const userSlug = getRouterParam(event, 'user_slug')
   
@@ -16,7 +18,7 @@ export default defineEventHandler(async (event) => {
   try {
     // Public endpoint - no authentication required
     const config = useRuntimeConfig()
-    const backendUrl = `${config.apiBase}/${userSlug}/incident-timer`
+    const backendUrl = `${config.apiBase}${API_ROUTES.PUBLIC.TIMERS.BY_USER_SLUG(userSlug)}`
     
     console.log(`🔍 [API] Calling backend at: ${backendUrl}`)
     console.log(`🔍 [API] Server config apiBase: ${config.apiBase}`)

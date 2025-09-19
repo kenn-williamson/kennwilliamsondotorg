@@ -7,11 +7,11 @@
 export function useAuthFetch() {
   const authFetch = async <T = any>(url: string, options: any = {}): Promise<T> => {
     // Auth operations always go through Nuxt server API
-    const targetUrl = `/api${url}`
+    // URL should already be a complete API route (e.g., /api/auth/login)
     
-    console.log(`🔐 [useAuthFetch] ${options.method || 'GET'} ${targetUrl}`)
+    console.log(`🔐 [useAuthFetch] ${options.method || 'GET'} ${url}`)
     
-    const response = await $fetch<T>(targetUrl, {
+    const response = await $fetch<T>(url, {
       ...options,
       baseURL: '' // Use relative URL for internal Nuxt API
     })

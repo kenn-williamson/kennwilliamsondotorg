@@ -3,35 +3,43 @@
  *
  * Architecture:
  * - All requests go directly to Rust backend (/backend)
- * - JWT tokens are added automatically for authenticated requests
+ * - JWT tokens are added automatically for protected requests only
  * - Used for client-side operations and mutations
  * - For SSR prefetching, use $fetch('/api/*') directly in pages
  */
+
+import { requiresAuth } from '#shared/config/api-routes'
+import { useJwtManager } from './useJwtManager'
+
 export function useBackendFetch() {
   const config = useRuntimeConfig()
   const jwtManager = useJwtManager()
 
   const backendFetch = async <T = any>(url: string, options: any = {}): Promise<T> => {
-    // Always go directly to Rust backend
+    // All backend calls use the same base URL
     const baseURL = config.public.apiBase
     const targetUrl = url
-
-    // Get fresh token (JWT manager handles expiration check and refresh automatically)
-    const token = await jwtManager.getToken()
 
     // Prepare request options
     const requestOptions = { ...options }
 
-    if (token) {
-      // Initialize headers if not present
-      if (!requestOptions.headers) {
-        requestOptions.headers = {}
-      }
+    // Only add JWT token for protected routes
+    if (requiresAuth(url)) {
+      const token = await jwtManager.getToken()
+      
+      if (token) {
+        // Initialize headers if not present
+        if (!requestOptions.headers) {
+          requestOptions.headers = {}
+        }
 
-      requestOptions.headers.Authorization = `Bearer ${token}`
-      console.log(`✅ [useBackendFetch] Added JWT token to request`)
+        requestOptions.headers.Authorization = `Bearer ${token}`
+        console.log(`✅ [useBackendFetch] Added JWT token to protected request`)
+      } else {
+        console.log(`❌ [useBackendFetch] No JWT token available for protected request`)
+      }
     } else {
-      console.log(`❌ [useBackendFetch] No JWT token available for request`)
+      console.log(`ℹ️ [useBackendFetch] Public route, no JWT token needed`)
     }
 
     console.log(`🔄 [useBackendFetch] ${options.method || 'GET'} ${targetUrl}`)

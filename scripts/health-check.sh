@@ -230,9 +230,9 @@ check_backend() {
     fi
     
     # Check health endpoint (nginx proxy first, fallback to direct)
-    if curl -f -s -k https://localhost/backend/health >/dev/null 2>&1; then
+    if curl -f -s -k https://localhost/backend/public/health >/dev/null 2>&1; then
         success "Backend health endpoint responding (via nginx proxy)"
-    elif curl -f -s http://localhost:8080/backend/health >/dev/null 2>&1; then
+    elif curl -f -s http://localhost:8080/backend/public/health >/dev/null 2>&1; then
         warn "Backend health endpoint responding (direct access only - nginx proxy issue)"
     else
         failure "Backend health endpoint not responding (both proxy and direct failed)"
@@ -240,9 +240,9 @@ check_backend() {
     fi
     
     # Check database health endpoint (nginx proxy first, fallback to direct)
-    if curl -f -s -k https://localhost/backend/health/db >/dev/null 2>&1; then
+    if curl -f -s -k https://localhost/backend/public/health/db >/dev/null 2>&1; then
         success "Backend database connectivity OK (via nginx proxy)"
-    elif curl -f -s http://localhost:8080/backend/health/db >/dev/null 2>&1; then
+    elif curl -f -s http://localhost:8080/backend/public/health/db >/dev/null 2>&1; then
         warn "Backend database connectivity OK (direct access only - nginx proxy issue)"
     else
         failure "Backend cannot connect to database (both proxy and direct failed)"

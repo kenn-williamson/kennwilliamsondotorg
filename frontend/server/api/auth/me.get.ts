@@ -1,28 +1,15 @@
 import { defineEventHandler, createError } from 'h3'
 import { useRuntimeConfig } from '#imports'
 import { getClientInfo } from '../../utils/client-ip'
+import { API_ROUTES } from '#shared/config/api-routes'
+import { requireValidJwtToken } from '../../utils/jwt-handler'
 
 export default defineEventHandler(async (event) => {
   try {
-    // Get the current user session to access the JWT token
-    const session = await getUserSession(event)
+    // Get valid JWT token (with automatic refresh if needed)
+    const jwtToken = await requireValidJwtToken(event)
 
-    if (!session?.user) {
-      throw createError({
-        statusCode: 401,
-        statusMessage: 'Authentication required'
-      })
-    }
-
-    const jwtToken = session.secure?.jwtToken
-    if (!jwtToken) {
-      throw createError({
-        statusCode: 401,
-        statusMessage: 'No JWT token available'
-      })
-    }
-
-    console.log('🔍 [Me API] Fetching current user for:', session.user.email)
+    console.log('🔍 [Me API] Fetching current user')
 
     // Call the backend /auth/me endpoint
     const config = useRuntimeConfig()
@@ -39,7 +26,7 @@ export default defineEventHandler(async (event) => {
       slug: string
       roles: string[]
       created_at: string
-    }>(`${config.apiBase}/auth/me`, {
+    }>(`${config.apiBase}${API_ROUTES.PROTECTED.AUTH.ME}`, {
       method: 'GET',
       headers: {
         'Authorization': `Bearer ${jwtToken}`,
@@ -52,6 +39,24 @@ export default defineEventHandler(async (event) => {
     })
 
     console.log('✅ [Me API] Got fresh user data from backend')
+
+    // Get current session to update it with fresh user data
+    const session = await getUserSession(event)
+    
+    // Update the session with fresh user data to keep it in sync
+    await setUserSession(event, {
+      ...session,
+      user: {
+        id: response.id,
+        email: response.email,
+        display_name: response.display_name,
+        slug: response.slug,
+        roles: response.roles,
+        created_at: response.created_at
+      }
+    })
+
+    console.log('✅ [Me API] Updated session with fresh user data')
 
     return response
   } catch (error: any) {

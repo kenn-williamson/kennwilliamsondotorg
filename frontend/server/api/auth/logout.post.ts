@@ -1,5 +1,6 @@
 import { defineEventHandler, createError } from 'h3'
 import { useRuntimeConfig } from '#imports'
+import { API_ROUTES } from '#shared/config/api-routes'
 
 export default defineEventHandler(async (event: any) => {
   try {
@@ -23,7 +24,7 @@ export default defineEventHandler(async (event: any) => {
         const config = useRuntimeConfig()
         console.log('🔄 [Logout API] Calling backend /auth/revoke...')
         
-        await $fetch(`${config.apiBase}/auth/revoke`, {
+        await $fetch(`${config.apiBase}${API_ROUTES.PROTECTED.AUTH.REVOKE}`, {
           method: 'POST',
           body: { refresh_token: refreshToken }
         })

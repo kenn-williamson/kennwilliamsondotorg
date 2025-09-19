@@ -7,6 +7,7 @@
 
 import { useBackendFetch } from './useBackendFetch'
 import { useAuthFetch } from './useAuthFetch'
+import { API_ROUTES } from '#shared/config/api-routes'
 
 interface LoginRequest {
   email: string
@@ -27,97 +28,91 @@ interface SlugPreviewResponse {
 
 export function useAuthService() {
   const { clear, fetch: refreshSession } = useUserSession()
-  const backendFetch = useBackendFetch()
-  const authFetch = useAuthFetch()
+  const { executeRequest, executeRequestWithSuccess, backendFetch, authFetch } = useBaseService()
 
   return {
     async login(credentials: LoginRequest): Promise<{ success: boolean }> {
-      try {
-        // Call Nuxt API route that handles session creation
-        await authFetch('/auth/login', {
-          method: 'POST',
-          body: credentials,
-        })
-        
-        // Refresh session state on client-side
-        await refreshSession()
-        
-        return { success: true }
-      } catch (error: any) {
-        throw new Error(error.data?.statusMessage || 'Login failed')
-      }
+      return executeRequestWithSuccess(
+        async () => {
+          // Call Nuxt API route that handles session creation
+          await authFetch(API_ROUTES.API.AUTH.LOGIN, {
+            method: 'POST',
+            body: credentials,
+          })
+          
+          // Refresh session to get updated user data
+          await refreshSession()
+          
+          return { success: true }
+        },
+        'Login successful',
+        'login'
+      )
     },
 
     async register(userData: RegisterRequest): Promise<{ success: boolean }> {
-      try {
-        // Call Nuxt API route that handles session creation  
-        await authFetch('/auth/register', {
-          method: 'POST',
-          body: userData,
-        })
-        
-        // Refresh session state on client-side
-        await refreshSession()
-        return { success: true }
-      } catch (error: any) {
-        throw new Error(error.data?.statusMessage || 'Registration failed')
-      }
+      return executeRequestWithSuccess(
+        async () => {
+          // Call Nuxt API route that handles session creation  
+          await authFetch(API_ROUTES.API.AUTH.REGISTER, {
+            method: 'POST',
+            body: userData,
+          })
+          
+          // Refresh session to get updated user data
+          await refreshSession()
+          return { success: true }
+        },
+        'Registration successful',
+        'register'
+      )
     },
 
     async previewSlug(displayName: string): Promise<SlugPreviewResponse> {
-      // Direct call to backend (no session needed)
-      return backendFetch('/auth/preview-slug', {
-        method: 'POST',
-        body: { display_name: displayName },
-      })
+      return executeRequest(
+        () => backendFetch(API_ROUTES.PUBLIC.AUTH.PREVIEW_SLUG, {
+          method: 'POST',
+          body: { display_name: displayName },
+        }),
+        'previewSlug'
+      )
     },
 
-    async refreshToken(): Promise<{ success: boolean }> {
-      try {
-        await authFetch('/auth/refresh', { method: 'POST' })
-        return { success: true }
-      } catch (error: any) {
-        throw new Error(error.data?.statusMessage || 'Token refresh failed')
-      }
-    },
 
     async revokeAllSessions(): Promise<{ success: boolean }> {
-      try {
-        const backendFetch = useBackendFetch()
-        await backendFetch('/auth/revoke-all', { method: 'POST' })
+      return executeRequestWithSuccess(
+        async () => {
+          await backendFetch(API_ROUTES.PROTECTED.AUTH.REVOKE_ALL, { method: 'POST' })
 
-        // Clear local session after revoking all sessions
-        await this.logout()
-        return { success: true }
-      } catch (error: any) {
-        throw new Error('Failed to revoke all sessions')
-      }
+          // Clear local session after revoking all sessions
+          await clear()
+          return { success: true }
+        },
+        'All sessions revoked successfully',
+        'revokeAllSessions'
+      )
     },
 
     async logout(): Promise<void> {
-      try {
-        console.log('🔍 [Auth Service] Starting logout process...')
-        
-        // Call the Nuxt server logout endpoint which handles refresh token revocation
-        try {
-          console.log('🔄 [Auth Service] Calling Nuxt server /api/auth/logout...')
-          await $fetch('/api/auth/logout', { method: 'POST' })
-          console.log('✅ [Auth Service] Logout completed on server')
-        } catch (error) {
-          console.error('❌ [Auth Service] Failed to logout on server:', error)
-          // Continue with client-side cleanup even if server logout fails
-        }
-      } catch (error) {
-        console.error('❌ [Auth Service] Error during logout:', error)
-        // Continue with logout even if cleanup fails
-      }
+      return executeRequest(
+        async () => {
+          console.log('🔍 [Auth Service] Starting logout process...')
+          
+          // Call the Nuxt server logout endpoint which handles refresh token revocation
+          try {
+            console.log('🔄 [Auth Service] Calling Nuxt server /api/auth/logout...')
+            await authFetch(API_ROUTES.API.AUTH.LOGOUT, { method: 'POST' })
+            console.log('✅ [Auth Service] Logout completed on server')
+          } catch (error) {
+            console.error('❌ [Auth Service] Failed to logout on server:', error)
+            // Continue with client-side cleanup even if server logout fails
+          }
 
-      // Clear the JWT token first
-      const jwtManager = useJwtManager()
-      jwtManager.clearToken()
-
-      // Clear the session
-      await clear()
+          // Clear authentication state
+          await clear()
+        },
+        'logout'
+      )
     },
   }
 }

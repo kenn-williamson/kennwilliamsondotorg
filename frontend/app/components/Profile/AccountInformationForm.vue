@@ -99,7 +99,6 @@
 import { ref, computed, watch } from 'vue'
 import { useForm, Field, ErrorMessage } from 'vee-validate'
 import { profileUpdateSchema, generateSlug } from '#shared/schemas/auth'
-import { useBackendFetch } from '~/composables/useBackendFetch'
 
 // Props
 const props = defineProps({
@@ -116,7 +115,7 @@ const user = computed(() => props.user)
 const emit = defineEmits(['profile-updated'])
 
 // Composables
-const backendFetch = useBackendFetch()
+const { updateProfile, previewSlug, isLoading, error, hasError } = useAuthProfileService()
 
 // Form setup
 const { handleSubmit, errors, isSubmitting, setFieldValue, values } = useForm({
@@ -161,10 +160,7 @@ const checkSlugUniqueness = async (slug) => {
     if (slug && slug !== props.user.slug) {
       isCheckingSlug.value = true
       try {
-        const response = await backendFetch('/auth/preview-slug', {
-          method: 'POST',
-          body: { display_name: slug }
-        })
+        const response = await previewSlug(slug)
         slugPreview.value = response
       } catch (error) {
         console.error('Error checking slug uniqueness:', error)
@@ -217,12 +213,9 @@ const onSlugChange = (event) => {
 // Form submission
 const onSubmit = handleSubmit(async (values) => {
   try {
-    const response = await backendFetch('/auth/profile', {
-      method: 'PUT',
-      body: {
-        display_name: values.display_name,
-        slug: values.slug
-      }
+    const response = await updateProfile({
+      display_name: values.display_name,
+      slug: values.slug
     })
     
     // Emit success event with updated user data
@@ -233,7 +226,7 @@ const onSubmit = handleSubmit(async (values) => {
     
   } catch (error) {
     console.error('Profile update error:', error)
-    // You could add toast notification here
+    // Error handling is managed by the service
   }
 })
 

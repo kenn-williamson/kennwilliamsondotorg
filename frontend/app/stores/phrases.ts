@@ -1,9 +1,21 @@
-import { defineStore } from 'pinia'
-import { ref } from 'vue'
 import type { Phrase, PhraseSuggestion, PhraseWithExclusion } from '#shared/types/phrases'
+import { useAdminService } from '~/composables/useAdminService'
 
 export const usePhrasesStore = defineStore('phrases', () => {
-  const baseService = useBaseService()
+  const { 
+    fetchAllPhrases, 
+    fetchUserPhrases,
+    fetchExcludedPhrases, 
+    excludePhrase, 
+    removePhraseExclusion, 
+    submitPhraseSuggestion, 
+    fetchPhraseSuggestions,
+    isLoading,
+    error,
+    hasError
+  } = usePhraseService()
+  
+  const { approveSuggestion: approveSuggestionService, rejectSuggestion: rejectSuggestionService } = useAdminService()
 
   // State
   const userPhrases = ref<PhraseWithExclusion[]>([])
@@ -18,41 +30,29 @@ export const usePhrasesStore = defineStore('phrases', () => {
   const hasAdminSuggestions = computed(() => adminSuggestions.value.length > 0)
 
   // Actions
-  const loadPhrasesForUser = () => baseService.executeRequest(
-    async () => {
-      const response = await baseService.backendFetch<{ phrases: PhraseWithExclusion[], total: number }>('/phrases/user')
-      userPhrases.value = response.phrases
-      return response
-    },
-    'loadPhrasesForUser'
-  )
+  const loadPhrasesForUser = async () => {
+    const response = await fetchUserPhrases()
+    userPhrases.value = response.phrases
+    return response
+  }
 
-  const loadAllPhrasesForAdmin = () => baseService.executeRequest(
-    async () => {
-      const response = await baseService.backendFetch<{ phrases: Phrase[], total: number }>('/phrases/admin')
-      adminPhrases.value = response.phrases
-      return response
-    },
-    'loadAllPhrasesForAdmin'
-  )
+  const loadAllPhrasesForAdmin = async () => {
+    const response = await fetchAllPhrases()
+    adminPhrases.value = response.phrases
+    return response
+  }
 
-  const loadSuggestionsForUser = () => baseService.executeRequest(
-    async () => {
-      const response = await baseService.backendFetch<{ suggestions: PhraseSuggestion[], total: number }>('/phrases/suggestions')
-      userSuggestions.value = response.suggestions
-      return response
-    },
-    'loadSuggestionsForUser'
-  )
+  const loadSuggestionsForUser = async () => {
+    const response = await fetchPhraseSuggestions()
+    userSuggestions.value = response.suggestions
+    return response
+  }
 
-  const loadAllSuggestionsForAdmin = () => baseService.executeRequest(
-    async () => {
-      const response = await baseService.backendFetch<{ suggestions: PhraseSuggestion[], total: number }>('/phrases/suggestions/admin')
-      adminSuggestions.value = response.suggestions
-      return response
-    },
-    'loadAllSuggestionsForAdmin'
-  )
+  const loadAllSuggestionsForAdmin = async () => {
+    const response = await fetchPhraseSuggestions()
+    adminSuggestions.value = response.suggestions
+    return response
+  }
 
   const togglePhraseExclusion = async (phraseId: string) => {
     const phrase = userPhrases.value.find(p => p.id === phraseId)
@@ -60,80 +60,51 @@ export const usePhrasesStore = defineStore('phrases', () => {
 
     const wasExcluded = phrase.is_excluded
 
-    try {
-      if (phrase.is_excluded) {
-        // Remove exclusion
-        await baseService.backendFetch(`/phrases/exclude/${phraseId}`, { method: 'DELETE' })
-        phrase.is_excluded = false
-      } else {
-        // Add exclusion
-        await baseService.backendFetch(`/phrases/exclude/${phraseId}`, { method: 'POST' })
-        phrase.is_excluded = true
-      }
-      
-      // Show success message
-      console.log(`Phrase ${wasExcluded ? 'included' : 'excluded'} successfully`)
-    } catch (error) {
-      console.error('Error toggling phrase exclusion:', error)
-      throw error
+    if (phrase.is_excluded) {
+      // Remove exclusion
+      await removePhraseExclusion(phraseId)
+      phrase.is_excluded = false
+    } else {
+      // Add exclusion
+      await excludePhrase(phraseId)
+      phrase.is_excluded = true
     }
   }
 
-  const submitSuggestion = (phraseText: string) => baseService.executeRequestWithSuccess(
-    async () => {
-      const response = await baseService.backendFetch<{ suggestion: PhraseSuggestion }>('/phrases/suggestions', {
-        method: 'POST',
-        body: { phrase_text: phraseText }
-      })
-      
-      // Add to user suggestions
-      userSuggestions.value.unshift(response.suggestion)
-      
-      return response.suggestion
-    },
-    'Phrase suggestion submitted successfully',
-    'submitSuggestion'
-  )
+  const submitSuggestion = async (phraseText: string) => {
+    const response = await submitPhraseSuggestion(phraseText)
+    
+    // Add to user suggestions
+    userSuggestions.value.unshift(response.suggestion)
+    
+    return response.suggestion
+  }
 
-  const approveSuggestion = (suggestionId: string, reason?: string) => baseService.executeRequestWithSuccess(
-    async () => {
-      await baseService.backendFetch(`/phrases/suggestions/${suggestionId}/approve`, {
-        method: 'POST',
-        body: { admin_reason: reason }
-      })
-      
-      // Update suggestion status
-      const suggestion = adminSuggestions.value.find(s => s.id === suggestionId)
-      if (suggestion) {
-        suggestion.status = 'approved'
-        suggestion.admin_reason = reason
-      }
-      
-      return suggestion
-    },
-    'Suggestion approved successfully',
-    'approveSuggestion'
-  )
+  const approveSuggestion = async (suggestionId: string, reason?: string) => {
+    await approveSuggestionService(suggestionId, reason || '')
+    
+    // Update suggestion status
+    const suggestion = adminSuggestions.value.find(s => s.id === suggestionId)
+    if (suggestion) {
+      suggestion.status = 'approved'
+      suggestion.admin_reason = reason
+    }
+    
+    return suggestion
+  }
 
-  const rejectSuggestion = (suggestionId: string, reason?: string) => baseService.executeRequestWithSuccess(
-    async () => {
-      await baseService.backendFetch(`/phrases/suggestions/${suggestionId}/reject`, {
-        method: 'POST',
-        body: { admin_reason: reason }
-      })
-      
-      // Update suggestion status
-      const suggestion = adminSuggestions.value.find(s => s.id === suggestionId)
-      if (suggestion) {
-        suggestion.status = 'rejected'
-        suggestion.admin_reason = reason
-      }
-      
-      return suggestion
-    },
-    'Suggestion rejected successfully',
-    'rejectSuggestion'
-  )
+  const rejectSuggestion = async (suggestionId: string, reason?: string) => {
+    await rejectSuggestionService(suggestionId, reason || '')
+    
+    // Update suggestion status
+    const suggestion = adminSuggestions.value.find(s => s.id === suggestionId)
+    if (suggestion) {
+      suggestion.status = 'rejected'
+      suggestion.admin_reason = reason
+    }
+    
+    return suggestion
+  }
 
   // Utility functions
   const clearUserData = () => {
@@ -165,10 +136,9 @@ export const usePhrasesStore = defineStore('phrases', () => {
     hasAdminSuggestions,
     
     // Base service state
-    isLoading: baseService.isLoading,
-    error: baseService.error,
-    hasError: baseService.hasError,
-    isStale: baseService.isStale,
+    isLoading,
+    error,
+    hasError,
     
     // Actions
     loadPhrasesForUser,

@@ -63,8 +63,8 @@ const currentTimer = computed(() => {
   }
   
   // Sort by reset_timestamp descending and get the first (most recent)
-  return incidentTimerStore.timers
-    .sort((a, b) => new Date(b.reset_timestamp).getTime() - new Date(a.reset_timestamp).getTime())[0]
+  return [...incidentTimerStore.timers]
+    .sort((a: any, b: any) => new Date(b.reset_timestamp).getTime() - new Date(a.reset_timestamp).getTime())[0]
 })
 
 const shareTimer = async () => {
@@ -97,8 +97,8 @@ const getUserSlug = async (): Promise<string | null> => {
     }
     
     // Fallback to API call
-    const response = await $fetch('/api/auth/me') as { slug?: string }
-    return response.slug || null
+    const { data: response } = await useFetch<{ slug?: string }>('/api/auth/me')
+    return response.value?.slug || null
   } catch (error) {
     console.error('Error getting user slug:', error)
     return null

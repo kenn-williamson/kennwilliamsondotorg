@@ -102,13 +102,12 @@
 import { ref, computed, watch } from 'vue'
 import { useForm, Field, ErrorMessage } from 'vee-validate'
 import { passwordChangeSchema } from '#shared/schemas/auth'
-import { useBackendFetch } from '~/composables/useBackendFetch'
 
 // Emits
 const emit = defineEmits(['password-changed'])
 
 // Composables
-const backendFetch = useBackendFetch()
+const { changePassword, isLoading, error, hasError } = useAuthProfileService()
 
 // Form setup
 const { handleSubmit, errors, isSubmitting, setFieldValue, values } = useForm({
@@ -155,12 +154,9 @@ const isFormValid = computed(() => {
 // Form submission
 const onSubmit = handleSubmit(async (values) => {
   try {
-    await backendFetch('/auth/change-password', {
-      method: 'PUT',
-      body: {
-        current_password: values.current_password,
-        new_password: values.new_password
-      }
+    await changePassword({
+      current_password: values.current_password,
+      new_password: values.new_password
     })
     
     // Emit success event
@@ -176,7 +172,7 @@ const onSubmit = handleSubmit(async (values) => {
     
   } catch (error) {
     console.error('Password change error:', error)
-    // You could add toast notification here
+    // Error handling is managed by the service
   }
 })
 

@@ -2,18 +2,14 @@ import { ref, computed, getCurrentInstance, onUnmounted } from 'vue'
 
 export function useBaseService() {
   const backendFetch = useBackendFetch()
+  const authFetch = useAuthFetch()
   
   // Service state
   const isLoading = ref(false)
   const error = ref<string | null>(null)
-  const lastFetchTime = ref<Date | null>(null)
 
   // Computed properties
   const hasError = computed(() => !!error.value)
-  const isStale = computed(() => {
-    if (!lastFetchTime.value) return true
-    return Date.now() - lastFetchTime.value.getTime() > 5 * 60 * 1000 // 5 minutes
-  })
 
   // State management
   const setLoading = (loading: boolean): void => {
@@ -24,16 +20,8 @@ export function useBaseService() {
     error.value = err
   }
 
-  const setLastFetchTime = (): void => {
-    lastFetchTime.value = new Date()
-  }
-
   const clearError = (): void => {
     error.value = null
-  }
-
-  const invalidateCache = (): void => {
-    lastFetchTime.value = null
   }
 
   // Simple error handler (can be enhanced later)
@@ -59,7 +47,6 @@ export function useBaseService() {
     
     try {
       const result = await requestFn()
-      setLastFetchTime()
       return result
     } catch (err) {
       const errorMessage = err instanceof Error ? err.message : 'An unexpected error occurred'
@@ -94,22 +81,19 @@ export function useBaseService() {
     // State
     isLoading: computed(() => isLoading.value),
     error: computed(() => error.value),
-    lastFetchTime: computed(() => lastFetchTime.value),
     hasError,
-    isStale,
     
     // State management
     setLoading,
     setError,
-    setLastFetchTime,
     clearError,
-    invalidateCache,
     
     // Request execution
     executeRequest,
     executeRequestWithSuccess,
     
     // API client access
-    backendFetch
+    backendFetch,
+    authFetch
   }
 }

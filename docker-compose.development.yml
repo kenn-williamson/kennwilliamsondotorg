@@ -54,8 +54,8 @@ services:
       - "24678:24678" # Nuxt DevTools port
     environment:
       - NODE_ENV=development
-      - NUXT_PUBLIC_API_BASE=https://localhost/backend  # Use nginx proxy for client-side
-      - NUXT_API_BASE=http://backend:8080/backend  # Use internal Docker network for server-side
+      - NUXT_PUBLIC_API_BASE=https://localhost/backend  # Client-side API base
+      - NUXT_API_BASE=http://backend:8080/backend  # Server-side API base
       - NUXT_SESSION_PASSWORD=${NUXT_SESSION_PASSWORD}  # For Nuxt Auth Utils
       - JWT_SECRET=${JWT_SECRET}
       - CHOKIDAR_USEPOLLING=true  # For file watching in containers

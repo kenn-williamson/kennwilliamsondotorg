@@ -57,6 +57,13 @@
               >
                 Account Settings
               </button>
+              <button 
+                v-if="isAdmin"
+                @click="goToAdminPanel"
+                class="block w-full px-4 py-2 text-sm text-gray-700 hover:bg-gray-50 text-left transition-colors duration-200"
+              >
+                Admin Panel
+              </button>
               <hr class="my-1 border-gray-100">
               <button 
                 @click="logout"
@@ -145,6 +152,13 @@
               Account Settings
             </button>
             <button 
+              v-if="isAdmin"
+              @click="goToAdminPanel"
+              class="mobile-nav-link text-left"
+            >
+              Admin Panel
+            </button>
+            <button 
               @click="logout"
               class="mobile-nav-link text-left"
             >
@@ -188,6 +202,10 @@ const userInitial = computed(() => {
   return user.value.email.charAt(0).toUpperCase()
 })
 
+const isAdmin = computed(() => {
+  return user.value?.roles?.includes('admin') || false
+})
+
 // Methods
 const toggleMobileMenu = () => {
   showMobileMenu.value = !showMobileMenu.value
@@ -214,6 +232,12 @@ const goToAccountSettings = () => {
   showUserMenu.value = false
   showMobileMenu.value = false
   router.push('/profile')
+}
+
+const goToAdminPanel = () => {
+  showUserMenu.value = false
+  showMobileMenu.value = false
+  router.push('/admin')
 }
 
 // Click outside to close menus

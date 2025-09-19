@@ -2,6 +2,7 @@ import { z } from 'zod'
 import { defineEventHandler, readValidatedBody, createError } from 'h3'
 import { useRuntimeConfig } from '#imports'
 import { getClientInfo } from '../../utils/client-ip'
+import { API_ROUTES } from '#shared/config/api-routes'
 
 const bodySchema = z.object({
   email: z.string().email(),
@@ -31,7 +32,7 @@ export default defineEventHandler(async (event: any) => {
         roles: string[]
         created_at: string
       }
-    }>(`${config.apiBase}/auth/login`, {
+    }>(`${config.apiBase}${API_ROUTES.PUBLIC.AUTH.LOGIN}`, {
       method: 'POST',
       body: { email, password },
       headers: {

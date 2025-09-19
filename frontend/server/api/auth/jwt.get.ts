@@ -1,28 +1,22 @@
 import { parseJwtToken } from '#shared/utils/jwt'
+import { getValidJwtToken } from '../../utils/jwt-handler'
 
 export default defineEventHandler(async (event) => {
   try {
-    // Get the user session to access the JWT token
-    const session = await getUserSession(event)
+    // Get valid JWT token (with automatic refresh if needed)
+    const jwtToken = await getValidJwtToken(event)
     
-    if (!session?.user) {
+    if (!jwtToken) {
       throw createError({
         statusCode: 401,
         statusMessage: 'Authentication required'
       })
     }
     
-    if (!session.secure?.jwtToken) {
-      throw createError({
-        statusCode: 401,
-        statusMessage: 'No JWT token available in session'
-      })
-    }
-    
-    console.log('🔍 [JWT API] Providing JWT token for:', session.user.email)
+    console.log('🔍 [JWT API] Providing JWT token')
 
     // Extract expiration from JWT token using shared utility
-    const result = parseJwtToken(session.secure.jwtToken)
+    const result = parseJwtToken(jwtToken)
     let expiresAt: string
     
     if (result.isValid) {
@@ -35,7 +29,7 @@ export default defineEventHandler(async (event) => {
 
     // Return the JWT token to the client
     return {
-      token: session.secure.jwtToken,
+      token: jwtToken,
       expiresAt
     }
   } catch (error: any) {

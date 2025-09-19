@@ -1,22 +1,18 @@
+import { API_ROUTES } from '#shared/config/api-routes'
+import { requireValidJwtToken } from '../utils/jwt-handler'
+
 export default defineEventHandler(async (event) => {
   try {
-    // Get the user session to access the JWT token
-    const session = await getUserSession(event)
+    // Get valid JWT token (with automatic refresh if needed)
+    const jwtToken = await requireValidJwtToken(event)
     
-    if (!session?.user) {
-      throw createError({
-        statusCode: 401,
-        statusMessage: 'Authentication required'
-      })
-    }
+    console.log('🔍 [SSR API] Getting user timers')
     
-    console.log('🔍 [SSR API] Getting user timers for:', session.user.email)
-    
-    // Call the backend with the JWT token from the session
+    // Call the backend with the JWT token
     const config = useRuntimeConfig()
-    const timers = await $fetch(`${config.apiBase}/incident-timers`, {
+    const timers = await $fetch(`${config.apiBase}${API_ROUTES.PROTECTED.TIMERS.LIST}`, {
       headers: {
-        'Authorization': `Bearer ${session.secure?.jwtToken}`
+        'Authorization': `Bearer ${jwtToken}`
       }
     })
     

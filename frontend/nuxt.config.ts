@@ -37,11 +37,11 @@ export default defineNuxtConfig({
       maxAge: 60 * 60 * 24 * 7 // 1 week
     },
     // Server-side API base URL (for internal Docker network)
-    apiBase: process.env.NUXT_API_BASE || 'http://localhost:8080/backend',
+    apiBase: process.env.NUXT_API_BASE || 'http://backend:8080/backend',
     
     public: {
       // Client-side environment variables
-      apiBase: process.env.NUXT_PUBLIC_API_BASE || 'http://localhost:8080/backend',
+      apiBase: process.env.NUXT_PUBLIC_API_BASE || 'https://localhost/backend',
       appName: 'KennWilliamson.org'
     }
   },

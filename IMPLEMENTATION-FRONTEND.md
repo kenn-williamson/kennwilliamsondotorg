@@ -156,6 +156,93 @@ Page-specific aesthetics following [UX-LAYOUT.md](UX-LAYOUT.md):
 - **Stores**: Pinia for reactive state (timers, phrases)
 - **Forms**: All forms use VeeValidate + Yup validation
 
+### Service Architecture
+
+**Unified Service Pattern:**
+All services use `useBaseService()` which provides:
+- `backendFetch` - Direct backend calls with automatic JWT for protected routes
+- `authFetch` - SSR proxy calls for auth operations
+- `executeRequest()` - Wraps API calls with loading/error handling
+- `executeRequestWithSuccess()` - Wraps with success messaging
+- `isLoading`, `error`, `hasError` - Unified state management
+
+**API Route Usage:**
+- `API_ROUTES.PUBLIC.*` - Public endpoints (no auth needed)
+- `API_ROUTES.PROTECTED.*` - Protected endpoints (JWT required)
+- `API_ROUTES.API.*` - SSR proxy routes (session-based)
+
+**Decision Tree for API Calls:**
+
+```
+Client-side API call needed?
+├── Auth operation (login/register/refresh/logout)?
+│   └── Use: executeRequest(() => authFetch(API_ROUTES.API.AUTH.*))
+├── Backend operation (CRUD, data fetching)?
+│   └── Use: executeRequest(() => backendFetch(API_ROUTES.PROTECTED.*))
+└── Public operation (no auth needed)?
+    └── Use: executeRequest(() => backendFetch(API_ROUTES.PUBLIC.*))
+
+SSR data fetching in pages/components?
+└── Use: useFetch('/api/*') for proper SSR support
+
+Server API routes (server/api/*)?
+└── Use: $fetch(config.apiBase + API_ROUTES.PUBLIC/PROTECTED.*)
+```
+
+**Environment Configuration:**
+- `NUXT_API_BASE=http://backend:8080/backend` (SSR - internal Docker network)
+- `NUXT_PUBLIC_API_BASE=https://localhost/backend` (CSR - browser access)
+- `useBackendFetch()` automatically adds JWT tokens to protected routes only
+
+**Service Implementation Examples:**
+
+```typescript
+// ✅ CORRECT: Service using unified pattern
+export function useMyService() {
+  const { executeRequest, executeRequestWithSuccess, backendFetch, authFetch } = useBaseService()
+  
+  return {
+    // Protected backend call
+    async getData() {
+      return executeRequest(
+        () => backendFetch(API_ROUTES.PROTECTED.SOMETHING.LIST),
+        'getData'
+      )
+    },
+    
+    // Auth operation
+    async login(credentials) {
+      return executeRequestWithSuccess(
+        () => authFetch(API_ROUTES.API.AUTH.LOGIN, { method: 'POST', body: credentials }),
+        'Login successful',
+        'login'
+      )
+    },
+    
+    // Public backend call
+    async getPublicData() {
+      return executeRequest(
+        () => backendFetch(API_ROUTES.PUBLIC.SOMETHING.LIST),
+        'getPublicData'
+      )
+    }
+  }
+}
+
+// ✅ CORRECT: SSR data fetching in component
+const { data: user } = await useFetch('/api/auth/me')
+
+// ✅ CORRECT: Server API route
+const response = await $fetch(`${config.apiBase}${API_ROUTES.PROTECTED.SOMETHING.LIST}`)
+
+// ❌ WRONG: Raw $fetch in client-side service
+const response = await $fetch('/api/something') // Use useBaseService instead
+
+// ❌ WRONG: Manual JWT handling
+const token = await jwtManager.getToken()
+const response = await $fetch(url, { headers: { Authorization: `Bearer ${token}` } }) // Use backendFetch instead
+```
+
 ### Form Validation Standards
 - **Required**: All forms must use VeeValidate + Yup for validation
 - **Consistency**: Standardized validation patterns across authentication, timers, and phrases
