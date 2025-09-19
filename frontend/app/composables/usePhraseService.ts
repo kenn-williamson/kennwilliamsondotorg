@@ -1,4 +1,4 @@
-import type { Phrase, UserExcludedPhrase, PhraseSuggestion } from '~/types/phrases'
+import type { Phrase, UserExcludedPhrase, PhraseSuggestion } from '#shared/types/phrases'
 
 export const usePhraseService = () => {
   const backendFetch = useBackendFetch()

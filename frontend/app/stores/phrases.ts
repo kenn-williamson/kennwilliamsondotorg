@@ -1,6 +1,6 @@
 import { defineStore } from 'pinia'
 import { ref } from 'vue'
-import type { Phrase, PhraseSuggestion, PhraseWithExclusion } from '~/types/phrases'
+import type { Phrase, PhraseSuggestion, PhraseWithExclusion } from '#shared/types/phrases'
 
 export const usePhrasesStore = defineStore('phrases', () => {
   const baseService = useBaseService()

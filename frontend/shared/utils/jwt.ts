@@ -4,19 +4,7 @@
  * Shared between client and server for consistent JWT token handling
  */
 
-export interface JwtPayload {
-  exp: number
-  iat: number
-  sub: string
-  [key: string]: any
-}
-
-export interface JwtParseResult {
-  payload: JwtPayload
-  expiration: Date
-  isValid: boolean
-  error?: string
-}
+import type { JwtPayload, JwtParseResult } from '../types/auth'
 
 /**
  * Parse a JWT token and extract its payload and expiration

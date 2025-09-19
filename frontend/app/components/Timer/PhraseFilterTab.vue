@@ -89,7 +89,7 @@
 <script setup lang="ts">
 import { ref, computed, onMounted } from 'vue'
 import { usePhrasesStore } from '~/stores/phrases'
-import type { PhraseWithExclusion } from '~/types/phrases'
+import type { PhraseWithExclusion } from '#shared/types/phrases'
 
 const phrasesStore = usePhrasesStore()
 

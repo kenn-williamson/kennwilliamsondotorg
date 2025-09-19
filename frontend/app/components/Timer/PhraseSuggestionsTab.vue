@@ -86,7 +86,7 @@
 <script setup lang="ts">
 import { ref, computed, onMounted } from 'vue'
 import { usePhraseService } from '~/composables/usePhraseService'
-import type { PhraseSuggestion } from '~/types/phrases'
+import type { PhraseSuggestion } from '#shared/types/phrases'
 
 const phraseService = usePhraseService()
 

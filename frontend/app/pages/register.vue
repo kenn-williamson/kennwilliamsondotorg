@@ -144,7 +144,7 @@
 
 <script setup>
 import { useForm, Field, ErrorMessage } from 'vee-validate'
-import * as yup from 'yup'
+import { registerSchema, generateSlug } from '#shared/schemas/auth'
 
 // Page meta
 useHead({
@@ -163,29 +163,7 @@ if (loggedIn.value) {
 }
 
 // Form validation schema
-const validationSchema = yup.object({
-  email: yup
-    .string()
-    .required('Email is required')
-    .email('Please enter a valid email address'),
-  displayName: yup
-    .string()
-    .required('Display name is required')
-    .min(2, 'Display name must be at least 2 characters')
-    .max(50, 'Display name must be no more than 50 characters')
-    .trim(),
-  password: yup
-    .string()
-    .required('Password is required')
-    .min(8, 'Password must be at least 8 characters')
-    .matches(/(?=.*[a-z])/, 'Password must contain at least one lowercase letter')
-    .matches(/(?=.*[A-Z])/, 'Password must contain at least one uppercase letter')
-    .matches(/(?=.*\d)/, 'Password must contain at least one number'),
-  confirmPassword: yup
-    .string()
-    .required('Please confirm your password')
-    .oneOf([yup.ref('password')], 'Passwords must match'),
-})
+const validationSchema = registerSchema
 
 // Form state
 const form = reactive({

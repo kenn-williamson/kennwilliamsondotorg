@@ -91,7 +91,7 @@
 
 <script setup>
 import { useForm, Field, ErrorMessage } from 'vee-validate'
-import * as yup from 'yup'
+import { loginSchema } from '#shared/schemas/auth'
 
 // Page meta
 useHead({
@@ -111,16 +111,7 @@ const router = useRouter()
 // }
 
 // Form validation schema
-const validationSchema = yup.object({
-  email: yup
-    .string()
-    .required('Email is required')
-    .email('Please enter a valid email address'),
-  password: yup
-    .string()
-    .required('Password is required')
-    .min(8, 'Password must be at least 8 characters'),
-})
+const validationSchema = loginSchema
 
 // Form state
 const form = reactive({

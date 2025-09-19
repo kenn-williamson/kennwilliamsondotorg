@@ -58,7 +58,7 @@
 
 <script setup>
 import { useForm, useField } from 'vee-validate'
-import * as yup from 'yup'
+import { timerEditFormSchema } from '#shared/schemas/timers'
 import { toDatetimeLocalInput, fromDatetimeLocalInput } from '~/utils/dateUtils'
 
 const props = defineProps({
@@ -79,17 +79,7 @@ const props = defineProps({
 const emit = defineEmits(['close', 'updated'])
 
 // Edit form validation with VeeValidate + Yup
-const editFormSchema = yup.object({
-  notes: yup.string(),
-  reset_timestamp: yup.string()
-    .required('Reset date/time is required')
-    .test('not-future', 'Reset date/time cannot be in the future', (value) => {
-      if (!value) return true // Let required handle empty values
-      const selectedDate = new Date(value)
-      const now = new Date()
-      return selectedDate <= now
-    })
-})
+const editFormSchema = timerEditFormSchema
 
 const { handleSubmit: handleEditSubmit, resetForm: resetEditForm, errors: editErrors } = useForm({
   validationSchema: editFormSchema,

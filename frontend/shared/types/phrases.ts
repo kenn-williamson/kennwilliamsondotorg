@@ -1,3 +1,8 @@
+/**
+ * Phrase-related type definitions
+ * Consolidated from app/types/phrases.ts for better organization
+ */
+
 export interface Phrase {
   id: string
   phrase_text: string
@@ -29,7 +34,7 @@ export interface PhraseSuggestion {
   updated_at: string
 }
 
-
+// Response types
 export interface PhraseExclusionResponse {
   message: string
 }
@@ -40,6 +45,7 @@ export interface PhraseSuggestionResponse {
 
 export interface PhraseSuggestionsResponse {
   suggestions: PhraseSuggestion[]
+  total: number
 }
 
 export interface ExcludedPhrasesResponse {
@@ -48,4 +54,32 @@ export interface ExcludedPhrasesResponse {
 
 export interface AllPhrasesResponse {
   phrases: Phrase[]
+  total: number
+}
+
+// Request types
+export interface PhraseSuggestionRequest {
+  phrase_text: string
+}
+
+export interface PhraseExclusionRequest {
+  phrase_id: string
+}
+
+// Admin types
+export interface AdminPhraseCreateRequest {
+  phrase_text: string
+}
+
+export interface AdminPhraseUpdateRequest {
+  phrase_text: string
+  active: boolean
+}
+
+export interface AdminSuggestionApproveRequest {
+  admin_reason?: string
+}
+
+export interface AdminSuggestionRejectRequest {
+  admin_reason?: string
 }
