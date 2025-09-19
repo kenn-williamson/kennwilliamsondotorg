@@ -1,0 +1,22 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "\n            SELECT COUNT(*) > 0\n            FROM user_roles ur\n            JOIN roles r ON ur.role_id = r.id\n            WHERE ur.user_id = $1 AND r.name = 'admin'\n            ",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "?column?",
+        "type_info": "Bool"
+      }
+    ],
+    "parameters": {
+      "Left": [
+        "Uuid"
+      ]
+    },
+    "nullable": [
+      null
+    ]
+  },
+  "hash": "d977faa97896049f7c264a94a732f663d89f156e4d048ae3e089eb06a4612f1d"
+}

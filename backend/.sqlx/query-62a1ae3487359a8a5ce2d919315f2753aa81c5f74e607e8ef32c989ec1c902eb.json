@@ -1,6 +1,6 @@
 {
   "db_name": "PostgreSQL",
-  "query": "\n            UPDATE users \n            SET display_name = $1, slug = $2, updated_at = NOW()\n            WHERE id = $3\n            RETURNING id, email, password_hash, display_name, slug, created_at, updated_at\n            ",
+  "query": "\n            INSERT INTO users (email, password_hash, display_name, slug)\n            VALUES ($1, $2, $3, $4)\n            RETURNING id, email, password_hash, display_name, slug, active, created_at, updated_at\n            ",
   "describe": {
     "columns": [
       {
@@ -30,11 +30,16 @@
       },
       {
         "ordinal": 5,
+        "name": "active",
+        "type_info": "Bool"
+      },
+      {
+        "ordinal": 6,
         "name": "created_at",
         "type_info": "Timestamptz"
       },
       {
-        "ordinal": 6,
+        "ordinal": 7,
         "name": "updated_at",
         "type_info": "Timestamptz"
       }
@@ -43,7 +48,8 @@
       "Left": [
         "Varchar",
         "Varchar",
-        "Uuid"
+        "Varchar",
+        "Varchar"
       ]
     },
     "nullable": [
@@ -53,8 +59,9 @@
       false,
       false,
       false,
+      false,
       false
     ]
   },
-  "hash": "4091b4e00c996ee8a12acc359d5df2ace658457a1d20ea38ba15e59f33721924"
+  "hash": "62a1ae3487359a8a5ce2d919315f2753aa81c5f74e607e8ef32c989ec1c902eb"
 }

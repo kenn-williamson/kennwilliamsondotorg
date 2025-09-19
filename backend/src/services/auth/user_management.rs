@@ -5,7 +5,6 @@ use uuid::Uuid;
 
 use crate::models::db::User;
 use crate::models::api::{CreateUserRequest, LoginRequest, UserResponse, ProfileUpdateRequest, PasswordChangeRequest};
-use crate::models::auth_user::AuthUser;
 
 #[derive(Clone)]
 pub struct UserManagementService {
@@ -26,7 +25,7 @@ impl UserManagementService {
             r#"
             INSERT INTO users (email, password_hash, display_name, slug)
             VALUES ($1, $2, $3, $4)
-            RETURNING id, email, password_hash, display_name, slug, created_at, updated_at
+            RETURNING id, email, password_hash, display_name, slug, active, created_at, updated_at
             "#,
             data.email,
             password_hash,
@@ -54,7 +53,7 @@ impl UserManagementService {
         // Get user by email
         let user = sqlx::query_as!(
             User,
-            "SELECT id, email, password_hash, display_name, slug, created_at, updated_at FROM users WHERE email = $1",
+            "SELECT id, email, password_hash, display_name, slug, active, created_at, updated_at FROM users WHERE email = $1",
             data.email
         )
         .fetch_optional(&self.pool)
@@ -82,19 +81,6 @@ impl UserManagementService {
         }
     }
 
-    pub async fn get_auth_user(&self, user_id: Uuid) -> Result<Option<AuthUser>> {
-        if let Some(user) = self.get_user_by_id(user_id).await? {
-            let roles = self.get_user_roles(user.id).await?;
-            let roles_set = roles.into_iter().collect();
-            Ok(Some(AuthUser {
-                id: user.id,
-                email: user.email,
-                roles: roles_set,
-            }))
-        } else {
-            Ok(None)
-        }
-    }
 
     pub async fn update_profile(&self, user_id: Uuid, request: ProfileUpdateRequest) -> Result<UserResponse> {
         // Validate slug format using the slug utils
@@ -118,7 +104,7 @@ impl UserManagementService {
             UPDATE users 
             SET display_name = $1, slug = $2, updated_at = NOW()
             WHERE id = $3
-            RETURNING id, email, password_hash, display_name, slug, created_at, updated_at
+            RETURNING id, email, password_hash, display_name, slug, active, created_at, updated_at
             "#,
             request.display_name,
             request.slug,
@@ -166,7 +152,7 @@ impl UserManagementService {
     async fn get_user_by_id(&self, user_id: Uuid) -> Result<Option<User>> {
         let user = sqlx::query_as!(
             User,
-            "SELECT id, email, password_hash, display_name, slug, created_at, updated_at FROM users WHERE id = $1",
+            "SELECT id, email, password_hash, display_name, slug, active, created_at, updated_at FROM users WHERE id = $1",
             user_id
         )
         .fetch_optional(&self.pool)

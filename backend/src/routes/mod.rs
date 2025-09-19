@@ -95,10 +95,32 @@ pub fn configure_app_routes(cfg: &mut web::ServiceConfig) {
                                 .route(web::post().to(phrases::submit_suggestion))
                         )
                 )
-                // Admin endpoints (TODO: Add admin role middleware)
+                // Admin endpoints with admin role middleware
                 .service(
                     web::scope("/admin")
                         .wrap(actix_web::middleware::from_fn(middleware::auth::jwt_auth_middleware))
+                        .wrap(actix_web::middleware::from_fn(middleware::admin::admin_auth_middleware))
+                        // System stats
+                        .route("/stats", web::get().to(admin::get_system_stats))
+                        // User management
+                        .route("/users", web::get().to(admin::get_users))
+                        .service(
+                            web::resource("/users/{id}/deactivate")
+                                .route(web::post().to(admin::deactivate_user))
+                        )
+                        .service(
+                            web::resource("/users/{id}/activate")
+                                .route(web::post().to(admin::activate_user))
+                        )
+                        .service(
+                            web::resource("/users/{id}/reset-password")
+                                .route(web::post().to(admin::reset_user_password))
+                        )
+                        .service(
+                            web::resource("/users/{id}/promote")
+                                .route(web::post().to(admin::promote_user_to_admin))
+                        )
+                        // Phrase management
                         .service(
                             web::resource("/phrases")
                                 .route(web::get().to(admin::get_all_phrases))
@@ -109,16 +131,27 @@ pub fn configure_app_routes(cfg: &mut web::ServiceConfig) {
                                 .route(web::put().to(admin::update_phrase))
                                 .route(web::delete().to(admin::deactivate_phrase))
                         )
-                        .service(
-                            web::resource("/suggestions")
-                                .route(web::get().to(admin::get_pending_suggestions))
-                        )
+                        // Phrase suggestions (new endpoints)
+                        .route("/suggestions", web::get().to(admin::get_pending_suggestions_new))
                         .service(
                             web::resource("/suggestions/{id}/approve")
-                                .route(web::post().to(admin::approve_suggestion))
+                                .route(web::post().to(admin::approve_suggestion_new))
                         )
                         .service(
                             web::resource("/suggestions/{id}/reject")
+                                .route(web::post().to(admin::reject_suggestion_new))
+                        )
+                        // Legacy suggestion endpoints (keep for compatibility)
+                        .service(
+                            web::resource("/suggestions-legacy")
+                                .route(web::get().to(admin::get_pending_suggestions))
+                        )
+                        .service(
+                            web::resource("/suggestions-legacy/{id}/approve")
+                                .route(web::post().to(admin::approve_suggestion))
+                        )
+                        .service(
+                            web::resource("/suggestions-legacy/{id}/reject")
                                 .route(web::post().to(admin::reject_suggestion))
                         )
                 )

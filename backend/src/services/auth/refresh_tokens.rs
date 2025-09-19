@@ -6,7 +6,7 @@ use sha2::{Digest, Sha256};
 use rand::{thread_rng, Rng};
 
 use crate::models::api::{RefreshTokenRequest, RefreshTokenResponse, RevokeTokenRequest};
-use crate::models::refresh_token::RefreshToken;
+use crate::models::refresh_token::{RefreshToken, CreateRefreshToken};
 use super::jwt::JwtService;
 
 #[derive(Clone)]
@@ -16,12 +16,6 @@ pub struct RefreshTokenService {
 }
 
 impl RefreshTokenService {
-    pub fn new(pool: PgPool) -> Self {
-        Self { 
-            pool,
-            jwt_service: JwtService::new("dummy_secret".to_string()), // This will be set properly by the parent
-        }
-    }
 
     pub fn with_jwt_service(pool: PgPool, jwt_service: JwtService) -> Self {
         Self { pool, jwt_service }
@@ -108,20 +102,32 @@ impl RefreshTokenService {
         let token_hash = self.hash_token(&refresh_token_string);
         let expires_at = Utc::now() + Duration::days(7); // Aligned with 1-week session expiration
 
+        let request = CreateRefreshToken {
+            user_id,
+            token_hash,
+            device_info,
+            expires_at,
+        };
+
+        self.create_refresh_token_from_dto(request).await?;
+        Ok(refresh_token_string)
+    }
+
+    pub async fn create_refresh_token_from_dto(&self, request: CreateRefreshToken) -> Result<()> {
         sqlx::query!(
             r#"
             INSERT INTO refresh_tokens (user_id, token_hash, device_info, expires_at)
             VALUES ($1, $2, $3, $4)
             "#,
-            user_id,
-            token_hash,
-            device_info,
-            expires_at
+            request.user_id,
+            request.token_hash,
+            request.device_info,
+            request.expires_at
         )
         .execute(&self.pool)
         .await?;
 
-        Ok(refresh_token_string)
+        Ok(())
     }
 
     pub async fn revoke_refresh_token(&self, request: RevokeTokenRequest) -> Result<bool> {
@@ -168,7 +174,7 @@ impl RefreshTokenService {
     async fn get_user_by_id(&self, user_id: Uuid) -> Result<Option<crate::models::db::User>> {
         let user = sqlx::query_as!(
             crate::models::db::User,
-            "SELECT id, email, password_hash, display_name, slug, created_at, updated_at FROM users WHERE id = $1",
+            "SELECT id, email, password_hash, display_name, slug, active, created_at, updated_at FROM users WHERE id = $1",
             user_id
         )
         .fetch_optional(&self.pool)

@@ -1,0 +1,46 @@
+use actix_web::{
+    dev::{ServiceRequest, ServiceResponse},
+    middleware::Next,
+    HttpMessage, Error, Result,
+};
+use uuid::Uuid;
+use sqlx::PgPool;
+
+use crate::services::admin::UserManagementService;
+
+pub async fn admin_auth_middleware(
+    req: ServiceRequest,
+    next: Next<impl actix_web::body::MessageBody>,
+) -> Result<ServiceResponse<impl actix_web::body::MessageBody>, Error> {
+    log::debug!("Admin middleware called for: {} {}", req.method(), req.path());
+    
+    // First, run JWT auth middleware to get user_id
+    let user_id = match req.extensions().get::<Uuid>() {
+        Some(id) => *id,
+        None => {
+            log::debug!("No user_id found in request extensions - JWT middleware must run first");
+            return Err(actix_web::error::ErrorUnauthorized("Authentication required"));
+        }
+    };
+
+    // Get database pool from app data
+    let pool = req.app_data::<actix_web::web::Data<PgPool>>()
+        .ok_or_else(|| actix_web::error::ErrorInternalServerError("Database pool not found"))?;
+
+    // Check if user is admin
+    match UserManagementService::is_user_admin(pool, user_id).await {
+        Ok(true) => {
+            log::debug!("User {} is admin, allowing access", user_id);
+            let res = next.call(req).await?;
+            Ok(res)
+        }
+        Ok(false) => {
+            log::debug!("User {} is not admin, denying access", user_id);
+            Err(actix_web::error::ErrorForbidden("Admin access required"))
+        }
+        Err(e) => {
+            log::error!("Failed to check admin status for user {}: {}", user_id, e);
+            Err(actix_web::error::ErrorInternalServerError("Failed to verify admin status"))
+        }
+    }
+}

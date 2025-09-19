@@ -13,13 +13,6 @@ pub struct Phrase {
     pub updated_at: DateTime<Utc>,
 }
 
-#[derive(Debug, Clone, FromRow, Serialize)]
-pub struct UserExcludedPhrase {
-    pub id: Uuid,
-    pub user_id: Uuid,
-    pub phrase_id: Uuid,
-    pub excluded_at: DateTime<Utc>,
-}
 
 #[derive(Debug, Clone, FromRow, Serialize)]
 pub struct PhraseSuggestion {
@@ -33,14 +26,3 @@ pub struct PhraseSuggestion {
     pub updated_at: DateTime<Utc>,
 }
 
-#[derive(Debug, Clone, FromRow, Serialize)]
-pub struct UserWithActive {
-    pub id: Uuid,
-    pub email: String,
-    pub password_hash: String,
-    pub display_name: String,
-    pub slug: String,
-    pub active: bool,
-    pub created_at: DateTime<Utc>,
-    pub updated_at: DateTime<Utc>,
-}

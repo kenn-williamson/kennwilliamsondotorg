@@ -1,4 +1,4 @@
-use actix_web::{web, App, HttpResponse, HttpServer, Result};
+use actix_web::{web, App, HttpServer};
 use actix_cors::Cors;
 use dotenv::dotenv;
 use sqlx::PgPool;

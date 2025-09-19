@@ -137,20 +137,4 @@ impl IncidentTimerService {
         Ok(result.rows_affected() > 0)
     }
 
-    pub async fn get_by_id(&self, id: Uuid, user_id: Uuid) -> Result<Option<IncidentTimer>> {
-        let timer = sqlx::query_as!(
-            IncidentTimer,
-            r#"
-            SELECT id, user_id, reset_timestamp, notes, created_at, updated_at
-            FROM incident_timers
-            WHERE id = $1 AND user_id = $2
-            "#,
-            id,
-            user_id
-        )
-        .fetch_optional(&self.pool)
-        .await?;
-
-        Ok(timer)
-    }
 }

@@ -7,7 +7,6 @@ use sqlx::PgPool;
 use anyhow::Result;
 use uuid::Uuid;
 use crate::models::api::{AuthResponse, CreateUserRequest, LoginRequest, UserResponse, SlugPreviewRequest, SlugPreviewResponse, RefreshTokenRequest, RefreshTokenResponse, RevokeTokenRequest, ProfileUpdateRequest, PasswordChangeRequest};
-use crate::models::auth_user::AuthUser;
 
 use self::jwt::JwtService;
 use self::refresh_tokens::RefreshTokenService;
@@ -101,9 +100,6 @@ impl AuthService {
         self.user_management_service.get_current_user(user_id).await
     }
 
-    pub async fn get_auth_user(&self, user_id: Uuid) -> Result<Option<AuthUser>> {
-        self.user_management_service.get_auth_user(user_id).await
-    }
 
     pub async fn preview_slug(&self, request: SlugPreviewRequest) -> Result<SlugPreviewResponse> {
         self.slug_utils.preview_slug(request).await

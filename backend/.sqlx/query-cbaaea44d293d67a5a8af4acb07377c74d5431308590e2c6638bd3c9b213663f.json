@@ -1,0 +1,15 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "\n            INSERT INTO phrases (id, phrase_text, active, created_by, created_at, updated_at)\n            VALUES (uuid_generate_v7(), $1, true, $2, NOW(), NOW())\n            ",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Left": [
+        "Varchar",
+        "Uuid"
+      ]
+    },
+    "nullable": []
+  },
+  "hash": "cbaaea44d293d67a5a8af4acb07377c74d5431308590e2c6638bd3c9b213663f"
+}

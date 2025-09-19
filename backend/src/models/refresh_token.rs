@@ -15,7 +15,7 @@ pub struct RefreshToken {
     pub last_used_at: Option<DateTime<Utc>>,
 }
 
-#[derive(Debug)]
+#[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct CreateRefreshToken {
     pub user_id: Uuid,
     pub token_hash: String,
