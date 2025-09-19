@@ -34,6 +34,16 @@ pub fn configure_app_routes(cfg: &mut web::ServiceConfig) {
                                 .wrap(actix_web::middleware::from_fn(middleware::auth::jwt_auth_middleware))
                                 .route(web::post().to(auth::revoke_all))
                         )
+                        .service(
+                            web::resource("/profile")
+                                .wrap(actix_web::middleware::from_fn(middleware::auth::jwt_auth_middleware))
+                                .route(web::put().to(auth::update_profile))
+                        )
+                        .service(
+                            web::resource("/change-password")
+                                .wrap(actix_web::middleware::from_fn(middleware::auth::jwt_auth_middleware))
+                                .route(web::put().to(auth::change_password))
+                        )
                 )
                 // Public incident timer endpoint
                 .route("/{user_slug}/incident-timer", web::get().to(incident_timers::get_latest_by_user_slug))

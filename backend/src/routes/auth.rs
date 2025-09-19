@@ -2,7 +2,7 @@ use actix_web::{web, HttpMessage, HttpRequest, HttpResponse, Result as ActixResu
 use uuid::Uuid;
 use serde_json::json;
 
-use crate::models::api::{CreateUserRequest, LoginRequest, SlugPreviewRequest, RefreshTokenRequest, RevokeTokenRequest};
+use crate::models::api::{CreateUserRequest, LoginRequest, SlugPreviewRequest, RefreshTokenRequest, RevokeTokenRequest, ProfileUpdateRequest, PasswordChangeRequest};
 use crate::services::auth::AuthService;
 
 /// Extract device information from HTTP request headers
@@ -161,6 +161,64 @@ pub async fn revoke_all(
             Ok(HttpResponse::InternalServerError().json(serde_json::json!({
                 "error": "Internal server error"
             })))
+        }
+    }
+}
+
+pub async fn update_profile(
+    req: HttpRequest,
+    data: web::Json<ProfileUpdateRequest>,
+    auth_service: web::Data<AuthService>,
+) -> ActixResult<HttpResponse> {
+    let user_id = req.extensions().get::<Uuid>().cloned().unwrap();
+
+    match auth_service.update_profile(user_id, data.into_inner()).await {
+        Ok(user) => Ok(HttpResponse::Ok().json(user)),
+        Err(err) => {
+            if err.to_string().contains("Invalid slug format") {
+                Ok(HttpResponse::BadRequest().json(serde_json::json!({
+                    "error": "Invalid slug format"
+                })))
+            } else if err.to_string().contains("Slug already taken") {
+                Ok(HttpResponse::Conflict().json(serde_json::json!({
+                    "error": "Username already taken"
+                })))
+            } else {
+                log::error!("Profile update error: {}", err);
+                Ok(HttpResponse::InternalServerError().json(serde_json::json!({
+                    "error": "Internal server error"
+                })))
+            }
+        }
+    }
+}
+
+pub async fn change_password(
+    req: HttpRequest,
+    data: web::Json<PasswordChangeRequest>,
+    auth_service: web::Data<AuthService>,
+) -> ActixResult<HttpResponse> {
+    let user_id = req.extensions().get::<Uuid>().cloned().unwrap();
+
+    match auth_service.change_password(user_id, data.into_inner()).await {
+        Ok(()) => Ok(HttpResponse::Ok().json(serde_json::json!({
+            "message": "Password changed successfully"
+        }))),
+        Err(err) => {
+            if err.to_string().contains("Current password is incorrect") {
+                Ok(HttpResponse::BadRequest().json(serde_json::json!({
+                    "error": "Current password is incorrect"
+                })))
+            } else if err.to_string().contains("User not found") {
+                Ok(HttpResponse::NotFound().json(serde_json::json!({
+                    "error": "User not found"
+                })))
+            } else {
+                log::error!("Password change error: {}", err);
+                Ok(HttpResponse::InternalServerError().json(serde_json::json!({
+                    "error": "Internal server error"
+                })))
+            }
         }
     }
 }

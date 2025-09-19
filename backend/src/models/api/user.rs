@@ -62,6 +62,18 @@ pub struct RevokeTokenRequest {
     pub refresh_token: String,
 }
 
+#[derive(Debug, Deserialize)]
+pub struct ProfileUpdateRequest {
+    pub display_name: String,
+    pub slug: String,
+}
+
+#[derive(Debug, Deserialize)]
+pub struct PasswordChangeRequest {
+    pub current_password: String,
+    pub new_password: String,
+}
+
 impl UserResponse {
     pub fn from_user_with_roles(user: User, roles: Vec<String>) -> Self {
         UserResponse {
