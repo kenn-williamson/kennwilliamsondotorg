@@ -47,8 +47,9 @@ Development Environment (https://localhost)
 - **Details**: See [IMPLEMENTATION-FRONTEND.md](IMPLEMENTATION-FRONTEND.md)
 
 #### Rust Backend API
-- **Framework**: Actix-web 4.x
+- **Framework**: Actix-web 4.x with 3-layer architecture
 - **Port**: 8080 (internal)
+- **Architecture**: Repository pattern with dependency injection
 - **Database**: SQLx for PostgreSQL integration
 - **Details**: See [IMPLEMENTATION-BACKEND.md](IMPLEMENTATION-BACKEND.md)
 
@@ -59,6 +60,23 @@ Development Environment (https://localhost)
 - **Details**: See [IMPLEMENTATION-DATABASE.md](IMPLEMENTATION-DATABASE.md)
 
 ## Data Flow Architecture
+
+### 3-Layer Backend Architecture
+
+**API Layer** (`routes/`):
+- HTTP request/response handling
+- Route validation and middleware
+- Service layer delegation
+
+**Service Layer** (`services/`):
+- Business logic and orchestration
+- Repository trait dependencies
+- Error handling and validation
+
+**Repository Layer** (`repositories/`):
+- Data access abstraction
+- PostgreSQL and mock implementations
+- Database query execution
 
 ### Authentication Flow
 Hybrid JWT/refresh token architecture with secure session management. See [IMPLEMENTATION-SECURITY.md](IMPLEMENTATION-SECURITY.md#authentication-system) for details.
@@ -80,15 +98,21 @@ See [IMPLEMENTATION-FRONTEND.md](IMPLEMENTATION-FRONTEND.md#architecture-pattern
 ### Data Flow Examples
 
 **Timer Creation**:
-1. Frontend form submission
-2. Backend API validation and storage
+1. Frontend form submission → API Layer (`routes/incident_timers.rs`)
+2. Service Layer (`services/incident_timer.rs`) → Repository Layer (`repositories/postgres/`)
 3. PostgreSQL with automatic timestamps
-4. Response to frontend for display
+4. Response propagated back through layers to frontend
 
 **Public Access**:
 - Direct URL access without authentication
-- Backend queries by user slug
+- API Layer → Service Layer → Repository Layer
 - Returns public-safe data only
+
+**Service Dependencies**:
+- All services use repository traits for data access
+- ServiceContainer manages dependency injection
+- Mock repositories enable unit testing
+- Clean separation of concerns across all layers
 
 ## Security Architecture
 Comprehensive security implementation across all layers. See [IMPLEMENTATION-SECURITY.md](IMPLEMENTATION-SECURITY.md) for detailed security measures including:

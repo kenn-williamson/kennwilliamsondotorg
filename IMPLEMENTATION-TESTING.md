@@ -1,11 +1,33 @@
 # Testing Implementation
 
 ## Overview
-Testing architecture and implementation for backend integration tests.
+Testing architecture and implementation for backend with 3-layer architecture and comprehensive test coverage.
 
-## Backend Testing
+## Backend Testing Status
+
+### Current Test Coverage
+- **Repository Layer**: 20 unit tests passing (mock implementations)
+- **Integration Tests**: 2 test files remaining (refresh_token_validation.rs, test_helpers.rs)
+- **Service Layer**: Unit tests needed for business logic
+- **API Layer**: Integration tests needed for all endpoints
+
+### Test Architecture by Layer
+
+**Repository Layer** (✅ Complete):
+- **Framework**: Rust with mockall for mock implementations
+- **Tests**: 20 unit tests covering all repository traits
+- **Execution**: Fast unit tests (~0.01s total)
+- **Coverage**: All CRUD operations and helper methods
+
+**Service Layer** (🚧 In Progress):
+- **Framework**: Rust with mock repositories
+- **Tests**: Unit tests needed for business logic
+- **Execution**: Fast unit tests with mocked dependencies
+- **Coverage**: Business logic and error handling
+
+**API Layer** (🚧 In Progress):
 - **Framework**: Rust with actix-test and sqlx
-- **Tests**: 15 integration tests covering all endpoints
+- **Tests**: Integration tests needed for all endpoints
 - **Execution**: Sequential (~5.5s total)
 - **Database**: Isolated test database
 
@@ -13,88 +35,124 @@ Testing architecture and implementation for backend integration tests.
 
 ### Test Organization
 ```
-backend/tests/
-├── auth_simple.rs          # Authentication tests (4 tests)
-├── refresh_token_tests.rs  # Refresh token tests (4 tests)
-├── incident_simple.rs      # Incident timer tests (5 tests)  
-├── health_simple.rs        # Health endpoint tests (2 tests)
-└── test_helpers.rs         # Database utilities and helpers
+backend/
+├── src/
+│   ├── repositories/mocks/  # Repository layer unit tests
+│   │   ├── mock_user_repository.rs          # 4 unit tests
+│   │   ├── mock_refresh_token_repository.rs # 5 unit tests
+│   │   ├── mock_incident_timer_repository.rs # 6 unit tests
+│   │   └── mock_phrase_repository.rs        # 5 unit tests
+│   └── services/           # Service layer unit tests (planned)
+│       ├── auth_service_tests.rs
+│       ├── incident_timer_service_tests.rs
+│       └── phrase_service_tests.rs
+└── tests/                  # Integration tests
+    ├── refresh_token_validation.rs  # Refresh token validation tests
+    └── test_helpers.rs              # Database utilities and helpers
 ```
 
-### Test Coverage
+### Test Coverage by Layer
 
-**Authentication** (`auth_simple.rs` - 4 tests):
-- User registration with validation
-- Login success and failure cases
-- Token generation and validation
+**Repository Layer** (✅ Complete - 20 tests):
+- **UserRepository**: 4 unit tests (create, find, email_exists, error handling)
+- **RefreshTokenRepository**: 5 unit tests (create, find, revoke, validation, error handling)
+- **IncidentTimerRepository**: 6 unit tests (CRUD operations, ownership validation, error handling)
+- **PhraseRepository**: 5 unit tests (random selection, user phrases, suggestions, error handling)
 
-**Refresh Tokens** (`refresh_token_tests.rs` - 4 tests):
-- Token refresh flow
-- Revocation and expiration
+**Service Layer** (🚧 Planned):
+- **AuthService**: Unit tests with mock repositories
+- **IncidentTimerService**: Unit tests with mock repositories
+- **PhraseService**: Unit tests with mock repositories
+- **Admin Services**: Unit tests for user management and phrase moderation
 
-**Incident Timers** (`incident_simple.rs` - 5 tests):
-- Public access without authentication
-- CRUD operations with JWT protection
-- Ownership validation
+**API Layer** (🚧 In Progress):
+- **Refresh Token Validation**: Complex refresh token flow testing
+- **Integration Tests**: Full API endpoint testing needed
+- **Authentication**: Complete auth flow testing needed
+- **Admin Endpoints**: Admin panel functionality testing needed
 
-**Health Checks** (`health_simple.rs` - 2 tests):
-- Service health endpoint
-- Database connectivity
+### Test Architecture by Layer
 
-### Test Architecture
+**Repository Layer** (✅ Complete):
+- **Mock Implementations**: Complete mockall-based mocks for all repository traits
+- **Unit Tests**: Fast, isolated testing without database dependencies
+- **Error Handling**: Comprehensive error scenario testing
+- **Coverage**: All CRUD operations and helper methods
 
-**Patterns**:
-- Direct database setup via `test_helpers.rs`
-- Real service integration (no mocks)
-- Unique test data generation
-- Comprehensive cleanup after each test
+**Service Layer** (🚧 Planned):
+- **Mock Dependencies**: Services use mock repositories for unit testing
+- **Business Logic**: Focused testing of service layer logic
+- **Error Scenarios**: Testing error handling and validation
+- **Fast Execution**: No database dependencies
 
-**Key Helpers**:
-- `create_test_user_in_db()` - Direct user creation
-- `create_test_timer_in_db()` - Timer test data
-- `unique_test_*()` - Collision-free test data
-- Real JWT generation via `AuthService`
+**API Layer** (🚧 In Progress):
+- **Integration Tests**: Full request/response cycle testing
+- **Database Integration**: Real database operations with test data
+- **Authentication**: Complete auth flow testing
+- **Patterns**: Direct database setup via `test_helpers.rs`
 
 ### Running Tests
 
 ```bash
-# All tests (sequential required)
+# Repository layer unit tests (fast)
+cargo test --lib -- --test-threads 1
+
+# Integration tests (slower)
+cargo test --test refresh_token_validation -- --test-threads 1
+
+# All tests
 cargo test -- --test-threads 1
-
-# Specific test suite
-cargo test --test auth_simple
-
-# Single test
-cargo test test_user_registration_success
 ```
 
 **Environment**: `.env.test` with isolated test database
 
 ## Test Data Strategy
+
+### Repository Layer
+- **Mock Data**: In-memory test data for fast unit tests
+- **Error Scenarios**: Comprehensive error condition testing
+- **Edge Cases**: Boundary conditions and validation testing
+
+### Service Layer (Planned)
+- **Mock Dependencies**: Mock repositories for isolated testing
+- **Business Logic**: Focus on service-specific logic
+- **Error Handling**: Service-level error scenarios
+
+### API Layer
 - **Uniqueness**: Timestamp-based data generation
 - **Direct Setup**: Database operations bypass API
 - **Cleanup**: Automatic after each test
 - **Realism**: Production-like test scenarios
 
-## Best Practices
+## Best Practices by Layer
 
-**Principles**:
-- Real services over mocks
-- Direct database setup for speed
-- Isolated test environment
-- Focus on specific functionality
+### Repository Layer (✅ Implemented)
+- **Mock Implementations**: Complete mockall-based mocks
+- **Unit Testing**: Fast, isolated testing without external dependencies
+- **Error Coverage**: Comprehensive error scenario testing
 
-**Coverage Areas**:
-- Invalid inputs and edge cases
-- Authentication failures
-- Permission boundaries
-- Database constraints
+### Service Layer (🚧 Planned)
+- **Mock Dependencies**: Use mock repositories for unit testing
+- **Business Logic Focus**: Test service-specific logic only
+- **Error Scenarios**: Service-level error handling
+
+### API Layer (🚧 In Progress)
+- **Integration Testing**: Full request/response cycle
+- **Database Integration**: Real database operations
+- **Authentication**: Complete auth flow testing
 
 ## Coverage Summary
-- **Endpoints**: All public APIs tested
-- **Auth Flows**: Registration, login, JWT validation
-- **Permissions**: User isolation and role checks
-- **Error Cases**: Invalid inputs, auth failures
+
+### Current Status
+- **Repository Layer**: 20 unit tests passing (100% coverage)
+- **Service Layer**: Unit tests needed
+- **API Layer**: Integration tests needed
+
+### Target Coverage
+- **Repository Layer**: ✅ Complete (20/20 tests)
+- **Service Layer**: Unit tests for all services
+- **API Layer**: Integration tests for all endpoints
+- **Error Cases**: Invalid inputs, auth failures, edge cases
 
 ## Future Testing
 Frontend testing planned. See [ROADMAP.md](ROADMAP.md#testing-enhancements).

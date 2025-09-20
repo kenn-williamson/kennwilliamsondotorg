@@ -43,6 +43,8 @@
 - **`prepare-sqlx.sh`**: Generate query cache (`--clean` to regenerate)
 - **`reset-db.sh`**: Fresh database start
 - **`backup-db.sh`**: Backup/restore database
+- **`setup-test-db.sh`**: Create test database with migrations
+- **`cleanup-test-db.sh`**: Drop test database
 
 ## Troubleshooting
 
@@ -69,6 +71,28 @@ curl -k https://localhost
 # Stop when done
 docker-compose --env-file .env.production -f docker-compose.yml -f docker-compose.local-prod.yml down
 ```
+
+## Testing Workflow
+
+### Test Database Setup
+```bash
+# Start development environment (if not running)
+./scripts/dev-start.sh
+
+# Create test database with migrations
+./scripts/setup-test-db.sh
+
+# Run tests
+cd backend && cargo test -- --test-threads 1
+
+# Clean up test database when done
+./scripts/cleanup-test-db.sh
+```
+
+### Test Database Details
+- **Test DB**: `kennwilliamson_test` (separate from dev)
+- **Connection**: `postgresql://postgres:password@localhost:5432/kennwilliamson_test`
+- **Isolation**: Complete separation from development data
 
 ## Access Points
 - **Main App**: https://localhost

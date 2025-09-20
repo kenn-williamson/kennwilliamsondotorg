@@ -22,14 +22,35 @@ backend/
 │   │   ├── user.rs       # User model + auth requests
 │   │   ├── incident_timer.rs # Incident timer model
 │   │   └── phrase.rs     # Phrase and suggestion models
+│   ├── repositories/     # Repository layer (3-layer architecture)
+│   │   ├── mod.rs        # Repository exports
+│   │   ├── traits/       # Repository trait definitions
+│   │   │   ├── mod.rs
+│   │   │   ├── user_repository.rs
+│   │   │   ├── refresh_token_repository.rs
+│   │   │   ├── incident_timer_repository.rs
+│   │   │   └── phrase_repository.rs
+│   │   ├── postgres/     # PostgreSQL implementations
+│   │   │   ├── mod.rs
+│   │   │   ├── postgres_user_repository.rs
+│   │   │   ├── postgres_refresh_token_repository.rs
+│   │   │   ├── postgres_incident_timer_repository.rs
+│   │   │   └── postgres_phrase_repository.rs
+│   │   └── mocks/        # Mock implementations for testing
+│   │       ├── mod.rs
+│   │       ├── mock_user_repository.rs
+│   │       ├── mock_refresh_token_repository.rs
+│   │       ├── mock_incident_timer_repository.rs
+│   │       └── mock_phrase_repository.rs
 │   ├── routes/           # API route handlers
 │   │   ├── mod.rs        # Route configuration
 │   │   ├── auth.rs       # Registration/login endpoints
 │   │   ├── incident_timers.rs # CRUD + public endpoints
 │   │   ├── phrases.rs    # Phrase management endpoints
 │   │   └── admin.rs      # Admin user management and phrase moderation endpoints
-│   ├── services/         # Business logic
+│   ├── services/         # Business logic layer
 │   │   ├── mod.rs        # Service exports
+│   │   ├── container.rs  # ServiceContainer for dependency injection
 │   │   ├── auth.rs       # JWT + password validation
 │   │   ├── incident_timer.rs # Timer business logic
 │   │   ├── phrase.rs     # Phrase and suggestion business logic
@@ -47,10 +68,7 @@ backend/
 │   ├── 20250914134654_add_refresh_tokens_and_user_active.sql
 │   └── 20250914134703_add_phrases_system.sql
 ├── tests/               # Integration tests
-│   ├── auth_simple.rs       # Authentication endpoint tests (4 tests)
-│   ├── refresh_token_tests.rs # Refresh token tests (4 tests)
-│   ├── incident_simple.rs   # Incident timer endpoint tests (5 tests)
-│   ├── health_simple.rs     # Health endpoint tests (2 tests)
+│   ├── refresh_token_validation.rs # Refresh token validation tests
 │   └── test_helpers.rs      # Database utilities for testing
 ├── Cargo.toml           # Dependencies
 ├── Dockerfile           # Multi-stage container build
@@ -66,14 +84,33 @@ backend/
 - **Phrases System**: Dynamic phrases with user suggestions and admin approval
 - **Public API**: Unauthenticated access to user timers and phrases
 - **Database Integration**: SQLx with compile-time query verification
-- **Testing**: Comprehensive integration test suite
+- **3-Layer Architecture**: Clean separation with repository pattern and dependency injection
+- **Testing**: 20 unit tests for repository layer, integration tests in progress
 
 ## Architecture Patterns
-- **Middleware**: JWT validation via `actix_web::middleware::from_fn()`
-- **Routing**: Clean public/protected route separation with admin infrastructure
-- **Service Layer**: Business logic separated from route handlers
+
+### 3-Layer Architecture
+- **API Layer**: HTTP handlers in `routes/` directory
+- **Service Layer**: Business logic in `services/` directory using repository traits
+- **Repository Layer**: Data access in `repositories/` directory with trait-based design
+
+### Repository Pattern
+- **Traits**: Abstract interfaces for all data operations
+- **PostgreSQL Implementations**: Concrete implementations using SQLx
+- **Mock Implementations**: Complete mock implementations for unit testing
+- **Dependency Injection**: ServiceContainer manages all dependencies
+
+### Service Layer
+- **Repository Dependencies**: All services use repository traits instead of direct database access
+- **Business Logic**: Clean separation from data access concerns
 - **Error Handling**: Consistent error responses across endpoints
+- **Testing**: Easy unit testing with mock repositories
+
+### API Layer
+- **Route Handlers**: Use service layer exclusively
+- **Middleware**: JWT validation via `actix_web::middleware::from_fn()`
 - **Route Structure**: Public routes (no auth) and protected routes (JWT required) with clear separation
+- **Error Handling**: Consistent error responses across endpoints
 
 ## API Endpoints
 
@@ -114,7 +151,30 @@ cargo test
 ```
 
 ## Testing
-Comprehensive integration test suite with 15 tests covering all endpoints. See [IMPLEMENTATION-TESTING.md](IMPLEMENTATION-TESTING.md#backend-testing) for details.
+
+### Current Test Status
+- **Repository Layer**: 20 unit tests passing for all mock implementations
+- **Integration Tests**: 2 test files remaining (refresh_token_validation.rs, test_helpers.rs)
+- **Service Layer**: Unit tests needed for business logic
+- **API Layer**: Integration tests needed for all endpoints
+
+### Repository Testing
+- **Mock Implementations**: Complete test coverage for all repository traits
+- **Unit Tests**: Fast, isolated testing without database dependencies
+- **Error Handling**: Comprehensive error scenario testing
+- **Coverage**: All CRUD operations and helper methods tested
+
+### Service Testing (In Progress)
+- **Mock Dependencies**: Services use mock repositories for unit testing
+- **Business Logic**: Focused testing of service layer logic
+- **Error Scenarios**: Testing error handling and validation
+
+### Integration Testing (In Progress)
+- **API Endpoints**: Full request/response cycle testing
+- **Database Integration**: Real database operations with test data
+- **Authentication**: Complete auth flow testing
+
+See [IMPLEMENTATION-TESTING.md](IMPLEMENTATION-TESTING.md#backend-testing) for detailed testing implementation.
 
 ## Database Integration
 - **Connection**: SQLx with connection pooling
