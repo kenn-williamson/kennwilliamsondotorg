@@ -1,77 +1,45 @@
-use sqlx::PgPool;
+use std::sync::Arc;
+use anyhow::Result;
 
-/// Statistics service for admin dashboard
-pub struct StatsService;
+use crate::models::api::SystemStatsResponse;
+use crate::repositories::traits::{UserRepository, PhraseRepository};
+
+/// Statistics service for admin operations
+pub struct StatsService {
+    user_repository: Arc<dyn UserRepository>,
+    phrase_repository: Arc<dyn PhraseRepository>,
+}
 
 impl StatsService {
-    /// Get system statistics for admin dashboard
-    pub async fn get_system_stats(pool: &PgPool) -> Result<SystemStats, sqlx::Error> {
-        // Get all stats in parallel
-        let (total_users, active_users, pending_suggestions, total_phrases) = tokio::try_join!(
-            Self::get_total_users(pool),
-            Self::get_active_users(pool),
-            Self::get_pending_suggestions_count(pool),
-            Self::get_total_phrases(pool)
-        )?;
+    pub fn new(
+        user_repository: Box<dyn UserRepository>,
+        phrase_repository: Box<dyn PhraseRepository>,
+    ) -> Self {
+        Self {
+            user_repository: Arc::from(user_repository),
+            phrase_repository: Arc::from(phrase_repository),
+        }
+    }
 
-        Ok(SystemStats {
+    /// Get system statistics
+    pub async fn get_system_stats(&self) -> Result<SystemStatsResponse> {
+        // Get total users count
+        let total_users = self.user_repository.count_all_users().await?;
+        
+        // Get active users count
+        let active_users = self.user_repository.count_active_users().await?;
+        
+        // Get pending suggestions count
+        let pending_suggestions = self.phrase_repository.count_pending_suggestions().await?;
+        
+        // Get total phrases count
+        let total_phrases = self.phrase_repository.count_all_phrases().await?;
+
+        Ok(SystemStatsResponse {
             total_users,
             active_users,
             pending_suggestions,
             total_phrases,
         })
     }
-
-    /// Get total user count
-    async fn get_total_users(pool: &PgPool) -> Result<i64, sqlx::Error> {
-        let count = sqlx::query_scalar!(
-            "SELECT COUNT(*) FROM users"
-        )
-        .fetch_one(pool)
-        .await?;
-
-        Ok(count.unwrap_or(0))
-    }
-
-    /// Get active user count (non-deactivated users)
-    async fn get_active_users(pool: &PgPool) -> Result<i64, sqlx::Error> {
-        let count = sqlx::query_scalar!(
-            "SELECT COUNT(*) FROM users WHERE active = true"
-        )
-        .fetch_one(pool)
-        .await?;
-
-        Ok(count.unwrap_or(0))
-    }
-
-    /// Get pending phrase suggestions count
-    async fn get_pending_suggestions_count(pool: &PgPool) -> Result<i64, sqlx::Error> {
-        let count = sqlx::query_scalar!(
-            "SELECT COUNT(*) FROM phrase_suggestions WHERE status = 'pending'"
-        )
-        .fetch_one(pool)
-        .await?;
-
-        Ok(count.unwrap_or(0))
-    }
-
-    /// Get total active phrases count
-    async fn get_total_phrases(pool: &PgPool) -> Result<i64, sqlx::Error> {
-        let count = sqlx::query_scalar!(
-            "SELECT COUNT(*) FROM phrases WHERE active = true"
-        )
-        .fetch_one(pool)
-        .await?;
-
-        Ok(count.unwrap_or(0))
-    }
-}
-
-/// System statistics for admin dashboard
-#[derive(Debug, Clone, serde::Serialize)]
-pub struct SystemStats {
-    pub total_users: i64,
-    pub active_users: i64,
-    pub pending_suggestions: i64,
-    pub total_phrases: i64,
 }

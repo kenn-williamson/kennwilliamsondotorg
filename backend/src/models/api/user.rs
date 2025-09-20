@@ -46,7 +46,7 @@ pub struct SlugPreviewResponse {
     pub final_slug: String,
 }
 
-#[derive(Debug, Deserialize)]
+#[derive(Debug, Serialize, Deserialize)]
 pub struct RefreshTokenRequest {
     pub refresh_token: String,
 }
@@ -57,7 +57,7 @@ pub struct RefreshTokenResponse {
     pub refresh_token: String,
 }
 
-#[derive(Debug, Deserialize)]
+#[derive(Debug, Serialize, Deserialize)]
 pub struct RevokeTokenRequest {
     pub refresh_token: String,
 }

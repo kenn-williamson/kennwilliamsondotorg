@@ -4,7 +4,6 @@ use actix_web::{
     HttpMessage, Error, Result,
 };
 use uuid::Uuid;
-use sqlx::PgPool;
 
 use crate::services::admin::UserManagementService;
 
@@ -23,12 +22,12 @@ pub async fn admin_auth_middleware(
         }
     };
 
-    // Get database pool from app data
-    let pool = req.app_data::<actix_web::web::Data<PgPool>>()
-        .ok_or_else(|| actix_web::error::ErrorInternalServerError("Database pool not found"))?;
+    // Get admin service from app data
+    let admin_service = req.app_data::<actix_web::web::Data<UserManagementService>>()
+        .ok_or_else(|| actix_web::error::ErrorInternalServerError("Admin service not found"))?;
 
     // Check if user is admin
-    match UserManagementService::is_user_admin(pool, user_id).await {
+    match admin_service.is_user_admin(user_id).await {
         Ok(true) => {
             log::debug!("User {} is admin, allowing access", user_id);
             let res = next.call(req).await?;

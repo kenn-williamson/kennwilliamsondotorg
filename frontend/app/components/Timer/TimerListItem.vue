@@ -27,7 +27,7 @@
             </svg>
           </button>
           <button
-            @click="$emit('delete', timer)"
+            @click="deleteTimer"
             class="p-2 text-gray-500 hover:text-red-600 hover:bg-red-100 rounded-md transition-colors duration-200"
             title="Delete timer"
           >
@@ -59,7 +59,7 @@ const props = defineProps({
   }
 })
 
-defineEmits(['edit', 'delete'])
+defineEmits(['edit'])
 
 // Get timer store for formatting non-latest timers
 const timerStore = useIncidentTimerStore()
@@ -76,5 +76,12 @@ const elapsedTimeDisplay = computed(() => {
 // Format date for display using utility
 const formatDate = (dateString) => {
   return formatDisplayDate(dateString)
+}
+
+// Delete timer directly via store
+const deleteTimer = async () => {
+  if (confirm('Are you sure you want to delete this timer?')) {
+    await timerStore.deleteTimer(props.timer.id)
+  }
 }
 </script>

@@ -6,6 +6,7 @@ use std::env;
 
 mod middleware;
 mod models;
+mod repositories;
 mod routes;
 mod services;
 
@@ -33,12 +34,15 @@ async fn main() -> std::io::Result<()> {
         .await
         .expect("Failed to connect to database");
 
-    // Create services
+    // Create service container
     let jwt_secret = env::var("JWT_SECRET")
         .expect("JWT_SECRET must be set");
     
-    let auth_service = services::auth::AuthService::new(pool.clone(), jwt_secret);
-    let incident_timer_service = services::incident_timer::IncidentTimerService::new(pool.clone());
+    let container = match env::var("ENVIRONMENT").unwrap_or_else(|_| "development".to_string()).as_str() {
+        "testing" => services::container::ServiceContainer::new_testing(jwt_secret),
+        "production" => services::container::ServiceContainer::new_production(pool.clone(), jwt_secret),
+        _ => services::container::ServiceContainer::new_development(pool.clone(), jwt_secret),
+    };
 
     println!("🚀 Starting server at http://{}:{}", host, port);
     println!("📊 Database connected successfully");
@@ -58,8 +62,12 @@ async fn main() -> std::io::Result<()> {
             .wrap(actix_web::middleware::from_fn(request_logging_middleware))
             .wrap(cors)
             .app_data(web::Data::new(pool.clone()))
-            .app_data(web::Data::new(auth_service.clone()))
-            .app_data(web::Data::new(incident_timer_service.clone()))
+            .app_data(web::Data::from(container.auth_service.clone()))
+            .app_data(web::Data::from(container.incident_timer_service.clone()))
+            .app_data(web::Data::from(container.phrase_service.clone()))
+            .app_data(web::Data::from(container.admin_service.clone()))
+            .app_data(web::Data::from(container.phrase_moderation_service.clone()))
+            .app_data(web::Data::from(container.stats_service.clone()))
             .configure(routes::configure_app_routes)
     })
     .bind(format!("{}:{}", host, port))?

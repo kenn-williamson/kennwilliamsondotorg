@@ -35,7 +35,6 @@
             :key="timer.id"
             :timer="timer"
             @edit="editTimer"
-            @delete="deleteTimer"
           />
         </div>
       </div>
@@ -133,16 +132,6 @@ const saveTimer = async (updatedTimer: any) => {
   }
 }
 
-const deleteTimer = async (timerId: string) => {
-  if (confirm('Are you sure you want to delete this timer?')) {
-    try {
-      await incidentTimerStore.deleteTimer(timerId)
-      await loadTimers() // Refresh the list
-    } catch (error) {
-      console.error('Error deleting timer:', error)
-    }
-  }
-}
 
 const closeEditModal = () => {
   editingTimer.value = null

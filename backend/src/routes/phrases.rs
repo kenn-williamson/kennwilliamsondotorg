@@ -1,5 +1,5 @@
 use actix_web::{web, HttpMessage, HttpRequest, HttpResponse, Result};
-use sqlx::PgPool;
+use std::sync::Arc;
 use uuid::Uuid;
 
 use crate::models::api::{
@@ -10,12 +10,12 @@ use crate::services::phrase::PhraseService;
 
 /// Get a random phrase for a specific user (public endpoint)
 pub async fn get_random_phrase_for_user(
-    pool: web::Data<PgPool>,
+    phrase_service: web::Data<PhraseService>,
     path: web::Path<String>,
 ) -> Result<HttpResponse> {
     let user_slug = path.into_inner();
     
-    match PhraseService::get_random_phrase_by_slug(&pool, &user_slug).await {
+    match phrase_service.get_random_phrase_by_slug(&user_slug).await {
         Ok(phrase_text) => Ok(HttpResponse::Ok().json(phrase_text)),
         Err(e) => {
             log::error!("Failed to get random phrase for user {}: {}", user_slug, e);
@@ -28,12 +28,12 @@ pub async fn get_random_phrase_for_user(
 
 /// Get a random phrase for the authenticated user (protected endpoint)
 pub async fn get_random_phrase_for_auth_user(
-    pool: web::Data<PgPool>,
+    phrase_service: web::Data<PhraseService>,
     req: HttpRequest,
 ) -> Result<HttpResponse> {
     let user_id = req.extensions().get::<Uuid>().cloned().unwrap();
     
-    match PhraseService::get_random_phrase(&pool, user_id).await {
+    match phrase_service.get_random_phrase(user_id).await {
         Ok(phrase_text) => Ok(HttpResponse::Ok().json(phrase_text)),
         Err(e) => {
             log::error!("Failed to get random phrase for authenticated user: {}", e);
@@ -46,7 +46,7 @@ pub async fn get_random_phrase_for_auth_user(
 
 /// Get all active phrases for authenticated user
 pub async fn get_user_phrases(
-    pool: web::Data<PgPool>,
+    phrase_service: web::Data<PhraseService>,
     req: HttpRequest,
     query: web::Query<PhraseListQuery>,
 ) -> Result<HttpResponse> {
@@ -54,7 +54,7 @@ pub async fn get_user_phrases(
     let limit = query.limit;
     let offset = query.offset;
 
-    match PhraseService::get_user_phrases(&pool, user_id, limit, offset).await {
+    match phrase_service.get_user_phrases(user_id, limit, offset).await {
         Ok(phrases) => {
             let total = phrases.len() as i64;
             let response = PhraseListResponse {
@@ -74,12 +74,12 @@ pub async fn get_user_phrases(
 
 /// Get all phrases for user with exclusion status (single API call)
 pub async fn get_user_phrases_with_exclusions(
-    pool: web::Data<PgPool>,
+    phrase_service: web::Data<PhraseService>,
     req: HttpRequest,
 ) -> Result<HttpResponse> {
     let user_id = req.extensions().get::<Uuid>().cloned().unwrap();
 
-    match PhraseService::get_user_phrases_with_exclusions(&pool, user_id).await {
+    match phrase_service.get_user_phrases_with_exclusions(user_id).await {
         Ok(response) => Ok(HttpResponse::Ok().json(response)),
         Err(e) => {
             log::error!("Failed to get user phrases with exclusions: {}", e);
@@ -92,14 +92,14 @@ pub async fn get_user_phrases_with_exclusions(
 
 /// Exclude a phrase for the authenticated user
 pub async fn exclude_phrase(
-    pool: web::Data<PgPool>,
+    phrase_service: web::Data<PhraseService>,
     req: HttpRequest,
     path: web::Path<Uuid>,
 ) -> Result<HttpResponse> {
     let user_id = req.extensions().get::<Uuid>().cloned().unwrap();
     let phrase_id = path.into_inner();
 
-    match PhraseService::exclude_phrase_for_user(&pool, user_id, phrase_id).await {
+    match phrase_service.exclude_phrase_for_user(user_id, phrase_id).await {
         Ok(_) => Ok(HttpResponse::Ok().json(serde_json::json!({
             "message": "Phrase excluded successfully"
         }))),
@@ -114,14 +114,14 @@ pub async fn exclude_phrase(
 
 /// Remove phrase exclusion for the authenticated user
 pub async fn remove_phrase_exclusion(
-    pool: web::Data<PgPool>,
+    phrase_service: web::Data<PhraseService>,
     req: HttpRequest,
     path: web::Path<Uuid>,
 ) -> Result<HttpResponse> {
     let user_id = req.extensions().get::<Uuid>().cloned().unwrap();
     let phrase_id = path.into_inner();
 
-    match PhraseService::remove_phrase_exclusion(&pool, user_id, phrase_id).await {
+    match phrase_service.remove_phrase_exclusion(user_id, phrase_id).await {
         Ok(_) => Ok(HttpResponse::Ok().json(serde_json::json!({
             "message": "Phrase exclusion removed successfully"
         }))),
@@ -136,11 +136,11 @@ pub async fn remove_phrase_exclusion(
 
 /// Get user's excluded phrases
 pub async fn get_excluded_phrases(
-    pool: web::Data<PgPool>,
+    phrase_service: web::Data<PhraseService>,
     req: HttpRequest,
 ) -> Result<HttpResponse> {
     let user_id = req.extensions().get::<Uuid>().cloned().unwrap();
-    match PhraseService::get_user_excluded_phrases(&pool, user_id).await {
+    match phrase_service.get_user_excluded_phrases(user_id).await {
         Ok(exclusions) => {
             let excluded_phrases: Vec<UserExcludedPhraseResponse> = exclusions
                 .into_iter()
@@ -170,12 +170,12 @@ pub async fn get_excluded_phrases(
 
 /// Submit a phrase suggestion
 pub async fn submit_suggestion(
-    pool: web::Data<PgPool>,
+    phrase_service: web::Data<PhraseService>,
     req: HttpRequest,
     request: web::Json<PhraseSuggestionRequest>,
 ) -> Result<HttpResponse> {
     let user_id = req.extensions().get::<Uuid>().cloned().unwrap();
-    match PhraseService::submit_phrase_suggestion(&pool, user_id, request.into_inner()).await {
+    match phrase_service.submit_phrase_suggestion(user_id, request.into_inner()).await {
         Ok(suggestion) => Ok(HttpResponse::Created().json(suggestion)),
         Err(e) => {
             log::error!("Failed to submit suggestion: {}", e);
@@ -188,11 +188,11 @@ pub async fn submit_suggestion(
 
 /// Get user's phrase suggestions
 pub async fn get_user_suggestions(
-    pool: web::Data<PgPool>,
+    phrase_service: web::Data<PhraseService>,
     req: HttpRequest,
 ) -> Result<HttpResponse> {
     let user_id = req.extensions().get::<Uuid>().cloned().unwrap();
-    match PhraseService::get_user_suggestions(&pool, user_id).await {
+    match phrase_service.get_user_suggestions(user_id).await {
         Ok(suggestions) => {
             let total = suggestions.len() as i64;
             let response = SuggestionListResponse {

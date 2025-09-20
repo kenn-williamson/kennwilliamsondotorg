@@ -35,7 +35,7 @@ pub struct UpdatePhraseRequest {
     pub active: Option<bool>,
 }
 
-#[derive(Debug, Deserialize)]
+#[derive(Debug, Deserialize, Clone, PartialEq)]
 pub struct PhraseSuggestionRequest {
     pub phrase_text: String,
 }

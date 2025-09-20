@@ -1,18 +1,17 @@
 use actix_web::{web, HttpMessage, HttpRequest, HttpResponse, Result};
-use sqlx::PgPool;
 use uuid::Uuid;
 
 use crate::models::api::{
     CreatePhraseRequest, UpdatePhraseRequest,
-    PhraseListResponse, UserListResponse, SystemStatsResponse,
-    PendingSuggestionsResponse, PasswordResetResponse, UserSearchQuery, AdminActionRequest
+    PhraseListResponse, UserListResponse,
+    PasswordResetResponse, UserSearchQuery, AdminActionRequest
 };
 use crate::services::phrase::PhraseService;
-use crate::services::admin::{UserManagementService, StatsService, PhraseModerationService};
+use crate::services::admin::{UserManagementService, PhraseModerationService, StatsService};
 
 /// Get all phrases (admin only)
 pub async fn get_all_phrases(
-    pool: web::Data<PgPool>,
+    phrase_service: web::Data<PhraseService>,
     _req: HttpRequest, // Middleware ensures admin role
     query: web::Query<AdminPhraseQuery>,
 ) -> Result<HttpResponse> {
@@ -20,7 +19,7 @@ pub async fn get_all_phrases(
     let limit = query.limit;
     let offset = query.offset;
 
-    match PhraseService::get_all_phrases(&pool, include_inactive, limit, offset).await {
+    match phrase_service.get_all_phrases(include_inactive, limit, offset).await {
         Ok(phrases) => {
             let total = phrases.len() as i64;
             let response = PhraseListResponse {
@@ -40,12 +39,12 @@ pub async fn get_all_phrases(
 
 /// Create a new phrase (admin only)
 pub async fn create_phrase(
-    pool: web::Data<PgPool>,
+    phrase_service: web::Data<PhraseService>,
     req: HttpRequest,
     request: web::Json<CreatePhraseRequest>,
 ) -> Result<HttpResponse> {
     let user_id = req.extensions().get::<Uuid>().cloned().unwrap();
-    match PhraseService::create_phrase(&pool, request.into_inner(), user_id).await {
+    match phrase_service.create_phrase(request.into_inner(), user_id).await {
         Ok(phrase) => Ok(HttpResponse::Created().json(phrase)),
         Err(e) => {
             log::error!("Failed to create phrase: {}", e);
@@ -58,14 +57,14 @@ pub async fn create_phrase(
 
 /// Update a phrase (admin only)
 pub async fn update_phrase(
-    pool: web::Data<PgPool>,
+    phrase_service: web::Data<PhraseService>,
     _req: HttpRequest,
     path: web::Path<Uuid>,
     request: web::Json<UpdatePhraseRequest>,
 ) -> Result<HttpResponse> {
     let phrase_id = path.into_inner();
 
-    match PhraseService::update_phrase(&pool, phrase_id, request.into_inner()).await {
+    match phrase_service.update_phrase(phrase_id, request.into_inner()).await {
         Ok(phrase) => Ok(HttpResponse::Ok().json(phrase)),
         Err(e) => {
             log::error!("Failed to update phrase: {}", e);
@@ -78,7 +77,7 @@ pub async fn update_phrase(
 
 /// Deactivate a phrase (admin only)
 pub async fn deactivate_phrase(
-    pool: web::Data<PgPool>,
+    phrase_service: web::Data<PhraseService>,
     _req: HttpRequest,
     path: web::Path<Uuid>,
 ) -> Result<HttpResponse> {
@@ -89,7 +88,7 @@ pub async fn deactivate_phrase(
         active: Some(false),
     };
 
-    match PhraseService::update_phrase(&pool, phrase_id, request).await {
+    match phrase_service.update_phrase(phrase_id, request).await {
         Ok(_) => Ok(HttpResponse::Ok().json(serde_json::json!({
             "message": "Phrase deactivated successfully"
         }))),
@@ -115,19 +114,11 @@ pub struct AdminPhraseQuery {
 
 /// Get system statistics (admin only)
 pub async fn get_system_stats(
-    pool: web::Data<PgPool>,
+    stats_service: web::Data<StatsService>,
     _req: HttpRequest,
 ) -> Result<HttpResponse> {
-    match StatsService::get_system_stats(&pool).await {
-        Ok(stats) => {
-            let response = SystemStatsResponse {
-                total_users: stats.total_users,
-                active_users: stats.active_users,
-                pending_suggestions: stats.pending_suggestions,
-                total_phrases: stats.total_phrases,
-            };
-            Ok(HttpResponse::Ok().json(response))
-        }
+    match stats_service.get_system_stats().await {
+        Ok(stats) => Ok(HttpResponse::Ok().json(stats)),
         Err(e) => {
             log::error!("Failed to get system stats: {}", e);
             Ok(HttpResponse::InternalServerError().json(serde_json::json!({
@@ -139,12 +130,11 @@ pub async fn get_system_stats(
 
 /// Get users with search (admin only)
 pub async fn get_users(
-    pool: web::Data<PgPool>,
+    admin_service: web::Data<UserManagementService>,
     _req: HttpRequest,
     query: web::Query<UserSearchQuery>,
 ) -> Result<HttpResponse> {
-    match UserManagementService::get_users(
-        &pool,
+    match admin_service.get_users(
         query.search.clone(),
         query.limit,
         query.offset,
@@ -165,13 +155,13 @@ pub async fn get_users(
 
 /// Deactivate user (admin only)
 pub async fn deactivate_user(
-    pool: web::Data<PgPool>,
+    admin_service: web::Data<UserManagementService>,
     _req: HttpRequest,
     path: web::Path<Uuid>,
 ) -> Result<HttpResponse> {
     let user_id = path.into_inner();
 
-    match UserManagementService::deactivate_user(&pool, user_id).await {
+    match admin_service.deactivate_user(user_id).await {
         Ok(_) => Ok(HttpResponse::Ok().json(serde_json::json!({
             "message": "User deactivated successfully"
         }))),
@@ -186,13 +176,13 @@ pub async fn deactivate_user(
 
 /// Activate user (admin only)
 pub async fn activate_user(
-    pool: web::Data<PgPool>,
+    admin_service: web::Data<UserManagementService>,
     _req: HttpRequest,
     path: web::Path<Uuid>,
 ) -> Result<HttpResponse> {
     let user_id = path.into_inner();
 
-    match UserManagementService::activate_user(&pool, user_id).await {
+    match admin_service.activate_user(user_id).await {
         Ok(_) => Ok(HttpResponse::Ok().json(serde_json::json!({
             "message": "User activated successfully"
         }))),
@@ -207,13 +197,13 @@ pub async fn activate_user(
 
 /// Reset user password (admin only)
 pub async fn reset_user_password(
-    pool: web::Data<PgPool>,
+    admin_service: web::Data<UserManagementService>,
     _req: HttpRequest,
     path: web::Path<Uuid>,
 ) -> Result<HttpResponse> {
     let user_id = path.into_inner();
 
-    match UserManagementService::reset_user_password(&pool, user_id).await {
+    match admin_service.reset_user_password(user_id).await {
         Ok(new_password) => {
             let response = PasswordResetResponse { new_password };
             Ok(HttpResponse::Ok().json(response))
@@ -229,13 +219,13 @@ pub async fn reset_user_password(
 
 /// Promote user to admin (admin only)
 pub async fn promote_user_to_admin(
-    pool: web::Data<PgPool>,
+    admin_service: web::Data<UserManagementService>,
     _req: HttpRequest,
     path: web::Path<Uuid>,
 ) -> Result<HttpResponse> {
     let user_id = path.into_inner();
 
-    match UserManagementService::promote_to_admin(&pool, user_id).await {
+    match admin_service.promote_to_admin(user_id).await {
         Ok(_) => Ok(HttpResponse::Ok().json(serde_json::json!({
             "message": "User promoted to admin successfully"
         }))),
@@ -250,18 +240,11 @@ pub async fn promote_user_to_admin(
 
 /// Get pending phrase suggestions (admin only)
 pub async fn get_pending_suggestions(
-    pool: web::Data<PgPool>,
+    phrase_moderation_service: web::Data<PhraseModerationService>,
     _req: HttpRequest,
 ) -> Result<HttpResponse> {
-    match PhraseModerationService::get_pending_suggestions(&pool).await {
-        Ok(suggestions) => {
-            let total = suggestions.len() as i64;
-            let response = PendingSuggestionsResponse {
-                suggestions: suggestions.into_iter().map(|s| s.into()).collect(),
-                total,
-            };
-            Ok(HttpResponse::Ok().json(response))
-        }
+    match phrase_moderation_service.get_pending_suggestions().await {
+        Ok(response) => Ok(HttpResponse::Ok().json(response)),
         Err(e) => {
             log::error!("Failed to get pending suggestions: {}", e);
             Ok(HttpResponse::InternalServerError().json(serde_json::json!({
@@ -273,7 +256,7 @@ pub async fn get_pending_suggestions(
 
 /// Approve phrase suggestion (admin only)
 pub async fn approve_suggestion(
-    pool: web::Data<PgPool>,
+    phrase_moderation_service: web::Data<PhraseModerationService>,
     req: HttpRequest,
     path: web::Path<Uuid>,
     request: Option<web::Json<AdminActionRequest>>,
@@ -282,7 +265,7 @@ pub async fn approve_suggestion(
     let suggestion_id = path.into_inner();
     let admin_reason = request.and_then(|r| r.admin_reason.clone());
 
-    match PhraseModerationService::approve_suggestion(&pool, suggestion_id, admin_id, admin_reason).await {
+    match phrase_moderation_service.approve_suggestion(suggestion_id, admin_id, admin_reason).await {
         Ok(_) => Ok(HttpResponse::Ok().json(serde_json::json!({
             "message": "Suggestion approved successfully"
         }))),
@@ -297,7 +280,7 @@ pub async fn approve_suggestion(
 
 /// Reject phrase suggestion (admin only)
 pub async fn reject_suggestion(
-    pool: web::Data<PgPool>,
+    phrase_moderation_service: web::Data<PhraseModerationService>,
     req: HttpRequest,
     path: web::Path<Uuid>,
     request: Option<web::Json<AdminActionRequest>>,
@@ -306,7 +289,7 @@ pub async fn reject_suggestion(
     let suggestion_id = path.into_inner();
     let admin_reason = request.and_then(|r| r.admin_reason.clone());
 
-    match PhraseModerationService::reject_suggestion(&pool, suggestion_id, admin_id, admin_reason).await {
+    match phrase_moderation_service.reject_suggestion(suggestion_id, admin_id, admin_reason).await {
         Ok(_) => Ok(HttpResponse::Ok().json(serde_json::json!({
             "message": "Suggestion rejected successfully"
         }))),
