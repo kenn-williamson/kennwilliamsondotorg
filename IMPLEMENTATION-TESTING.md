@@ -8,7 +8,7 @@ Testing architecture and implementation for backend with comprehensive test cove
 ### Current Test Coverage
 - **Repository Layer**: 20 unit tests passing (mock implementations)
 - **Service Layer**: 37 unit tests in service modules (auth service components)
-- **API Layer**: 10 API endpoint tests (auth endpoints) - some failing, needs debugging
+- **API Layer**: 24 API endpoint tests (auth + incident timer endpoints) - all passing
 - **Testcontainers Tests**: 3 testcontainers integration tests (container per test, parallel execution)
 - **Refresh Token Tests**: 3 refresh token validation tests
 - **Test Infrastructure**: Consolidated test helpers with proper container scope management
@@ -29,7 +29,7 @@ Testing architecture and implementation for backend with comprehensive test cove
 
 **API Layer** (🚧 In Progress):
 - **Framework**: Rust with actix-test and testcontainers
-- **Tests**: 10 API endpoint tests (auth endpoints) - some failing
+- **Tests**: 24 API endpoint tests (auth + incident timer endpoints) - all passing
 - **Execution**: Parallel with isolated container per test
 - **Database**: Testcontainers with proper scope management
 
@@ -68,7 +68,8 @@ backend/
 │               └── slug.rs                  # 2 unit tests
 └── tests/                  # Integration and API tests
     ├── api/                # API endpoint tests
-    │   └── testcontainers_auth_api_tests.rs # 10 API tests (some failing)
+    │   ├── testcontainers_auth_api_tests.rs # 10 auth API tests
+    │   └── testcontainers_incident_timer_api_tests.rs # 14 incident timer API tests
     ├── testcontainers_integration_simple.rs # 3 testcontainers tests
     ├── refresh_token_validation.rs         # 3 refresh token tests
     ├── test_helpers.rs                     # Consolidated test utilities
@@ -91,11 +92,12 @@ backend/
 - **Password Service**: 7 unit tests (password changes, validation, security)
 - **Slug Service**: 2 unit tests (slug generation and validation)
 
-**API Layer** (🚧 In Progress - 10 tests):
+**API Layer** (🚧 In Progress - 24 tests):
 - **Auth API Tests**: 10 API endpoint tests (registration, login, profile, password changes)
-- **Coverage**: Authentication endpoints with real HTTP requests
-- **Status**: Some tests failing with assertion errors, needs debugging
-- **Missing**: Incident timer, phrases, and admin API endpoints
+- **Incident Timer API Tests**: 14 API endpoint tests (CRUD operations, public access)
+- **Coverage**: Authentication and incident timer endpoints with real HTTP requests
+- **Status**: All tests passing with comprehensive coverage
+- **Missing**: Phrases and admin API endpoints
 
 **Refresh Token Tests** (✅ Complete - 3 tests):
 - **Refresh Token Validation**: 3 tests (end-to-end refresh token flow)
@@ -208,14 +210,14 @@ cargo test
 ### Current Status
 - **Repository Layer**: 20 unit tests passing (100% coverage)
 - **Service Layer**: 37 unit tests passing (100% auth service coverage)
-- **API Layer**: 10 API tests (auth endpoints only) - some failing
+- **API Layer**: 24 API tests (auth + incident timer endpoints) - all passing
 - **Refresh Token Tests**: 3 tests passing (100% coverage)
 - **Testcontainers Tests**: 3 testcontainers tests passing (100% parallel execution)
 
 ### Target Coverage
 - **Repository Layer**: ✅ Complete (20/20 tests)
 - **Service Layer**: ✅ Complete (37/37 tests)
-- **API Layer**: 🚧 In Progress (10/50+ planned tests) - needs debugging
+- **API Layer**: 🚧 In Progress (24/50+ planned tests) - auth + incident timer complete
 - **Refresh Token Tests**: ✅ Complete (3/3 tests)
 - **Testcontainers Tests**: ✅ Complete (3/3 tests)
 - **Error Cases**: Comprehensive coverage across all layers

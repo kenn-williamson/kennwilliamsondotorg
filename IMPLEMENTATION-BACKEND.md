@@ -90,7 +90,8 @@ backend/
 │   ├── refresh_token_validation.rs # Refresh token validation tests
 │   └── api/             # API endpoint tests
 │       ├── mod.rs
-│       └── testcontainers_auth_api_tests.rs # Authentication API tests (some failing)
+│       ├── testcontainers_auth_api_tests.rs # Authentication API tests
+│       └── testcontainers_incident_timer_api_tests.rs # Incident timer API tests
 ├── Cargo.toml           # Dependencies
 ├── Dockerfile           # Multi-stage container build
 └── .env                 # Environment configuration
@@ -208,9 +209,10 @@ cargo test
 ### API Testing
 - **Endpoint Tests**: Full request/response cycle testing with testcontainers
 - **Authentication Flow**: Complete auth flow testing including JWT validation
+- **Incident Timer Flow**: Complete CRUD operations and public access testing
 - **Error Scenarios**: Testing error handling and validation
 - **Container Management**: TestContainer struct keeps containers alive during tests
-- **Status**: Some tests failing with assertion errors, needs debugging
+- **Status**: All API tests passing with comprehensive coverage
 
 ### Testcontainers Testing
 - **Container Isolation**: Each test gets its own PostgreSQL container

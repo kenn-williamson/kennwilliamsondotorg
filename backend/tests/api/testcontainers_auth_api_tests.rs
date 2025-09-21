@@ -66,27 +66,42 @@ async fn test_register_duplicate_email() {
 
 #[actix_web::test]
 async fn test_login_success() {
-    let (srv, pool, _test_container) = crate::test_helpers::create_test_app_with_testcontainers().await;
+    let (srv, _pool, _test_container) = crate::test_helpers::create_test_app_with_testcontainers().await;
     
-    // Create a test user
+    // First register a user to get proper password hashing
     let email = crate::test_helpers::unique_test_email();
-    let password_hash = crate::test_helpers::test_password_hash();
+    let password = "TestPassword123!";
     let display_name = "Test User";
-    let slug = crate::test_helpers::unique_test_slug();
     
-    let user = crate::test_helpers::create_test_user_in_db(&pool, &email, &password_hash, display_name, &slug)
+    let register_request_body = json!({
+        "email": email,
+        "password": password,
+        "display_name": display_name
+    });
+    
+    let mut register_resp = srv.post("/backend/public/auth/register")
+        .send_json(&register_request_body)
         .await
-        .expect("Failed to create test user");
+        .unwrap();
     
-    let request_body = json!({
-        "email": user.email,
-        "password": "TestPassword123!"
+    assert!(register_resp.status().is_success());
+    
+    // Now try to login with the same credentials
+    let login_request_body = json!({
+        "email": email,
+        "password": password
     });
     
     let mut resp = srv.post("/backend/public/auth/login")
-        .send_json(&request_body)
+        .send_json(&login_request_body)
         .await
         .unwrap();
+    
+    println!("Login response status: {}", resp.status());
+    if !resp.status().is_success() {
+        let body: serde_json::Value = resp.json().await.unwrap();
+        println!("Login error response: {:?}", body);
+    }
     assert!(resp.status().is_success());
     
     let body: serde_json::Value = resp.json().await.unwrap();
@@ -95,8 +110,8 @@ async fn test_login_success() {
     assert!(body.get("user").is_some());
     
     let returned_user = body.get("user").unwrap();
-    assert_eq!(returned_user.get("id").unwrap().as_str().unwrap(), user.id.to_string());
-    assert_eq!(returned_user.get("email").unwrap().as_str().unwrap(), user.email);
+    assert_eq!(returned_user.get("email").unwrap().as_str().unwrap(), email);
+    assert_eq!(returned_user.get("display_name").unwrap().as_str().unwrap(), display_name);
 }
 
 #[actix_web::test]
@@ -121,32 +136,46 @@ async fn test_login_invalid_credentials() {
 
 #[actix_web::test]
 async fn test_get_current_user_success() {
-    let (srv, pool, _test_container) = crate::test_helpers::create_test_app_with_testcontainers().await;
+    let (srv, _pool, _test_container) = crate::test_helpers::create_test_app_with_testcontainers().await;
     
-    // Create a test user
+    // First register a user to get proper password hashing
     let email = crate::test_helpers::unique_test_email();
-    let password_hash = crate::test_helpers::test_password_hash();
+    let password = "TestPassword123!";
     let display_name = "Test User";
-    let slug = crate::test_helpers::unique_test_slug();
     
-    let user = crate::test_helpers::create_test_user_in_db(&pool, &email, &password_hash, display_name, &slug)
+    let register_request_body = json!({
+        "email": email,
+        "password": password,
+        "display_name": display_name
+    });
+    
+    let mut register_resp = srv.post("/backend/public/auth/register")
+        .send_json(&register_request_body)
         .await
-        .expect("Failed to create test user");
+        .unwrap();
     
-    // Create JWT token for the user
-    let token = crate::test_helpers::create_test_jwt_token(&user).await.unwrap();
+    assert!(register_resp.status().is_success());
     
+    let register_body: serde_json::Value = register_resp.json().await.unwrap();
+    let token = register_body.get("token").unwrap().as_str().unwrap();
+    
+    // Now test getting current user with the JWT token
     let mut resp = srv.get("/backend/protected/auth/me")
         .insert_header(("Authorization", format!("Bearer {}", token)))
         .send()
         .await
         .unwrap();
+    
+    println!("Get current user response status: {}", resp.status());
+    if !resp.status().is_success() {
+        let body: serde_json::Value = resp.json().await.unwrap();
+        println!("Get current user error response: {:?}", body);
+    }
     assert!(resp.status().is_success());
     
     let body: serde_json::Value = resp.json().await.unwrap();
-    assert_eq!(body.get("id").unwrap().as_str().unwrap(), user.id.to_string());
-    assert_eq!(body.get("email").unwrap().as_str().unwrap(), user.email);
-    assert_eq!(body.get("display_name").unwrap().as_str().unwrap(), user.display_name);
+    assert_eq!(body.get("email").unwrap().as_str().unwrap(), email);
+    assert_eq!(body.get("display_name").unwrap().as_str().unwrap(), display_name);
 }
 
 #[actix_web::test]
@@ -179,20 +208,30 @@ async fn test_get_current_user_invalid_token() {
 
 #[actix_web::test]
 async fn test_update_profile_success() {
-    let (srv, pool, _test_container) = crate::test_helpers::create_test_app_with_testcontainers().await;
+    let (srv, _pool, _test_container) = crate::test_helpers::create_test_app_with_testcontainers().await;
     
-    // Create a test user
+    // First register a user to get proper password hashing
     let email = crate::test_helpers::unique_test_email();
-    let password_hash = crate::test_helpers::test_password_hash();
+    let password = "TestPassword123!";
     let display_name = "Original Name";
-    let slug = crate::test_helpers::unique_test_slug();
     
-    let user = crate::test_helpers::create_test_user_in_db(&pool, &email, &password_hash, display_name, &slug)
+    let register_request_body = json!({
+        "email": email,
+        "password": password,
+        "display_name": display_name
+    });
+    
+    let mut register_resp = srv.post("/backend/public/auth/register")
+        .send_json(&register_request_body)
         .await
-        .expect("Failed to create test user");
+        .unwrap();
     
-    let token = crate::test_helpers::create_test_jwt_token(&user).await.unwrap();
+    assert!(register_resp.status().is_success());
     
+    let register_body: serde_json::Value = register_resp.json().await.unwrap();
+    let token = register_body.get("token").unwrap().as_str().unwrap();
+    
+    // Now test updating profile
     let request_body = json!({
         "display_name": "Updated Name",
         "slug": "updated-slug"
@@ -203,6 +242,12 @@ async fn test_update_profile_success() {
         .send_json(&request_body)
         .await
         .unwrap();
+    
+    println!("Update profile response status: {}", resp.status());
+    if !resp.status().is_success() {
+        let body: serde_json::Value = resp.json().await.unwrap();
+        println!("Update profile error response: {:?}", body);
+    }
     assert!(resp.status().is_success());
     
     let body: serde_json::Value = resp.json().await.unwrap();
@@ -212,22 +257,32 @@ async fn test_update_profile_success() {
 
 #[actix_web::test]
 async fn test_change_password_success() {
-    let (srv, pool, _test_container) = crate::test_helpers::create_test_app_with_testcontainers().await;
+    let (srv, _pool, _test_container) = crate::test_helpers::create_test_app_with_testcontainers().await;
     
-    // Create a test user
+    // First register a user to get proper password hashing
     let email = crate::test_helpers::unique_test_email();
-    let password_hash = crate::test_helpers::test_password_hash();
+    let password = "TestPassword123!";
     let display_name = "Test User";
-    let slug = crate::test_helpers::unique_test_slug();
     
-    let user = crate::test_helpers::create_test_user_in_db(&pool, &email, &password_hash, display_name, &slug)
+    let register_request_body = json!({
+        "email": email,
+        "password": password,
+        "display_name": display_name
+    });
+    
+    let mut register_resp = srv.post("/backend/public/auth/register")
+        .send_json(&register_request_body)
         .await
-        .expect("Failed to create test user");
+        .unwrap();
     
-    let token = crate::test_helpers::create_test_jwt_token(&user).await.unwrap();
+    assert!(register_resp.status().is_success());
     
+    let register_body: serde_json::Value = register_resp.json().await.unwrap();
+    let token = register_body.get("token").unwrap().as_str().unwrap();
+    
+    // Now test changing password
     let request_body = json!({
-        "current_password": "TestPassword123!",
+        "current_password": password,
         "new_password": "NewPassword456!"
     });
     
@@ -236,6 +291,12 @@ async fn test_change_password_success() {
         .send_json(&request_body)
         .await
         .unwrap();
+    
+    println!("Change password response status: {}", resp.status());
+    if !resp.status().is_success() {
+        let body: serde_json::Value = resp.json().await.unwrap();
+        println!("Change password error response: {:?}", body);
+    }
     assert!(resp.status().is_success());
     
     let body: serde_json::Value = resp.json().await.unwrap();
@@ -244,20 +305,30 @@ async fn test_change_password_success() {
 
 #[actix_web::test]
 async fn test_change_password_wrong_current() {
-    let (srv, pool, _test_container) = crate::test_helpers::create_test_app_with_testcontainers().await;
+    let (srv, _pool, _test_container) = crate::test_helpers::create_test_app_with_testcontainers().await;
     
-    // Create a test user
+    // First register a user to get proper password hashing
     let email = crate::test_helpers::unique_test_email();
-    let password_hash = crate::test_helpers::test_password_hash();
+    let password = "TestPassword123!";
     let display_name = "Test User";
-    let slug = crate::test_helpers::unique_test_slug();
     
-    let user = crate::test_helpers::create_test_user_in_db(&pool, &email, &password_hash, display_name, &slug)
+    let register_request_body = json!({
+        "email": email,
+        "password": password,
+        "display_name": display_name
+    });
+    
+    let mut register_resp = srv.post("/backend/public/auth/register")
+        .send_json(&register_request_body)
         .await
-        .expect("Failed to create test user");
+        .unwrap();
     
-    let token = crate::test_helpers::create_test_jwt_token(&user).await.unwrap();
+    assert!(register_resp.status().is_success());
     
+    let register_body: serde_json::Value = register_resp.json().await.unwrap();
+    let token = register_body.get("token").unwrap().as_str().unwrap();
+    
+    // Now test changing password with wrong current password
     let request_body = json!({
         "current_password": "WrongPassword123!",
         "new_password": "NewPassword456!"
@@ -268,6 +339,12 @@ async fn test_change_password_wrong_current() {
         .send_json(&request_body)
         .await
         .unwrap();
+    
+    println!("Change password wrong current response status: {}", resp.status());
+    if resp.status() != 400 {
+        let body: serde_json::Value = resp.json().await.unwrap();
+        println!("Change password wrong current error response: {:?}", body);
+    }
     assert_eq!(resp.status(), 400); // Bad Request
     
     let body: serde_json::Value = resp.json().await.unwrap();
