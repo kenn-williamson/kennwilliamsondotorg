@@ -13,6 +13,7 @@ use anyhow::Result;
 // ============================================================================
 
 /// Wait for database to be ready with retry logic
+#[allow(dead_code)]
 pub async fn wait_for_database_ready(connection_string: &str) -> PgPool {
     let mut attempt = 0;
     let max_attempts = 10;
@@ -56,6 +57,7 @@ pub async fn wait_for_database_ready(connection_string: &str) -> PgPool {
 }
 
 /// Create a testcontainers database with proper setup
+#[allow(dead_code)]
 pub async fn create_testcontainers_database() -> (PgPool, String) {
     let image = GenericImage::new("ghcr.io/fboulnois/pg_uuidv7", "1.6.0")
         .with_exposed_port(5432.tcp())
@@ -101,6 +103,8 @@ pub async fn create_testcontainers_database() -> (PgPool, String) {
 // ============================================================================
 
 /// Create a test app with testcontainers database
+/// Used in: testcontainers_admin_api_tests.rs - e.g. line 13 in test_admin_endpoints_require_authentication()
+#[allow(dead_code)]
 pub async fn create_test_app_with_testcontainers() -> (actix_test::TestServer, PgPool, TestContainer) {
     use backend::services::container::ServiceContainer;
     use backend::routes;
@@ -131,6 +135,8 @@ pub async fn create_test_app_with_testcontainers() -> (actix_test::TestServer, P
 }
 
 /// Create a test app with a specific user pre-created
+/// Used in: Currently unused but available for future test scenarios
+#[allow(dead_code)]
 pub async fn create_test_app_with_user(
     email: &str,
     password_hash: &str,
@@ -152,6 +158,8 @@ pub async fn create_test_app_with_user(
 }
 
 /// Create a test app with admin user pre-created
+/// Used in: testcontainers_admin_api_tests.rs (12 times) - e.g. test_get_system_stats_success(), test_deactivate_user_success()
+#[allow(dead_code)]
 pub async fn create_test_app_with_admin_user(
     email: &str,
     password_hash: &str,
@@ -180,6 +188,8 @@ pub async fn create_test_app_with_admin_user(
 // ============================================================================
 
 /// Creates a test user in the database
+/// Used in: testcontainers_admin_api_tests.rs (4 times) - e.g. line 175 in test_deactivate_user_success()
+#[allow(dead_code)]
 pub async fn create_test_user_in_db(
     pool: &PgPool,
     email: &str,
@@ -236,6 +246,8 @@ pub async fn create_test_user_in_db(
 }
 
 /// Add admin role to a user
+/// Used in: Currently unused but available for future test scenarios
+#[allow(dead_code)]
 pub async fn add_admin_role_to_user(pool: &sqlx::PgPool, user_id: uuid::Uuid) -> Result<()> {
     // Get admin role ID
     let admin_role_id: uuid::Uuid = sqlx::query_scalar(
@@ -261,6 +273,8 @@ pub async fn add_admin_role_to_user(pool: &sqlx::PgPool, user_id: uuid::Uuid) ->
 // ============================================================================
 
 /// Creates a JWT token for testing
+/// Used in: testcontainers_admin_api_tests.rs (16 times) - e.g. line 79 in test_get_system_stats_success(), line 185 in test_deactivate_user_success()
+#[allow(dead_code)]
 pub async fn create_test_jwt_token(user: &backend::models::db::user::User) -> Result<String, anyhow::Error> {
     use backend::services::auth::jwt::JwtService;
     
@@ -275,21 +289,29 @@ pub async fn create_test_jwt_token(user: &backend::models::db::user::User) -> Re
 // ============================================================================
 
 /// Generates a unique test email
+/// Used in: testcontainers_admin_api_tests.rs - e.g. line 36 in test_register_duplicate_email()
+#[allow(dead_code)]
 pub fn unique_test_email() -> String {
     format!("test_{}@test.com", std::time::SystemTime::now().duration_since(std::time::UNIX_EPOCH).unwrap().as_secs())
 }
 
 /// Generates a unique test slug
+/// Used in: testcontainers_admin_api_tests.rs - e.g. line 76 in test_get_system_stats_success()
+#[allow(dead_code)]
 pub fn unique_test_slug() -> String {
     format!("test-user-{}", std::time::SystemTime::now().duration_since(std::time::UNIX_EPOCH).unwrap().as_secs())
 }
 
 /// Test password hash for testing
+/// Used in: testcontainers_admin_api_tests.rs (17 times) - e.g. line 166 in test_deactivate_user_success(), line 205 in test_activate_user_success()
+#[allow(dead_code)]
 pub fn test_password_hash() -> String {
     "$2b$04$6X8Q8Q8Q8Q8Q8Q8Q8Q8Q8O8Q8Q8Q8Q8Q8Q8Q8Q8Q8Q8Q8Q8Q8Q8Q8Q".to_string()
 }
 
 /// Generates a unique test phrase
+/// Used in: Currently unused but available for future test scenarios
+#[allow(dead_code)]
 pub fn unique_test_phrase() -> String {
     format!("Test phrase {}", std::time::SystemTime::now().duration_since(std::time::UNIX_EPOCH).unwrap().as_secs())
 }
@@ -299,6 +321,8 @@ pub fn unique_test_phrase() -> String {
 // ============================================================================
 
 /// Cleans up test database
+/// Used in: Currently unused but available for future test scenarios
+#[allow(dead_code)]
 pub async fn cleanup_test_db(pool: &PgPool) -> Result<(), sqlx::Error> {
     // Clean up test data
     sqlx::query("DELETE FROM user_excluded_phrases").execute(pool).await?;
@@ -317,6 +341,8 @@ pub async fn cleanup_test_db(pool: &PgPool) -> Result<(), sqlx::Error> {
 // ============================================================================
 
 /// Creates a test refresh token in the database
+/// Used in: refresh_token_validation.rs - e.g. line 123 in test_refresh_token_expiration()
+#[allow(dead_code)]
 pub async fn create_test_refresh_token_in_db(
     pool: &PgPool,
     user_id: uuid::Uuid,
@@ -359,6 +385,8 @@ pub async fn create_test_refresh_token_in_db(
 // ============================================================================
 
 /// Verifies test database URL is set
+/// Used in: Currently unused but available for future test scenarios
+#[allow(dead_code)]
 pub fn verify_test_database_url() {
     let database_url = std::env::var("DATABASE_URL")
         .unwrap_or_else(|_| "postgresql://postgres:password@localhost:5432/kennwilliamson_test".to_string());
@@ -376,6 +404,7 @@ pub fn verify_test_database_url() {
 pub struct TestContainer {
     _container: Box<dyn std::any::Any + Send + Sync>,
     pub pool: PgPool,
+    #[allow(dead_code)] // Field is available for debugging and future use
     pub connection_string: String,
 }
 
@@ -515,12 +544,16 @@ impl TestContainer {
 // ============================================================================
 
 /// Create a test app for integration tests using testcontainers
+/// Used in: Currently unused but available for future integration test scenarios
+#[allow(dead_code)]
 pub async fn create_integration_test_app() -> Result<(actix_test::TestServer, sqlx::PgPool, TestContainer)> {
     let (srv, pool, test_container) = create_test_app_with_testcontainers().await;
     Ok((srv, pool, test_container))
 }
 
 /// Create a test app with user for integration tests
+/// Used in: Currently unused but available for future integration test scenarios
+#[allow(dead_code)]
 pub async fn create_integration_test_app_with_user(
     email: &str,
     password_hash: &str,
@@ -532,6 +565,8 @@ pub async fn create_integration_test_app_with_user(
 }
 
 /// Create a test app with admin user for integration tests
+/// Used in: Currently unused but available for future integration test scenarios
+#[allow(dead_code)]
 pub async fn create_integration_test_app_with_admin_user(
     email: &str,
     password_hash: &str,

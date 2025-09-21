@@ -4,6 +4,7 @@ mod test_helpers;
 
 /// Test the complete refresh token flow to ensure refactor preserved functionality
 #[actix_web::test]
+#[allow(unused_mut)]
 async fn test_refresh_token_complete_flow() {
     let (srv, _pool, _test_container) = test_helpers::create_test_app_with_testcontainers().await;
 
@@ -101,6 +102,7 @@ async fn test_refresh_token_complete_flow() {
 
 /// Test refresh token expiration handling
 #[actix_web::test]
+#[allow(unused_mut)]
 async fn test_refresh_token_expiration() {
     let (srv, pool, _test_container) = test_helpers::create_test_app_with_testcontainers().await;
     
@@ -141,6 +143,7 @@ async fn test_refresh_token_expiration() {
 
 /// Test refresh token with invalid token
 #[actix_web::test]
+#[allow(unused_mut)]
 async fn test_refresh_token_invalid() {
     let (srv, _pool, _test_container) = test_helpers::create_test_app_with_testcontainers().await;
 

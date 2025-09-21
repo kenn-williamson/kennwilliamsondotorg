@@ -207,6 +207,7 @@ async fn test_exclude_phrase_unauthorized() {
 }
 
 #[actix_web::test]
+#[allow(unused_mut)]
 async fn test_remove_phrase_exclusion_success() {
     let (srv, pool, _test_container) = crate::test_helpers::create_test_app_with_testcontainers().await;
     
@@ -359,6 +360,7 @@ async fn test_submit_suggestion_unauthorized() {
 }
 
 #[actix_web::test]
+#[allow(unused_mut)]
 async fn test_get_public_phrase_success() {
     let (srv, _pool, _test_container) = crate::test_helpers::create_test_app_with_testcontainers().await;
     

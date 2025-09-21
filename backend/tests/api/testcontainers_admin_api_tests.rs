@@ -8,6 +8,7 @@ use uuid::Uuid;
 // ============================================================================
 
 #[actix_web::test]
+#[allow(unused_mut)]
 async fn test_admin_endpoints_require_authentication() {
     let (srv, _pool, _test_container) = crate::test_helpers::create_test_app_with_testcontainers().await;
     
@@ -27,6 +28,7 @@ async fn test_admin_endpoints_require_authentication() {
 }
 
 #[actix_web::test]
+#[allow(unused_mut)]
 async fn test_admin_endpoints_require_admin_role() {
     let (srv, _pool, _test_container) = crate::test_helpers::create_test_app_with_testcontainers().await;
     
@@ -166,6 +168,7 @@ async fn test_deactivate_user_success() {
         &crate::test_helpers::unique_test_slug(),
     ).await.unwrap();
     
+    #[allow(unused_variables)] // Used in line 185: format!("Bearer {}", token)
     let token = crate::test_helpers::create_test_jwt_token(&admin_user).await.unwrap();
     
     // Create a regular user to deactivate
@@ -205,6 +208,7 @@ async fn test_activate_user_success() {
         &crate::test_helpers::unique_test_slug(),
     ).await.unwrap();
     
+    #[allow(unused_variables)] // Used in line 225: format!("Bearer {}", token)
     let token = crate::test_helpers::create_test_jwt_token(&admin_user).await.unwrap();
     
     // Create a regular user to activate
@@ -244,6 +248,7 @@ async fn test_reset_user_password_success() {
         &crate::test_helpers::unique_test_slug(),
     ).await.unwrap();
     
+    #[allow(unused_variables)] // Used in line 265: format!("Bearer {}", token)
     let token = crate::test_helpers::create_test_jwt_token(&admin_user).await.unwrap();
     
     // Create a regular user to reset password
@@ -283,6 +288,7 @@ async fn test_promote_user_to_admin_success() {
         &crate::test_helpers::unique_test_slug(),
     ).await.unwrap();
     
+    #[allow(unused_variables)] // Used in line 305: format!("Bearer {}", token)
     let token = crate::test_helpers::create_test_jwt_token(&admin_user).await.unwrap();
     
     // Create a regular user to promote

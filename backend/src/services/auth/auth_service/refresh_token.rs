@@ -194,6 +194,7 @@ mod tests {
     }
 
     #[tokio::test]
+    #[allow(unused_mut)]
     async fn refresh_token_fails_with_invalid_token() -> Result<()> {
         let mut user_repo = MockUserRepository::new();
         let mut refresh_repo = MockRefreshTokenRepository::new();
@@ -224,6 +225,7 @@ mod tests {
     }
 
     #[tokio::test]
+    #[allow(unused_mut)]
     async fn refresh_token_fails_with_expired_token() -> Result<()> {
         let mut user_repo = MockUserRepository::new();
         let mut refresh_repo = MockRefreshTokenRepository::new();
@@ -299,6 +301,7 @@ mod tests {
     }
 
     #[tokio::test]
+    #[allow(unused_mut)]
     async fn handles_database_error_during_token_lookup() -> Result<()> {
         let mut user_repo = MockUserRepository::new();
         let mut refresh_repo = MockRefreshTokenRepository::new();

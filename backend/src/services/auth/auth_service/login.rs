@@ -164,6 +164,7 @@ mod tests {
     }
 
     #[tokio::test]
+    #[allow(unused_mut)]
     async fn login_fails_with_invalid_password() -> Result<()> {
         let mut user_repo = MockUserRepository::new();
         let mut refresh_repo = MockRefreshTokenRepository::new();
@@ -193,6 +194,7 @@ mod tests {
     }
 
     #[tokio::test]
+    #[allow(unused_mut)]
     async fn login_fails_when_user_not_found() -> Result<()> {
         let mut user_repo = MockUserRepository::new();
         let mut refresh_repo = MockRefreshTokenRepository::new();
@@ -222,6 +224,7 @@ mod tests {
     }
 
     #[tokio::test]
+    #[allow(unused_mut)]
     async fn handles_database_error_during_user_lookup() -> Result<()> {
         let mut user_repo = MockUserRepository::new();
         let mut refresh_repo = MockRefreshTokenRepository::new();

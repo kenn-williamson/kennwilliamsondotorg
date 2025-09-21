@@ -8,7 +8,7 @@ Testing architecture and implementation for backend with comprehensive test cove
 ### Current Test Coverage
 - **Repository Layer**: 20 unit tests passing (mock implementations)
 - **Service Layer**: 37 unit tests in service modules (auth service components)
-- **API Layer**: 36 API endpoint tests (auth + incident timer + phrase endpoints) - all passing
+- **API Layer**: 55 API endpoint tests (auth + incident timer + phrase + admin + health endpoints) - all passing
 - **Testcontainers Tests**: 3 testcontainers integration tests (container per test, parallel execution)
 - **Refresh Token Tests**: 3 refresh token validation tests
 - **Test Infrastructure**: Consolidated test helpers with proper container scope management and robust restart logic
@@ -93,13 +93,14 @@ backend/
 - **Password Service**: 7 unit tests (password changes, validation, security)
 - **Slug Service**: 2 unit tests (slug generation and validation)
 
-**API Layer** (🚧 In Progress - 36 tests):
+**API Layer** (✅ Complete - 55 tests):
 - **Auth API Tests**: 10 API endpoint tests (registration, login, profile, password changes)
 - **Incident Timer API Tests**: 14 API endpoint tests (CRUD operations, public access)
 - **Phrase API Tests**: 12 API endpoint tests (phrase management, suggestions, exclusions)
-- **Coverage**: Authentication, incident timer, and phrase endpoints with real HTTP requests
+- **Admin API Tests**: 14 API endpoint tests (user management, phrase moderation, system stats)
+- **Health API Tests**: 5 API endpoint tests (service and database health checks)
+- **Coverage**: All API endpoints with real HTTP requests
 - **Status**: All tests passing with comprehensive coverage
-- **Missing**: Admin and health API endpoints
 
 **Refresh Token Tests** (✅ Complete - 3 tests):
 - **Refresh Token Validation**: 3 tests (end-to-end refresh token flow)
@@ -212,14 +213,14 @@ cargo test
 ### Current Status
 - **Repository Layer**: 20 unit tests passing (100% coverage)
 - **Service Layer**: 37 unit tests passing (100% auth service coverage)
-- **API Layer**: 36 API tests (auth + incident timer + phrase endpoints) - all passing
+- **API Layer**: 55 API tests (auth + incident timer + phrase + admin + health endpoints) - all passing
 - **Refresh Token Tests**: 3 tests passing (100% coverage)
 - **Testcontainers Tests**: 3 testcontainers tests passing (100% parallel execution)
 
 ### Target Coverage
 - **Repository Layer**: ✅ Complete (20/20 tests)
 - **Service Layer**: ✅ Complete (37/37 tests)
-- **API Layer**: 🚧 In Progress (36/50+ planned tests) - auth + incident timer + phrase complete
+- **API Layer**: ✅ Complete (55/55 tests) - all API endpoints covered
 - **Refresh Token Tests**: ✅ Complete (3/3 tests)
 - **Testcontainers Tests**: ✅ Complete (3/3 tests)
 - **Error Cases**: Comprehensive coverage across all layers

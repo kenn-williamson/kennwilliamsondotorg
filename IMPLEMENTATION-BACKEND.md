@@ -86,12 +86,14 @@ backend/
 ├── tests/               # Comprehensive test suite
 │   ├── mod.rs           # Test module organization
 │   ├── test_helpers.rs  # Consolidated test utilities with container scope management
-│   ├── testcontainers_integration_simple.rs # Testcontainers integration tests
 │   ├── refresh_token_validation.rs # Refresh token validation tests
 │   └── api/             # API endpoint tests
 │       ├── mod.rs
 │       ├── testcontainers_auth_api_tests.rs # Authentication API tests
-│       └── testcontainers_incident_timer_api_tests.rs # Incident timer API tests
+│       ├── testcontainers_incident_timer_api_tests.rs # Incident timer API tests
+│       ├── testcontainers_phrase_api_tests.rs # Phrase API tests
+│       ├── testcontainers_admin_api_tests.rs # Admin API tests
+│       └── testcontainers_health_api_tests.rs # Health API tests
 ├── Cargo.toml           # Dependencies
 ├── Dockerfile           # Multi-stage container build
 └── .env                 # Environment configuration
@@ -213,7 +215,7 @@ cargo test
 - **Phrase Flow**: Complete phrase management and suggestion testing
 - **Error Scenarios**: Testing error handling and validation
 - **Container Management**: TestContainer struct keeps containers alive during tests
-- **Status**: All 36 API tests passing with comprehensive coverage
+- **Status**: All 55 API tests passing with comprehensive coverage
 
 ### Testcontainers Testing
 - **Container Isolation**: Each test gets its own PostgreSQL container

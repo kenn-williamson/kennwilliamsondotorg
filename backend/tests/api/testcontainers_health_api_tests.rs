@@ -50,6 +50,7 @@ async fn test_health_db_endpoint_success() {
 }
 
 #[actix_web::test]
+#[allow(unused_mut)]
 async fn test_health_endpoints_are_public() {
     let (srv, _pool, _test_container) = crate::test_helpers::create_test_app_with_testcontainers().await;
     

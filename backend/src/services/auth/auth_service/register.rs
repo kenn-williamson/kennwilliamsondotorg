@@ -174,9 +174,10 @@ mod tests {
     }
 
     #[tokio::test]
+    #[allow(unused_mut)]
     async fn handles_database_error_during_user_creation() -> Result<()> {
         let mut user_repo = MockUserRepository::new();
-        let mut refresh_repo = MockRefreshTokenRepository::new();
+        let refresh_repo = MockRefreshTokenRepository::new();
         let _jwt_service = JwtService::new("test-secret".to_string());
 
         // Setup mock expectations

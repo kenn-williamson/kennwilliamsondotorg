@@ -47,6 +47,7 @@ async fn test_get_user_timers_success() {
 }
 
 #[actix_web::test]
+#[allow(unused_mut)]
 async fn test_get_user_timers_unauthorized() {
     let (srv, _pool, _test_container) = crate::test_helpers::create_test_app_with_testcontainers().await;
     
@@ -159,6 +160,7 @@ async fn test_create_timer_minimal() {
 }
 
 #[actix_web::test]
+#[allow(unused_mut)]
 async fn test_create_timer_unauthorized() {
     let (srv, _pool, _test_container) = crate::test_helpers::create_test_app_with_testcontainers().await;
     
@@ -286,6 +288,7 @@ async fn test_update_timer_not_found() {
 }
 
 #[actix_web::test]
+#[allow(unused_mut)]
 async fn test_update_timer_unauthorized() {
     let (srv, _pool, _test_container) = crate::test_helpers::create_test_app_with_testcontainers().await;
     
@@ -413,6 +416,7 @@ async fn test_delete_timer_not_found() {
 }
 
 #[actix_web::test]
+#[allow(unused_mut)]
 async fn test_delete_timer_unauthorized() {
     let (srv, _pool, _test_container) = crate::test_helpers::create_test_app_with_testcontainers().await;
     
@@ -427,6 +431,7 @@ async fn test_delete_timer_unauthorized() {
 }
 
 #[actix_web::test]
+#[allow(unused_mut)]
 async fn test_get_public_timer_success() {
     let (srv, _pool, _test_container) = crate::test_helpers::create_test_app_with_testcontainers().await;
     

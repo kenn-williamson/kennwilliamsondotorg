@@ -35,6 +35,7 @@ async fn test_register_success() {
 }
 
 #[actix_web::test]
+#[allow(unused_mut)]
 async fn test_register_duplicate_email() {
     let (srv, _pool, _test_container) = crate::test_helpers::create_test_app_with_testcontainers().await;
     
@@ -65,6 +66,7 @@ async fn test_register_duplicate_email() {
 }
 
 #[actix_web::test]
+#[allow(unused_mut)]
 async fn test_login_success() {
     let (srv, _pool, _test_container) = crate::test_helpers::create_test_app_with_testcontainers().await;
     
@@ -195,6 +197,7 @@ async fn test_get_current_user_unauthorized() {
 }
 
 #[actix_web::test]
+#[allow(unused_mut)]
 async fn test_get_current_user_invalid_token() {
     let (srv, _pool, _test_container) = crate::test_helpers::create_test_app_with_testcontainers().await;
     
