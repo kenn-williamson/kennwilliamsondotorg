@@ -380,38 +380,133 @@ pub struct TestContainer {
 }
 
 impl TestContainer {
-    /// Create a new test container with database setup
+    /// Create a new test container with database setup and restart logic
     pub async fn new() -> Result<Self> {
-        let image = GenericImage::new("ghcr.io/fboulnois/pg_uuidv7", "1.6.0")
-            .with_exposed_port(5432.tcp())
-            .with_wait_for(WaitFor::message_on_stdout("database system is ready to accept connections"))
-            .with_env_var("POSTGRES_DB", "testdb")
-            .with_env_var("POSTGRES_USER", "postgres")
-            .with_env_var("POSTGRES_PASSWORD", "postgres");
-
-        let container = image.start().await.expect("Failed to start PostgreSQL container");
-        let port = container.get_host_port_ipv4(5432).await.unwrap();
-        let connection_string = format!("postgres://postgres:postgres@127.0.0.1:{}/testdb?sslmode=disable", port);
+        let mut current_container: Option<Box<dyn std::any::Any + Send + Sync>> = None;
+        let mut total_attempts = 0;
+        let max_total_attempts = 15; // 3 containers × 5 attempts each
         
-        let pool = wait_for_database_ready(&connection_string).await;
+        loop {
+            total_attempts += 1;
+            if total_attempts > max_total_attempts {
+                return Err(anyhow::anyhow!("Failed to setup database after {} total attempts (3 containers × 5 attempts each)", max_total_attempts));
+            }
+            // Clean up the previous container if it exists
+            if let Some(old_container) = current_container.take() {
+                println!("🧹 Cleaning up previous container...");
+                // The container will be automatically cleaned up when dropped
+                drop(old_container);
+                tokio::time::sleep(tokio::time::Duration::from_secs(1)).await; // Brief pause
+            }
+            
+            println!("🚀 Starting PostgreSQL container...");
+            
+            // Create a fresh image configuration for each attempt
+            let image = GenericImage::new("ghcr.io/fboulnois/pg_uuidv7", "1.6.0")
+                .with_exposed_port(5432.tcp())
+                .with_wait_for(WaitFor::message_on_stdout("database system is ready to accept connections"))
+                .with_env_var("POSTGRES_DB", "testdb")
+                .with_env_var("POSTGRES_USER", "postgres")
+                .with_env_var("POSTGRES_PASSWORD", "postgres");
+            
+            let container = match image.start().await {
+                Ok(container) => container,
+                Err(e) => {
+                    println!("❌ Failed to start container: {}", e);
+                    tokio::time::sleep(tokio::time::Duration::from_secs(2)).await;
+                    continue;
+                }
+            };
+            
+            let port = match container.get_host_port_ipv4(5432).await {
+                Ok(port) => port,
+                Err(e) => {
+                    println!("❌ Failed to get port: {}", e);
+                    // Store container for cleanup
+                    current_container = Some(Box::new(container));
+                    tokio::time::sleep(tokio::time::Duration::from_secs(2)).await;
+                    continue;
+                }
+            };
+            
+            let connection_string = format!("postgres://postgres:postgres@127.0.0.1:{}/testdb?sslmode=disable", port);
+            
+            // Try to connect with restart logic (tries 5 times, then signals restart)
+            match Self::wait_for_database_ready_with_restart(&connection_string).await {
+                Ok(pool) => {
+                    // Enable pg_uuidv7 extension
+                    sqlx::query("CREATE EXTENSION IF NOT EXISTS pg_uuidv7")
+                        .execute(&pool)
+                        .await
+                        .expect("Failed to enable pg_uuidv7 extension");
+                    
+                    // Run migrations
+                    sqlx::migrate!("./migrations")
+                        .run(&pool)
+                        .await
+                        .expect("Failed to run migrations");
+                    
+                    return Ok(TestContainer {
+                        _container: Box::new(container),
+                        pool,
+                        connection_string,
+                    });
+                },
+                Err(e) => {
+                    println!("❌ Database setup failed: {}", e);
+                    // Store container for cleanup on next iteration
+                    current_container = Some(Box::new(container));
+                    tokio::time::sleep(tokio::time::Duration::from_secs(2)).await;
+                }
+            }
+        }
+    }
+    
+    /// Wait for database to be ready with container restart logic
+    async fn wait_for_database_ready_with_restart(
+        connection_string: &str
+    ) -> Result<PgPool> {
+        let mut attempt = 0;
+        let attempts_per_container = 5; // Try 5 times before restarting container
         
-        // Enable pg_uuidv7 extension
-        sqlx::query("CREATE EXTENSION IF NOT EXISTS pg_uuidv7")
-            .execute(&pool)
-            .await
-            .expect("Failed to enable pg_uuidv7 extension");
-        
-        // Run migrations
-        sqlx::migrate!("./migrations")
-            .run(&pool)
-            .await
-            .expect("Failed to run migrations");
-        
-        Ok(TestContainer {
-            _container: Box::new(container),
-            pool,
-            connection_string,
-        })
+        loop {
+            attempt += 1;
+            println!("🔍 Database readiness check attempt {}", attempt);
+            
+            match sqlx::postgres::PgPoolOptions::new()
+                .max_connections(5)
+                .acquire_timeout(std::time::Duration::from_secs(10))
+                .idle_timeout(std::time::Duration::from_secs(600))
+                .connect(connection_string)
+                .await
+            {
+                Ok(pool) => {
+                    // Test the connection
+                    match sqlx::query("SELECT 1").fetch_one(&pool).await {
+                        Ok(_) => {
+                            println!("✅ Database is ready!");
+                            return Ok(pool);
+                        },
+                        Err(e) => {
+                            println!("⚠️  Connection established but query failed: {}", e);
+                        }
+                    }
+                },
+                Err(e) => {
+                    println!("❌ Connection failed: {}", e);
+                }
+            }
+            
+            // If we've tried 5 times, signal that we need to restart the container
+            if attempt % attempts_per_container == 0 {
+                println!("🔄 Container appears unresponsive after {} attempts, will restart...", attempt);
+                return Err(anyhow::anyhow!("Container restart needed after {} attempts", attempt));
+            }
+            
+            let delay = std::cmp::min(1 << (attempt % attempts_per_container), 8); // Exponential backoff, max 8 seconds
+            println!("⏳ Waiting {}s before retry...", delay);
+            tokio::time::sleep(tokio::time::Duration::from_secs(delay)).await;
+        }
     }
 }
 

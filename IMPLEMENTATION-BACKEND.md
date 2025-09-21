@@ -192,7 +192,7 @@ cargo test
 - **API Tests**: Endpoint testing in `tests/api/` directory with testcontainers
 - **Testcontainers Tests**: Container-based integration tests in `testcontainers_integration_simple.rs`
 - **Refresh Token Tests**: End-to-end refresh token testing in `refresh_token_validation.rs`
-- **Test Helpers**: Consolidated utilities in `test_helpers.rs` with proper container scope management
+- **Test Helpers**: Consolidated utilities in `test_helpers.rs` with proper container scope management and robust restart logic
 
 ### Repository Testing
 - **Mock Implementations**: Complete test coverage for all repository traits
@@ -210,16 +210,17 @@ cargo test
 - **Endpoint Tests**: Full request/response cycle testing with testcontainers
 - **Authentication Flow**: Complete auth flow testing including JWT validation
 - **Incident Timer Flow**: Complete CRUD operations and public access testing
+- **Phrase Flow**: Complete phrase management and suggestion testing
 - **Error Scenarios**: Testing error handling and validation
 - **Container Management**: TestContainer struct keeps containers alive during tests
-- **Status**: All API tests passing with comprehensive coverage
+- **Status**: All 36 API tests passing with comprehensive coverage
 
 ### Testcontainers Testing
 - **Container Isolation**: Each test gets its own PostgreSQL container
 - **Production Parity**: Uses exact same PostgreSQL image as production
 - **Extension Support**: pg_uuidv7 extension pre-installed and enabled
-- **Robust Connection**: Exponential backoff retry logic for container readiness
-- **Parallel Execution**: Tests run in parallel with isolated containers
+- **Robust Connection**: Exponential backoff retry logic with container restart strategy
+- **Parallel Execution**: Tests run in parallel with isolated containers and resource contention handling
 
 ### Test Infrastructure
 - **Consolidated Helpers**: Unified `test_helpers.rs` with all test utilities
@@ -227,6 +228,7 @@ cargo test
 - **Mock Services**: Easy switching between real and mock implementations
 - **Test Data**: Unique test data generation to prevent collisions
 - **Dead Code Cleanup**: Removed non-functional test_database.rs and integration files
+- **Container Restart Logic**: Robust retry strategy with proper cleanup for reliable parallel execution
 
 See [IMPLEMENTATION-TESTING.md](IMPLEMENTATION-TESTING.md#backend-testing) for detailed testing implementation.
 
