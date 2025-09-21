@@ -41,22 +41,6 @@
           </p>
         </div>
 
-        <!-- API Test Section -->
-        <div class="pt-8 p-4 bg-gray-50 rounded-lg">
-          <h3 class="text-lg font-semibold text-gray-800 mb-2">API Test</h3>
-          <button @click="testApi" class="mb-4 px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600">
-            Test API Call
-          </button>
-          <div v-if="apiMessage" class="text-green-600 font-mono text-sm">
-            {{ apiMessage }}
-          </div>
-          <div v-else-if="apiError" class="text-red-600 font-mono text-sm">
-            Error: {{ apiError }}
-          </div>
-          <div v-else class="text-gray-500 text-sm">
-            Click the button to test the API
-          </div>
-        </div>
 
         <!-- Subtle Navigation Hint -->
         <div class="pt-8">
@@ -107,42 +91,6 @@ useHead({
 // Control fallback display
 const showFallback = ref(false)
 
-// API test state
-const apiMessage = ref('')
-const apiError = ref('')
-
-// Test API function
-const testApi = async () => {
-  try {
-    console.log('Testing API endpoint...')
-    
-    // Try multiple endpoints to see which one works
-    const endpoints = ['/api/test', '/api/simple', '/api/health']
-    
-    for (const endpoint of endpoints) {
-      try {
-        console.log(`Trying ${endpoint}...`)
-        const { data: response } = await useFetch(endpoint)
-        if (!response.value) continue
-        console.log(`${endpoint} response:`, response.value)
-        apiMessage.value = `${endpoint}: ${JSON.stringify(response.value, null, 2)}`
-        apiError.value = ''
-        return
-      } catch (err) {
-        console.log(`${endpoint} failed:`, err.message)
-      }
-    }
-    
-    // If all endpoints fail
-    apiError.value = 'All API endpoints failed'
-    apiMessage.value = ''
-    
-  } catch (error) {
-    console.error('API test error:', error)
-    apiError.value = error.message || 'Failed to call API'
-    apiMessage.value = ''
-  }
-}
 </script>
 
 <style scoped>

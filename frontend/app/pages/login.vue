@@ -3,7 +3,7 @@
     <div class="max-w-md w-full">
       <!-- Header -->
       <div class="text-center mb-8">
-        <h1 class="text-3xl font-bold text-gray-900 mb-2">Sign In - TEST CHANGE</h1>
+        <h1 class="text-3xl font-bold text-gray-900 mb-2">Sign In</h1>
         <p class="text-gray-600">Welcome back to your digital sanctuary</p>
       </div>
 
@@ -105,10 +105,10 @@ useHead({
 const { loggedIn } = useUserSession()
 const router = useRouter()
 
-// Comment out the redirect to see if this is causing the issue
-// if (loggedIn.value) {
-//   await navigateTo('/')
-// }
+// Redirect if already authenticated
+if (loggedIn.value) {
+  await navigateTo('/')
+}
 
 // Form validation schema
 const validationSchema = loginSchema
