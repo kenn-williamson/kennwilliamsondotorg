@@ -264,7 +264,7 @@ pub async fn add_admin_role_to_user(pool: &sqlx::PgPool, user_id: uuid::Uuid) ->
 pub async fn create_test_jwt_token(user: &backend::models::db::user::User) -> Result<String, anyhow::Error> {
     use backend::services::auth::jwt::JwtService;
     
-    let jwt_secret = "test-jwt-secret-for-integration-tests".to_string();
+    let jwt_secret = "test-jwt-secret-for-api-tests".to_string();
     let jwt_service = JwtService::new(jwt_secret);
     
     jwt_service.generate_token(user).map_err(|e| e.into())
