@@ -2,32 +2,32 @@ use std::sync::Arc;
 use anyhow::Result;
 
 use crate::models::api::SystemStatsResponse;
-use crate::repositories::traits::{UserRepository, PhraseRepository};
+use crate::repositories::traits::{PhraseRepository, AdminRepository};
 
 /// Statistics service for admin operations
 pub struct StatsService {
-    user_repository: Arc<dyn UserRepository>,
     phrase_repository: Arc<dyn PhraseRepository>,
+    admin_repository: Arc<dyn AdminRepository>,
 }
 
 impl StatsService {
     pub fn new(
-        user_repository: Box<dyn UserRepository>,
         phrase_repository: Box<dyn PhraseRepository>,
+        admin_repository: Box<dyn AdminRepository>,
     ) -> Self {
         Self {
-            user_repository: Arc::from(user_repository),
             phrase_repository: Arc::from(phrase_repository),
+            admin_repository: Arc::from(admin_repository),
         }
     }
 
     /// Get system statistics
     pub async fn get_system_stats(&self) -> Result<SystemStatsResponse> {
         // Get total users count
-        let total_users = self.user_repository.count_all_users().await?;
+        let total_users = self.admin_repository.count_all_users().await?;
         
         // Get active users count
-        let active_users = self.user_repository.count_active_users().await?;
+        let active_users = self.admin_repository.count_active_users().await?;
         
         // Get pending suggestions count
         let pending_suggestions = self.phrase_repository.count_pending_suggestions().await?;

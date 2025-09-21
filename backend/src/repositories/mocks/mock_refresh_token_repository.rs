@@ -3,8 +3,8 @@ use async_trait::async_trait;
 use uuid::Uuid;
 use anyhow::Result;
 
-use crate::models::db::refresh_token::RefreshToken;
-use crate::repositories::traits::refresh_token_repository::{RefreshTokenRepository, CreateRefreshTokenData};
+use crate::models::db::refresh_token::{RefreshToken, CreateRefreshToken};
+use crate::repositories::traits::refresh_token_repository::RefreshTokenRepository;
 
 // Generate mock for RefreshTokenRepository trait
 mock! {
@@ -12,12 +12,11 @@ mock! {
     
     #[async_trait]
     impl RefreshTokenRepository for RefreshTokenRepository {
-        async fn create_token(&self, token_data: &CreateRefreshTokenData) -> Result<RefreshToken>;
+        async fn create_token(&self, token_data: &CreateRefreshToken) -> Result<RefreshToken>;
         async fn find_by_token(&self, token: &str) -> Result<Option<RefreshToken>>;
         async fn revoke_token(&self, token: &str) -> Result<()>;
         async fn revoke_all_user_tokens(&self, user_id: Uuid) -> Result<()>;
         async fn cleanup_expired_tokens(&self) -> Result<u64>;
-        async fn is_token_valid(&self, token: &str) -> Result<bool>;
     }
 }
 
@@ -43,10 +42,10 @@ mod tests {
     }
 
     // Helper function to create test data
-    fn create_test_token_data() -> CreateRefreshTokenData {
-        CreateRefreshTokenData {
+    fn create_test_token_data() -> CreateRefreshToken {
+        CreateRefreshToken {
             user_id: Uuid::new_v4(),
-            token: "test_token_hash".to_string(),
+            token_hash: "test_token_hash".to_string(),
             device_info: None,
             expires_at: Utc::now() + chrono::Duration::days(7),
         }
@@ -90,20 +89,20 @@ mod tests {
     }
 
     #[tokio::test]
-    async fn test_mock_is_token_valid() {
+    async fn test_mock_find_by_token_second() {
         let mut mock_repo = MockRefreshTokenRepository::new();
         
         // Setup mock expectation
         mock_repo
-            .expect_is_token_valid()
+            .expect_find_by_token()
             .times(1)
             .with(eq("valid_token"))
-            .returning(|_| Ok(true));
+            .returning(|_| Ok(Some(create_test_refresh_token())));
         
         // Test the mock
-        let result = mock_repo.is_token_valid("valid_token").await;
+        let result = mock_repo.find_by_token("valid_token").await;
         assert!(result.is_ok());
-        assert!(result.unwrap());
+        assert!(result.unwrap().is_some());
     }
 
     #[tokio::test]

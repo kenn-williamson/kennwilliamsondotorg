@@ -1,5 +1,5 @@
 # SQLx CLI container for database migrations using our setup-db.sh script
-FROM rust:1.89-alpine
+FROM rust:1.90-alpine
 
 # Install necessary packages for building SQLx and running bash scripts
 RUN apk add --no-cache \

@@ -2,9 +2,9 @@ use async_trait::async_trait;
 use uuid::Uuid;
 use anyhow::Result;
 
-use crate::models::db::{Phrase, PhraseSuggestion};
+use crate::models::db::PhraseSuggestion;
 use crate::models::api::{
-    CreatePhraseRequest, UpdatePhraseRequest, PhraseWithExclusion, UserPhrasesResponse
+    CreatePhraseRequest, UpdatePhraseRequest, UserPhrasesResponse
 };
 
 /// Repository trait for phrase operations

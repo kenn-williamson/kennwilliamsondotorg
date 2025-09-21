@@ -1,20 +1,19 @@
 use std::sync::Arc;
 use sqlx::PgPool;
 
-use crate::repositories::traits::{
-    UserRepository, RefreshTokenRepository, IncidentTimerRepository, PhraseRepository
-};
 use crate::repositories::postgres::{
     postgres_user_repository::PostgresUserRepository,
     postgres_refresh_token_repository::PostgresRefreshTokenRepository,
     postgres_incident_timer_repository::PostgresIncidentTimerRepository,
     postgres_phrase_repository::PostgresPhraseRepository,
+    postgres_admin_repository::PostgresAdminRepository,
 };
 use crate::repositories::mocks::{
     MockUserRepository,
     MockRefreshTokenRepository,
     MockIncidentTimerRepository,
     MockPhraseRepository,
+    MockAdminRepository,
 };
 
 use super::auth::AuthService;
@@ -32,22 +31,11 @@ pub struct ServiceContainer {
     pub phrase_moderation_service: Arc<PhraseModerationService>,
     pub stats_service: Arc<StatsService>,
     
-    // Repositories (for testing/debugging)
-    pub user_repository: Arc<dyn UserRepository>,
-    pub refresh_token_repository: Arc<dyn RefreshTokenRepository>,
-    pub incident_timer_repository: Arc<dyn IncidentTimerRepository>,
-    pub phrase_repository: Arc<dyn PhraseRepository>,
 }
 
 impl ServiceContainer {
     /// Create service container for development/production with PostgreSQL
     pub fn new(pool: PgPool, jwt_secret: String) -> Self {
-        // Create repositories
-        let user_repo = Arc::new(PostgresUserRepository::new(pool.clone()));
-        let refresh_token_repo = Arc::new(PostgresRefreshTokenRepository::new(pool.clone()));
-        let timer_repo = Arc::new(PostgresIncidentTimerRepository::new(pool.clone()));
-        let phrase_repo = Arc::new(PostgresPhraseRepository::new(pool.clone()));
-        
         // Create services with repository dependencies
         let auth_service = Arc::new(AuthService::new(
             Box::new(PostgresUserRepository::new(pool.clone())),
@@ -66,6 +54,7 @@ impl ServiceContainer {
         let admin_service = Arc::new(UserManagementService::new(
             Box::new(PostgresUserRepository::new(pool.clone())),
             Box::new(PostgresRefreshTokenRepository::new(pool.clone())),
+            Box::new(PostgresAdminRepository::new(pool.clone())),
         ));
         
         let phrase_moderation_service = Arc::new(PhraseModerationService::new(
@@ -73,8 +62,8 @@ impl ServiceContainer {
         ));
         
         let stats_service = Arc::new(StatsService::new(
-            Box::new(PostgresUserRepository::new(pool.clone())),
             Box::new(PostgresPhraseRepository::new(pool.clone())),
+            Box::new(PostgresAdminRepository::new(pool.clone())),
         ));
         
         Self {
@@ -84,27 +73,12 @@ impl ServiceContainer {
             admin_service,
             phrase_moderation_service,
             stats_service,
-            user_repository: user_repo,
-            refresh_token_repository: refresh_token_repo,
-            incident_timer_repository: timer_repo,
-            phrase_repository: phrase_repo,
         }
     }
     
     /// Factory method for testing with mocks
-    pub fn new_for_testing(
-        user_repo: Arc<dyn UserRepository>,
-        refresh_token_repo: Arc<dyn RefreshTokenRepository>,
-        timer_repo: Arc<dyn IncidentTimerRepository>,
-        phrase_repo: Arc<dyn PhraseRepository>,
-        jwt_secret: String,
-    ) -> Self {
-        // For testing, we need to create new instances of the repositories
-        // Since we can't clone trait objects, we'll create new instances
-        // This is a limitation of the current design - in a real testing scenario,
-        // we'd want to use the actual mock repositories
-        
-        // Create new instances by cloning the Arc and creating new Box<dyn Trait>
+    pub fn new_for_testing(jwt_secret: String) -> Self {
+        // Create services with mock repositories for testing
         let auth_service = Arc::new(AuthService::new(
             Box::new(MockUserRepository::new()),
             Box::new(MockRefreshTokenRepository::new()),
@@ -122,6 +96,7 @@ impl ServiceContainer {
         let admin_service = Arc::new(UserManagementService::new(
             Box::new(MockUserRepository::new()),
             Box::new(MockRefreshTokenRepository::new()),
+            Box::new(MockAdminRepository::new()),
         ));
         
         let phrase_moderation_service = Arc::new(PhraseModerationService::new(
@@ -129,8 +104,8 @@ impl ServiceContainer {
         ));
         
         let stats_service = Arc::new(StatsService::new(
-            Box::new(MockUserRepository::new()),
             Box::new(MockPhraseRepository::new()),
+            Box::new(MockAdminRepository::new()),
         ));
         
         Self {
@@ -140,10 +115,6 @@ impl ServiceContainer {
             admin_service,
             phrase_moderation_service,
             stats_service,
-            user_repository: user_repo,
-            refresh_token_repository: refresh_token_repo,
-            incident_timer_repository: timer_repo,
-            phrase_repository: phrase_repo,
         }
     }
     
@@ -154,12 +125,7 @@ impl ServiceContainer {
     
     /// Testing environment - use mocks
     pub fn new_testing(jwt_secret: String) -> Self {
-        let user_repo = Arc::new(MockUserRepository::new());
-        let refresh_token_repo = Arc::new(MockRefreshTokenRepository::new());
-        let timer_repo = Arc::new(MockIncidentTimerRepository::new());
-        let phrase_repo = Arc::new(MockPhraseRepository::new());
-        
-        Self::new_for_testing(user_repo, refresh_token_repo, timer_repo, phrase_repo, jwt_secret)
+        Self::new_for_testing(jwt_secret)
     }
     
     /// Production environment - use PostgreSQL with connection pooling

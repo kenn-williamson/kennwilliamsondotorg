@@ -14,8 +14,6 @@ mock! {
     impl IncidentTimerRepository for IncidentTimerRepository {
         async fn create_timer(&self, timer_data: &CreateTimerData) -> Result<IncidentTimer>;
         async fn find_by_user_id(&self, user_id: Uuid) -> Result<Vec<IncidentTimer>>;
-        async fn find_by_id(&self, id: Uuid) -> Result<Option<IncidentTimer>>;
-        async fn find_latest_by_user_slug(&self, slug: &str) -> Result<Option<IncidentTimer>>;
         async fn find_latest_by_user_slug_with_display_name(&self, slug: &str) -> Result<Option<(IncidentTimer, String)>>;
         async fn update_timer(&self, id: Uuid, updates: &TimerUpdates) -> Result<IncidentTimer>;
         async fn delete_timer(&self, id: Uuid) -> Result<()>;
@@ -88,24 +86,6 @@ mod tests {
         assert_eq!(timers.len(), 1);
     }
 
-    #[tokio::test]
-    async fn test_mock_find_by_id() {
-        let mut mock_repo = MockIncidentTimerRepository::new();
-        let timer_id = Uuid::new_v4();
-        
-        // Setup mock expectation
-        mock_repo
-            .expect_find_by_id()
-            .times(1)
-            .with(eq(timer_id))
-            .returning(|_| Ok(Some(create_test_incident_timer())));
-        
-        // Test the mock
-        let result = mock_repo.find_by_id(timer_id).await;
-        assert!(result.is_ok());
-        let timer = result.unwrap();
-        assert!(timer.is_some());
-    }
 
     #[tokio::test]
     async fn test_mock_timer_belongs_to_user() {
@@ -143,19 +123,4 @@ mod tests {
         assert!(result.is_ok());
     }
 
-    #[tokio::test]
-    async fn test_mock_error_handling() {
-        let mut mock_repo = MockIncidentTimerRepository::new();
-        
-        // Setup mock to return an error
-        mock_repo
-            .expect_find_by_id()
-            .times(1)
-            .returning(|_| Err(anyhow::anyhow!("Database connection failed")));
-        
-        // Test error handling
-        let result = mock_repo.find_by_id(Uuid::new_v4()).await;
-        assert!(result.is_err());
-        assert!(result.unwrap_err().to_string().contains("Database connection failed"));
-    }
 }

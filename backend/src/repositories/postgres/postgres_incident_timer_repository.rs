@@ -56,36 +56,6 @@ impl IncidentTimerRepository for PostgresIncidentTimerRepository {
         Ok(timers)
     }
 
-    async fn find_by_id(&self, id: Uuid) -> Result<Option<IncidentTimer>> {
-        let timer = sqlx::query_as::<_, IncidentTimer>(
-            "SELECT * FROM incident_timers WHERE id = $1"
-        )
-        .bind(id)
-        .fetch_optional(&self.pool)
-        .await?;
-
-        Ok(timer)
-    }
-
-    async fn find_latest_by_user_slug(&self, slug: &str) -> Result<Option<IncidentTimer>> {
-        // Match exact query from IncidentTimerService::get_latest_by_user_slug
-        let timer = sqlx::query_as!(
-            IncidentTimer,
-            r#"
-            SELECT it.id, it.user_id, it.reset_timestamp, it.notes, it.created_at, it.updated_at
-            FROM incident_timers it
-            JOIN users u ON it.user_id = u.id
-            WHERE u.slug = $1
-            ORDER BY it.reset_timestamp DESC
-            LIMIT 1
-            "#,
-            slug
-        )
-        .fetch_optional(&self.pool)
-        .await?;
-
-        Ok(timer)
-    }
 
     async fn find_latest_by_user_slug_with_display_name(&self, slug: &str) -> Result<Option<(IncidentTimer, String)>> {
         // Query to get both timer and user display name

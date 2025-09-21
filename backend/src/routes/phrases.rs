@@ -1,5 +1,4 @@
 use actix_web::{web, HttpMessage, HttpRequest, HttpResponse, Result};
-use std::sync::Arc;
 use uuid::Uuid;
 
 use crate::models::api::{

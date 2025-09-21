@@ -1,7 +1,6 @@
 use actix_web::{test, web, App};
 use sqlx::PgPool;
 use std::env;
-use uuid::Uuid;
 use chrono::{Duration, Utc};
 
 use backend::services::container::ServiceContainer;
@@ -43,7 +42,7 @@ async fn test_refresh_token_complete_flow() {
     ).await;
 
     // Step 1: Register a new user
-    let test_email = test_helpers::unique_test_email("refresh_test");
+    let test_email = test_helpers::unique_test_email();
     let register_request = CreateUserRequest {
         email: test_email.clone(),
         password: "password123".to_string(),
@@ -160,10 +159,10 @@ async fn test_refresh_token_expiration() {
     // Create a user
     let user = test_helpers::create_test_user_in_db(
         &pool,
-        &test_helpers::unique_test_email("expiry_test"),
+        &test_helpers::unique_test_email(),
         "$2b$04$test_hash",
         "Expiry Test User",
-        &test_helpers::unique_test_slug("expiry-test-user")
+        &test_helpers::unique_test_slug()
     ).await
     .expect("Failed to create test user");
 
@@ -176,7 +175,6 @@ async fn test_refresh_token_expiration() {
         user.id,
         token_hash,
         expired_time,
-        None, // No device info
     ).await
     .expect("Failed to insert expired token");
 

@@ -1,5 +1,5 @@
 # Development Dockerfile for Rust backend with hot reload
-FROM rust:1.89.0-alpine AS dev
+FROM rust:1.90-alpine AS dev
 
 # Install development dependencies
 RUN apk add --no-cache \
@@ -33,7 +33,8 @@ EXPOSE 8080
 # Create non-root user for security
 RUN addgroup -g 1000 appuser && \
     adduser -D -u 1000 -G appuser appuser && \
-    chown -R appuser:appuser /app
+    chown -R appuser:appuser /app && \
+    chown -R appuser:appuser /usr/local/cargo
 
 USER appuser
 

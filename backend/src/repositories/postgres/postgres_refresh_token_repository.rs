@@ -3,8 +3,8 @@ use sqlx::PgPool;
 use uuid::Uuid;
 use anyhow::Result;
 
-use crate::models::db::refresh_token::RefreshToken;
-use crate::repositories::traits::refresh_token_repository::{RefreshTokenRepository, CreateRefreshTokenData};
+use crate::models::db::refresh_token::{RefreshToken, CreateRefreshToken};
+use crate::repositories::traits::refresh_token_repository::RefreshTokenRepository;
 
 /// PostgreSQL implementation of RefreshTokenRepository
 pub struct PostgresRefreshTokenRepository {
@@ -19,7 +19,7 @@ impl PostgresRefreshTokenRepository {
 
 #[async_trait]
 impl RefreshTokenRepository for PostgresRefreshTokenRepository {
-    async fn create_token(&self, token_data: &CreateRefreshTokenData) -> Result<RefreshToken> {
+    async fn create_token(&self, token_data: &CreateRefreshToken) -> Result<RefreshToken> {
         // Match exact query from RefreshTokenService::create_refresh_token_from_dto
         let token = sqlx::query_as!(
             RefreshToken,
@@ -29,7 +29,7 @@ impl RefreshTokenRepository for PostgresRefreshTokenRepository {
             RETURNING id, user_id, token_hash, device_info, expires_at, created_at, updated_at, last_used_at
             "#,
             token_data.user_id,
-            token_data.token,
+            token_data.token_hash,
             token_data.device_info,
             token_data.expires_at
         )
@@ -90,14 +90,4 @@ impl RefreshTokenRepository for PostgresRefreshTokenRepository {
         Ok(result.rows_affected())
     }
 
-    async fn is_token_valid(&self, token: &str) -> Result<bool> {
-        let count: i64 = sqlx::query_scalar(
-            "SELECT COUNT(*) FROM refresh_tokens WHERE token_hash = $1 AND expires_at > NOW()"
-        )
-        .bind(token)
-        .fetch_one(&self.pool)
-        .await?;
-
-        Ok(count > 0)
-    }
 }

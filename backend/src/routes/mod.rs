@@ -33,6 +33,7 @@ pub fn configure_app_routes(cfg: &mut web::ServiceConfig) {
                         .service(
                             web::scope("/auth")
                                 .route("/me", web::get().to(auth::get_current_user))
+                                .route("/revoke", web::post().to(auth::revoke))
                                 .route("/revoke-all", web::post().to(auth::revoke_all))
                                 .route("/profile", web::put().to(auth::update_profile))
                                 .route("/change-password", web::put().to(auth::change_password))
