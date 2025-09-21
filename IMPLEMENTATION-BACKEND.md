@@ -85,20 +85,12 @@ backend/
 │   └── 20250914134703_add_phrases_system.sql
 ├── tests/               # Comprehensive test suite
 │   ├── mod.rs           # Test module organization
-│   ├── test_helpers.rs  # Database utilities for testing
+│   ├── test_helpers.rs  # Consolidated test utilities with container scope management
 │   ├── testcontainers_integration_simple.rs # Testcontainers integration tests
 │   ├── refresh_token_validation.rs # Refresh token validation tests
-│   ├── unit/            # Unit tests (repository layer)
-│   ├── integration/     # Integration tests
-│   │   ├── mod.rs
-│   │   ├── test_app.rs  # Test application setup
-│   │   ├── test_database.rs # Database test utilities
-│   │   ├── simple_database_test.rs # Database connectivity tests
-│   │   ├── simple_repository_test.rs # Repository integration tests
-│   │   └── user_repository_tests.rs # User repository specific tests
 │   └── api/             # API endpoint tests
 │       ├── mod.rs
-│       └── auth_api_tests.rs # Authentication API tests
+│       └── testcontainers_auth_api_tests.rs # Authentication API tests (some failing)
 ├── Cargo.toml           # Dependencies
 ├── Dockerfile           # Multi-stage container build
 └── .env                 # Environment configuration
@@ -195,11 +187,11 @@ cargo test
 ## Testing
 
 ### Test Organization
-- **Unit Tests**: Repository layer tests in `tests/unit/` directory
-- **Integration Tests**: Service and database integration tests in `tests/integration/` directory
-- **API Tests**: Endpoint testing in `tests/api/` directory
+- **Unit Tests**: Repository and service layer tests in `src/` modules
+- **API Tests**: Endpoint testing in `tests/api/` directory with testcontainers
 - **Testcontainers Tests**: Container-based integration tests in `testcontainers_integration_simple.rs`
-- **Test Helpers**: Shared utilities in `test_helpers.rs`
+- **Refresh Token Tests**: End-to-end refresh token testing in `refresh_token_validation.rs`
+- **Test Helpers**: Consolidated utilities in `test_helpers.rs` with proper container scope management
 
 ### Repository Testing
 - **Mock Implementations**: Complete test coverage for all repository traits
@@ -207,17 +199,18 @@ cargo test
 - **Error Handling**: Comprehensive error scenario testing
 - **Coverage**: All CRUD operations and helper methods tested
 
-### Integration Testing
-- **Database Tests**: Real database operations with test data isolation
-- **Repository Integration**: PostgreSQL repository implementations tested
-- **Service Integration**: Service layer with real repository dependencies
-- **Test Database**: Isolated test database per test run
+### Service Layer Testing
+- **Unit Tests**: 37 unit tests across auth service modules
+- **Mock Dependencies**: Services use mock repositories for isolated testing
+- **Business Logic**: Focused testing of service layer logic
+- **Error Scenarios**: Comprehensive error handling and validation testing
 
 ### API Testing
-- **Endpoint Tests**: Full request/response cycle testing
+- **Endpoint Tests**: Full request/response cycle testing with testcontainers
 - **Authentication Flow**: Complete auth flow testing including JWT validation
 - **Error Scenarios**: Testing error handling and validation
-- **Service Injection**: Testing with proper service container setup
+- **Container Management**: TestContainer struct keeps containers alive during tests
+- **Status**: Some tests failing with assertion errors, needs debugging
 
 ### Testcontainers Testing
 - **Container Isolation**: Each test gets its own PostgreSQL container
@@ -227,10 +220,11 @@ cargo test
 - **Parallel Execution**: Tests run in parallel with isolated containers
 
 ### Test Infrastructure
-- **Test App Factory**: `create_test_app()` for consistent test setup
-- **Database Utilities**: `create_test_database()` for isolated test databases
+- **Consolidated Helpers**: Unified `test_helpers.rs` with all test utilities
+- **Container Management**: TestContainer struct for proper container scope management
 - **Mock Services**: Easy switching between real and mock implementations
 - **Test Data**: Unique test data generation to prevent collisions
+- **Dead Code Cleanup**: Removed non-functional test_database.rs and integration files
 
 See [IMPLEMENTATION-TESTING.md](IMPLEMENTATION-TESTING.md#backend-testing) for detailed testing implementation.
 

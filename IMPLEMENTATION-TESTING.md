@@ -8,10 +8,10 @@ Testing architecture and implementation for backend with comprehensive test cove
 ### Current Test Coverage
 - **Repository Layer**: 20 unit tests passing (mock implementations)
 - **Service Layer**: 37 unit tests in service modules (auth service components)
-- **Integration Tests**: 26 integration tests across multiple test files
-- **API Layer**: 10 API endpoint tests (auth endpoints)
-- **Database Tests**: 3 database isolation and migration tests
+- **API Layer**: 10 API endpoint tests (auth endpoints) - some failing, needs debugging
 - **Testcontainers Tests**: 3 testcontainers integration tests (container per test, parallel execution)
+- **Refresh Token Tests**: 3 refresh token validation tests
+- **Test Infrastructure**: Consolidated test helpers with proper container scope management
 
 ### Test Architecture by Layer
 
@@ -28,16 +28,16 @@ Testing architecture and implementation for backend with comprehensive test cove
 - **Coverage**: Business logic and error handling for auth operations
 
 **API Layer** (🚧 In Progress):
-- **Framework**: Rust with actix-test and sqlx
-- **Tests**: 10 API endpoint tests (auth endpoints)
-- **Execution**: Parallel with isolated database per test
-- **Database**: Isolated test database per test
+- **Framework**: Rust with actix-test and testcontainers
+- **Tests**: 10 API endpoint tests (auth endpoints) - some failing
+- **Execution**: Parallel with isolated container per test
+- **Database**: Testcontainers with proper scope management
 
-**Integration Tests** (✅ Complete):
-- **Framework**: Rust with actix-test and sqlx
-- **Tests**: 26 integration tests across multiple test files
-- **Execution**: Parallel with isolated database per test
-- **Coverage**: End-to-end testing with real database operations
+**Refresh Token Tests** (✅ Complete):
+- **Framework**: Rust with actix-test and testcontainers
+- **Tests**: 3 refresh token validation tests
+- **Execution**: Parallel with isolated container per test
+- **Coverage**: End-to-end refresh token flow testing
 
 **Testcontainers Tests** (✅ Complete):
 - **Framework**: Rust with testcontainers and sqlx
@@ -68,16 +68,11 @@ backend/
 │               └── slug.rs                  # 2 unit tests
 └── tests/                  # Integration and API tests
     ├── api/                # API endpoint tests
-    │   └── auth_api_tests.rs               # 10 API tests
-    ├── integration/        # Integration tests
-    │   ├── user_repository_tests.rs        # 7 integration tests
-    │   ├── simple_repository_test.rs       # 3 integration tests
-    │   ├── simple_database_test.rs         # 3 database tests
-    │   ├── test_app.rs                     # 2 test helper tests
-    │   └── test_database.rs                # 1 database helper test
+    │   └── testcontainers_auth_api_tests.rs # 10 API tests (some failing)
     ├── testcontainers_integration_simple.rs # 3 testcontainers tests
     ├── refresh_token_validation.rs         # 3 refresh token tests
-    └── test_helpers.rs                     # Database utilities
+    ├── test_helpers.rs                     # Consolidated test utilities
+    └── mod.rs                              # Test module organization
 ```
 
 ### Test Coverage by Layer
@@ -99,15 +94,13 @@ backend/
 **API Layer** (🚧 In Progress - 10 tests):
 - **Auth API Tests**: 10 API endpoint tests (registration, login, profile, password changes)
 - **Coverage**: Authentication endpoints with real HTTP requests
+- **Status**: Some tests failing with assertion errors, needs debugging
 - **Missing**: Incident timer, phrases, and admin API endpoints
 
-**Integration Tests** (✅ Complete - 26 tests):
-- **User Repository Integration**: 7 tests (real database operations)
-- **Simple Repository Tests**: 3 tests (basic CRUD operations)
-- **Database Tests**: 3 tests (isolation, migrations, cleanup)
-- **Test App Helpers**: 2 tests (test app creation utilities)
-- **Database Helpers**: 1 test (database creation utilities)
+**Refresh Token Tests** (✅ Complete - 3 tests):
 - **Refresh Token Validation**: 3 tests (end-to-end refresh token flow)
+- **Coverage**: Complete refresh token lifecycle testing
+- **Execution**: Testcontainers with proper container scope management
 
 **Testcontainers Tests** (✅ Complete - 3 tests):
 - **Database Operations**: 1 test (basic database operations with container)
@@ -135,12 +128,12 @@ backend/
 - **Authentication**: Complete auth flow testing
 - **HTTP Testing**: Real HTTP requests with actix-test
 
-**Integration Tests** (✅ Complete):
-- **Database Integration**: Real database operations with per-test isolation
-- **End-to-End Testing**: Complete request/response cycles
-- **Test Utilities**: Comprehensive test helper functions
-- **Database Management**: Automatic per-test database creation and cleanup
-- **Parallel Execution**: Tests run in parallel with isolated databases
+**Refresh Token Tests** (✅ Complete):
+- **Database Integration**: Real database operations with testcontainers
+- **End-to-End Testing**: Complete refresh token request/response cycles
+- **Test Utilities**: Consolidated test helper functions
+- **Container Management**: Proper container scope management with TestContainer struct
+- **Parallel Execution**: Tests run in parallel with isolated containers
 
 **Testcontainers Tests** (✅ Complete):
 - **Container Isolation**: Each test gets its own PostgreSQL container
@@ -161,19 +154,19 @@ cargo test --lib
 # Testcontainers tests (parallel execution with isolated containers)
 cargo test --test testcontainers_integration_simple
 
-# Integration tests (parallel execution with isolated databases)
+# Refresh token tests (parallel execution with isolated containers)
 cargo test --test refresh_token_validation
 
-# API tests (parallel execution with isolated databases)
-cargo test --test auth_api_tests
+# API tests (parallel execution with isolated containers)
+cargo test --test mod
 
-# All tests (parallel execution with database isolation)
+# All tests (parallel execution with container isolation)
 cargo test
 ```
 
-**Environment**: `.env.test` with isolated test database per test
+**Environment**: Testcontainers with PostgreSQL + pg_uuidv7 extension
 
-**Note**: Tests currently have compilation issues that need to be resolved before running.
+**Note**: Some API tests are failing with assertion errors and need debugging.
 
 ## Test Data Strategy
 
@@ -215,15 +208,15 @@ cargo test
 ### Current Status
 - **Repository Layer**: 20 unit tests passing (100% coverage)
 - **Service Layer**: 37 unit tests passing (100% auth service coverage)
-- **API Layer**: 10 API tests (auth endpoints only)
-- **Integration Tests**: 26 integration tests passing
+- **API Layer**: 10 API tests (auth endpoints only) - some failing
+- **Refresh Token Tests**: 3 tests passing (100% coverage)
 - **Testcontainers Tests**: 3 testcontainers tests passing (100% parallel execution)
 
 ### Target Coverage
 - **Repository Layer**: ✅ Complete (20/20 tests)
 - **Service Layer**: ✅ Complete (37/37 tests)
-- **API Layer**: 🚧 In Progress (10/50+ planned tests)
-- **Integration Tests**: ✅ Complete (26/26 tests)
+- **API Layer**: 🚧 In Progress (10/50+ planned tests) - needs debugging
+- **Refresh Token Tests**: ✅ Complete (3/3 tests)
 - **Testcontainers Tests**: ✅ Complete (3/3 tests)
 - **Error Cases**: Comprehensive coverage across all layers
 
