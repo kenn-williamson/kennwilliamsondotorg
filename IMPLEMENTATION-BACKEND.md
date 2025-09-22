@@ -67,13 +67,27 @@ backend/
 │   │   │       ├── profile.rs  # Profile management
 │   │   │       ├── password.rs # Password operations
 │   │   │       └── slug.rs     # Username slug generation
-│   │   ├── incident_timer.rs # Timer business logic
-│   │   ├── phrase.rs     # Phrase and suggestion business logic
-│   │   └── admin/        # Admin services
+│   │   ├── incident_timer/ # Timer business logic (modularized)
+│   │   │   ├── mod.rs
+│   │   │   ├── create.rs
+│   │   │   ├── read.rs
+│   │   │   ├── update.rs
+│   │   │   └── delete.rs
+│   │   ├── phrase/       # Phrase and suggestion business logic (modularized)
+│   │   │   ├── mod.rs
+│   │   │   ├── public_access.rs
+│   │   │   ├── user_management.rs
+│   │   │   ├── admin_management.rs
+│   │   │   ├── exclusions.rs
+│   │   │   └── suggestions.rs
+│   │   └── admin/        # Admin services (modularized)
 │   │       ├── mod.rs    # Admin service exports
-│   │       ├── user_management.rs # User management operations
-│   │       ├── phrase_moderation.rs # Phrase suggestion moderation
-│   │       └── stats.rs  # System statistics
+│   │       ├── user_management/ # User management service modules
+│   │       │   └── mod.rs # UserManagementService + 7 unit tests
+│   │       ├── phrase_moderation/ # Phrase moderation service modules
+│   │       │   └── mod.rs # PhraseModerationService + 5 unit tests
+│   │       └── stats/    # Statistics service modules
+│   │           └── mod.rs # StatsService + 3 unit tests
 │   ├── middleware/       # Custom middleware
 │   │   ├── mod.rs        # Middleware exports
 │   │   ├── auth.rs       # JWT validation with role extraction
@@ -110,7 +124,9 @@ backend/
 - **Database Integration**: SQLx with compile-time query verification
 - **3-Layer Architecture**: Clean separation with repository pattern and dependency injection
 - **Modular Services**: Auth service split into focused modules (register, login, refresh, profile, password, slug)
-- **Admin Services**: Dedicated admin service layer for user management, phrase moderation, and system statistics
+- **Modular Incident Timer Service**: Split into focused modules (create, read, update, delete) with 19 unit tests
+- **Modular Phrase Service**: Split into focused modules (public_access, user_management, admin_management, exclusions, suggestions) with comprehensive test coverage
+- **Modular Admin Services**: Split into focused modules (user_management, phrase_moderation, stats) with 15 unit tests
 - **Route Scoping**: Public/protected/admin route organization with appropriate middleware
 - **Testing**: Comprehensive test suite with unit, integration, API, and testcontainers tests
 
@@ -189,50 +205,7 @@ cargo test
 
 ## Testing
 
-### Test Organization
-- **Unit Tests**: Repository and service layer tests in `src/` modules
-- **API Tests**: Endpoint testing in `tests/api/` directory with testcontainers
-- **Testcontainers Tests**: Container-based integration tests in `testcontainers_integration_simple.rs`
-- **Refresh Token Tests**: End-to-end refresh token testing in `refresh_token_validation.rs`
-- **Test Helpers**: Consolidated utilities in `test_helpers.rs` with proper container scope management and robust restart logic
-
-### Repository Testing
-- **Mock Implementations**: Complete test coverage for all repository traits
-- **Unit Tests**: Fast, isolated testing without database dependencies
-- **Error Handling**: Comprehensive error scenario testing
-- **Coverage**: All CRUD operations and helper methods tested
-
-### Service Layer Testing
-- **Unit Tests**: 37 unit tests across auth service modules
-- **Mock Dependencies**: Services use mock repositories for isolated testing
-- **Business Logic**: Focused testing of service layer logic
-- **Error Scenarios**: Comprehensive error handling and validation testing
-
-### API Testing
-- **Endpoint Tests**: Full request/response cycle testing with testcontainers
-- **Authentication Flow**: Complete auth flow testing including JWT validation
-- **Incident Timer Flow**: Complete CRUD operations and public access testing
-- **Phrase Flow**: Complete phrase management and suggestion testing
-- **Error Scenarios**: Testing error handling and validation
-- **Container Management**: TestContainer struct keeps containers alive during tests
-- **Status**: All 55 API tests passing with comprehensive coverage
-
-### Testcontainers Testing
-- **Container Isolation**: Each test gets its own PostgreSQL container
-- **Production Parity**: Uses exact same PostgreSQL image as production
-- **Extension Support**: pg_uuidv7 extension pre-installed and enabled
-- **Robust Connection**: Exponential backoff retry logic with container restart strategy
-- **Parallel Execution**: Tests run in parallel with isolated containers and resource contention handling
-
-### Test Infrastructure
-- **Consolidated Helpers**: Unified `test_helpers.rs` with all test utilities
-- **Container Management**: TestContainer struct for proper container scope management
-- **Mock Services**: Easy switching between real and mock implementations
-- **Test Data**: Unique test data generation to prevent collisions
-- **Dead Code Cleanup**: Removed non-functional test_database.rs and integration files
-- **Container Restart Logic**: Robust retry strategy with proper cleanup for reliable parallel execution
-
-See [IMPLEMENTATION-TESTING.md](IMPLEMENTATION-TESTING.md#backend-testing) for detailed testing implementation.
+See [IMPLEMENTATION-TESTING.md](IMPLEMENTATION-TESTING.md) for comprehensive testing documentation including 134 total tests across all layers with parallel execution and container isolation.
 
 ## Database Integration
 - **Connection**: SQLx with connection pooling

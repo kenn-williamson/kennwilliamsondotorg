@@ -2,9 +2,9 @@ use async_trait::async_trait;
 use uuid::Uuid;
 use anyhow::Result;
 
-use crate::models::db::PhraseSuggestion;
+use crate::models::db::{Phrase, PhraseSuggestion, PhraseWithUserExclusionView};
 use crate::models::api::{
-    CreatePhraseRequest, UpdatePhraseRequest, UserPhrasesResponse
+    CreatePhraseRequest, UpdatePhraseRequest
 };
 
 /// Repository trait for phrase operations
@@ -22,10 +22,10 @@ pub trait PhraseRepository: Send + Sync {
         user_id: Uuid, 
         limit: Option<i64>, 
         offset: Option<i64>
-    ) -> Result<Vec<crate::models::api::PhraseResponse>>;
+    ) -> Result<Vec<Phrase>>;
     
     /// Get all active phrases for a user with exclusion status (single API call)
-    async fn get_user_phrases_with_exclusions(&self, user_id: Uuid) -> Result<UserPhrasesResponse>;
+    async fn get_user_phrases_with_exclusions(&self, user_id: Uuid) -> Result<Vec<PhraseWithUserExclusionView>>;
     
     /// Get all phrases (admin only)
     async fn get_all_phrases(
@@ -33,13 +33,13 @@ pub trait PhraseRepository: Send + Sync {
         include_inactive: bool, 
         limit: Option<i64>, 
         offset: Option<i64>
-    ) -> Result<Vec<crate::models::api::PhraseResponse>>;
+    ) -> Result<Vec<Phrase>>;
     
     /// Create a new phrase (admin only)
-    async fn create_phrase(&self, request: CreatePhraseRequest, created_by: Uuid) -> Result<crate::models::api::PhraseResponse>;
+    async fn create_phrase(&self, request: CreatePhraseRequest, created_by: Uuid) -> Result<Phrase>;
     
     /// Update a phrase (admin only)
-    async fn update_phrase(&self, phrase_id: Uuid, request: UpdatePhraseRequest) -> Result<crate::models::api::PhraseResponse>;
+    async fn update_phrase(&self, phrase_id: Uuid, request: UpdatePhraseRequest) -> Result<Phrase>;
     
     /// Exclude a phrase for a user
     async fn exclude_phrase_for_user(&self, user_id: Uuid, phrase_id: Uuid) -> Result<()>;

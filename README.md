@@ -20,6 +20,7 @@ A modern web application built with Nuxt.js 4 and Rust, featuring JWT-based auth
 - **Real-time Updates**: Live timer displays that update every second with steampunk flip-clock animations
 - **Responsive Design**: Mobile-first design with Gothic construction theming and steampunk aesthetics
 - **Hot Reload Development**: Instant updates for both frontend and backend during development
+- **Comprehensive Testing**: 134 total tests across all layers with modular service architecture
 
 ## Technology Stack
 

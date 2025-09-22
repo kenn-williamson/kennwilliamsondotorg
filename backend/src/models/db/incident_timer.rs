@@ -2,7 +2,7 @@ use serde::Serialize;
 use sqlx::types::chrono::{DateTime, Utc};
 use uuid::Uuid;
 
-#[derive(Debug, Serialize, sqlx::FromRow)]
+#[derive(Debug, Clone, Serialize, sqlx::FromRow)]
 pub struct IncidentTimer {
     pub id: Uuid,
     pub user_id: Uuid,

@@ -5,10 +5,9 @@ use anyhow::Result;
 
 use crate::repositories::traits::PhraseRepository;
 use crate::models::api::{
-    CreatePhraseRequest, UpdatePhraseRequest, PhraseResponse, 
-    UserPhrasesResponse, PhraseSuggestionRequest
+    CreatePhraseRequest, UpdatePhraseRequest, PhraseSuggestionRequest
 };
-use crate::models::db::PhraseSuggestion;
+use crate::models::db::{Phrase, PhraseSuggestion, PhraseWithUserExclusionView};
 
 // Generate mock for PhraseRepository trait
 mock! {
@@ -23,16 +22,16 @@ mock! {
             user_id: Uuid, 
             limit: Option<i64>, 
             offset: Option<i64>
-        ) -> Result<Vec<PhraseResponse>>;
-        async fn get_user_phrases_with_exclusions(&self, user_id: Uuid) -> Result<UserPhrasesResponse>;
+        ) -> Result<Vec<Phrase>>;
+        async fn get_user_phrases_with_exclusions(&self, user_id: Uuid) -> Result<Vec<PhraseWithUserExclusionView>>;
         async fn get_all_phrases(
             &self, 
             include_inactive: bool, 
             limit: Option<i64>, 
             offset: Option<i64>
-        ) -> Result<Vec<PhraseResponse>>;
-        async fn create_phrase(&self, request: CreatePhraseRequest, created_by: Uuid) -> Result<PhraseResponse>;
-        async fn update_phrase(&self, phrase_id: Uuid, request: UpdatePhraseRequest) -> Result<PhraseResponse>;
+        ) -> Result<Vec<Phrase>>;
+        async fn create_phrase(&self, request: CreatePhraseRequest, created_by: Uuid) -> Result<Phrase>;
+        async fn update_phrase(&self, phrase_id: Uuid, request: UpdatePhraseRequest) -> Result<Phrase>;
         async fn exclude_phrase_for_user(&self, user_id: Uuid, phrase_id: Uuid) -> Result<()>;
         async fn remove_phrase_exclusion(&self, user_id: Uuid, phrase_id: Uuid) -> Result<()>;
         async fn get_user_excluded_phrases(&self, user_id: Uuid) -> Result<Vec<(Uuid, String, chrono::DateTime<chrono::Utc>)>>;
@@ -65,9 +64,9 @@ mod tests {
     use chrono::Utc;
     use mockall::predicate::eq;
 
-    // Helper function to create a test phrase response
-    fn create_test_phrase_response() -> PhraseResponse {
-        PhraseResponse {
+    // Helper function to create a test phrase
+    fn create_test_phrase() -> Phrase {
+        Phrase {
             id: Uuid::new_v4(),
             phrase_text: "Test phrase".to_string(),
             active: true,
@@ -136,7 +135,7 @@ mod tests {
             .expect_get_user_phrases()
             .times(1)
             .with(eq(user_id), eq(Some(10)), eq(Some(0)))
-            .returning(|_, _, _| Ok(vec![create_test_phrase_response()]));
+            .returning(|_, _, _| Ok(vec![create_test_phrase()]));
         
         // Test the mock
         let result = mock_repo.get_user_phrases(user_id, Some(10), Some(0)).await;

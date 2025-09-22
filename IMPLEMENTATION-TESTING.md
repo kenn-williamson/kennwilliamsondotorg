@@ -7,11 +7,12 @@ Testing architecture and implementation for backend with comprehensive test cove
 
 ### Current Test Coverage
 - **Repository Layer**: 20 unit tests passing (mock implementations)
-- **Service Layer**: 37 unit tests in service modules (auth service components)
+- **Service Layer**: 71 unit tests across all service modules (37 auth + 19 incident timer + 15 admin)
 - **API Layer**: 55 API endpoint tests (auth + incident timer + phrase + admin + health endpoints) - all passing
 - **Testcontainers Tests**: 3 testcontainers integration tests (container per test, parallel execution)
 - **Refresh Token Tests**: 3 refresh token validation tests
 - **Test Infrastructure**: Consolidated test helpers with proper container scope management and robust restart logic
+- **Total Tests**: 134 tests passing with comprehensive coverage across all layers
 
 ### Test Architecture by Layer
 
@@ -23,13 +24,14 @@ Testing architecture and implementation for backend with comprehensive test cove
 
 **Service Layer** (✅ Complete):
 - **Framework**: Rust with mock repositories
-- **Tests**: 37 unit tests across auth service modules
+- **Tests**: 71 unit tests across all service modules (37 auth + 19 incident timer + 15 admin)
 - **Execution**: Fast unit tests with mocked dependencies
-- **Coverage**: Business logic and error handling for auth operations
+- **Coverage**: Business logic and error handling for all service operations
+- **Modular Design**: Tests embedded in each service module with `#[cfg(test)]`
 
-**API Layer** (🚧 In Progress):
+**API Layer** (✅ Complete):
 - **Framework**: Rust with actix-test and testcontainers
-- **Tests**: 36 API endpoint tests (auth + incident timer + phrase endpoints) - all passing
+- **Tests**: 55 API endpoint tests (auth + incident timer + phrase + admin + health endpoints) - all passing
 - **Execution**: Parallel with isolated container per test and robust restart logic
 - **Database**: Testcontainers with proper scope management
 
@@ -58,19 +60,32 @@ backend/
 │   │   ├── mock_phrase_repository.rs        # 5 unit tests
 │   │   └── mock_admin_repository.rs         # 0 unit tests (mock only)
 │   └── services/           # Service layer unit tests
-│       └── auth/
-│           └── auth_service/
-│               ├── register.rs              # 3 unit tests
-│               ├── login.rs                 # 5 unit tests
-│               ├── refresh_token.rs         # 9 unit tests
-│               ├── profile.rs               # 11 unit tests
-│               ├── password.rs              # 7 unit tests
-│               └── slug.rs                  # 2 unit tests
+│       ├── auth/
+│       │   └── auth_service/
+│       │       ├── register.rs              # 3 unit tests
+│       │       ├── login.rs                 # 5 unit tests
+│       │       ├── refresh_token.rs         # 9 unit tests
+│       │       ├── profile.rs               # 11 unit tests
+│       │       ├── password.rs              # 7 unit tests
+│       │       └── slug.rs                  # 2 unit tests
+│       ├── incident_timer/  # Incident timer service tests
+│       │   ├── create.rs                   # 4 unit tests
+│       │   ├── read.rs                     # 6 unit tests
+│       │   ├── update.rs                   # 5 unit tests
+│       │   └── delete.rs                   # 4 unit tests
+│       └── phrase/         # Phrase service tests
+│           ├── public_access.rs            # 3 unit tests
+│           ├── user_management.rs          # 6 unit tests
+│           ├── admin_management.rs         # 6 unit tests
+│           ├── exclusions.rs               # 6 unit tests
+│           └── suggestions.rs              # 5 unit tests
 └── tests/                  # Integration and API tests
     ├── api/                # API endpoint tests
     │   ├── testcontainers_auth_api_tests.rs # 10 auth API tests
     │   ├── testcontainers_incident_timer_api_tests.rs # 14 incident timer API tests
-    │   └── testcontainers_phrase_api_tests.rs # 12 phrase API tests
+    │   ├── testcontainers_phrase_api_tests.rs # 12 phrase API tests
+    │   ├── testcontainers_admin_api_tests.rs # 14 admin API tests
+    │   └── testcontainers_health_api_tests.rs # 5 health API tests
     ├── testcontainers_integration_simple.rs # 3 testcontainers tests
     ├── refresh_token_validation.rs         # 3 refresh token tests
     ├── test_helpers.rs                     # Consolidated test utilities
@@ -85,13 +100,25 @@ backend/
 - **IncidentTimerRepository**: 6 unit tests (CRUD operations, ownership validation, error handling)
 - **PhraseRepository**: 5 unit tests (random selection, user phrases, suggestions, error handling)
 
-**Service Layer** (✅ Complete - 37 tests):
-- **Register Service**: 3 unit tests (user registration, validation, error handling)
-- **Login Service**: 5 unit tests (authentication, JWT generation, error cases)
-- **Refresh Token Service**: 9 unit tests (token refresh, expiration, validation)
-- **Profile Service**: 11 unit tests (profile updates, slug validation, error handling)
-- **Password Service**: 7 unit tests (password changes, validation, security)
-- **Slug Service**: 2 unit tests (slug generation and validation)
+**Service Layer** (✅ Complete - 56+ tests):
+- **Auth Service Modules**: 37 unit tests
+  - **Register Service**: 3 unit tests (user registration, validation, error handling)
+  - **Login Service**: 5 unit tests (authentication, JWT generation, error cases)
+  - **Refresh Token Service**: 9 unit tests (token refresh, expiration, validation)
+  - **Profile Service**: 11 unit tests (profile updates, slug validation, error handling)
+  - **Password Service**: 7 unit tests (password changes, validation, security)
+  - **Slug Service**: 2 unit tests (slug generation and validation)
+- **Incident Timer Service Modules**: 19 unit tests
+  - **Create Module**: 4 unit tests (timer creation, validation, error handling)
+  - **Read Module**: 6 unit tests (timer retrieval, public access, error scenarios)
+  - **Update Module**: 5 unit tests (timer updates, ownership validation, error handling)
+  - **Delete Module**: 4 unit tests (timer deletion, ownership validation, error handling)
+- **Phrase Service Modules**: 26 unit tests
+  - **Public Access**: 3 unit tests (public phrase access, error handling)
+  - **User Management**: 6 unit tests (user phrases, exclusions, error scenarios)
+  - **Admin Management**: 6 unit tests (admin operations, validation, error handling)
+  - **Exclusions**: 6 unit tests (phrase exclusions, error scenarios)
+  - **Suggestions**: 5 unit tests (phrase suggestions, validation, error handling)
 
 **API Layer** (✅ Complete - 55 tests):
 - **Auth API Tests**: 10 API endpoint tests (registration, login, profile, password changes)
@@ -212,18 +239,20 @@ cargo test
 
 ### Current Status
 - **Repository Layer**: 20 unit tests passing (100% coverage)
-- **Service Layer**: 37 unit tests passing (100% auth service coverage)
+- **Service Layer**: 56+ unit tests passing (100% coverage across all service modules)
 - **API Layer**: 55 API tests (auth + incident timer + phrase + admin + health endpoints) - all passing
 - **Refresh Token Tests**: 3 tests passing (100% coverage)
 - **Testcontainers Tests**: 3 testcontainers tests passing (100% parallel execution)
+- **Total Tests**: 119 tests passing with comprehensive coverage across all layers
 
 ### Target Coverage
 - **Repository Layer**: ✅ Complete (20/20 tests)
-- **Service Layer**: ✅ Complete (37/37 tests)
+- **Service Layer**: ✅ Complete (56+/56+ tests) - all service modules covered
 - **API Layer**: ✅ Complete (55/55 tests) - all API endpoints covered
 - **Refresh Token Tests**: ✅ Complete (3/3 tests)
 - **Testcontainers Tests**: ✅ Complete (3/3 tests)
 - **Error Cases**: Comprehensive coverage across all layers
+- **Total Coverage**: ✅ Complete (119/119 tests) - comprehensive coverage achieved
 
 ## Container Restart Logic Implementation
 

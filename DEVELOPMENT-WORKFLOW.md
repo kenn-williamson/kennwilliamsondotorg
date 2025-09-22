@@ -82,8 +82,8 @@ docker-compose --env-file .env.production -f docker-compose.yml -f docker-compos
 # Create test database with migrations
 ./scripts/setup-test-db.sh
 
-# Run tests
-cd backend && cargo test -- --test-threads 1
+# Run tests (see IMPLEMENTATION-TESTING.md for detailed testing documentation)
+cd backend && cargo test -- --test-threads=4
 
 # Clean up test database when done
 ./scripts/cleanup-test-db.sh

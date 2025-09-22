@@ -23,13 +23,13 @@ pub struct PhraseListResponse {
     pub total: i64,
 }
 
-#[derive(Debug, Deserialize)]
+#[derive(Debug, Deserialize, Clone, PartialEq)]
 pub struct CreatePhraseRequest {
     pub phrase_text: String,
     pub active: Option<bool>,
 }
 
-#[derive(Debug, Deserialize)]
+#[derive(Debug, Deserialize, Clone, PartialEq)]
 pub struct UpdatePhraseRequest {
     pub phrase_text: Option<String>,
     pub active: Option<bool>,

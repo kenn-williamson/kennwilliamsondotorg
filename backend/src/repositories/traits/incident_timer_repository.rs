@@ -6,7 +6,7 @@ use anyhow::Result;
 use crate::models::db::incident_timer::IncidentTimer;
 
 /// Data structure for creating a new incident timer
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, PartialEq)]
 pub struct CreateTimerData {
     pub user_id: Uuid,
     pub reset_timestamp: DateTime<Utc>,
@@ -14,7 +14,7 @@ pub struct CreateTimerData {
 }
 
 /// Data structure for updating an incident timer
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, PartialEq)]
 pub struct TimerUpdates {
     pub reset_timestamp: Option<DateTime<Utc>>,
     pub notes: Option<String>,

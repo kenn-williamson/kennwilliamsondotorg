@@ -26,3 +26,9 @@ pub struct PhraseSuggestion {
     pub updated_at: DateTime<Utc>,
 }
 
+#[derive(Debug, Clone, Serialize)]
+pub struct PhraseWithUserExclusionView {
+    pub phrase: Phrase,
+    pub is_excluded: bool,
+}
+

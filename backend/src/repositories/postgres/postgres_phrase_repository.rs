@@ -4,10 +4,9 @@ use anyhow::Result;
 use sqlx::PgPool;
 
 use crate::repositories::traits::PhraseRepository;
-use crate::models::db::{Phrase, PhraseSuggestion};
+use crate::models::db::{Phrase, PhraseSuggestion, PhraseWithUserExclusionView};
 use crate::models::api::{
-    CreatePhraseRequest, UpdatePhraseRequest, PhraseResponse, PhraseWithExclusion, 
-    UserPhrasesResponse, PhraseSuggestionRequest
+    CreatePhraseRequest, UpdatePhraseRequest, PhraseSuggestionRequest
 };
 
 pub struct PostgresPhraseRepository {
@@ -72,7 +71,7 @@ impl PhraseRepository for PostgresPhraseRepository {
         user_id: Uuid, 
         limit: Option<i64>, 
         offset: Option<i64>
-    ) -> Result<Vec<PhraseResponse>> {
+    ) -> Result<Vec<Phrase>> {
         let limit = limit.unwrap_or(50);
         let offset = offset.unwrap_or(0);
 
@@ -97,10 +96,10 @@ impl PhraseRepository for PostgresPhraseRepository {
         .fetch_all(&self.pool)
         .await?;
 
-        Ok(phrases.into_iter().map(PhraseResponse::from).collect())
+        Ok(phrases)
     }
 
-    async fn get_user_phrases_with_exclusions(&self, user_id: Uuid) -> Result<UserPhrasesResponse> {
+    async fn get_user_phrases_with_exclusions(&self, user_id: Uuid) -> Result<Vec<PhraseWithUserExclusionView>> {
         let phrases = sqlx::query!(
             r#"
             SELECT 
@@ -121,25 +120,26 @@ impl PhraseRepository for PostgresPhraseRepository {
         .fetch_all(&self.pool)
         .await?;
 
-        let phrases_with_exclusions: Vec<PhraseWithExclusion> = phrases
+        let phrases_with_exclusions: Vec<PhraseWithUserExclusionView> = phrases
             .into_iter()
-            .map(|row| PhraseWithExclusion {
-                id: row.id,
-                phrase_text: row.phrase_text,
-                active: row.active,
-                created_by: row.created_by,
-                created_at: row.created_at,
-                updated_at: row.updated_at,
-                is_excluded: row.is_excluded.unwrap_or(false),
+            .map(|row| {
+                let phrase = Phrase {
+                    id: row.id,
+                    phrase_text: row.phrase_text,
+                    active: row.active,
+                    created_by: row.created_by,
+                    created_at: row.created_at,
+                    updated_at: row.updated_at,
+                };
+                let is_excluded = row.is_excluded.unwrap_or(false);
+                PhraseWithUserExclusionView {
+                    phrase,
+                    is_excluded,
+                }
             })
             .collect();
 
-        let total = phrases_with_exclusions.len() as i64;
-
-        Ok(UserPhrasesResponse {
-            phrases: phrases_with_exclusions,
-            total,
-        })
+        Ok(phrases_with_exclusions)
     }
 
     async fn get_all_phrases(
@@ -147,7 +147,7 @@ impl PhraseRepository for PostgresPhraseRepository {
         include_inactive: bool, 
         limit: Option<i64>, 
         offset: Option<i64>
-    ) -> Result<Vec<PhraseResponse>> {
+    ) -> Result<Vec<Phrase>> {
         let limit = limit.unwrap_or(50);
         let offset = offset.unwrap_or(0);
 
@@ -174,10 +174,10 @@ impl PhraseRepository for PostgresPhraseRepository {
             .fetch_all(&self.pool)
             .await?;
 
-        Ok(phrases.into_iter().map(PhraseResponse::from).collect())
+        Ok(phrases)
     }
 
-    async fn create_phrase(&self, request: CreatePhraseRequest, created_by: Uuid) -> Result<PhraseResponse> {
+    async fn create_phrase(&self, request: CreatePhraseRequest, created_by: Uuid) -> Result<Phrase> {
         let active = request.active.unwrap_or(true);
 
         let phrase = sqlx::query_as!(
@@ -194,10 +194,10 @@ impl PhraseRepository for PostgresPhraseRepository {
         .fetch_one(&self.pool)
         .await?;
 
-        Ok(PhraseResponse::from(phrase))
+        Ok(phrase)
     }
 
-    async fn update_phrase(&self, phrase_id: Uuid, request: UpdatePhraseRequest) -> Result<PhraseResponse> {
+    async fn update_phrase(&self, phrase_id: Uuid, request: UpdatePhraseRequest) -> Result<Phrase> {
         let phrase = sqlx::query_as!(
             Phrase,
             r#"
@@ -216,7 +216,7 @@ impl PhraseRepository for PostgresPhraseRepository {
         .fetch_one(&self.pool)
         .await?;
 
-        Ok(PhraseResponse::from(phrase))
+        Ok(phrase)
     }
 
     async fn exclude_phrase_for_user(&self, user_id: Uuid, phrase_id: Uuid) -> Result<()> {
