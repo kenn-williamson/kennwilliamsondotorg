@@ -92,6 +92,7 @@
 <script setup>
 import { useForm, Field, ErrorMessage } from 'vee-validate'
 import { loginSchema } from '#shared/schemas/auth'
+import { useAuthActions } from '~/composables/useAuthActions'
 
 // Page meta
 useHead({
@@ -119,8 +120,10 @@ const form = reactive({
   password: '',
 })
 
-const isLoading = ref(false)
 const serverError = ref('')
+
+// Auth actions
+const { login, isLoading, error } = useAuthActions()
 
 // Form validation composable
 const { errors, meta, handleSubmit } = useForm({
@@ -131,11 +134,9 @@ const { errors, meta, handleSubmit } = useForm({
 // Handle form submission
 const handleLogin = async () => {
   try {
-    isLoading.value = true
     serverError.value = ''
 
-    const authService = useAuthService()
-    const result = await authService.login({
+    const result = await login({
       email: form.email,
       password: form.password,
     })
@@ -163,8 +164,6 @@ const handleLogin = async () => {
     } else {
       serverError.value = error.message || 'Login failed. Please try again.'
     }
-  } finally {
-    isLoading.value = false
   }
 }
 

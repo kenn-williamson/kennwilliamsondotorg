@@ -1,13 +1,13 @@
 <template>
   <div class="overview-tab">
     <!-- Loading State -->
-    <div v-if="adminStore.isLoading" class="flex justify-center items-center py-12">
+    <div v-if="isLoading" class="flex justify-center items-center py-12">
       <div class="animate-spin rounded-full h-8 w-8 border-b-2 border-gray-900"></div>
     </div>
 
     <!-- Error State -->
-    <div v-else-if="adminStore.error" class="bg-red-50 border border-red-200 rounded-md p-4 mb-6">
-      <p class="text-red-800 text-sm">{{ adminStore.error }}</p>
+    <div v-else-if="error" class="bg-red-50 border border-red-200 rounded-md p-4 mb-6">
+      <p class="text-red-800 text-sm">{{ error }}</p>
       <button 
         @click="refreshStats"
         class="mt-2 text-sm text-red-600 hover:text-red-700 underline"
@@ -96,17 +96,19 @@
 
 <script setup lang="ts">
 import { useAdminStore } from '~/stores/admin'
+import { useAdminActions } from '~/composables/useAdminActions'
 
 const adminStore = useAdminStore()
+const { fetchStats, isLoading, error } = useAdminActions()
 
 // Load stats on mount
 onMounted(async () => {
-  await adminStore.fetchStats()
+  await fetchStats()
 })
 
 // Refresh stats function
 const refreshStats = async () => {
-  await adminStore.fetchStats()
+  await fetchStats()
 }
 </script>
 

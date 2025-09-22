@@ -18,11 +18,7 @@
 </template>
 
 <script setup lang="ts">
-interface Tab {
-  id: string
-  label: string
-  icon: string
-}
+import type { Tab } from '#shared/types'
 
 const props = defineProps<{
   activeTab: string

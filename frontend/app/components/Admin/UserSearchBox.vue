@@ -29,8 +29,10 @@
 
 <script setup lang="ts">
 import { useAdminStore } from '~/stores/admin'
+import { useAdminActions } from '~/composables/useAdminActions'
 
 const adminStore = useAdminStore()
+const { fetchUsers, isLoading, error } = useAdminActions()
 
 // Local search query
 const searchQuery = ref('')
@@ -47,14 +49,14 @@ const onSearchInput = () => {
   // Set new timeout for debounced search
   searchTimeout = setTimeout(async () => {
     adminStore.setSearchQuery(searchQuery.value)
-    await adminStore.fetchUsers(searchQuery.value)
+    await fetchUsers(searchQuery.value)
   }, 300) // 300ms debounce
 }
 
 const clearSearch = () => {
   searchQuery.value = ''
   adminStore.setSearchQuery('')
-  adminStore.fetchUsers('')
+  fetchUsers('')
 }
 
 // Watch for external search query changes

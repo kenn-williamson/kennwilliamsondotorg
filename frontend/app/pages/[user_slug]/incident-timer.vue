@@ -6,7 +6,7 @@
     <div class="max-w-4xl w-full text-center relative z-10">
       
       <!-- Loading State -->
-      <div v-if="timerStore.loading" class="steampunk-loading-card">
+      <div v-if="isLoading" class="steampunk-loading-card">
         <div class="loading-gears">
           <div class="loading-gear gear-1"></div>
           <div class="loading-gear gear-2"></div>
@@ -15,7 +15,7 @@
       </div>
 
       <!-- Error State -->
-      <div v-else-if="timerStore.error" class="steampunk-error-card">
+      <div v-else-if="error" class="steampunk-error-card">
         <div class="error-icon">
           <svg viewBox="0 0 24 24" class="error-svg">
             <path d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L4.082 16.5c-.77.833.192 2.5 1.732 2.5z" 
@@ -62,9 +62,11 @@
 
 <script setup>
 import { storeToRefs } from 'pinia'
+import { useIncidentTimerActions } from '~/composables/useIncidentTimerActions'
 
 const route = useRoute()
 const timerStore = useIncidentTimerStore()
+const { fetchPublicTimer, stopLiveTimerUpdates, isLoading, error } = useIncidentTimerActions()
 
 // Get user slug from route params
 const userSlug = String(route.params.user_slug);
@@ -99,13 +101,13 @@ const timeBreakdown = computed(() => activeTimerBreakdown.value)
 
 // Load public timer data
 onMounted(async () => {
-  await timerStore.fetchPublicTimer(userSlug)
+  await fetchPublicTimer(userSlug)
 })
 
 // Cleanup on unmount
 onUnmounted(() => {
   // Stop live timer when component unmounts
-  timerStore.stopLiveTimerUpdates()
+  stopLiveTimerUpdates()
 })
 </script>
 

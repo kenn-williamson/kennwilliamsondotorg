@@ -119,15 +119,14 @@
 
 <script setup lang="ts">
 import { ref, computed, onMounted } from 'vue'
-import { usePhraseService } from '~/composables/usePhraseService'
+import { usePhrasesActions } from '~/composables/usePhrasesActions'
 import type { PhraseSuggestion } from '#shared/types/phrases'
 
-const phraseService = usePhraseService()
+const { fetchPhraseSuggestions, isLoading, error } = usePhrasesActions()
 
 const allSuggestions = ref<PhraseSuggestion[]>([])
 const statusFilter = ref('')
 const searchQuery = ref('')
-const isLoading = ref(false)
 const isEditing = ref(false)
 const isDeleting = ref(false)
 
@@ -158,14 +157,11 @@ onMounted(async () => {
 })
 
 const loadSuggestions = async () => {
-  isLoading.value = true
   try {
-    const response = await phraseService.fetchPhraseSuggestions()
+    const response = await fetchPhraseSuggestions()
     allSuggestions.value = response.suggestions
   } catch (error) {
     console.error('Error loading suggestions:', error)
-  } finally {
-    isLoading.value = false
   }
 }
 

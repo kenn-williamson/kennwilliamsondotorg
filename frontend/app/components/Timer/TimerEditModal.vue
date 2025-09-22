@@ -45,10 +45,10 @@
           </button>
           <button
             type="submit"
-            :disabled="loading"
+            :disabled="isLoading"
             class="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 disabled:opacity-50 transition-colors duration-200"
           >
-            {{ loading ? 'Updating...' : 'Update Timer' }}
+            {{ isLoading ? 'Updating...' : 'Update Timer' }}
           </button>
         </div>
       </form>
@@ -60,6 +60,7 @@
 import { useForm, useField } from 'vee-validate'
 import { timerEditFormSchema } from '#shared/schemas/timers'
 import { toDatetimeLocalInput, fromDatetimeLocalInput } from '~/utils/dateUtils'
+import { useIncidentTimerActions } from '~/composables/useIncidentTimerActions'
 
 const props = defineProps({
   show: {
@@ -76,7 +77,7 @@ const props = defineProps({
   }
 })
 
-const emit = defineEmits(['close', 'updated'])
+const emit = defineEmits(['close'])
 
 // Edit form validation with VeeValidate + Yup
 const editFormSchema = timerEditFormSchema
@@ -92,6 +93,9 @@ const { handleSubmit: handleEditSubmit, resetForm: resetEditForm, errors: editEr
 const { value: editNotes } = useField('notes')
 const { value: editResetTimestamp } = useField('reset_timestamp')
 
+// Action composable
+const { updateTimer, isLoading } = useIncidentTimerActions()
+
 // Handle form submission
 const handleEdit = handleEditSubmit(async (values) => {
   try {
@@ -100,7 +104,8 @@ const handleEdit = handleEditSubmit(async (values) => {
       reset_timestamp: fromDatetimeLocalInput(values.reset_timestamp)
     }
     
-    emit('updated', { id: props.timer.id, ...updateData })
+    await updateTimer(props.timer.id, updateData)
+    emit('close') // Close modal after successful update
   } catch (error) {
     console.error('Failed to update timer:', error)
   }

@@ -21,7 +21,6 @@
           <AccountInformationForm 
             v-else-if="user"
             :user="user"
-            @profile-updated="handleProfileUpdated"
           />
           <div v-else-if="userError" class="text-red-600">
             Failed to load profile data: {{ userError.message }}
@@ -39,9 +38,7 @@
           <p class="mt-1 text-sm text-gray-500">Change your password to keep your account secure.</p>
         </div>
         <div class="px-6 py-4">
-          <SecurityForm 
-            @password-changed="handlePasswordChanged"
-          />
+          <SecurityForm />
         </div>
       </div>
     </div>
@@ -78,17 +75,5 @@ if (userError.value?.statusCode === 401) {
   await navigateTo('/login')
 }
 
-// Event handlers
-const handleProfileUpdated = async (updatedUser) => {
-  // Refresh user data from backend
-  await refreshUser()
-  
-  // Show success message (you could add a toast notification here)
-  console.log('Profile updated successfully')
-}
-
-const handlePasswordChanged = () => {
-  // Show success message (you could add a toast notification here)
-  console.log('Password changed successfully')
-}
+// Event handlers removed - components handle success via action composables
 </script>

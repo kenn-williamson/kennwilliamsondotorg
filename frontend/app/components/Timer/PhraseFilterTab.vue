@@ -28,7 +28,7 @@
       </div>
 
       <!-- Phrases Table -->
-      <div v-if="phrasesStore.isLoading" class="loading-state">
+      <div v-if="isLoading" class="loading-state">
         <p>Loading phrases...</p>
       </div>
 
@@ -66,7 +66,7 @@
             </div>
             <div class="col-action">
               <button
-                @click="togglePhraseExclusion(phrase.id)"
+                @click="handleTogglePhraseExclusion(phrase.id)"
                 class="toggle-button"
                 :class="{ 
                   'excluded': isPhraseExcluded(phrase.id),
@@ -89,9 +89,11 @@
 <script setup lang="ts">
 import { ref, computed, onMounted } from 'vue'
 import { usePhrasesStore } from '~/stores/phrases'
+import { usePhrasesActions } from '~/composables/usePhrasesActions'
 import type { PhraseWithExclusion } from '#shared/types/phrases'
 
 const phrasesStore = usePhrasesStore()
+const { loadPhrasesForUser, togglePhraseExclusion, isLoading, error } = usePhrasesActions()
 
 const searchQuery = ref('')
 const togglingPhrases = ref(new Set<string>())
@@ -112,11 +114,7 @@ onMounted(async () => {
 })
 
 const loadData = async () => {
-  try {
-    await phrasesStore.loadPhrasesForUser()
-  } catch (error) {
-    console.error('Error loading phrase data:', error)
-  }
+  await loadPhrasesForUser()
 }
 
 const filterPhrases = () => {
@@ -128,11 +126,11 @@ const isPhraseExcluded = (phraseId: string) => {
   return phrase?.is_excluded || false
 }
 
-const togglePhraseExclusion = async (phraseId: string) => {
+const handleTogglePhraseExclusion = async (phraseId: string) => {
   togglingPhrases.value.add(phraseId)
   
   try {
-    await phrasesStore.togglePhraseExclusion(phraseId)
+    await togglePhraseExclusion(phraseId)
   } catch (error) {
     console.error('Error toggling phrase exclusion:', error)
     alert('Error updating phrase filter. Please try again.')

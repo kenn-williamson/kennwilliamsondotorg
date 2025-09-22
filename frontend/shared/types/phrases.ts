@@ -32,6 +32,7 @@ export interface PhraseSuggestion {
   admin_reason?: string
   created_at: string
   updated_at: string
+  user_display_name: string
 }
 
 // Response types

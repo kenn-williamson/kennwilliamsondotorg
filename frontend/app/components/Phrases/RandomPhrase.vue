@@ -28,12 +28,9 @@
 </template>
 
 <script setup lang="ts">
-interface Props {
-  userSlug?: string // Optional user slug - if not provided, uses authenticated endpoint
-  refreshInterval?: number // Optional refresh interval in milliseconds
-}
+import type { RandomPhraseProps } from '#shared/types'
 
-const props = withDefaults(defineProps<Props>(), {
+const props = withDefaults(defineProps<RandomPhraseProps>(), {
   userSlug: undefined,
   refreshInterval: 0 // 0 means no auto-refresh
 })

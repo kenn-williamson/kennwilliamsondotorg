@@ -7,7 +7,7 @@ export default defineNuxtRouteMiddleware(async (to, from) => {
   }
   
   // Check if user has admin role
-  if (!user.value.roles?.includes('admin')) {
+  if (!user.value || !('roles' in user.value) || !Array.isArray(user.value.roles) || !user.value.roles.includes('admin')) {
     return navigateTo('/')
   }
 })

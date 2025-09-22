@@ -2,6 +2,9 @@
  * Common type definitions shared across the application
  */
 
+// Generic fetcher type for service functions
+export type Fetcher = <T = any>(url: string, options?: any) => Promise<T>
+
 // API response wrapper
 export interface ApiResponse<T = any> {
   data?: T

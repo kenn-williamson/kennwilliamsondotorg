@@ -102,12 +102,12 @@
 import { ref, computed, watch } from 'vue'
 import { useForm, Field, ErrorMessage } from 'vee-validate'
 import { passwordChangeSchema } from '#shared/schemas/auth'
+import { useAuthProfileActions } from '~/composables/useAuthProfileActions'
 
-// Emits
-const emit = defineEmits(['password-changed'])
+// No emits needed - parent will handle success via action composable
 
 // Composables
-const { changePassword, isLoading, error, hasError } = useAuthProfileService()
+const { changePassword, isLoading, error, hasError } = useAuthProfileActions()
 
 // Form setup
 const { handleSubmit, errors, isSubmitting, setFieldValue, values } = useForm({
@@ -158,9 +158,6 @@ const onSubmit = handleSubmit(async (values) => {
       current_password: values.current_password,
       new_password: values.new_password
     })
-    
-    // Emit success event
-    emit('password-changed')
     
     // Clear form
     form.value.current_password = ''

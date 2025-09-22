@@ -25,16 +25,18 @@
     <h2 class="text-xl font-semibold text-gray-900 mb-2">No Active Timer</h2>
     <p class="text-gray-600 mb-4">Start tracking your incident-free time by creating your first timer.</p>
     <button
-      @click="$emit('create-timer')"
-      class="px-6 py-3 bg-blue-600 text-white rounded-md hover:bg-blue-700 transition-colors duration-200 font-medium"
+      @click="handleCreateTimer"
+      :disabled="isLoading"
+      class="px-6 py-3 bg-blue-600 text-white rounded-md hover:bg-blue-700 disabled:opacity-50 transition-colors duration-200 font-medium"
     >
-      Create First Timer
+      {{ isLoading ? 'Creating...' : 'Create First Timer' }}
     </button>
   </div>
 </template>
 
 <script setup>
 import { formatDisplayDate } from '~/utils/dateUtils'
+import { useIncidentTimerActions } from '~/composables/useIncidentTimerActions'
 
 const props = defineProps({
   timer: {
@@ -60,7 +62,21 @@ const props = defineProps({
   }
 })
 
-defineEmits(['create-timer'])
+// Action composable
+const { createTimer, isLoading } = useIncidentTimerActions()
+
+// Handle create timer
+const handleCreateTimer = async () => {
+  try {
+    const timerData = {
+      reset_timestamp: new Date().toISOString(),
+      notes: undefined
+    }
+    await createTimer(timerData)
+  } catch (error) {
+    console.error('Error creating timer:', error)
+  }
+}
 
 // Format date for display using utility
 const formatDate = (dateString) => {

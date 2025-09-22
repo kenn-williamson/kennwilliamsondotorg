@@ -62,21 +62,29 @@ frontend/
 │   │   │   └── index.vue  # Admin panel main page
 │   │   └── [user_slug]/
 │   │       └── incident-timer.vue # Public timer display
-│   ├── stores/            # Pinia stores
-│   │   ├── incident-timers.ts # Timer management state
-│   │   └── phrases.ts     # Phrases management state
+│   ├── stores/            # Pure Pinia stores (no service calls)
+│   │   ├── incident-timers.ts # Pure timer state management
+│   │   ├── phrases.ts     # Pure phrase state management
+│   │   └── admin.ts       # Pure admin state management
 │   ├── middleware/        # Route middleware
 │   │   ├── auth.ts        # Route protection
 │   │   └── admin.ts       # Admin route protection
 │   ├── composables/       # Composition API logic
 │   │   ├── useAuthFetch.ts # HTTP client with auth interceptors
-│   │   ├── useAuthService.ts # Authentication operations
 │   │   ├── useBackendFetch.ts # Direct backend client with automatic JWT management
 │   │   ├── useJwtManager.ts # JWT token management with automatic refresh
-│   │   ├── useIncidentTimerService.ts # Timer CRUD operations
-│   │   ├── usePhraseService.ts # Phrases CRUD operations
-│   │   ├── useAdminService.ts # Admin panel operations
-│   │   └── useBaseService.ts # Base service utilities
+│   │   ├── useBaseService.ts # Base service utilities
+│   │   ├── useAuthActions.ts # Authentication operations orchestration
+│   │   ├── useAuthProfileActions.ts # Profile management operations orchestration
+│   │   ├── usePhrasesActions.ts # Phrase operations orchestration
+│   │   ├── useAdminActions.ts # Admin operations orchestration
+│   │   └── useIncidentTimerActions.ts # Timer operations orchestration
+│   ├── services/          # Pure services (no Vue context)
+│   │   ├── authService.ts # Pure authentication operations
+│   │   ├── authProfileService.ts # Pure profile operations
+│   │   ├── phraseService.ts # Pure phrase operations
+│   │   ├── adminService.ts # Pure admin operations
+│   │   └── incidentTimerService.ts # Pure timer operations
 │   ├── types/             # TypeScript definitions
 │   │   └── phrases.ts     # Phrases type definitions
 │   └── utils/             # Utility functions
@@ -142,30 +150,41 @@ Page-specific aesthetics following [UX-LAYOUT.md](UX-LAYOUT.md):
 
 ## Component Architecture
 
-**Layout**: AppHeader.vue (responsive header with auth states and mobile menu)
+**Refactored Architecture**: All 25 components have been migrated to the new action composable + pure store pattern, eliminating event emission antipatterns and improving maintainability.
 
-**Timer Components** (10 components):
+**Layout**: AppHeader.vue (responsive header with auth states and mobile menu) ✅ **Refactored**
+
+**Timer Components** (10 components) ✅ **All Refactored**:
 - TimerStats.vue, TimerListItem.vue, TimerEditModal.vue, TimerResetModal.vue
 - TimerDisplayTab.vue, TimerControlsTab.vue, PhraseSuggestionsTab.vue, PhraseFilterTab.vue, SuggestionHistoryTab.vue, TabNavigation.vue
+- **Pattern**: All use `useIncidentTimerActions()` + `useIncidentTimerStore()`
 
-**Profile Components** (2 components):
+**Profile Components** (2 components) ✅ **All Refactored**:
 - AccountInformationForm.vue (display name and slug editing with validation)
 - SecurityForm.vue (password change with current password verification)
+- **Pattern**: All use `useAuthProfileActions()` (no store needed)
 
-**Admin Components** (6 components):
+**Admin Components** (6 components) ✅ **All Refactored**:
 - AdminPanel.vue (main admin interface with tabbed navigation and URL state management)
 - AdminTabNavigation.vue (tab navigation with URL synchronization)
 - OverviewTab.vue (system statistics dashboard)
 - UsersTab.vue (user management with search and actions)
 - PhraseSuggestionApprovalTab.vue (phrase suggestion moderation)
 - UserSearchBox.vue (user search functionality)
+- **Pattern**: All use `useAdminActions()` + `useAdminStore()`
+
+**Auth Components** (3 components) ✅ **All Refactored**:
+- login.vue, register.vue, AppHeader.vue
+- **Pattern**: All use `useAuthActions()` + `useAuthStore()`
 
 **Steampunk Design** (6 components):
 - SteamClock.vue, FlippingDigit.vue, SlidingTimeGroup.vue, SteampunkBackground.vue, SteampunkBanner.vue, VintageNoteCard.vue
 
-**Phrases**: RandomPhrase.vue (random phrase display component)
+**Phrases**: RandomPhrase.vue (random phrase display component) ✅ **Refactored**
 
-**Page Structure**: 5-tab interface in incidents.vue with TimerDisplayTab, TimerControlsTab, PhraseSuggestionsTab, PhraseFilterTab, SuggestionHistoryTab
+**Page Structure**: 5-tab interface in incidents.vue with TimerDisplayTab, TimerControlsTab, PhraseSuggestionsTab, PhraseFilterTab, SuggestionHistoryTab ✅ **All Refactored**
+
+**Migration Status**: 25/25 components (100% complete) - All components now use action composables + pure stores pattern
 
 ## Steampunk Design System
 - **Flip Clock**: FlippingDigit.vue (split-flap animation), SlidingTimeGroup.vue (time units), SteamClock.vue (main assembly)
@@ -181,19 +200,63 @@ Page-specific aesthetics following [UX-LAYOUT.md](UX-LAYOUT.md):
 - **Details**: See [ARCHITECTURE.md](ARCHITECTURE.md#data-flow-architecture)
 
 ### State Management
-- **Stores**: Pinia for reactive state (timers, phrases)
-- **Forms**: All forms use VeeValidate + Yup validation
+
+**Refactored Architecture**: Pure stores with action composables for clean separation of concerns.
+
+**Pure Stores (3 Complete):**
+- `stores/phrases.ts` - Pure phrase state management (no service calls)
+- `stores/admin.ts` - Pure admin state management (no service calls)  
+- `stores/incident-timers.ts` - Pure timer state management (no service calls)
+
+**Action Composables (5 Complete):**
+- `useAuthActions.ts` - Authentication operations orchestration
+- `useAuthProfileActions.ts` - Profile management operations orchestration
+- `usePhrasesActions.ts` - Phrase operations orchestration
+- `useAdminActions.ts` - Admin operations orchestration
+- `useIncidentTimerActions.ts` - Timer operations orchestration
+
+**Architecture Benefits:**
+- **Clear Separation**: Stores only manage state, actions orchestrate services
+- **Easy Testing**: Each layer can be tested in isolation
+- **Better Patterns**: Direct action calls instead of event emissions
+- **Maintainable**: Clean separation of concerns across all layers
+
+**Forms**: All forms use VeeValidate + Yup validation
 
 ### Service Architecture
 
-**Unified Service Pattern:**
-All services use `useBaseService()` which provides:
-- `backendFetch` - Direct backend calls with automatic JWT for protected routes
-- `authFetch` - SSR proxy calls for auth operations
-- `executeRequest()` - Wraps API calls with loading/error handling
-- `executeRequestWithSuccess()` - Wraps with success messaging
-- `isLoading`, `error`, `hasError` - Unified state management
-- **Simplified Architecture**: Removed caching complexity (lastFetchTime, isStale, invalidateCache) for cleaner, more maintainable code
+**Refactored Architecture Pattern:**
+The frontend has been completely refactored to use a clean separation of concerns with action composables orchestrating pure services and pure stores:
+
+```
+Components <-> Action Composables <-> Pure Services + Pure Stores
+```
+
+**Action Composables (5 Complete):**
+- `useAuthActions.ts` - Authentication operations orchestration
+- `useAuthProfileActions.ts` - Profile management operations orchestration  
+- `usePhrasesActions.ts` - Phrase operations orchestration
+- `useAdminActions.ts` - Admin operations orchestration
+- `useIncidentTimerActions.ts` - Timer operations orchestration
+
+**Pure Services (5 Complete):**
+- `services/authService.ts` - Pure authentication operations (no Vue context)
+- `services/authProfileService.ts` - Pure profile operations (no Vue context)
+- `services/phraseService.ts` - Pure phrase operations (no Vue context)
+- `services/adminService.ts` - Pure admin operations (no Vue context)
+- `services/incidentTimerService.ts` - Pure timer operations (no Vue context)
+
+**Pure Stores (3 Complete):**
+- `stores/phrases.ts` - Pure phrase state management (no service calls)
+- `stores/admin.ts` - Pure admin state management (no service calls)
+- `stores/incident-timers.ts` - Pure timer state management (no service calls)
+
+**Architecture Benefits:**
+- **Clear Separation**: Action composables orchestrate, services handle API calls, stores manage state
+- **Easy Testing**: Each layer can be tested in isolation with proper mocking
+- **Reusable Services**: Pure services can be used outside Vue context
+- **Better Component Patterns**: Direct action calls instead of event emissions
+- **Maintainable**: Clean separation of concerns across all layers
 
 **Centralized API Routes:**
 - **Configuration**: `frontend/shared/config/api-routes.ts` - Single source of truth for all endpoints
@@ -212,77 +275,54 @@ All services use `useBaseService()` which provides:
 - `API_ROUTES.PROTECTED.*` - Protected endpoints (JWT required)
 - `API_ROUTES.API.*` - SSR proxy routes (session-based)
 
-**Decision Tree for API Calls:**
+**Action Composable Pattern:**
 
-```
-Client-side API call needed?
-├── Auth operation (login/register/refresh/logout)?
-│   └── Use: executeRequest(() => authFetch(API_ROUTES.API.AUTH.*))
-├── Backend operation (CRUD, data fetching)?
-│   └── Use: executeRequest(() => backendFetch(API_ROUTES.PROTECTED.*))
-└── Public operation (no auth needed)?
-    └── Use: executeRequest(() => backendFetch(API_ROUTES.PUBLIC.*))
+```typescript
+// ✅ CORRECT: Action composable pattern
+export const useMyActions = () => {
+  const { executeRequest, executeRequestWithSuccess, isLoading, error, hasError } = useBaseService()
+  const backendFetch = useBackendFetch()
+  
+  // Create service instance
+  const myService = myService(backendFetch)
+  
+  // Destructure store methods
+  const { setData, updateData } = useMyStore()
+  
+  const loadData = async () => {
+    const data = await executeRequest(() => myService.getData(), 'loadData')
+    setData(data)
+    return data
+  }
+  
+  const updateSomething = async (id: string, updates: any) => {
+    const result = await executeRequestWithSuccess(
+      () => myService.updateSomething(id, updates),
+      'Updated successfully',
+      'updateSomething'
+    )
+    updateData(id, result)
+    return result
+  }
+  
+  return {
+    loadData,
+    updateSomething,
+    isLoading,
+    error,
+    hasError
+  }
+}
 
-SSR data fetching in pages/components?
-└── Use: useFetch('/api/*') for proper SSR support
-
-Server API routes (server/api/*)?
-└── Use: $fetch(config.apiBase + API_ROUTES.PUBLIC/PROTECTED.*)
+// ✅ CORRECT: Component usage
+const { loadData, updateSomething, isLoading } = useMyActions()
+await loadData() // Action calls service + updates store
 ```
 
 **Environment Configuration:**
 - `NUXT_API_BASE=http://backend:8080/backend` (SSR - internal Docker network)
 - `NUXT_PUBLIC_API_BASE=https://localhost/backend` (CSR - browser access)
 - `useBackendFetch()` automatically adds JWT tokens to protected routes only
-
-**Service Implementation Examples:**
-
-```typescript
-// ✅ CORRECT: Service using unified pattern
-export function useMyService() {
-  const { executeRequest, executeRequestWithSuccess, backendFetch, authFetch } = useBaseService()
-  
-  return {
-    // Protected backend call
-    async getData() {
-      return executeRequest(
-        () => backendFetch(API_ROUTES.PROTECTED.SOMETHING.LIST),
-        'getData'
-      )
-    },
-    
-    // Auth operation
-    async login(credentials) {
-      return executeRequestWithSuccess(
-        () => authFetch(API_ROUTES.API.AUTH.LOGIN, { method: 'POST', body: credentials }),
-        'Login successful',
-        'login'
-      )
-    },
-    
-    // Public backend call
-    async getPublicData() {
-      return executeRequest(
-        () => backendFetch(API_ROUTES.PUBLIC.SOMETHING.LIST),
-        'getPublicData'
-      )
-    }
-  }
-}
-
-// ✅ CORRECT: SSR data fetching in component
-const { data: user } = await useFetch('/api/auth/me')
-
-// ✅ CORRECT: Server API route
-const response = await $fetch(`${config.apiBase}${API_ROUTES.PROTECTED.SOMETHING.LIST}`)
-
-// ❌ WRONG: Raw $fetch in client-side service
-const response = await $fetch('/api/something') // Use useBaseService instead
-
-// ❌ WRONG: Manual JWT handling
-const token = await jwtManager.getToken()
-const response = await $fetch(url, { headers: { Authorization: `Bearer ${token}` } }) // Use backendFetch instead
-```
 
 ### Form Validation Standards
 - **Required**: All forms must use VeeValidate + Yup for validation

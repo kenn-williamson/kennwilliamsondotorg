@@ -99,6 +99,7 @@
 import { ref, computed, watch } from 'vue'
 import { useForm, Field, ErrorMessage } from 'vee-validate'
 import { profileUpdateSchema, generateSlug } from '#shared/schemas/auth'
+import { useAuthProfileActions } from '~/composables/useAuthProfileActions'
 
 // Props
 const props = defineProps({
@@ -111,11 +112,10 @@ const props = defineProps({
 // Watch for user data changes
 const user = computed(() => props.user)
 
-// Emits
-const emit = defineEmits(['profile-updated'])
+// No emits needed - parent will refresh via session update
 
 // Composables
-const { updateProfile, previewSlug, isLoading, error, hasError } = useAuthProfileService()
+const { updateProfile, previewSlug, isLoading, error, hasError } = useAuthProfileActions()
 
 // Form setup
 const { handleSubmit, errors, isSubmitting, setFieldValue, values } = useForm({
@@ -213,13 +213,10 @@ const onSlugChange = (event) => {
 // Form submission
 const onSubmit = handleSubmit(async (values) => {
   try {
-    const response = await updateProfile({
+    await updateProfile({
       display_name: values.display_name,
       slug: values.slug
     })
-    
-    // Emit success event with updated user data
-    emit('profile-updated', response)
     
     // Clear slug preview
     slugPreview.value = null

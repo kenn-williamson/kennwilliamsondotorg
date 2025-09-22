@@ -145,6 +145,7 @@
 <script setup>
 import { useForm, Field, ErrorMessage } from 'vee-validate'
 import { registerSchema, generateSlug } from '#shared/schemas/auth'
+import { useAuthActions } from '~/composables/useAuthActions'
 
 // Page meta
 useHead({
@@ -173,10 +174,12 @@ const form = reactive({
   confirmPassword: '',
 })
 
-const isLoading = ref(false)
 const serverError = ref('')
 const slugPreview = ref(null)
 const slugPreviewLoading = ref(false)
+
+// Auth actions
+const { register, previewSlug, isLoading, error } = useAuthActions()
 
 // Form validation composable
 const { errors, meta, handleSubmit } = useForm({
@@ -193,8 +196,7 @@ const debouncedSlugPreview = useDebounceFn(async (displayName) => {
 
   try {
     slugPreviewLoading.value = true
-    const authService = useAuthService()
-    const preview = await authService.previewSlug(displayName.trim())
+    const preview = await previewSlug(displayName.trim())
     slugPreview.value = preview
   } catch (error) {
     console.error('Failed to get slug preview:', error)
@@ -211,12 +213,10 @@ watch(() => form.display_name, (newValue) => {
 // Handle form submission using VeeValidate's handleSubmit
 const onSubmit = handleSubmit(async (values) => {
   try {
-    isLoading.value = true
     serverError.value = ''
 
     // Use auth service for registration
-    const authService = useAuthService()
-    const result = await authService.register({
+    const result = await register({
       email: values.email,
       display_name: values.displayName,
       password: values.password,
@@ -237,8 +237,6 @@ const onSubmit = handleSubmit(async (values) => {
   } catch (error) {
     console.error('Registration error:', error)
     serverError.value = error.message || 'Registration failed. Please try again.'
-  } finally {
-    isLoading.value = false
   }
 })
 

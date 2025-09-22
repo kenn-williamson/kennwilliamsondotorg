@@ -1,22 +1,11 @@
+/**
+ * Pure Phrases Store - Only state management, no service calls
+ * Refactored to follow proper separation of concerns
+ */
+
 import type { Phrase, PhraseSuggestion, PhraseWithExclusion } from '#shared/types/phrases'
-import { useAdminService } from '~/composables/useAdminService'
 
 export const usePhrasesStore = defineStore('phrases', () => {
-  const { 
-    fetchAllPhrases, 
-    fetchUserPhrases,
-    fetchExcludedPhrases, 
-    excludePhrase, 
-    removePhraseExclusion, 
-    submitPhraseSuggestion, 
-    fetchPhraseSuggestions,
-    isLoading,
-    error,
-    hasError
-  } = usePhraseService()
-  
-  const { approveSuggestion: approveSuggestionService, rejectSuggestion: rejectSuggestionService } = useAdminService()
-
   // State
   const userPhrases = ref<PhraseWithExclusion[]>([])
   const adminPhrases = ref<Phrase[]>([])
@@ -29,81 +18,46 @@ export const usePhrasesStore = defineStore('phrases', () => {
   const hasUserSuggestions = computed(() => userSuggestions.value.length > 0)
   const hasAdminSuggestions = computed(() => adminSuggestions.value.length > 0)
 
-  // Actions
-  const loadPhrasesForUser = async () => {
-    const response = await fetchUserPhrases()
-    userPhrases.value = response.phrases
-    return response
+  // Pure state management functions
+  const setUserPhrases = (phrases: PhraseWithExclusion[]) => {
+    userPhrases.value = phrases
   }
 
-  const loadAllPhrasesForAdmin = async () => {
-    const response = await fetchAllPhrases()
-    adminPhrases.value = response.phrases
-    return response
+  const setAdminPhrases = (phrases: Phrase[]) => {
+    adminPhrases.value = phrases
   }
 
-  const loadSuggestionsForUser = async () => {
-    const response = await fetchPhraseSuggestions()
-    userSuggestions.value = response.suggestions
-    return response
+  const setUserSuggestions = (suggestions: PhraseSuggestion[]) => {
+    userSuggestions.value = suggestions
   }
 
-  const loadAllSuggestionsForAdmin = async () => {
-    const response = await fetchPhraseSuggestions()
-    adminSuggestions.value = response.suggestions
-    return response
+  const setAdminSuggestions = (suggestions: PhraseSuggestion[]) => {
+    adminSuggestions.value = suggestions
   }
 
-  const togglePhraseExclusion = async (phraseId: string) => {
+  const addUserSuggestion = (suggestion: PhraseSuggestion) => {
+    userSuggestions.value.unshift(suggestion)
+  }
+
+  const togglePhraseExclusion = (phraseId: string) => {
     const phrase = userPhrases.value.find(p => p.id === phraseId)
-    if (!phrase) throw new Error('Phrase not found')
-
-    const wasExcluded = phrase.is_excluded
-
-    if (phrase.is_excluded) {
-      // Remove exclusion
-      await removePhraseExclusion(phraseId)
-      phrase.is_excluded = false
-    } else {
-      // Add exclusion
-      await excludePhrase(phraseId)
-      phrase.is_excluded = true
+    if (phrase) {
+      phrase.is_excluded = !phrase.is_excluded
     }
   }
 
-  const submitSuggestion = async (phraseText: string) => {
-    const response = await submitPhraseSuggestion(phraseText)
-    
-    // Add to user suggestions
-    userSuggestions.value.unshift(response.suggestion)
-    
-    return response.suggestion
-  }
-
-  const approveSuggestion = async (suggestionId: string, reason?: string) => {
-    await approveSuggestionService(suggestionId, reason || '')
-    
-    // Update suggestion status
+  const updateSuggestionStatus = (suggestionId: string, status: string, adminReason?: string) => {
     const suggestion = adminSuggestions.value.find(s => s.id === suggestionId)
     if (suggestion) {
-      suggestion.status = 'approved'
-      suggestion.admin_reason = reason
+      suggestion.status = status as 'pending' | 'approved' | 'rejected'
+      if (adminReason) {
+        suggestion.admin_reason = adminReason
+      }
     }
-    
-    return suggestion
   }
 
-  const rejectSuggestion = async (suggestionId: string, reason?: string) => {
-    await rejectSuggestionService(suggestionId, reason || '')
-    
-    // Update suggestion status
-    const suggestion = adminSuggestions.value.find(s => s.id === suggestionId)
-    if (suggestion) {
-      suggestion.status = 'rejected'
-      suggestion.admin_reason = reason
-    }
-    
-    return suggestion
+  const removeSuggestion = (suggestionId: string) => {
+    adminSuggestions.value = adminSuggestions.value.filter(s => s.id !== suggestionId)
   }
 
   // Utility functions
@@ -135,20 +89,15 @@ export const usePhrasesStore = defineStore('phrases', () => {
     hasUserSuggestions,
     hasAdminSuggestions,
     
-    // Base service state
-    isLoading,
-    error,
-    hasError,
-    
     // Actions
-    loadPhrasesForUser,
-    loadAllPhrasesForAdmin,
-    loadSuggestionsForUser,
-    loadAllSuggestionsForAdmin,
+    setUserPhrases,
+    setAdminPhrases,
+    setUserSuggestions,
+    setAdminSuggestions,
+    addUserSuggestion,
     togglePhraseExclusion,
-    submitSuggestion,
-    approveSuggestion,
-    rejectSuggestion,
+    updateSuggestionStatus,
+    removeSuggestion,
     
     // Utilities
     clearUserData,

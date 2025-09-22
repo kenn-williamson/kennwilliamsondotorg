@@ -11,6 +11,7 @@ export interface User {
   slug: string
   roles: string[]
   created_at: string
+  active: boolean
 }
 
 export interface UserSession {
@@ -92,4 +93,10 @@ export interface TokenRevokeResponse {
 
 export interface TokenRevokeAllResponse {
   message: string
+}
+
+// JWT token management types
+export interface JwtToken {
+  token: string
+  expiresAt: string
 }

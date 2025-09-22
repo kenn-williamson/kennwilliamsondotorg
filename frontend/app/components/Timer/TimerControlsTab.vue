@@ -46,14 +46,12 @@
       :show="true"
       :timer="editingTimer"
       @close="closeEditModal"
-      @updated="saveTimer"
     />
 
     <!-- Reset Timer Modal -->
     <TimerResetModal
       :show="showResetModal"
       @close="closeResetModal"
-      @reset="confirmReset"
     />
   </div>
 </template>
@@ -61,13 +59,14 @@
 <script setup lang="ts">
 import { ref, computed, onMounted } from 'vue'
 import { useIncidentTimerStore } from '~/stores/incident-timers'
+import { useIncidentTimerActions } from '~/composables/useIncidentTimerActions'
 import TimerListItem from '~/components/Timer/TimerListItem.vue'
 import TimerEditModal from '~/components/Timer/TimerEditModal.vue'
 import TimerResetModal from '~/components/Timer/TimerResetModal.vue'
 
 const incidentTimerStore = useIncidentTimerStore()
+const { fetchTimers, createTimer, updateTimer, isLoading, error } = useIncidentTimerActions()
 
-const isLoading = ref(false)
 const isResetting = ref(false)
 const editingTimer = ref(null)
 const showResetModal = ref(false)
@@ -86,59 +85,26 @@ onMounted(async () => {
 })
 
 const loadTimers = async () => {
-  isLoading.value = true
-  try {
-    await incidentTimerStore.fetchTimers()
-  } catch (error) {
-    console.error('Error loading timers:', error)
-  } finally {
-    isLoading.value = false
-  }
+  await fetchTimers()
 }
 
 const resetTimer = () => {
   showResetModal.value = true
 }
 
-const confirmReset = async (notes?: string) => {
-  isResetting.value = true
-  try {
-    const timerData = {
-      reset_timestamp: new Date().toISOString(),
-      notes: notes || undefined
-    }
-    await incidentTimerStore.createTimer(timerData)
-    await loadTimers() // Refresh the list
-  } catch (error) {
-    console.error('Error resetting timer:', error)
-  } finally {
-    isResetting.value = false
-    showResetModal.value = false
-  }
-}
-
 const editTimer = (timer: any) => {
   editingTimer.value = timer
 }
 
-const saveTimer = async (updatedTimer: any) => {
-  try {
-    await incidentTimerStore.updateTimer(updatedTimer.id, updatedTimer)
-    await loadTimers() // Refresh the list
-  } catch (error) {
-    console.error('Error updating timer:', error)
-  } finally {
-    editingTimer.value = null
-  }
-}
 
-
-const closeEditModal = () => {
+const closeEditModal = async () => {
   editingTimer.value = null
+  await loadTimers() // Refresh the list after edit
 }
 
-const closeResetModal = () => {
+const closeResetModal = async () => {
   showResetModal.value = false
+  await loadTimers() // Refresh the list after reset
 }
 </script>
 

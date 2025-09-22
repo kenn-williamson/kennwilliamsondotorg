@@ -5,10 +5,7 @@
  * Server handles token validation, refresh logic, and session management.
  */
 
-interface JwtToken {
-  token: string
-  expiresAt: string
-}
+import type { JwtToken } from '#shared/types'
 
 export function useJwtManager() {
   /**

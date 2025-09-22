@@ -11,6 +11,10 @@ export interface IncidentTimer {
   updated_at: string
 }
 
+export interface PublicIncidentTimer extends IncidentTimer {
+  user_display_name: string
+}
+
 export interface PublicTimerResponse extends IncidentTimer {
   user_display_name: string
 }

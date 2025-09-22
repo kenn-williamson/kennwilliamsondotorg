@@ -1,47 +1,12 @@
-// Auto-imported: defineStore, ref, computed, readonly
-import { useAdminService } from '~/composables/useAdminService'
+/**
+ * Pure Admin Store - Only state management, no service calls
+ * Refactored to follow proper separation of concerns
+ */
 
-interface User {
-  id: string
-  email: string
-  display_name: string
-  slug: string
-  active: boolean
-  roles: string[]
-  created_at: string
-}
-
-interface PhraseSuggestion {
-  id: string
-  phrase_text: string
-  user_display_name: string
-  created_at: string
-}
-
-interface AdminStats {
-  total_users: number
-  active_users: number
-  pending_suggestions: number
-  total_phrases: number
-}
+import type { User, AdminStats } from '#shared/types'
+import type { PhraseSuggestion } from '#shared/types/phrases'
 
 export const useAdminStore = defineStore('admin', () => {
-  // Destructure from service
-  const { 
-    getStats, 
-    getUsers, 
-    getSuggestions, 
-    deactivateUser, 
-    activateUser, 
-    resetUserPassword, 
-    promoteUser, 
-    approveSuggestion, 
-    rejectSuggestion,
-    isLoading,
-    error,
-    hasError
-  } = useAdminService()
-
   // State
   const users = ref<User[]>([])
   const suggestions = ref<PhraseSuggestion[]>([])
@@ -50,7 +15,7 @@ export const useAdminStore = defineStore('admin', () => {
   const selectedUser = ref<User | null>(null)
   const newPassword = ref<string | null>(null)
 
-  // Computed properties
+  // Computed
   const filteredUsers = computed((): User[] => {
     if (!searchQuery.value.trim()) return users.value
     
@@ -65,9 +30,17 @@ export const useAdminStore = defineStore('admin', () => {
     return suggestions.value
   })
 
-  // Actions
-  const clearNewPassword = () => {
-    newPassword.value = null
+  // Pure state management functions
+  const setUsers = (usersList: User[]) => {
+    users.value = usersList
+  }
+
+  const setSuggestions = (suggestionsList: PhraseSuggestion[]) => {
+    suggestions.value = suggestionsList
+  }
+
+  const setStats = (statsData: AdminStats) => {
+    stats.value = statsData
   }
 
   const setSearchQuery = (query: string) => {
@@ -78,72 +51,30 @@ export const useAdminStore = defineStore('admin', () => {
     selectedUser.value = user
   }
 
-  const fetchStats = async () => {
-    const data = await getStats()
-    stats.value = data
-    return data
+  const setNewPassword = (password: string | null) => {
+    newPassword.value = password
   }
 
-  const fetchUsers = async (searchQueryParam?: string) => {
-    const data = await getUsers(searchQueryParam || searchQuery.value)
-    users.value = data.users
-    return data
-  }
-
-  const fetchSuggestions = async () => {
-    const data = await getSuggestions()
-    suggestions.value = data.suggestions
-    return data
-  }
-
-  const deactivateUserAction = async (userId: string) => {
-    await deactivateUser(userId)
-
-    // Update user in local state
-    const userIndex = users.value.findIndex(user => user.id === userId)
-    if (userIndex !== -1 && users.value[userIndex]) {
-      users.value[userIndex].active = false
+  const updateUserActiveStatus = (userId: string, active: boolean) => {
+    const user = users.value.find(u => u.id === userId)
+    if (user) {
+      user.active = active
     }
   }
 
-  const activateUserAction = async (userId: string) => {
-    await activateUser(userId)
-
-    // Update user in local state
-    const userIndex = users.value.findIndex(user => user.id === userId)
-    if (userIndex !== -1 && users.value[userIndex]) {
-      users.value[userIndex].active = true
+  const updateUserRoles = (userId: string, roles: string[]) => {
+    const user = users.value.find(u => u.id === userId)
+    if (user) {
+      user.roles = roles
     }
   }
 
-  const resetUserPasswordAction = async (userId: string) => {
-    const data = await resetUserPassword(userId)
-    newPassword.value = data.new_password
-    return data
+  const removeSuggestion = (suggestionId: string) => {
+    suggestions.value = suggestions.value.filter(s => s.id !== suggestionId)
   }
 
-  const promoteUserAction = async (userId: string) => {
-    await promoteUser(userId)
-
-    // Update user in local state
-    const userIndex = users.value.findIndex(user => user.id === userId)
-    if (userIndex !== -1 && users.value[userIndex]) {
-      users.value[userIndex].roles = [...users.value[userIndex].roles, 'admin']
-    }
-  }
-
-  const approveSuggestionAction = async (suggestionId: string, adminReason: string) => {
-    await approveSuggestion(suggestionId, adminReason)
-
-    // Remove suggestion from local state
-    suggestions.value = suggestions.value.filter(suggestion => suggestion.id !== suggestionId)
-  }
-
-  const rejectSuggestionAction = async (suggestionId: string, adminReason: string) => {
-    await rejectSuggestion(suggestionId, adminReason)
-
-    // Remove suggestion from local state
-    suggestions.value = suggestions.value.filter(suggestion => suggestion.id !== suggestionId)
+  const clearNewPassword = () => {
+    newPassword.value = null
   }
 
   const clearState = () => {
@@ -164,28 +95,21 @@ export const useAdminStore = defineStore('admin', () => {
     selectedUser: readonly(selectedUser),
     newPassword: readonly(newPassword),
     
-    // Service state
-    isLoading,
-    error,
-    hasError,
-    
     // Computed
     filteredUsers,
     pendingSuggestions,
     
     // Actions
-    fetchStats,
-    fetchUsers,
-    fetchSuggestions,
-    deactivateUser: deactivateUserAction,
-    activateUser: activateUserAction,
-    resetUserPassword: resetUserPasswordAction,
-    promoteUser: promoteUserAction,
-    approveSuggestion: approveSuggestionAction,
-    rejectSuggestion: rejectSuggestionAction,
-    clearNewPassword,
+    setUsers,
+    setSuggestions,
+    setStats,
     setSearchQuery,
     setSelectedUser,
+    setNewPassword,
+    updateUserActiveStatus,
+    updateUserRoles,
+    removeSuggestion,
+    clearNewPassword,
     clearState
   }
 })

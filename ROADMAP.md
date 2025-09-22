@@ -1,7 +1,7 @@
 # KennWilliamson.org Roadmap
 
 ## Current Status
-**Production deployment complete at kennwilliamson.org**. Full-stack application live with SSL, production infrastructure, and comprehensive development tooling. Complete admin panel system with user management, phrase moderation, 3-layer architecture refactor, and comprehensive testing suite implemented with 134 total tests across all layers.
+**Production deployment complete at kennwilliamson.org**. Full-stack application live with SSL, production infrastructure, and comprehensive development tooling. Complete admin panel system with user management, phrase moderation, 3-layer architecture refactor, comprehensive testing suite implemented with 134 total tests across all layers, and frontend architecture refactor complete with 25/25 components migrated to action composable + pure store pattern.
 
 ## Immediate Priorities
 
@@ -14,12 +14,14 @@
 - **Primary Framework**: Vitest (Vite-native, fast execution)
 - **Component Testing**: Vue Test Utils for component isolation
 - **E2E Testing**: Playwright for end-to-end workflows
+- **Architecture**: Refactored frontend architecture now supports clean testing patterns
 
 **Test Categories:**
 - **Unit Tests**: 
-  - Composables (`useAuthService`, `useIncidentTimerService`, `useAuthFetch`)
+  - Action Composables (`useAuthActions`, `useIncidentTimerActions`, `usePhrasesActions`)
+  - Pure Services (`authService`, `incidentTimerService`, `phraseService`)
+  - Pure Stores (Pinia store state management and computed properties)
   - Utilities (helper functions, formatters, validators)
-  - Pinia stores (actions and state management)
 - **Component Tests**: 
   - Authentication forms with validation testing
   - Navigation component with auth state handling
@@ -49,9 +51,10 @@ npm install --save-dev @vitest/ui # Optional test UI
 - Database migration testing in CI environment
 
 **Coverage Goals:**
+- Action Composable coverage for all orchestration logic
+- Pure Service coverage for all API operations
+- Pure Store coverage for all state management
 - Component coverage for all major components
-- Store coverage for Pinia store actions and mutations
-- Utility coverage for helper functions and composables
 - Integration coverage for key user workflows
 
 ### SSR vs CSR Data Fetching Optimization

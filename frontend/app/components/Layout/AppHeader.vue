@@ -188,8 +188,10 @@
 </template>
 
 <script setup>
+import { useAuthActions } from '~/composables/useAuthActions'
+
 const { loggedIn, user, clear } = useUserSession()
-const { logout: authLogout } = useAuthService()
+const { logout: authLogout } = useAuthActions()
 const router = useRouter()
 
 // Reactive state

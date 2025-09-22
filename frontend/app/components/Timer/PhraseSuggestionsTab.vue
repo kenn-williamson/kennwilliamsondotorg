@@ -85,10 +85,10 @@
 
 <script setup lang="ts">
 import { ref, computed, onMounted } from 'vue'
-import { usePhraseService } from '~/composables/usePhraseService'
+import { usePhrasesActions } from '~/composables/usePhrasesActions'
 import type { PhraseSuggestion } from '#shared/types/phrases'
 
-const phraseService = usePhraseService()
+const { submitPhraseSuggestion, fetchPhraseSuggestions, isLoading, error } = usePhrasesActions()
 
 const maxPhraseLength = 200
 
@@ -146,7 +146,7 @@ const submitSuggestion = async () => {
   isSubmitting.value = true
   
   try {
-    await phraseService.submitPhraseSuggestion(formData.value.phraseText.trim())
+    await submitPhraseSuggestion(formData.value.phraseText.trim())
     
     // Clear form and reload recent suggestions
     clearForm()
@@ -170,7 +170,7 @@ const clearForm = () => {
 
 const loadRecentSuggestions = async () => {
   try {
-    const response = await phraseService.fetchPhraseSuggestions()
+    const response = await fetchPhraseSuggestions()
     recentSuggestions.value = response.suggestions
   } catch (error) {
     console.error('Error loading recent suggestions:', error)
