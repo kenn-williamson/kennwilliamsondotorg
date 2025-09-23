@@ -5,16 +5,19 @@
 
 import { authService } from '~/services/authService'
 import { useBaseService } from '~/composables/useBaseService'
+import { useBackendFetch } from '~/composables/useBackendFetch'
 import { useAuthFetch } from '~/composables/useAuthFetch'
 import type { LoginRequest, RegisterRequest, SlugPreviewResponse } from '#shared/types'
 
 export const useAuthActions = () => {
-  // Destructure base service utilities
-  const { executeRequest, executeRequestWithSuccess, isLoading, error, hasError } = useBaseService()
+  // Create dependencies at the top level
   const authFetch = useAuthFetch()
   const { clear, fetch: refreshSession } = useUserSession()
   
-  // Create service instance once
+  // Use base service for request execution
+  const { executeRequest, executeRequestWithSuccess, isLoading, error, hasError } = useBaseService()
+  
+  // Create service instance
   const authServiceBackend = authService(authFetch)
   
   // Destructure service methods

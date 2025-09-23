@@ -12,8 +12,6 @@ export default defineNuxtConfig({
     typeCheck: true
   },
 
-  // CSS framework
-  // css: ['~/assets/css/main.css'], // Removed - TailwindCSS handles this
   
   // Components auto-import with nested directory support
   components: [
@@ -24,7 +22,7 @@ export default defineNuxtConfig({
   ],
   
   // Modules
-  modules: ['@nuxtjs/tailwindcss', '@pinia/nuxt', '@vueuse/nuxt', 'nuxt-auth-utils'],
+  modules: ['@nuxtjs/tailwindcss', '@pinia/nuxt', '@vueuse/nuxt', 'nuxt-auth-utils', '@nuxt/test-utils/module'],
 
   // Server configuration
   serverDir: 'server',

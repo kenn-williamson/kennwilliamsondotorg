@@ -274,5 +274,194 @@ cargo test
 - **Fast Execution**: Tests complete in ~83 seconds with 4 parallel threads
 - **Reliable**: No more intermittent failures due to resource contention
 
+## Frontend Testing Status
+
+### Current Test Coverage
+- **Action Composables**: 26 tests passing (5 useAuthProfileActions + 7 useAuthActions + 14 useAdminActions)
+- **Base Service**: 20 tests passing (useBaseService - loading states, error handling, request execution)
+- **HTTP Composables**: 55 tests passing (14 useJwtManager + 19 useBackendFetch + 22 useAuthFetch)
+- **Service Layer**: 42 tests passing (5 services: authService, authProfileService, adminService, incidentTimerService, phraseService)
+- **Store Layer**: 77 tests passing (3 stores: admin, incident-timers, phrases)
+- **Utility Layer**: 16 tests passing (timer-manager utilities)
+- **Test Infrastructure**: 3 tests passing (setup and configuration)
+- **Total Tests**: 271 frontend tests passing with complete data layer coverage
+
+### Frontend Test Architecture
+
+**Action Composable Tests** (✅ Complete - 26 tests):
+- **Framework**: Vitest with comprehensive module mocking
+- **Tests**: Orchestration testing for action composables (useAuthActions, useAuthProfileActions, useAdminActions)
+- **Execution**: Fast unit tests with mocked dependencies
+- **Coverage**: Service calls, session management, error handling, interface contracts
+
+**Base Service Tests** (✅ Complete - 20 tests):
+- **Framework**: Vitest with Vue reactivity testing
+- **Tests**: Core service functionality testing (useBaseService)
+- **Execution**: Fast unit tests with comprehensive state management
+- **Coverage**: Loading states, error handling, request execution, component lifecycle, edge cases
+
+**HTTP Composable Tests** (✅ Complete - 55 tests):
+- **Framework**: Vitest with comprehensive mocking
+- **Tests**: HTTP client functionality testing (useJwtManager, useBackendFetch, useAuthFetch)
+- **Execution**: Fast unit tests with mock HTTP clients
+- **Coverage**: JWT token management, route protection, request configuration, error handling, console logging
+
+**Service Tests** (✅ Complete - 42 tests):
+- **Framework**: Vitest with mock fetchers
+- **Tests**: Direct service testing with mock HTTP clients (authService, authProfileService, adminService, incidentTimerService, phraseService)
+- **Execution**: Fast unit tests without external dependencies
+- **Coverage**: API endpoint calls, response handling, error scenarios, request configuration
+
+**Store Tests** (✅ Complete - 77 tests):
+- **Framework**: Vitest with Pinia store testing
+- **Tests**: State management testing (admin, incident-timers, phrases stores)
+- **Execution**: Fast unit tests with isolated store instances
+- **Coverage**: State mutations, getters, actions, reactive updates, error handling
+
+**Utility Tests** (✅ Complete - 16 tests):
+- **Framework**: Vitest with pure function testing
+- **Tests**: Utility function testing (timer-manager)
+- **Execution**: Fast unit tests with no dependencies
+- **Coverage**: Pure functions, edge cases, data transformations
+
+### Frontend Test Organization
+```
+frontend/
+├── test/
+│   ├── composables/           # Composable tests (101 tests)
+│   │   ├── useAuthActions.test.ts        # 7 tests (login, register, previewSlug, revokeAllSessions, logout, service instantiation, interface contract)
+│   │   ├── useAuthProfileActions.test.ts # 5 tests (updateProfile, changePassword, previewSlug, service instantiation, interface contract)
+│   │   ├── useAdminActions.test.ts       # 14 tests (fetchStats, fetchUsers, fetchSuggestions, user management, suggestion moderation, service instantiation, interface contract)
+│   │   ├── useBaseService.test.ts        # 20 tests (loading states, error handling, request execution, component lifecycle, edge cases, interface contract)
+│   │   ├── useJwtManager.test.ts         # 14 tests (token retrieval, error handling, multiple calls, edge cases, interface contract)
+│   │   ├── useBackendFetch.test.ts       # 19 tests (protected routes, public routes, request configuration, error handling, console logging, interface contract)
+│   │   ├── useAuthFetch.test.ts          # 22 tests (HTTP methods, request configuration, error handling, console logging, multiple calls, interface contract)
+│   │   ├── useIncidentTimerActions.test.ts # 14 tests (timer CRUD operations, store updates, live updates, service instantiation, interface contract)
+│   │   └── usePhrasesActions.test.ts     # 18 tests (phrase management, suggestions, exclusions, admin operations, service instantiation, interface contract)
+│   ├── services/              # Service layer tests (42 tests)
+│   │   ├── authService.test.ts           # 6 tests (authentication operations)
+│   │   ├── authProfileService.test.ts    # 5 tests (profile management operations)
+│   │   ├── adminService.test.ts          # 13 tests (admin operations)
+│   │   ├── incidentTimerService.test.ts  # 7 tests (timer operations)
+│   │   └── phraseService.test.ts         # 11 tests (phrase operations)
+│   ├── stores/                # Store layer tests (77 tests)
+│   │   ├── admin.test.ts                 # 27 tests (admin state management)
+│   │   ├── incident-timers.test.ts       # 33 tests (timer state management)
+│   │   └── phrases.test.ts               # 17 tests (phrase state management)
+│   ├── utils/                 # Utility tests (16 tests)
+│   │   └── timer-manager.test.ts         # 16 tests (timer utility functions)
+│   ├── setup.test.ts          # Test infrastructure (3 tests)
+│   └── setup.ts               # Global test configuration and mocks
+```
+
+### Action Composable Testing Patterns
+
+**Module Mocking Strategy**:
+```typescript
+// Mock all dependencies before importing the composable
+vi.mock('~/composables/useBaseService', () => ({
+  useBaseService: vi.fn()
+}))
+
+vi.mock('~/services/authService', () => ({
+  authService: vi.fn()
+}))
+
+// Mock auto-imports globally
+global.useUserSession = vi.fn()
+
+import { useAuthActions } from '~/composables/useAuthActions'
+```
+
+**Mock Configuration Pattern**:
+```typescript
+beforeEach(async () => {
+  vi.clearAllMocks()
+
+  // Configure mocked modules using vi.mocked()
+  const { useBaseService } = await import('~/composables/useBaseService')
+  vi.mocked(useBaseService).mockReturnValue({
+    executeRequest: vi.fn().mockImplementation(async (fn) => await fn()),
+    executeRequestWithSuccess: vi.fn().mockImplementation(async (fn) => await fn()),
+    isLoading: { value: false },
+    error: { value: null },
+    hasError: { value: false }
+  })
+
+  // Configure service mocks
+  const { authService } = await import('~/services/authService')
+  vi.mocked(authService).mockReturnValue(mockAuthService)
+})
+```
+
+**Test Focus Areas**:
+- **Orchestration**: Verify service calls with correct parameters
+- **Session Management**: Test session refresh/clear operations
+- **Error Handling**: Ensure proper error propagation
+- **Interface Contracts**: Verify all expected methods and state are exposed
+- **Service Instantiation**: Confirm services are created with correct dependencies
+
+### Service Testing Patterns
+
+**Direct Service Testing**:
+```typescript
+describe('incidentTimerService', () => {
+  let mockFetcher: any
+
+  beforeEach(() => {
+    mockFetcher = vi.fn()
+  })
+
+  it('should call correct endpoint', async () => {
+    const mockTimers = [createMockTimer(), createMockTimer()]
+    mockFetcher.mockResolvedValue(mockTimers)
+
+    const service = incidentTimerService(mockFetcher)
+    const result = await service.getUserTimers()
+
+    expect(mockFetcher).toHaveBeenCalledWith('/protected/incident-timers')
+    expect(result).toEqual(mockTimers)
+  })
+})
+```
+
+### Key Testing Principles
+
+**Separation of Concerns**:
+- **Action Tests**: Focus on orchestration (service calls, session management)
+- **Service Tests**: Focus on API endpoint calls and response handling
+- **Base Service Tests**: Focus on loading/error state management (planned)
+
+**Mock Strategy**:
+- **Module-level mocking**: Mock entire modules before import
+- **Simple service mocks**: Mock services to return expected data
+- **Auto-import handling**: Use global mocks for Nuxt auto-imports
+- **Fetcher mocking**: Mock HTTP clients for service testing
+
+**Test Organization**:
+- **Orchestration tests**: Verify action composable behavior
+- **Service instantiation tests**: Confirm proper dependency injection
+- **Interface contract tests**: Ensure expected API surface
+- **Error scenario tests**: Test error handling paths
+
+### Running Frontend Tests
+
+```bash
+# All frontend tests
+npm test
+
+# Specific composable tests
+npm test -- test/composables/useAuthActions.test.ts
+npm test -- test/composables/useAuthProfileActions.test.ts
+
+# Service tests
+npm test -- test/services/incidentTimerService.test.ts
+
+# Test with verbose output
+npm test -- --reporter=verbose
+```
+
+**Environment**: Vitest with comprehensive module mocking and auto-import handling
+
 ## Future Testing
-Frontend testing planned. See [ROADMAP.md](ROADMAP.md#testing-enhancements).
+Additional frontend testing planned. See [ROADMAP.md](ROADMAP.md#testing-enhancements).

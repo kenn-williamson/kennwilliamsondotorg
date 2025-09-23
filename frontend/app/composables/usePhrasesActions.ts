@@ -7,13 +7,16 @@ import { usePhrasesStore } from '~/stores/phrases'
 import { phraseService } from '~/services/phraseService'
 import { useBaseService } from '~/composables/useBaseService'
 import { useBackendFetch } from '~/composables/useBackendFetch'
+import { useAuthFetch } from '~/composables/useAuthFetch'
 
 export const usePhrasesActions = () => {
-  // Destructure base service utilities
-  const { executeRequest, executeRequestWithSuccess, isLoading, error, hasError } = useBaseService()
+  // Create dependencies at the top level
   const backendFetch = useBackendFetch()
   
-  // Create service instance once
+  // Use base service for request execution
+  const { executeRequest, executeRequestWithSuccess, isLoading, error, hasError } = useBaseService()
+  
+  // Create service instance
   const phraseServiceBackend = phraseService(backendFetch)
   
   // Destructure service methods

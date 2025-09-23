@@ -17,7 +17,13 @@ frontend/
 │   ├── app.vue            # Main application entry point
 │   ├── assets/            # Assets directory
 │   │   ├── css/           # TailwindCSS configuration
-│   │   └── images/        # Image assets (construction-castle.jpg)
+│   │   │   └── main.css   # Main CSS file
+│   │   └── images/        # Image assets
+│   │       ├── construction-castle.jpg
+│   │       ├── favicon-large.png.png
+│   │       ├── favicon-small.png.png
+│   │       ├── mahogany-wood.jpg
+│   │       └── scroll.png
 │   ├── components/        # Vue components (feature-based organization)
 │   │   ├── Layout/        # Layout and navigation components
 │   │   │   └── AppHeader.vue # Responsive header with auth states
@@ -73,43 +79,73 @@ frontend/
 │   │   ├── useAuthFetch.ts # HTTP client with auth interceptors
 │   │   ├── useBackendFetch.ts # Direct backend client with automatic JWT management
 │   │   ├── useJwtManager.ts # JWT token management with automatic refresh
-│   │   ├── useBaseService.ts # Base service utilities
+│   │   ├── useBaseService.ts # Base service utilities (loading states, error handling)
 │   │   ├── useAuthActions.ts # Authentication operations orchestration
 │   │   ├── useAuthProfileActions.ts # Profile management operations orchestration
 │   │   ├── usePhrasesActions.ts # Phrase operations orchestration
 │   │   ├── useAdminActions.ts # Admin operations orchestration
 │   │   └── useIncidentTimerActions.ts # Timer operations orchestration
-│   ├── services/          # Pure services (no Vue context)
-│   │   ├── authService.ts # Pure authentication operations
-│   │   ├── authProfileService.ts # Pure profile operations
-│   │   ├── phraseService.ts # Pure phrase operations
-│   │   ├── adminService.ts # Pure admin operations
-│   │   └── incidentTimerService.ts # Pure timer operations
-│   ├── types/             # TypeScript definitions
-│   │   └── phrases.ts     # Phrases type definitions
+│   ├── services/          # Pure services with curried dependency injection
+│   │   ├── authService.ts # Authentication operations
+│   │   ├── authProfileService.ts # Profile operations
+│   │   ├── phraseService.ts # Phrase operations
+│   │   ├── adminService.ts # Admin operations
+│   │   └── incidentTimerService.ts # Timer operations
 │   └── utils/             # Utility functions
-│       └── dateUtils.ts   # Date formatting utilities
+│       ├── dateUtils.ts   # Date formatting utilities
+│       └── timer-manager.ts # Timer management utilities
 ├── shared/                # Shared utilities and types
 │   ├── types/             # Shared type definitions
-│   │   └── auth.d.ts      # Authentication type definitions
-│   └── utils/             # Shared utility functions
-│       └── jwt.ts         # JWT token utilities
+│   │   ├── admin.ts       # Admin type definitions
+│   │   ├── auth.d.ts      # Authentication type definitions
+│   │   ├── auth.ts        # Authentication types
+│   │   ├── common.ts      # Common type definitions
+│   │   ├── index.ts       # Type exports
+│   │   ├── phrases.ts     # Phrases type definitions
+│   │   ├── timers.ts      # Timer type definitions
+│   │   └── ui.ts          # UI type definitions
+│   ├── utils/             # Shared utility functions
+│   │   ├── jwt.ts         # JWT token utilities
+│   │   └── validation.ts  # Validation utilities
+│   ├── config/            # Configuration files
+│   │   └── api-routes.ts  # Centralized API route definitions
+│   └── schemas/           # Validation schemas
+│       ├── auth.ts        # Authentication validation schemas
+│       ├── index.ts       # Schema exports
+│       ├── phrases.ts     # Phrase validation schemas
+│       └── timers.ts      # Timer validation schemas
 ├── server/                # Server API routes
-│   └── api/               # API endpoint handlers
-│       ├── auth/          # Authentication endpoints
-│       │   └── jwt.get.ts # Get current JWT token
-│       ├── phrases/       # Phrases endpoints
-│       │   └── random.get.ts # Get random phrase
-│       ├── [user_slug]/   # Dynamic user routes
-│       │   ├── incident-timer.get.ts # Public timer display
-│       │   └── phrase.get.ts # Public phrase display
-│       ├── incident-timers.get.ts # Get user timers
-│       ├── health.get.ts  # Health check
-│       └── test.get.ts    # Test endpoint
+│   ├── api/               # API endpoint handlers
+│   │   ├── auth/          # Authentication endpoints
+│   │   │   ├── debug-refresh-token.get.ts # Debug refresh token endpoint
+│   │   │   ├── jwt.get.ts # Get current JWT token
+│   │   │   ├── login.post.ts # Login endpoint
+│   │   │   ├── logout.post.ts # Logout endpoint
+│   │   │   ├── me.get.ts  # Get current user
+│   │   │   ├── register.post.ts # Registration endpoint
+│   │   │   └── session-check.get.ts # Session validation
+│   │   ├── phrases/       # Phrases endpoints
+│   │   │   └── random.get.ts # Get random phrase
+│   │   ├── [user_slug]/   # Dynamic user routes
+│   │   │   ├── incident-timer.get.ts # Public timer display
+│   │   │   └── phrase.get.ts # Public phrase display
+│   │   ├── incident-timers.get.ts # Get user timers
+│   │   ├── health.get.ts  # Health check
+│   │   ├── simple.ts      # Simple test endpoint
+│   │   ├── test/          # Test endpoints
+│   │   │   ├── clear-jwt.post.ts # Clear JWT test endpoint
+│   │   │   └── session-state.get.ts # Session state test endpoint
+│   │   └── test.get.ts    # Test endpoint
+│   └── utils/             # Server utilities
+│       ├── client-ip.ts   # Client IP utilities
+│       └── jwt-handler.ts # JWT handling utilities
 ├── nuxt.config.ts         # Nuxt configuration
 ├── package.json           # Dependencies
 ├── Dockerfile             # Production container
-└── tsconfig.json          # TypeScript config
+├── Dockerfile.dev         # Development container
+├── tsconfig.json          # TypeScript config
+├── vitest.config.ts       # Vitest configuration
+└── README.md              # Frontend documentation
 ```
 
 ## Core Features
@@ -150,7 +186,7 @@ Page-specific aesthetics following [UX-LAYOUT.md](UX-LAYOUT.md):
 
 ## Component Architecture
 
-**Refactored Architecture**: All 25 components have been migrated to the new action composable + pure store pattern, eliminating event emission antipatterns and improving maintainability.
+**Refactored Architecture**: All 26 components have been migrated to the new action composable + pure store pattern, eliminating event emission antipatterns and improving maintainability. The data layer has been completely refactored for testability with pure services, action composables, and pure stores.
 
 **Layout**: AppHeader.vue (responsive header with auth states and mobile menu) ✅ **Refactored**
 
@@ -184,7 +220,7 @@ Page-specific aesthetics following [UX-LAYOUT.md](UX-LAYOUT.md):
 
 **Page Structure**: 5-tab interface in incidents.vue with TimerDisplayTab, TimerControlsTab, PhraseSuggestionsTab, PhraseFilterTab, SuggestionHistoryTab ✅ **All Refactored**
 
-**Migration Status**: 25/25 components (100% complete) - All components now use action composables + pure stores pattern
+**Migration Status**: 26/26 components (100% complete) - All components now use action composables + pure stores pattern
 
 ## Steampunk Design System
 - **Flip Clock**: FlippingDigit.vue (split-flap animation), SlidingTimeGroup.vue (time units), SteamClock.vue (main assembly)
@@ -201,12 +237,12 @@ Page-specific aesthetics following [UX-LAYOUT.md](UX-LAYOUT.md):
 
 ### State Management
 
-**Refactored Architecture**: Pure stores with action composables for clean separation of concerns.
+**Refactored Architecture**: Pure stores with action composables for clean separation of concerns and comprehensive testability.
 
 **Pure Stores (3 Complete):**
-- `stores/phrases.ts` - Pure phrase state management (no service calls)
-- `stores/admin.ts` - Pure admin state management (no service calls)  
-- `stores/incident-timers.ts` - Pure timer state management (no service calls)
+- `stores/phrases.ts` - Pure phrase state management (no service calls, only state mutations)
+- `stores/admin.ts` - Pure admin state management (no service calls, only state mutations)  
+- `stores/incident-timers.ts` - Pure timer state management (no service calls, only state mutations)
 
 **Action Composables (5 Complete):**
 - `useAuthActions.ts` - Authentication operations orchestration
@@ -217,46 +253,51 @@ Page-specific aesthetics following [UX-LAYOUT.md](UX-LAYOUT.md):
 
 **Architecture Benefits:**
 - **Clear Separation**: Stores only manage state, actions orchestrate services
-- **Easy Testing**: Each layer can be tested in isolation
+- **Easy Testing**: Each layer can be tested in isolation with comprehensive mocking
 - **Better Patterns**: Direct action calls instead of event emissions
 - **Maintainable**: Clean separation of concerns across all layers
+- **Testable**: Pure functions enable comprehensive unit testing
 
 **Forms**: All forms use VeeValidate + Yup validation
 
 ### Service Architecture
 
 **Refactored Architecture Pattern:**
-The frontend has been completely refactored to use a clean separation of concerns with action composables orchestrating pure services and pure stores:
+The frontend has been completely refactored to use a clean separation of concerns with action composables orchestrating pure services and pure stores. All services use curried dependency injection for maximum testability:
 
 ```
-Components <-> Action Composables <-> Pure Services + Pure Stores
+Components <-> Action Composables <-> Pure Services (curried) + Pure Stores
 ```
 
 **Action Composables (5 Complete):**
 - `useAuthActions.ts` - Authentication operations orchestration
-- `useAuthProfileActions.ts` - Profile management operations orchestration  
+- `useAuthProfileActions.ts` - Profile management operations orchestration
 - `usePhrasesActions.ts` - Phrase operations orchestration
 - `useAdminActions.ts` - Admin operations orchestration
 - `useIncidentTimerActions.ts` - Timer operations orchestration
 
-**Pure Services (5 Complete):**
-- `services/authService.ts` - Pure authentication operations (no Vue context)
-- `services/authProfileService.ts` - Pure profile operations (no Vue context)
-- `services/phraseService.ts` - Pure phrase operations (no Vue context)
-- `services/adminService.ts` - Pure admin operations (no Vue context)
-- `services/incidentTimerService.ts` - Pure timer operations (no Vue context)
+**Pure Services with Curried Dependency Injection (5 Complete):**
+- `services/authService.ts` - Authentication operations
+- `services/authProfileService.ts` - Profile operations
+- `services/phraseService.ts` - Phrase operations
+- `services/adminService.ts` - Admin operations
+- `services/incidentTimerService.ts` - Timer operations
 
 **Pure Stores (3 Complete):**
-- `stores/phrases.ts` - Pure phrase state management (no service calls)
-- `stores/admin.ts` - Pure admin state management (no service calls)
-- `stores/incident-timers.ts` - Pure timer state management (no service calls)
+- `stores/phrases.ts` - Phrase state management
+- `stores/admin.ts` - Admin state management
+- `stores/incident-timers.ts` - Timer state management
+
+**Timer Management Utilities:**
+- `utils/timer-manager.ts` - Timer utilities (live updates, calculations, formatting)
 
 **Architecture Benefits:**
 - **Clear Separation**: Action composables orchestrate, services handle API calls, stores manage state
-- **Easy Testing**: Each layer can be tested in isolation with proper mocking
+- **Easy Testing**: Each layer can be tested in isolation with comprehensive mocking
 - **Reusable Services**: Pure services can be used outside Vue context
 - **Better Component Patterns**: Direct action calls instead of event emissions
 - **Maintainable**: Clean separation of concerns across all layers
+- **Testable**: Curried services enable easy mocking and comprehensive test coverage
 
 **Centralized API Routes:**
 - **Configuration**: `frontend/shared/config/api-routes.ts` - Single source of truth for all endpoints
@@ -278,20 +319,20 @@ Components <-> Action Composables <-> Pure Services + Pure Stores
 **Action Composable Pattern:**
 
 ```typescript
-// ✅ CORRECT: Action composable pattern
+// ✅ CORRECT: Action composable pattern with curried services
 export const useMyActions = () => {
   const { executeRequest, executeRequestWithSuccess, isLoading, error, hasError } = useBaseService()
   const backendFetch = useBackendFetch()
   
-  // Create service instance
+  // Create service instance with curried dependency injection
   const myService = myService(backendFetch)
   
-  // Destructure store methods
+  // Destructure store methods (pure state management)
   const { setData, updateData } = useMyStore()
   
   const loadData = async () => {
     const data = await executeRequest(() => myService.getData(), 'loadData')
-    setData(data)
+    setData(data) // Pure store mutation
     return data
   }
   
@@ -301,7 +342,7 @@ export const useMyActions = () => {
       'Updated successfully',
       'updateSomething'
     )
-    updateData(id, result)
+    updateData(id, result) // Pure store mutation
     return result
   }
   
@@ -316,7 +357,24 @@ export const useMyActions = () => {
 
 // ✅ CORRECT: Component usage
 const { loadData, updateSomething, isLoading } = useMyActions()
-await loadData() // Action calls service + updates store
+await loadData() // Action calls curried service + updates pure store
+```
+
+**Service Currying Pattern:**
+
+```typescript
+// ✅ CORRECT: Curried service for testability
+export const myService = (fetcher: FetcherFunction) => ({
+  getData: () => fetcher('/protected/data'),
+  updateSomething: (id: string, updates: any) => 
+    fetcher(`/protected/data/${id}`, { method: 'PUT', body: updates })
+})
+
+// ✅ CORRECT: Easy testing with mock fetcher
+const mockFetcher = vi.fn()
+const service = myService(mockFetcher)
+await service.getData()
+expect(mockFetcher).toHaveBeenCalledWith('/protected/data')
 ```
 
 **Environment Configuration:**

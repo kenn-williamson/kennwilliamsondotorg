@@ -4,14 +4,7 @@
  */
 
 import type { IncidentTimer, PublicTimerResponse } from '#shared/types/timers'
-
-// Global timer update interval - shared across all store instances
-let globalTimerInterval: NodeJS.Timeout | null = null
-
-// Global page visibility handler - shared across all store instances
-let visibilityHandlerAttached = false
-let visibilityChangeHandler: (() => void) | null = null
-let windowFocusHandler: (() => void) | null = null
+import { TimerManager, type TimerUpdateCallback, type DataRefreshCallback, type ActiveTimerProvider } from '~/utils/timer-manager'
 
 export const useIncidentTimerStore = defineStore('incident-timers', () => {
   // State
@@ -182,102 +175,57 @@ export const useIncidentTimerStore = defineStore('incident-timers', () => {
     )
   })
 
-  // Timer update methods
-  const startLiveTimerUpdates = () => {
-    // Clear existing interval
-    if (globalTimerInterval) {
-      clearInterval(globalTimerInterval)
-      globalTimerInterval = null
-    }
+  // Timer manager instance
+  let timerManager: TimerManager | null = null
 
-    // Set up page visibility handling (only once globally)
-    if (typeof document !== 'undefined' && !visibilityHandlerAttached) {
-      visibilityHandlerAttached = true
+  // Timer update callback for TimerManager
+  const timerUpdateCallback: TimerUpdateCallback = (breakdown) => {
+    activeTimerBreakdown.value = breakdown
+  }
 
-      visibilityChangeHandler = () => {
-        if (!document.hidden) {
-          console.log('👁️ Page visible again, refreshing data and restarting timer')
-          // Get current store instance and refresh data
-          const timerStore = useIncidentTimerStore()
-          if (timerStore.publicTimer && timerStore.publicTimerUserSlug) {
-            // Refresh public timer data - this would need to be called from action composable
-            console.log('🔄 Would refresh public timer data')
-          } else if (timerStore.latestTimer) {
-            // Refresh user timers data - this would need to be called from action composable
-            console.log('🔄 Would refresh user timers data')
-          }
-        }
-      }
+  // Data refresh callback for TimerManager
+  const dataRefreshCallback: DataRefreshCallback = async () => {
+    // This will be called by action composables when they need to refresh data
+    // The store doesn't handle data fetching - that's the action composable's job
+    console.log('🔄 TimerManager requested data refresh - action composable should handle this')
+  }
 
-      windowFocusHandler = () => {
-        console.log('🎯 Window focused, refreshing data and restarting timer')
-        const timerStore = useIncidentTimerStore()
-        if (timerStore.publicTimer && timerStore.publicTimerUserSlug) {
-          // Refresh public timer data - this would need to be called from action composable
-          console.log('🔄 Would refresh public timer data')
-        } else if (timerStore.latestTimer) {
-          // Refresh user timers data - this would need to be called from action composable
-          console.log('🔄 Would refresh user timers data')
-        }
-      }
-
-      document.addEventListener('visibilitychange', visibilityChangeHandler)
-      window.addEventListener('focus', windowFocusHandler)
-    }
-
-    // Determine which timer to track - prioritize public timer, fallback to latest user timer
+  // Active timer provider for TimerManager
+  const activeTimerProvider: ActiveTimerProvider = () => {
     const activeTimer = publicTimer.value || latestTimer.value
-    if (!activeTimer?.reset_timestamp) {
-      console.log('🔴 No active timer to track')
-      activeTimerBreakdown.value = { years: 0, months: 0, weeks: 0, days: 0, hours: 0, minutes: 0, seconds: 0 }
-      return
-    }
-
-    console.log('🟢 Starting live timer updates for:', {
+    if (!activeTimer?.reset_timestamp) return null
+    
+    return {
       id: activeTimer.id,
       reset_timestamp: activeTimer.reset_timestamp,
       isPublic: !!publicTimer.value
-    })
+    }
+  }
 
-    globalTimerInterval = setInterval(() => {
-      const currentActiveTimer = publicTimer.value || latestTimer.value
-      if (currentActiveTimer?.reset_timestamp) {
-        activeTimerBreakdown.value = getElapsedTimeBreakdown(currentActiveTimer)
-        console.log('🔄 Timer tick:', {
-          seconds: activeTimerBreakdown.value.seconds,
-          total: `${activeTimerBreakdown.value.years}y ${activeTimerBreakdown.value.months}m ${activeTimerBreakdown.value.weeks}w ${activeTimerBreakdown.value.days}d ${activeTimerBreakdown.value.hours}h ${activeTimerBreakdown.value.minutes}min ${activeTimerBreakdown.value.seconds}s`
-        })
-      } else {
-        console.log('🔴 No active timer found, stopping updates')
-        stopLiveTimerUpdates()
-      }
-    }, 1000)
+  // Timer update methods
+  const startLiveTimerUpdates = () => {
+    // Create timer manager if it doesn't exist
+    if (!timerManager) {
+      timerManager = new TimerManager(
+        timerUpdateCallback,
+        dataRefreshCallback,
+        activeTimerProvider
+      )
+    }
+
+    timerManager.start()
   }
 
   const stopLiveTimerUpdates = () => {
-    if (globalTimerInterval) {
-      console.log('⏹️ Stopping live timer updates')
-      clearInterval(globalTimerInterval)
-      globalTimerInterval = null
+    if (timerManager) {
+      timerManager.stop()
     }
-    activeTimerBreakdown.value = { years: 0, months: 0, weeks: 0, days: 0, hours: 0, minutes: 0, seconds: 0 }
   }
 
   const cleanupGlobalEventListeners = () => {
-    if (typeof document !== 'undefined' && visibilityHandlerAttached) {
-      console.log('🧹 Cleaning up page visibility event listeners')
-
-      if (visibilityChangeHandler) {
-        document.removeEventListener('visibilitychange', visibilityChangeHandler)
-        visibilityChangeHandler = null
-      }
-
-      if (windowFocusHandler) {
-        window.removeEventListener('focus', windowFocusHandler)
-        windowFocusHandler = null
-      }
-
-      visibilityHandlerAttached = false
+    if (timerManager) {
+      timerManager.cleanup()
+      timerManager = null
     }
   }
 

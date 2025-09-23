@@ -19,7 +19,8 @@ export function useJwtManager() {
       console.log('✅ [JWT Manager] Got token from server')
       return response.token
     } catch (error: any) {
-      console.log('❌ [JWT Manager] No token available:', error.message)
+      const errorMessage = error instanceof Error ? error.message : String(error)
+      console.log('❌ [JWT Manager] No token available:', errorMessage)
       return null
     }
   }

@@ -81,16 +81,18 @@ export const createMockAuthResponse = (overrides = {}) => ({
   ...overrides,
 })
 
-// Mock composables
+// Mock composables for new architecture
 export const mockUseBaseService = () => ({
   executeRequest: vi.fn(),
   executeRequestWithSuccess: vi.fn(),
-  backendFetch: vi.fn(),
-  authFetch: vi.fn(),
   isLoading: { value: false },
   error: { value: null },
   hasError: { value: false },
 })
+
+export const mockUseBackendFetch = () => vi.fn()
+
+export const mockUseAuthFetch = () => vi.fn()
 
 export const mockUseUserSession = () => ({
   loggedIn: { value: true },
@@ -99,38 +101,55 @@ export const mockUseUserSession = () => ({
   fetch: vi.fn(),
 })
 
-export const mockUseIncidentTimerService = () => ({
-  getUserTimers: vi.fn(),
-  getPublicTimer: vi.fn(),
+// Mock action composables
+export const mockUseIncidentTimerActions = () => ({
+  loadUserTimers: vi.fn(),
+  loadPublicTimer: vi.fn(),
   createTimer: vi.fn(),
   updateTimer: vi.fn(),
   deleteTimer: vi.fn(),
   quickReset: vi.fn(),
+  fetchTimers: vi.fn(),
+  fetchPublicTimer: vi.fn(),
+  startLiveTimerUpdates: vi.fn(),
+  stopLiveTimerUpdates: vi.fn(),
   isLoading: { value: false },
   error: { value: null },
   hasError: { value: false },
 })
 
-export const mockUsePhraseService = () => ({
-  fetchAllPhrases: vi.fn(),
-  fetchUserPhrases: vi.fn(),
-  fetchExcludedPhrases: vi.fn(),
+export const mockUseAuthActions = () => ({
+  login: vi.fn(),
+  register: vi.fn(),
+  previewSlug: vi.fn(),
+  revokeAllSessions: vi.fn(),
+  logout: vi.fn(),
+  isLoading: { value: false },
+  error: { value: null },
+  hasError: { value: false },
+})
+
+export const mockUsePhrasesActions = () => ({
+  loadUserPhrases: vi.fn(),
+  loadAdminPhrases: vi.fn(),
+  loadUserSuggestions: vi.fn(),
+  loadAdminSuggestions: vi.fn(),
   excludePhrase: vi.fn(),
   removePhraseExclusion: vi.fn(),
   submitPhraseSuggestion: vi.fn(),
-  fetchPhraseSuggestions: vi.fn(),
-  fetchRandomPhrase: vi.fn(),
-  fetchRandomPhraseClient: vi.fn(),
-  fetchRandomPhraseAuth: vi.fn(),
+  approveSuggestion: vi.fn(),
+  rejectSuggestion: vi.fn(),
+  getRandomPhrase: vi.fn(),
   isLoading: { value: false },
   error: { value: null },
   hasError: { value: false },
 })
 
-export const mockUseAdminService = () => ({
-  getStats: vi.fn(),
-  getUsers: vi.fn(),
-  getSuggestions: vi.fn(),
+export const mockUseAdminActions = () => ({
+  loadStats: vi.fn(),
+  loadUsers: vi.fn(),
+  loadSuggestions: vi.fn(),
+  loadPhrases: vi.fn(),
   deactivateUser: vi.fn(),
   activateUser: vi.fn(),
   resetUserPassword: vi.fn(),
@@ -140,6 +159,50 @@ export const mockUseAdminService = () => ({
   isLoading: { value: false },
   error: { value: null },
   hasError: { value: false },
+})
+
+// Mock pure services
+export const mockIncidentTimerService = () => ({
+  getUserTimers: vi.fn(),
+  getPublicTimer: vi.fn(),
+  createTimer: vi.fn(),
+  updateTimer: vi.fn(),
+  deleteTimer: vi.fn(),
+  quickReset: vi.fn(),
+})
+
+export const mockAuthService = () => ({
+  login: vi.fn(),
+  register: vi.fn(),
+  previewSlug: vi.fn(),
+  revokeAllSessions: vi.fn(),
+  logout: vi.fn(),
+})
+
+export const mockPhraseService = () => ({
+  fetchUserPhrases: vi.fn(),
+  fetchAllPhrases: vi.fn(),
+  excludePhrase: vi.fn(),
+  removePhraseExclusion: vi.fn(),
+  submitPhraseSuggestion: vi.fn(),
+  fetchPhraseSuggestions: vi.fn(),
+  fetchRandomPhraseAuth: vi.fn(),
+  fetchRandomPhraseClient: vi.fn(),
+  approveSuggestion: vi.fn(),
+  rejectSuggestion: vi.fn(),
+})
+
+export const mockAdminService = () => ({
+  getStats: vi.fn(),
+  getUsers: vi.fn(),
+  getSuggestions: vi.fn(),
+  getPhrases: vi.fn(),
+  deactivateUser: vi.fn(),
+  activateUser: vi.fn(),
+  resetUserPassword: vi.fn(),
+  promoteUser: vi.fn(),
+  approveSuggestion: vi.fn(),
+  rejectSuggestion: vi.fn(),
 })
 
 // Mock API responses

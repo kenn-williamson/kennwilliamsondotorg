@@ -1,23 +1,17 @@
-import { describe, it, expect, vi, beforeEach } from 'vitest'
+import { describe, it, expect, beforeEach } from 'vitest'
 import { setActivePinia, createPinia } from 'pinia'
-import { 
-  createMockUser, 
-  createMockPhraseSuggestion 
-} from '../utils/test-helpers'
+import { createMockUser, createMockPhraseSuggestion, createMockAdminStats } from '../utils/test-helpers'
 
-// Import the store (composables are mocked globally in setup.ts)
-import { useAdminStore } from '~/stores/admin'
+// Import the store directly - no mocking needed for pure stores
+import { useAdminStore } from '../../app/stores/admin'
 
 describe('useAdminStore', () => {
   beforeEach(() => {
     // Create a fresh pinia and make it active
     setActivePinia(createPinia())
-    
-    // Reset all mocks before each test
-    vi.clearAllMocks()
   })
 
-  describe('initial state', () => {
+  describe('store state', () => {
     it('should initialize with empty state', () => {
       const store = useAdminStore()
       
@@ -31,279 +25,239 @@ describe('useAdminStore', () => {
   })
 
   describe('computed properties', () => {
-    it('should filter users based on search query', () => {
+    it('should return all users when search query is empty', () => {
+      const store = useAdminStore()
+      const users = [createMockUser({ id: 'user1' }), createMockUser({ id: 'user2' })]
+      store.setUsers(users)
+      
+      expect(store.filteredUsers).toEqual(users)
+    })
+
+    it('should filter users by display name', () => {
       const store = useAdminStore()
       const users = [
-        createMockUser({ display_name: 'John Doe', email: 'john@example.com' }),
-        createMockUser({ display_name: 'Jane Smith', email: 'jane@example.com' }),
-        createMockUser({ display_name: 'Bob Johnson', email: 'bob@example.com' })
+        createMockUser({ id: 'user1', display_name: 'John Doe' }),
+        createMockUser({ id: 'user2', display_name: 'Jane Smith' }),
+        createMockUser({ id: 'user3', display_name: 'Bob Johnson' })
       ]
-      // Directly set the users array since it's readonly
-      store.users.splice(0, store.users.length, ...users)
-      
-      // No search query - should return all users
-      expect(store.filteredUsers).toEqual(users)
-      
-      // Search by display name
+      store.setUsers(users)
       store.setSearchQuery('John')
+      
       expect(store.filteredUsers).toHaveLength(2)
-      expect(store.filteredUsers).toContain(users[0]) // John Doe
-      expect(store.filteredUsers).toContain(users[2]) // Bob Johnson
+      expect(store.filteredUsers[0].display_name).toBe('John Doe')
+      expect(store.filteredUsers[1].display_name).toBe('Bob Johnson')
+    })
+
+    it('should filter users by email', () => {
+      const store = useAdminStore()
+      const users = [
+        createMockUser({ id: 'user1', email: 'john@example.com' }),
+        createMockUser({ id: 'user2', email: 'jane@test.com' }),
+        createMockUser({ id: 'user3', email: 'bob@example.org' })
+      ]
+      store.setUsers(users)
+      store.setSearchQuery('example')
       
-      // Search by email
-      store.setSearchQuery('jane@example.com')
-      expect(store.filteredUsers).toHaveLength(1)
-      expect(store.filteredUsers).toContain(users[1]) // Jane Smith
-      
-      // Case insensitive search
+      expect(store.filteredUsers).toHaveLength(2)
+      expect(store.filteredUsers[0].email).toBe('john@example.com')
+      expect(store.filteredUsers[1].email).toBe('bob@example.org')
+    })
+
+    it('should be case insensitive when filtering', () => {
+      const store = useAdminStore()
+      const users = [
+        createMockUser({ id: 'user1', display_name: 'John Doe' }),
+        createMockUser({ id: 'user2', display_name: 'JANE SMITH' }),
+        createMockUser({ id: 'user3', display_name: 'bob johnson' })
+      ]
+      store.setUsers(users)
       store.setSearchQuery('JOHN')
-      expect(store.filteredUsers).toHaveLength(2)
       
-      // Empty search query
-      store.setSearchQuery('')
-      expect(store.filteredUsers).toEqual(users)
+      expect(store.filteredUsers).toHaveLength(2)
+      expect(store.filteredUsers[0].display_name).toBe('John Doe')
+      expect(store.filteredUsers[1].display_name).toBe('bob johnson')
+    })
+
+    it('should return empty array when no users match search', () => {
+      const store = useAdminStore()
+      const users = [createMockUser({ display_name: 'John Doe' })]
+      store.setUsers(users)
+      store.setSearchQuery('NonExistent')
+      
+      expect(store.filteredUsers).toEqual([])
     })
 
     it('should return all suggestions as pending suggestions', () => {
       const store = useAdminStore()
       const suggestions = [
-        createMockPhraseSuggestion({ status: 'pending' }),
-        createMockPhraseSuggestion({ id: '2', status: 'pending' })
+        createMockPhraseSuggestion({ id: 'suggestion1' }),
+        createMockPhraseSuggestion({ id: 'suggestion2' })
       ]
-      // Directly set the suggestions array since it's readonly
-      store.suggestions.splice(0, store.suggestions.length, ...suggestions)
+      store.setSuggestions(suggestions)
       
       expect(store.pendingSuggestions).toEqual(suggestions)
     })
   })
 
-  describe('setSearchQuery', () => {
-    it('should update search query', () => {
+  describe('pure state management functions', () => {
+    it('should set users correctly', () => {
+      const store = useAdminStore()
+      const users = [createMockUser({ id: 'user1' }), createMockUser({ id: 'user2' })]
+      
+      store.setUsers(users)
+      
+      expect(store.users).toEqual(users)
+    })
+
+    it('should set suggestions correctly', () => {
+      const store = useAdminStore()
+      const suggestions = [
+        createMockPhraseSuggestion({ id: 'suggestion1' }),
+        createMockPhraseSuggestion({ id: 'suggestion2' })
+      ]
+      
+      store.setSuggestions(suggestions)
+      
+      expect(store.suggestions).toEqual(suggestions)
+    })
+
+    it('should set stats correctly', () => {
+      const store = useAdminStore()
+      const stats = createMockAdminStats()
+      
+      store.setStats(stats)
+      
+      expect(store.stats).toEqual(stats)
+    })
+
+    it('should set search query correctly', () => {
       const store = useAdminStore()
       
       store.setSearchQuery('test query')
+      
       expect(store.searchQuery).toBe('test query')
     })
-  })
 
-  describe('setSelectedUser', () => {
-    it('should update selected user', () => {
+    it('should set selected user correctly', () => {
       const store = useAdminStore()
-      const user = createMockUser()
+      const user = createMockUser({ id: 'selected' })
       
       store.setSelectedUser(user)
+      
       expect(store.selectedUser).toEqual(user)
+    })
+
+    it('should set selected user to null', () => {
+      const store = useAdminStore()
+      const user = createMockUser({ id: 'selected' })
+      store.setSelectedUser(user)
       
       store.setSelectedUser(null)
+      
       expect(store.selectedUser).toBeNull()
     })
-  })
 
-  describe('clearNewPassword', () => {
-    it('should clear new password', () => {
+    it('should set new password correctly', () => {
       const store = useAdminStore()
-      store.newPassword = 'test-password'
       
-      store.clearNewPassword()
+      store.setNewPassword('newPassword123')
+      
+      expect(store.newPassword).toBe('newPassword123')
+    })
+
+    it('should set new password to null', () => {
+      const store = useAdminStore()
+      store.setNewPassword('newPassword123')
+      
+      store.setNewPassword(null)
+      
       expect(store.newPassword).toBeNull()
     })
-  })
 
-  describe('fetchStats', () => {
-    it('should fetch stats and update state', async () => {
+    it('should update user active status correctly', () => {
       const store = useAdminStore()
-      const mockStats = {
-        total_users: 25,
-        active_users: 23,
-        pending_suggestions: 3,
-        total_phrases: 15
-      }
+      const user = createMockUser({ id: 'user1', active: true })
+      store.setUsers([user])
       
-      // Mock the service
-      const mockService = global.useAdminService()
-      mockService.getStats.mockResolvedValue(mockStats)
+      store.updateUserActiveStatus('user1', false)
       
-      const result = await store.fetchStats()
-      
-      expect(mockService.getStats).toHaveBeenCalled()
-      expect(store.stats).toEqual(mockStats)
-      expect(result).toEqual(mockStats)
-    })
-  })
-
-  describe('fetchUsers', () => {
-    it('should fetch users and update state', async () => {
-      const store = useAdminStore()
-      const mockUsers = [createMockUser(), createMockUser({ id: '2' })]
-      const mockResponse = { users: mockUsers, total: 2 }
-      
-      // Mock the service
-      const mockService = global.useAdminService()
-      mockService.getUsers.mockResolvedValue(mockResponse)
-      
-      const result = await store.fetchUsers()
-      
-      expect(mockService.getUsers).toHaveBeenCalledWith('')
-      expect(store.users).toEqual(mockUsers)
-      expect(result).toEqual(mockResponse)
+      expect(store.users[0].active).toBe(false)
     })
 
-    it('should use provided search query parameter', async () => {
+    it('should not update non-existent user active status', () => {
       const store = useAdminStore()
-      const mockUsers = [createMockUser()]
-      const mockResponse = { users: mockUsers, total: 1 }
+      const user = createMockUser({ id: 'user1', active: true })
+      store.setUsers([user])
       
-      // Mock the service
-      const mockService = global.useAdminService()
-      mockService.getUsers.mockResolvedValue(mockResponse)
+      store.updateUserActiveStatus('non-existent', false)
       
-      await store.fetchUsers('test search')
-      
-      expect(mockService.getUsers).toHaveBeenCalledWith('test search')
-    })
-  })
-
-  describe('fetchSuggestions', () => {
-    it('should fetch suggestions and update state', async () => {
-      const store = useAdminStore()
-      const mockSuggestions = [createMockPhraseSuggestion(), createMockPhraseSuggestion({ id: '2' })]
-      const mockResponse = { suggestions: mockSuggestions, total: 2 }
-      
-      // Mock the service
-      const mockService = global.useAdminService()
-      mockService.getSuggestions.mockResolvedValue(mockResponse)
-      
-      const result = await store.fetchSuggestions()
-      
-      expect(mockService.getSuggestions).toHaveBeenCalled()
-      expect(store.suggestions).toEqual(mockSuggestions)
-      expect(result).toEqual(mockResponse)
-    })
-  })
-
-  describe('deactivateUser', () => {
-    it('should deactivate user and update local state', async () => {
-      const store = useAdminStore()
-      const user = createMockUser({ active: true })
-      store.users.splice(0, store.users.length, user)
-      
-      // Mock the service
-      const mockService = global.useAdminService()
-      mockService.deactivateUser.mockResolvedValue({ message: 'User deactivated successfully' })
-      
-      await store.deactivateUser(user.id)
-      
-      expect(mockService.deactivateUser).toHaveBeenCalledWith(user.id)
-      expect(user.active).toBe(false)
+      expect(store.users[0].active).toBe(true)
     })
 
-    it('should handle user not found in local state', async () => {
+    it('should update user roles correctly', () => {
       const store = useAdminStore()
-      store.users = []
+      const user = createMockUser({ id: 'user1', roles: ['user'] })
+      store.setUsers([user])
       
-      // Mock the service
-      const mockService = global.useAdminService()
-      mockService.deactivateUser.mockResolvedValue({ message: 'User deactivated successfully' })
+      store.updateUserRoles('user1', ['user', 'admin'])
       
-      // Should not throw error even if user not found in local state
-      await expect(store.deactivateUser('nonexistent-id')).resolves.toBeUndefined()
+      expect(store.users[0].roles).toEqual(['user', 'admin'])
     })
-  })
 
-  describe('activateUser', () => {
-    it('should activate user and update local state', async () => {
+    it('should not update non-existent user roles', () => {
       const store = useAdminStore()
-      const user = createMockUser({ active: false })
-      store.users.splice(0, store.users.length, user)
+      const user = createMockUser({ id: 'user1', roles: ['user'] })
+      store.setUsers([user])
       
-      // Mock the service
-      const mockService = global.useAdminService()
-      mockService.activateUser.mockResolvedValue({ message: 'User activated successfully' })
+      store.updateUserRoles('non-existent', ['admin'])
       
-      await store.activateUser(user.id)
-      
-      expect(mockService.activateUser).toHaveBeenCalledWith(user.id)
-      expect(user.active).toBe(true)
+      expect(store.users[0].roles).toEqual(['user'])
     })
-  })
 
-  describe('resetUserPassword', () => {
-    it('should reset user password and store new password', async () => {
+    it('should remove suggestion correctly', () => {
       const store = useAdminStore()
-      const mockResponse = { new_password: 'newPassword123' }
+      const suggestion1 = createMockPhraseSuggestion({ id: 'suggestion1' })
+      const suggestion2 = createMockPhraseSuggestion({ id: 'suggestion2' })
+      store.setSuggestions([suggestion1, suggestion2])
       
-      // Mock the service
-      const mockService = global.useAdminService()
-      mockService.resetUserPassword.mockResolvedValue(mockResponse)
+      store.removeSuggestion('suggestion1')
       
-      const result = await store.resetUserPassword('user-id')
-      
-      expect(mockService.resetUserPassword).toHaveBeenCalledWith('user-id')
-      expect(store.newPassword).toBe('newPassword123')
-      expect(result).toEqual(mockResponse)
+      expect(store.suggestions).toHaveLength(1)
+      expect(store.suggestions[0]).toEqual(suggestion2)
     })
-  })
 
-  describe('promoteUser', () => {
-    it('should promote user and update local state', async () => {
+    it('should not remove non-existent suggestion', () => {
       const store = useAdminStore()
-      const user = createMockUser({ roles: ['user'] })
-      store.users.splice(0, store.users.length, user)
+      const suggestion = createMockPhraseSuggestion({ id: 'suggestion1' })
+      store.setSuggestions([suggestion])
       
-      // Mock the service
-      const mockService = global.useAdminService()
-      mockService.promoteUser.mockResolvedValue({ message: 'User promoted to admin successfully' })
+      store.removeSuggestion('non-existent')
       
-      await store.promoteUser(user.id)
-      
-      expect(mockService.promoteUser).toHaveBeenCalledWith(user.id)
-      expect(user.roles).toContain('admin')
+      expect(store.suggestions).toHaveLength(1)
+      expect(store.suggestions[0]).toEqual(suggestion)
     })
-  })
 
-  describe('approveSuggestion', () => {
-    it('should approve suggestion and remove from local state', async () => {
+    it('should clear new password correctly', () => {
       const store = useAdminStore()
-      const suggestion = createMockPhraseSuggestion()
-      store.suggestions.splice(0, store.suggestions.length, suggestion)
+      store.setNewPassword('password123')
       
-      // Mock the service
-      const mockService = global.useAdminService()
-      mockService.approveSuggestion.mockResolvedValue({ message: 'Suggestion approved successfully' })
+      store.clearNewPassword()
       
-      await store.approveSuggestion(suggestion.id, 'Great suggestion!')
-      
-      expect(mockService.approveSuggestion).toHaveBeenCalledWith(suggestion.id, 'Great suggestion!')
-      expect(store.suggestions).not.toContain(suggestion)
+      expect(store.newPassword).toBeNull()
     })
-  })
 
-  describe('rejectSuggestion', () => {
-    it('should reject suggestion and remove from local state', async () => {
+    it('should clear all state correctly', () => {
       const store = useAdminStore()
-      const suggestion = createMockPhraseSuggestion()
-      store.suggestions.splice(0, store.suggestions.length, suggestion)
+      const users = [createMockUser({ id: 'user1' })]
+      const suggestions = [createMockPhraseSuggestion({ id: 'suggestion1' })]
+      const stats = createMockAdminStats()
       
-      // Mock the service
-      const mockService = global.useAdminService()
-      mockService.rejectSuggestion.mockResolvedValue({ message: 'Suggestion rejected successfully' })
-      
-      await store.rejectSuggestion(suggestion.id, 'Too similar to existing content')
-      
-      expect(mockService.rejectSuggestion).toHaveBeenCalledWith(suggestion.id, 'Too similar to existing content')
-      expect(store.suggestions).not.toContain(suggestion)
-    })
-  })
-
-  describe('clearState', () => {
-    it('should clear all state', () => {
-      const store = useAdminStore()
-      store.users.splice(0, store.users.length, createMockUser())
-      store.suggestions.splice(0, store.suggestions.length, createMockPhraseSuggestion())
-      store.stats = { total_users: 10, active_users: 8, pending_suggestions: 2, total_phrases: 5 }
-      store.searchQuery = 'test'
-      store.selectedUser = createMockUser()
-      store.newPassword = 'password123'
+      store.setUsers(users)
+      store.setSuggestions(suggestions)
+      store.setStats(stats)
+      store.setSearchQuery('test')
+      store.setSelectedUser(users[0])
+      store.setNewPassword('password123')
       
       store.clearState()
       
@@ -313,6 +267,56 @@ describe('useAdminStore', () => {
       expect(store.searchQuery).toBe('')
       expect(store.selectedUser).toBeNull()
       expect(store.newPassword).toBeNull()
+    })
+  })
+
+  describe('edge cases', () => {
+    it('should handle empty search query with whitespace', () => {
+      const store = useAdminStore()
+      const users = [createMockUser({ display_name: 'John Doe' })]
+      store.setUsers(users)
+      store.setSearchQuery('   ')
+      
+      expect(store.filteredUsers).toEqual(users)
+    })
+
+    it('should handle partial matches in search', () => {
+      const store = useAdminStore()
+      const users = [
+        createMockUser({ display_name: 'Johnny Doe' }),
+        createMockUser({ display_name: 'John Smith' }),
+        createMockUser({ display_name: 'Bob Wilson' }) // Changed from Johnson to avoid matching
+      ]
+      store.setUsers(users)
+      store.setSearchQuery('John')
+      
+      expect(store.filteredUsers).toHaveLength(2)
+    })
+
+    it('should handle special characters in search', () => {
+      const store = useAdminStore()
+      const users = [
+        createMockUser({ display_name: 'John-Doe' }),
+        createMockUser({ display_name: 'John_Doe' }),
+        createMockUser({ display_name: 'John.Doe' })
+      ]
+      store.setUsers(users)
+      store.setSearchQuery('John')
+      
+      expect(store.filteredUsers).toHaveLength(3)
+    })
+
+    it('should handle updating user that appears multiple times', () => {
+      const store = useAdminStore()
+      const user1 = createMockUser({ id: 'user1', active: true })
+      const user2 = createMockUser({ id: 'user1', active: true }) // Same ID
+      store.setUsers([user1, user2])
+      
+      store.updateUserActiveStatus('user1', false)
+      
+      // Should update the first occurrence
+      expect(store.users[0].active).toBe(false)
+      expect(store.users[1].active).toBe(true)
     })
   })
 })

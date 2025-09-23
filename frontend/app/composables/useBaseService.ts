@@ -1,8 +1,6 @@
 import { ref, computed, getCurrentInstance, onUnmounted } from 'vue'
 
 export function useBaseService() {
-  const backendFetch = useBackendFetch()
-  const authFetch = useAuthFetch()
   
   // Service state
   const isLoading = ref(false)
@@ -90,10 +88,6 @@ export function useBaseService() {
     
     // Request execution
     executeRequest,
-    executeRequestWithSuccess,
-    
-    // API client access
-    backendFetch,
-    authFetch
+    executeRequestWithSuccess
   }
 }

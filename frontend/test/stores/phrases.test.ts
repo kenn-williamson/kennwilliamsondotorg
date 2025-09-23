@@ -1,24 +1,17 @@
-import { describe, it, expect, vi, beforeEach } from 'vitest'
+import { describe, it, expect, beforeEach } from 'vitest'
 import { setActivePinia, createPinia } from 'pinia'
-import { 
-  createMockPhrase, 
-  createMockPhraseSuggestion, 
-  createMockUser 
-} from '../utils/test-helpers'
+import { createMockPhrase, createMockPhraseSuggestion, createMockPhraseWithExclusion } from '../utils/test-helpers'
 
-// Import the store (composables are mocked globally in setup.ts)
+// Import the store directly - no mocking needed for pure stores
 import { usePhrasesStore } from '~/stores/phrases'
 
 describe('usePhrasesStore', () => {
   beforeEach(() => {
     // Create a fresh pinia and make it active
     setActivePinia(createPinia())
-    
-    // Reset all mocks before each test
-    vi.clearAllMocks()
   })
 
-  describe('initial state', () => {
+  describe('store state', () => {
     it('should initialize with empty state', () => {
       const store = usePhrasesStore()
       
@@ -26,260 +19,148 @@ describe('usePhrasesStore', () => {
       expect(store.adminPhrases).toEqual([])
       expect(store.userSuggestions).toEqual([])
       expect(store.adminSuggestions).toEqual([])
-      expect(store.hasUserPhrases).toBe(false)
-      expect(store.hasAdminPhrases).toBe(false)
-      expect(store.hasUserSuggestions).toBe(false)
-      expect(store.hasAdminSuggestions).toBe(false)
     })
   })
 
   describe('computed properties', () => {
-    it('should correctly compute hasUserPhrases', () => {
+    it('should correctly identify when user has phrases', () => {
       const store = usePhrasesStore()
+      const phrases = [createMockPhraseWithExclusion()]
       
-      // Initially empty
-      expect(store.hasUserPhrases).toBe(false)
+      store.setUserPhrases(phrases)
       
-      // Add phrases
-      store.userPhrases.splice(0, store.userPhrases.length, createMockPhrase())
       expect(store.hasUserPhrases).toBe(true)
     })
 
-    it('should correctly compute hasAdminPhrases', () => {
+    it('should correctly identify when user has no phrases', () => {
       const store = usePhrasesStore()
       
-      // Initially empty
-      expect(store.hasAdminPhrases).toBe(false)
+      expect(store.hasUserPhrases).toBe(false)
+    })
+
+    it('should correctly identify when admin has phrases', () => {
+      const store = usePhrasesStore()
+      const phrases = [createMockPhrase()]
       
-      // Add phrases
-      store.adminPhrases.splice(0, store.adminPhrases.length, createMockPhrase())
+      store.setAdminPhrases(phrases)
+      
       expect(store.hasAdminPhrases).toBe(true)
     })
 
-    it('should correctly compute hasUserSuggestions', () => {
+    it('should correctly identify when user has suggestions', () => {
       const store = usePhrasesStore()
+      const suggestions = [createMockPhraseSuggestion()]
       
-      // Initially empty
-      expect(store.hasUserSuggestions).toBe(false)
+      store.setUserSuggestions(suggestions)
       
-      // Add suggestions
-      store.userSuggestions.splice(0, store.userSuggestions.length, createMockPhraseSuggestion())
       expect(store.hasUserSuggestions).toBe(true)
     })
 
-    it('should correctly compute hasAdminSuggestions', () => {
+    it('should correctly identify when admin has suggestions', () => {
       const store = usePhrasesStore()
+      const suggestions = [createMockPhraseSuggestion()]
       
-      // Initially empty
-      expect(store.hasAdminSuggestions).toBe(false)
+      store.setAdminSuggestions(suggestions)
       
-      // Add suggestions
-      store.adminSuggestions.splice(0, store.adminSuggestions.length, createMockPhraseSuggestion())
       expect(store.hasAdminSuggestions).toBe(true)
     })
   })
 
-  describe('loadPhrasesForUser', () => {
-    it('should load user phrases and update state', async () => {
+  describe('pure state management functions', () => {
+    it('should set user phrases correctly', () => {
       const store = usePhrasesStore()
-      const mockPhrases = [createMockPhrase(), createMockPhrase({ id: '2' })]
-      const mockResponse = { phrases: mockPhrases }
+      const phrases = [createMockPhraseWithExclusion(), createMockPhraseWithExclusion()]
       
-      // Mock the service
-      const mockService = global.usePhraseService()
-      mockService.fetchUserPhrases.mockResolvedValue(mockResponse)
+      store.setUserPhrases(phrases)
       
-      const result = await store.loadPhrasesForUser()
-      
-      expect(mockService.fetchUserPhrases).toHaveBeenCalled()
-      expect(store.userPhrases).toEqual(mockPhrases)
-      expect(result).toEqual(mockResponse)
-    })
-  })
-
-  describe('loadAllPhrasesForAdmin', () => {
-    it('should load admin phrases and update state', async () => {
-      const store = usePhrasesStore()
-      const mockPhrases = [createMockPhrase(), createMockPhrase({ id: '2' })]
-      const mockResponse = { phrases: mockPhrases }
-      
-      // Mock the service
-      const mockService = global.usePhraseService()
-      mockService.fetchAllPhrases.mockResolvedValue(mockResponse)
-      
-      const result = await store.loadAllPhrasesForAdmin()
-      
-      expect(mockService.fetchAllPhrases).toHaveBeenCalled()
-      expect(store.adminPhrases).toEqual(mockPhrases)
-      expect(result).toEqual(mockResponse)
-    })
-  })
-
-  describe('loadSuggestionsForUser', () => {
-    it('should load user suggestions and update state', async () => {
-      const store = usePhrasesStore()
-      const mockSuggestions = [createMockPhraseSuggestion(), createMockPhraseSuggestion({ id: '2' })]
-      const mockResponse = { suggestions: mockSuggestions }
-      
-      // Mock the service
-      const mockService = global.usePhraseService()
-      mockService.fetchPhraseSuggestions.mockResolvedValue(mockResponse)
-      
-      const result = await store.loadSuggestionsForUser()
-      
-      expect(mockService.fetchPhraseSuggestions).toHaveBeenCalled()
-      expect(store.userSuggestions).toEqual(mockSuggestions)
-      expect(result).toEqual(mockResponse)
-    })
-  })
-
-  describe('loadAllSuggestionsForAdmin', () => {
-    it('should load admin suggestions and update state', async () => {
-      const store = usePhrasesStore()
-      const mockSuggestions = [createMockPhraseSuggestion(), createMockPhraseSuggestion({ id: '2' })]
-      const mockResponse = { suggestions: mockSuggestions }
-      
-      // Mock the service
-      const mockService = global.usePhraseService()
-      mockService.fetchPhraseSuggestions.mockResolvedValue(mockResponse)
-      
-      const result = await store.loadAllSuggestionsForAdmin()
-      
-      expect(mockService.fetchPhraseSuggestions).toHaveBeenCalled()
-      expect(store.adminSuggestions).toEqual(mockSuggestions)
-      expect(result).toEqual(mockResponse)
-    })
-  })
-
-  describe('togglePhraseExclusion', () => {
-    it('should exclude phrase when not currently excluded', async () => {
-      const store = usePhrasesStore()
-      const phrase = createMockPhrase({ is_excluded: false })
-      store.userPhrases.splice(0, store.userPhrases.length, phrase)
-      
-      // Mock the service
-      const mockService = global.usePhraseService()
-      mockService.excludePhrase.mockResolvedValue({ message: 'Phrase excluded successfully' })
-      
-      await store.togglePhraseExclusion(phrase.id)
-      
-      expect(mockService.excludePhrase).toHaveBeenCalledWith(phrase.id)
-      expect(phrase.is_excluded).toBe(true)
+      expect(store.userPhrases).toEqual(phrases)
     })
 
-    it('should remove exclusion when currently excluded', async () => {
+    it('should set admin phrases correctly', () => {
       const store = usePhrasesStore()
-      const phrase = createMockPhrase({ is_excluded: true })
-      store.userPhrases.splice(0, store.userPhrases.length, phrase)
+      const phrases = [createMockPhrase(), createMockPhrase()]
       
-      // Mock the service
-      const mockService = global.usePhraseService()
-      mockService.removePhraseExclusion.mockResolvedValue({ message: 'Phrase exclusion removed successfully' })
+      store.setAdminPhrases(phrases)
       
-      await store.togglePhraseExclusion(phrase.id)
-      
-      expect(mockService.removePhraseExclusion).toHaveBeenCalledWith(phrase.id)
-      expect(phrase.is_excluded).toBe(false)
+      expect(store.adminPhrases).toEqual(phrases)
     })
 
-    it('should throw error when phrase not found', async () => {
+    it('should set user suggestions correctly', () => {
       const store = usePhrasesStore()
-      store.userPhrases = []
+      const suggestions = [createMockPhraseSuggestion(), createMockPhraseSuggestion()]
       
-      await expect(store.togglePhraseExclusion('nonexistent-id'))
-        .rejects.toThrow('Phrase not found')
-    })
-  })
-
-  describe('submitSuggestion', () => {
-    it('should submit suggestion and add to user suggestions', async () => {
-      const store = usePhrasesStore()
-      const mockSuggestion = createMockPhraseSuggestion()
-      const mockResponse = { suggestion: mockSuggestion }
+      store.setUserSuggestions(suggestions)
       
-      // Mock the service
-      const mockService = global.usePhraseService()
-      mockService.submitPhraseSuggestion.mockResolvedValue(mockResponse)
-      
-      const result = await store.submitSuggestion('New phrase suggestion')
-      
-      expect(mockService.submitPhraseSuggestion).toHaveBeenCalledWith('New phrase suggestion')
-      expect(store.userSuggestions).toContain(mockSuggestion)
-      expect(result).toEqual(mockSuggestion)
-    })
-  })
-
-  describe('approveSuggestion', () => {
-    it('should approve suggestion and update status', async () => {
-      const store = usePhrasesStore()
-      const suggestion = createMockPhraseSuggestion({ status: 'pending' })
-      store.adminSuggestions.splice(0, store.adminSuggestions.length, suggestion)
-      
-      // Mock the service
-      const mockService = global.useAdminService()
-      mockService.approveSuggestion.mockResolvedValue({ message: 'Suggestion approved successfully' })
-      
-      const result = await store.approveSuggestion(suggestion.id, 'Great suggestion!')
-      
-      expect(mockService.approveSuggestion).toHaveBeenCalledWith(suggestion.id, 'Great suggestion!')
-      expect(suggestion.status).toBe('approved')
-      expect(suggestion.admin_reason).toBe('Great suggestion!')
-      expect(result).toEqual(suggestion)
+      expect(store.userSuggestions).toEqual(suggestions)
     })
 
-    it('should approve suggestion with empty reason when not provided', async () => {
+    it('should set admin suggestions correctly', () => {
       const store = usePhrasesStore()
-      const suggestion = createMockPhraseSuggestion({ status: 'pending' })
-      store.adminSuggestions.splice(0, store.adminSuggestions.length, suggestion)
+      const suggestions = [createMockPhraseSuggestion(), createMockPhraseSuggestion()]
       
-      // Mock the service
-      const mockService = global.useAdminService()
-      mockService.approveSuggestion.mockResolvedValue({ message: 'Suggestion approved successfully' })
+      store.setAdminSuggestions(suggestions)
       
-      await store.approveSuggestion(suggestion.id)
-      
-      expect(mockService.approveSuggestion).toHaveBeenCalledWith(suggestion.id, '')
-    })
-  })
-
-  describe('rejectSuggestion', () => {
-    it('should reject suggestion and update status', async () => {
-      const store = usePhrasesStore()
-      const suggestion = createMockPhraseSuggestion({ status: 'pending' })
-      store.adminSuggestions.splice(0, store.adminSuggestions.length, suggestion)
-      
-      // Mock the service
-      const mockService = global.useAdminService()
-      mockService.rejectSuggestion.mockResolvedValue({ message: 'Suggestion rejected successfully' })
-      
-      const result = await store.rejectSuggestion(suggestion.id, 'Too similar to existing content')
-      
-      expect(mockService.rejectSuggestion).toHaveBeenCalledWith(suggestion.id, 'Too similar to existing content')
-      expect(suggestion.status).toBe('rejected')
-      expect(suggestion.admin_reason).toBe('Too similar to existing content')
-      expect(result).toEqual(suggestion)
+      expect(store.adminSuggestions).toEqual(suggestions)
     })
 
-    it('should reject suggestion with empty reason when not provided', async () => {
+    it('should add user suggestion correctly', () => {
       const store = usePhrasesStore()
-      const suggestion = createMockPhraseSuggestion({ status: 'pending' })
-      store.adminSuggestions.splice(0, store.adminSuggestions.length, suggestion)
+      const existingSuggestion = createMockPhraseSuggestion({ id: 'existing' })
+      const newSuggestion = createMockPhraseSuggestion({ id: 'new' })
+      store.setUserSuggestions([existingSuggestion])
       
-      // Mock the service
-      const mockService = global.useAdminService()
-      mockService.rejectSuggestion.mockResolvedValue({ message: 'Suggestion rejected successfully' })
+      store.addUserSuggestion(newSuggestion)
       
-      await store.rejectSuggestion(suggestion.id)
+      expect(store.userSuggestions).toHaveLength(2)
+      expect(store.userSuggestions[0].id).toBe('new') // Should be added to beginning
+    })
+
+    it('should toggle phrase exclusion correctly', () => {
+      const store = usePhrasesStore()
+      const phrase = createMockPhraseWithExclusion({ id: 'test-phrase', is_excluded: false })
+      store.setUserPhrases([phrase])
       
-      expect(mockService.rejectSuggestion).toHaveBeenCalledWith(suggestion.id, '')
+      store.togglePhraseExclusion('test-phrase')
+      
+      expect(store.userPhrases[0].is_excluded).toBe(true)
+      
+      store.togglePhraseExclusion('test-phrase')
+      
+      expect(store.userPhrases[0].is_excluded).toBe(false)
+    })
+
+    it('should update suggestion status correctly', () => {
+      const store = usePhrasesStore()
+      const suggestion = createMockPhraseSuggestion({ 
+        id: 'test-suggestion', 
+        status: 'pending' 
+      })
+      store.setAdminSuggestions([suggestion])
+      
+      store.updateSuggestionStatus('test-suggestion', 'approved', 'Great suggestion!')
+      
+      expect(store.adminSuggestions[0].status).toBe('approved')
+      expect(store.adminSuggestions[0].admin_reason).toBe('Great suggestion!')
+    })
+
+    it('should remove suggestion correctly', () => {
+      const store = usePhrasesStore()
+      const suggestion1 = createMockPhraseSuggestion({ id: 'suggestion-1' })
+      const suggestion2 = createMockPhraseSuggestion({ id: 'suggestion-2' })
+      store.setAdminSuggestions([suggestion1, suggestion2])
+      
+      store.removeSuggestion('suggestion-1')
+      
+      expect(store.adminSuggestions).toHaveLength(1)
+      expect(store.adminSuggestions[0].id).toBe('suggestion-2')
     })
   })
 
   describe('utility functions', () => {
-    it('should clear user data', () => {
+    it('should clear user data correctly', () => {
       const store = usePhrasesStore()
-      store.userPhrases.splice(0, store.userPhrases.length, createMockPhrase())
-      store.userSuggestions.splice(0, store.userSuggestions.length, createMockPhraseSuggestion())
+      store.setUserPhrases([createMockPhraseWithExclusion()])
+      store.setUserSuggestions([createMockPhraseSuggestion()])
       
       store.clearUserData()
       
@@ -287,10 +168,10 @@ describe('usePhrasesStore', () => {
       expect(store.userSuggestions).toEqual([])
     })
 
-    it('should clear admin data', () => {
+    it('should clear admin data correctly', () => {
       const store = usePhrasesStore()
-      store.adminPhrases.splice(0, store.adminPhrases.length, createMockPhrase())
-      store.adminSuggestions.splice(0, store.adminSuggestions.length, createMockPhraseSuggestion())
+      store.setAdminPhrases([createMockPhrase()])
+      store.setAdminSuggestions([createMockPhraseSuggestion()])
       
       store.clearAdminData()
       
@@ -298,18 +179,18 @@ describe('usePhrasesStore', () => {
       expect(store.adminSuggestions).toEqual([])
     })
 
-    it('should clear all data', () => {
+    it('should clear all data correctly', () => {
       const store = usePhrasesStore()
-      store.userPhrases.splice(0, store.userPhrases.length, createMockPhrase())
-      store.adminPhrases.splice(0, store.adminPhrases.length, createMockPhrase())
-      store.userSuggestions.splice(0, store.userSuggestions.length, createMockPhraseSuggestion())
-      store.adminSuggestions.splice(0, store.adminSuggestions.length, createMockPhraseSuggestion())
+      store.setUserPhrases([createMockPhraseWithExclusion()])
+      store.setUserSuggestions([createMockPhraseSuggestion()])
+      store.setAdminPhrases([createMockPhrase()])
+      store.setAdminSuggestions([createMockPhraseSuggestion()])
       
       store.clearAllData()
       
       expect(store.userPhrases).toEqual([])
-      expect(store.adminPhrases).toEqual([])
       expect(store.userSuggestions).toEqual([])
+      expect(store.adminPhrases).toEqual([])
       expect(store.adminSuggestions).toEqual([])
     })
   })
