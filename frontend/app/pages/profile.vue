@@ -64,16 +64,19 @@ if (!loggedIn.value) {
   await navigateTo('/login')
 }
 
-// Fetch fresh user data from backend
-const { data: user, refresh: refreshUser, pending: userPending, error: userError } = await useFetch('/api/auth/me', {
-  server: true,
-  default: () => null
-})
+// Fetch fresh user data using auth store
+const authStore = useAuthStore()
+const user = await authStore.fetchCurrentUser()
 
 // Handle authentication errors
-if (userError.value?.statusCode === 401) {
+if (authStore.error && authStore.error.includes('401')) {
   await navigateTo('/login')
 }
+
+// Reactive references for template compatibility
+const refreshUser = () => authStore.refreshUser()
+const userPending = computed(() => authStore.isLoading)
+const userError = computed(() => authStore.error ? { statusCode: 401 } : null)
 
 // Event handlers removed - components handle success via action composables
 </script>

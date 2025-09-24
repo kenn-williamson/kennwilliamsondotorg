@@ -4,8 +4,8 @@
       <button
         v-for="tab in tabs"
         :key="tab.id"
-        :class="['tab-button', { active: activeTab === tab.id }]"
-        :aria-selected="activeTab === tab.id"
+        :class="['tab-button', { active: adminStore.activeTab === tab.id }]"
+        :aria-selected="adminStore.activeTab === tab.id"
         :aria-controls="`tab-panel-${tab.id}`"
         role="tab"
         @click="setActiveTab(tab.id)"
@@ -18,15 +18,10 @@
 </template>
 
 <script setup lang="ts">
+import { useAdminStore } from '~/stores/admin'
 import type { Tab } from '#shared/types'
 
-const props = defineProps<{
-  activeTab: string
-}>()
-
-const emit = defineEmits<{
-  'update:activeTab': [tabId: string]
-}>()
+const adminStore = useAdminStore()
 
 const tabs: Tab[] = [
   {
@@ -47,7 +42,7 @@ const tabs: Tab[] = [
 ]
 
 const setActiveTab = (tabId: string) => {
-  emit('update:activeTab', tabId)
+  adminStore.setActiveTab(tabId)
   // Update URL without page reload
   const url = new URL(window.location.href)
   url.searchParams.set('tab', tabId)

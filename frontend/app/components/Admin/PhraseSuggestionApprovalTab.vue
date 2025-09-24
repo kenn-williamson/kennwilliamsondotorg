@@ -1,13 +1,13 @@
 <template>
   <div class="phrase-suggestions-tab">
     <!-- Loading State -->
-    <div v-if="isLoading" class="flex justify-center items-center py-12">
+    <div v-if="adminStore.isLoading" class="flex justify-center items-center py-12">
       <div class="animate-spin rounded-full h-8 w-8 border-b-2 border-gray-900"></div>
     </div>
 
     <!-- Error State -->
-    <div v-else-if="error" class="bg-red-50 border border-red-200 rounded-md p-4 mb-6">
-      <p class="text-red-800 text-sm">{{ error }}</p>
+    <div v-else-if="adminStore.error" class="bg-red-50 border border-red-200 rounded-md p-4 mb-6">
+      <p class="text-red-800 text-sm">{{ adminStore.error }}</p>
       <button 
         @click="refreshSuggestions"
         class="mt-2 text-sm text-red-600 hover:text-red-700 underline"
@@ -163,10 +163,10 @@
 
 <script setup lang="ts">
 import { useAdminStore } from '~/stores/admin'
-import { useAdminActions } from '~/composables/useAdminActions'
+import { usePhrasesStore } from '~/stores/phrases'
 
 const adminStore = useAdminStore()
-const { fetchPhraseSuggestions, approveSuggestion: approveSuggestionAction, rejectSuggestion: rejectSuggestionAction, isLoading, error } = useAdminActions()
+const phrasesStore = usePhrasesStore()
 
 // Modal state
 const showApprovalModal = ref(false)
@@ -176,14 +176,14 @@ const approvalReason = ref('')
 const rejectionReason = ref('')
 const isProcessing = ref(false)
 
-// Load suggestions on mount
-onMounted(async () => {
-  await fetchPhraseSuggestions()
-})
+// Load suggestions directly in setup. This runs ON THE SERVER.
+// Nuxt will wait for this to complete before sending the page.
+console.log('🔄 Loading admin suggestions for PhraseSuggestionApprovalTab...')
+await adminStore.fetchSuggestions()
 
 // Refresh suggestions function
 const refreshSuggestions = async () => {
-  await fetchPhraseSuggestions()
+  await adminStore.fetchSuggestions()
 }
 
 // Approve suggestion
@@ -198,7 +198,7 @@ const confirmApproval = async () => {
   
   try {
     isProcessing.value = true
-    await approveSuggestionAction(selectedSuggestion.value.id, approvalReason.value)
+    await phrasesStore.approveSuggestion(selectedSuggestion.value.id, approvalReason.value)
     showApprovalModal.value = false
     selectedSuggestion.value = null
     approvalReason.value = ''
@@ -227,7 +227,7 @@ const confirmRejection = async () => {
   
   try {
     isProcessing.value = true
-    await rejectSuggestionAction(selectedSuggestion.value.id, rejectionReason.value)
+    await phrasesStore.rejectSuggestion(selectedSuggestion.value.id, rejectionReason.value)
     showRejectionModal.value = false
     selectedSuggestion.value = null
     rejectionReason.value = ''

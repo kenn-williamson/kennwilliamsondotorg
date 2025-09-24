@@ -1,10 +1,12 @@
 /**
- * Pure Admin Store - Only state management, no service calls
- * Refactored to follow proper separation of concerns
+ * Centralized Admin Store - State management with actions
+ * Refactored to eliminate action composable middleman
  */
 
 import type { User, AdminStats } from '#shared/types'
 import type { PhraseSuggestion } from '#shared/types/phrases'
+import { adminService } from '~/services/adminService'
+import { useSmartFetch } from '#shared/composables/useSmartFetch'
 
 export const useAdminStore = defineStore('admin', () => {
   // State
@@ -14,6 +16,11 @@ export const useAdminStore = defineStore('admin', () => {
   const searchQuery = ref('')
   const selectedUser = ref<User | null>(null)
   const newPassword = ref<string | null>(null)
+  const activeTab = ref('overview')
+  
+  // Transient state (moved from useBaseService)
+  const isLoading = ref(false)
+  const error = ref<string | null>(null)
 
   // Computed
   const filteredUsers = computed((): User[] => {
@@ -29,6 +36,155 @@ export const useAdminStore = defineStore('admin', () => {
   const pendingSuggestions = computed((): PhraseSuggestion[] => {
     return suggestions.value
   })
+
+  const hasError = computed(() => !!error.value)
+
+  // Service instance
+  const smartFetch = useSmartFetch()
+  const adminServiceInstance = adminService(smartFetch)
+
+  // Private action handler (replaces useBaseService logic)
+  const _handleAction = async <T>(
+    action: () => Promise<T>,
+    context?: string
+  ): Promise<T | undefined> => {
+    isLoading.value = true
+    error.value = null
+    
+    try {
+      const result = await action()
+      return result
+    } catch (err: any) {
+      const errorMessage = err instanceof Error ? err.message : 'An unexpected error occurred'
+      error.value = errorMessage
+      console.error(`[AdminStore] Error${context ? ` in ${context}` : ''}:`, errorMessage)
+      
+      // Handle authentication errors gracefully (don't crash during SSR)
+      if (err.statusCode === 401) {
+        console.log(`[AdminStore] Authentication error in ${context}, returning null instead of crashing`)
+        return undefined
+      }
+      
+      throw err
+    } finally {
+      isLoading.value = false
+    }
+  }
+
+  // Private success handler
+  const _handleSuccess = (message: string): void => {
+    console.log(`[AdminStore] Success: ${message}`)
+    // TODO: Add toast notifications here
+  }
+
+  // Get backend URL based on environment
+  const getBackendUrl = () => {
+    // During SSR, use internal Docker network
+    if (process.server) {
+      return 'http://backend:8080/backend'
+    }
+    // On client, use public URL
+    return 'https://localhost/backend'
+  }
+
+  // Actions (migrated from useAdminActions)
+  const fetchStats = async () => {
+    const data = await _handleAction(() => adminServiceInstance.getStats(), 'fetchStats')
+    if (data) {
+      stats.value = data
+    }
+    return data
+  }
+
+  // SSR-compatible stats fetching
+  const fetchStatsSSR = async (): Promise<AdminStats | null> => {
+    const result = await _handleAction(async () => {
+      // Use existing service method with useSmartFetch
+      const response = await adminServiceInstance.getStats()
+      stats.value = response
+      return response
+    }, 'fetchStatsSSR')
+    
+    return result || null
+  }
+
+  const fetchUsers = async (searchQueryParam?: string) => {
+    const data = await _handleAction(
+      () => adminServiceInstance.getUsers(searchQueryParam || searchQuery.value),
+      'fetchUsers'
+    )
+    if (data) {
+      users.value = data.users
+    }
+    return data
+  }
+
+  const fetchSuggestions = async () => {
+    const data = await _handleAction(() => adminServiceInstance.getSuggestions(), 'fetchSuggestions')
+    if (data) {
+      suggestions.value = data.suggestions
+    }
+    return data
+  }
+
+  const deactivateUser = async (userId: string) => {
+    await _handleAction(() => adminServiceInstance.deactivateUser(userId), 'deactivateUser')
+    _handleSuccess('User deactivated successfully')
+    
+    // Update local state
+    const user = users.value.find(u => u.id === userId)
+    if (user) {
+      user.active = false
+    }
+  }
+
+  const activateUser = async (userId: string) => {
+    await _handleAction(() => adminServiceInstance.activateUser(userId), 'activateUser')
+    _handleSuccess('User activated successfully')
+    
+    // Update local state
+    const user = users.value.find(u => u.id === userId)
+    if (user) {
+      user.active = true
+    }
+  }
+
+  const resetUserPassword = async (userId: string) => {
+    const data = await _handleAction(() => adminServiceInstance.resetUserPassword(userId), 'resetUserPassword')
+    _handleSuccess('Password reset successfully')
+    
+    if (data) {
+      newPassword.value = data.new_password
+    }
+    return data
+  }
+
+  const promoteUser = async (userId: string) => {
+    await _handleAction(() => adminServiceInstance.promoteUser(userId), 'promoteUser')
+    _handleSuccess('User promoted to admin successfully')
+    
+    // Update local state
+    const user = users.value.find(u => u.id === userId)
+    if (user) {
+      user.roles = [...user.roles, 'admin']
+    }
+  }
+
+  const approveSuggestion = async (suggestionId: string, adminReason: string) => {
+    await _handleAction(() => adminServiceInstance.approveSuggestion(suggestionId, adminReason), 'approveSuggestion')
+    _handleSuccess('Suggestion approved successfully')
+    
+    // Remove from local state
+    suggestions.value = suggestions.value.filter(s => s.id !== suggestionId)
+  }
+
+  const rejectSuggestion = async (suggestionId: string, adminReason: string) => {
+    await _handleAction(() => adminServiceInstance.rejectSuggestion(suggestionId, adminReason), 'rejectSuggestion')
+    _handleSuccess('Suggestion rejected successfully')
+    
+    // Remove from local state
+    suggestions.value = suggestions.value.filter(s => s.id !== suggestionId)
+  }
 
   // Pure state management functions
   const setUsers = (usersList: User[]) => {
@@ -49,6 +205,10 @@ export const useAdminStore = defineStore('admin', () => {
 
   const setSelectedUser = (user: User | null) => {
     selectedUser.value = user
+  }
+
+  const setActiveTab = (tab: string) => {
+    activeTab.value = tab
   }
 
   const setNewPassword = (password: string | null) => {
@@ -84,6 +244,8 @@ export const useAdminStore = defineStore('admin', () => {
     searchQuery.value = ''
     selectedUser.value = null
     newPassword.value = null
+    activeTab.value = 'overview'
+    error.value = null
   }
 
   return {
@@ -94,17 +256,34 @@ export const useAdminStore = defineStore('admin', () => {
     searchQuery: readonly(searchQuery),
     selectedUser: readonly(selectedUser),
     newPassword: readonly(newPassword),
+    activeTab: readonly(activeTab),
+    isLoading: readonly(isLoading),
+    error: readonly(error),
     
     // Computed
     filteredUsers,
     pendingSuggestions,
+    hasError,
     
-    // Actions
+    // Actions (migrated from useAdminActions)
+    fetchStats,
+    fetchStatsSSR,
+    fetchUsers,
+    fetchSuggestions,
+    deactivateUser,
+    activateUser,
+    resetUserPassword,
+    promoteUser,
+    approveSuggestion,
+    rejectSuggestion,
+    
+    // Utility actions
     setUsers,
     setSuggestions,
     setStats,
     setSearchQuery,
     setSelectedUser,
+    setActiveTab,
     setNewPassword,
     updateUserActiveStatus,
     updateUserRoles,

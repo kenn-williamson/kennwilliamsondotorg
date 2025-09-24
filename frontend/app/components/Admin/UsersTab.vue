@@ -4,13 +4,13 @@
     <UserSearchBox />
 
     <!-- Loading State -->
-    <div v-if="isLoading" class="flex justify-center items-center py-12">
+    <div v-if="adminStore.isLoading" class="flex justify-center items-center py-12">
       <div class="animate-spin rounded-full h-8 w-8 border-b-2 border-gray-900"></div>
     </div>
 
     <!-- Error State -->
-    <div v-else-if="error" class="bg-red-50 border border-red-200 rounded-md p-4 mb-6">
-      <p class="text-red-800 text-sm">{{ error }}</p>
+    <div v-else-if="adminStore.error" class="bg-red-50 border border-red-200 rounded-md p-4 mb-6">
+      <p class="text-red-800 text-sm">{{ adminStore.error }}</p>
       <button 
         @click="refreshUsers"
         class="mt-2 text-sm text-red-600 hover:text-red-700 underline"
@@ -195,19 +195,17 @@
 
 <script setup lang="ts">
 import { useAdminStore } from '~/stores/admin'
-import { useAdminActions } from '~/composables/useAdminActions'
 
 const adminStore = useAdminStore()
-const { fetchUsers, deactivateUser, activateUser, resetUserPassword, promoteUser, isLoading, error } = useAdminActions()
 
-// Load users on mount
-onMounted(async () => {
-  await fetchUsers()
-})
+// Load users directly in setup. This runs ON THE SERVER.
+// Nuxt will wait for this to complete before sending the page.
+console.log('🔄 Loading admin users for UsersTab...')
+await adminStore.fetchUsers()
 
 // Refresh users function
 const refreshUsers = async () => {
-  await fetchUsers()
+  await adminStore.fetchUsers()
 }
 
 // View user details
@@ -223,9 +221,9 @@ const viewUser = (user: any) => {
 const toggleUserStatus = async (user: any) => {
   try {
     if (user.active) {
-      await deactivateUser(user.id)
+      await adminStore.deactivateUser(user.id)
     } else {
-      await activateUser(user.id)
+      await adminStore.activateUser(user.id)
     }
   } catch (error) {
     console.error('Toggle user status error:', error)
@@ -236,7 +234,7 @@ const toggleUserStatus = async (user: any) => {
 const resetPassword = async (user: any) => {
   try {
     adminStore.setSelectedUser(user)
-    await resetUserPassword(user.id)
+    await adminStore.resetUserPassword(user.id)
   } catch (error) {
     console.error('Reset password error:', error)
   }
@@ -245,7 +243,7 @@ const resetPassword = async (user: any) => {
 // Promote user to admin
 const handlePromoteUser = async (user: any) => {
   try {
-    await promoteUser(user.id)
+    await adminStore.promoteUser(user.id)
   } catch (error) {
     console.error('Promote user error:', error)
   }

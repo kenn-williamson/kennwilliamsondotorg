@@ -7,11 +7,11 @@ export default defineEventHandler(async (event: any) => {
     // Get the user session to access the refresh token
     const session = await getUserSession(event)
     
+    // If no user data, just clear the session (handles stale sessions)
     if (!session?.user) {
-      throw createError({
-        statusCode: 401,
-        statusMessage: 'Not authenticated'
-      })
+      console.log('🔍 [Logout API] No user data found, clearing stale session')
+      await clearUserSession(event)
+      return { success: true, message: 'Stale session cleared' }
     }
     
     const refreshToken = session.secure?.refreshToken

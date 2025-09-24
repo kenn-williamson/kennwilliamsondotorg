@@ -44,7 +44,6 @@
 <script setup>
 import { formatDisplayDate } from '~/utils/dateUtils'
 import { useIncidentTimerStore } from '~/stores/incident-timers'
-import { useIncidentTimerActions } from '~/composables/useIncidentTimerActions'
 
 const props = defineProps({
   timer: {
@@ -64,15 +63,14 @@ const props = defineProps({
 defineEmits(['edit'])
 
 // Get timer store for formatting non-latest timers
-const timerStore = useIncidentTimerStore()
-const { deleteTimer } = useIncidentTimerActions()
+const incidentTimerStore = useIncidentTimerStore()
 
 // Compute elapsed time display
 const elapsedTimeDisplay = computed(() => {
   if (props.isLatest) {
     return props.liveElapsedTime
   } else {
-    return timerStore.formatElapsedTime(props.timer)
+    return incidentTimerStore.formatElapsedTime(props.timer)
   }
 })
 
@@ -81,10 +79,10 @@ const formatDate = (dateString) => {
   return formatDisplayDate(dateString)
 }
 
-// Delete timer using action composable
+// Delete timer using store
 const handleDeleteTimer = async () => {
   if (confirm('Are you sure you want to delete this timer?')) {
-    await deleteTimer(props.timer.id)
+    await incidentTimerStore.deleteTimer(props.timer.id)
   }
 }
 </script>

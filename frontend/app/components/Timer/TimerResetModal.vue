@@ -27,10 +27,10 @@
           </button>
           <button
             type="submit"
-            :disabled="isLoading"
+            :disabled="incidentTimerStore.isLoading"
             class="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 disabled:opacity-50 transition-colors duration-200"
           >
-            {{ isLoading ? 'Resetting...' : 'Reset Timer' }}
+            {{ incidentTimerStore.isLoading ? 'Resetting...' : 'Reset Timer' }}
           </button>
         </div>
       </form>
@@ -39,7 +39,7 @@
 </template>
 
 <script setup>
-import { useIncidentTimerActions } from '~/composables/useIncidentTimerActions'
+import { useIncidentTimerStore } from '~/stores/incident-timers'
 
 const props = defineProps({
   show: {
@@ -54,8 +54,8 @@ const form = reactive({
   notes: ''
 })
 
-// Action composable
-const { createTimer, isLoading } = useIncidentTimerActions()
+// Store
+const incidentTimerStore = useIncidentTimerStore()
 
 const handleSubmit = async () => {
   try {
@@ -63,7 +63,7 @@ const handleSubmit = async () => {
       reset_timestamp: new Date().toISOString(),
       notes: form.notes || undefined
     }
-    await createTimer(timerData)
+    await incidentTimerStore.createTimer(timerData)
     emit('close') // Close modal after successful creation
   } catch (error) {
     console.error('Error creating timer:', error)

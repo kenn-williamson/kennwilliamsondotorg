@@ -16,8 +16,9 @@ export function useBackendFetch() {
   const jwtManager = useJwtManager()
 
   const backendFetch = async <T = any>(url: string, options: any = {}): Promise<T> => {
-    // All backend calls use the same base URL
-    const baseURL = config.public.apiBase
+    // Use correct base URL based on environment
+    // SSR: internal Docker network, Client: nginx proxy
+    const baseURL = process.server ? config.apiBase : config.public.apiBase
     const targetUrl = url
 
     // Prepare request options
@@ -35,6 +36,8 @@ export function useBackendFetch() {
 
         requestOptions.headers.Authorization = `Bearer ${token}`
         console.log(`✅ [useBackendFetch] Added JWT token to protected request`)
+        console.log(`🔍 [useBackendFetch] Token preview: ${token.substring(0, 20)}...`)
+        console.log(`🔍 [useBackendFetch] Authorization header: ${requestOptions.headers.Authorization.substring(0, 30)}...`)
       } else {
         console.log(`❌ [useBackendFetch] No JWT token available for protected request`)
       }
@@ -44,6 +47,8 @@ export function useBackendFetch() {
 
     console.log(`🔄 [useBackendFetch] ${options.method || 'GET'} ${targetUrl}`)
     console.log(`🔍 [useBackendFetch] Full URL: ${baseURL}${targetUrl}`)
+    console.log(`🔍 [useBackendFetch] Environment: ${process.server ? 'SSR' : 'Client'}`)
+    console.log(`🔍 [useBackendFetch] Request options:`, JSON.stringify(requestOptions, null, 2))
 
     // Make the request (no retry logic needed - JWT manager handles refresh)
     const response = await $fetch<T>(targetUrl, {

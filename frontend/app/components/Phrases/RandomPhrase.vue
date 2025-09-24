@@ -16,8 +16,8 @@
     </div>
 
     <!-- Phrase Display -->
-    <div v-else-if="phraseData" class="phrase-content">
-      <p class="phrase-text">{{ phraseData }}</p>
+    <div v-else-if="phrasesStore.currentPhrase" class="phrase-content">
+      <p class="phrase-text">{{ phrasesStore.currentPhrase }}</p>
     </div>
 
     <!-- Fallback -->
@@ -35,14 +35,16 @@ const props = withDefaults(defineProps<RandomPhraseProps>(), {
   refreshInterval: 0 // 0 means no auto-refresh
 })
 
+// Use phrases store for data management
+const phrasesStore = usePhrasesStore()
+
 // Smart phrase fetching - uses public endpoint if userSlug provided, auth endpoint otherwise
-const { data: phraseData, pending, error, refresh } = await useFetch<string>(
-  () => props.userSlug ? `/api/${props.userSlug}/phrase` : '/api/phrases/random',
-  {
-    key: props.userSlug ? `phrase-${props.userSlug}` : 'phrase-auth',
-    server: true // Enable SSR
-  }
-)
+const phraseData = await phrasesStore.fetchRandomPhraseSSR(props.userSlug)
+
+// Reactive references for template compatibility
+const pending = computed(() => phrasesStore.isLoading)
+const error = computed(() => phrasesStore.error)
+const refresh = () => phrasesStore.fetchRandomPhraseSSR(props.userSlug)
 
 // Auto-refresh functionality
 let refreshTimer: NodeJS.Timeout | null = null

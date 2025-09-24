@@ -1,6 +1,5 @@
 /**
- * Pure Incident Timer Service - No Vue context, accepts fetcher as parameter
- * Easy to test with mock fetchers
+ * Incident Timer Service - Uses useRequestFetch for SSR-safe requests
  */
 
 import { API_ROUTES } from '#shared/config/api-routes'

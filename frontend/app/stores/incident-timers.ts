@@ -1,9 +1,11 @@
 /**
- * Pure Incident Timer Store - Only state management, no service calls
- * Refactored to follow proper separation of concerns
+ * Enhanced Incident Timer Store - Centralized state management with actions
+ * Refactored from action composable pattern to store-with-actions pattern
  */
 
-import type { IncidentTimer, PublicTimerResponse } from '#shared/types/timers'
+import type { IncidentTimer, PublicTimerResponse, CreateTimerRequest, UpdateTimerRequest } from '#shared/types/timers'
+import { incidentTimerService } from '~/services/incidentTimerService'
+import { useRequestFetchWithAuth } from '#shared/composables/useRequestFetchWithAuth'
 import { TimerManager, type TimerUpdateCallback, type DataRefreshCallback, type ActiveTimerProvider } from '~/utils/timer-manager'
 
 export const useIncidentTimerStore = defineStore('incident-timers', () => {
@@ -13,6 +15,10 @@ export const useIncidentTimerStore = defineStore('incident-timers', () => {
   const publicTimer = ref<PublicTimerResponse | null>(null)
   const publicTimerUserSlug = ref<string | null>(null)
   const activeTimerBreakdown = ref({ years: 0, months: 0, weeks: 0, days: 0, hours: 0, minutes: 0, seconds: 0 })
+  
+  // Transient state (moved from useBaseService)
+  const isLoading = ref(false)
+  const error = ref<string | null>(null)
 
   // Pure state management functions
   const setTimers = (timersList: IncidentTimer[]) => {
@@ -34,7 +40,7 @@ export const useIncidentTimerStore = defineStore('incident-timers', () => {
     timers.value.push(timer)
   }
 
-  const updateTimer = (timerId: string, updates: Partial<IncidentTimer>) => {
+  const updateTimerStore = (timerId: string, updates: Partial<IncidentTimer>) => {
     const index = timers.value.findIndex(t => t.id === timerId)
     if (index !== -1) {
       timers.value[index] = { ...timers.value[index], ...updates } as IncidentTimer
@@ -175,6 +181,46 @@ export const useIncidentTimerStore = defineStore('incident-timers', () => {
     )
   })
 
+  const hasError = computed(() => !!error.value)
+
+  // Service instance - uses useRequestFetchWithAuth for SSR-safe requests with JWT
+  const requestFetchWithAuth = useRequestFetchWithAuth()
+  const incidentTimerServiceInstance = incidentTimerService(requestFetchWithAuth)
+
+  // Private action handler (replaces useBaseService logic)
+  const _handleAction = async <T>(
+    action: () => Promise<T>,
+    context?: string
+  ): Promise<T | undefined> => {
+    isLoading.value = true
+    error.value = null
+    
+    try {
+      const result = await action()
+      return result
+    } catch (err: any) {
+      const errorMessage = err instanceof Error ? err.message : 'An unexpected error occurred'
+      error.value = errorMessage
+      console.error(`[IncidentTimerStore] Error${context ? ` in ${context}` : ''}:`, errorMessage)
+      
+      // Handle authentication errors gracefully (don't crash during SSR)
+      if (err.statusCode === 401) {
+        console.log(`[IncidentTimerStore] Authentication error in ${context}, returning null instead of crashing`)
+        return undefined
+      }
+      
+      throw err
+    } finally {
+      isLoading.value = false
+    }
+  }
+
+  // Private success handler
+  const _handleSuccess = (message: string): void => {
+    console.log(`[IncidentTimerStore] Success: ${message}`)
+    // TODO: Add toast notifications here
+  }
+
   // Timer manager instance
   let timerManager: TimerManager | null = null
 
@@ -229,23 +275,119 @@ export const useIncidentTimerStore = defineStore('incident-timers', () => {
     }
   }
 
+  // Actions (migrated from useIncidentTimerActions)
+  const loadUserTimers = async () => {
+    const data = await _handleAction(() => incidentTimerServiceInstance.getUserTimers(), 'loadUserTimers')
+    if (data) {
+      timers.value = data
+      
+      // Start live timer updates if we have timers
+      if (data.length > 0) {
+        startLiveTimerUpdates()
+      }
+    }
+    return data
+  }
+
+  const loadPublicTimer = async (userSlug: string) => {
+    const data = await _handleAction(() => incidentTimerServiceInstance.getPublicTimer(userSlug), 'loadPublicTimer')
+    if (data) {
+      publicTimer.value = data
+      publicTimerUserSlug.value = userSlug
+      
+      // Start live timer updates for public timer
+      startLiveTimerUpdates()
+    }
+    return data
+  }
+
+  const createTimer = async (timerData: CreateTimerRequest) => {
+    const data = await _handleAction(() => incidentTimerServiceInstance.createTimer(timerData), 'createTimer')
+    _handleSuccess('Timer created successfully')
+    
+    if (data) {
+      timers.value.push(data)
+      currentTimer.value = data
+    }
+    return data
+  }
+
+  const updateTimer = async (timerId: string, timerData: UpdateTimerRequest) => {
+    const data = await _handleAction(() => incidentTimerServiceInstance.updateTimer(timerId, timerData), 'updateTimer')
+    _handleSuccess('Timer updated successfully')
+    
+    if (data) {
+      const index = timers.value.findIndex(t => t.id === timerId)
+      if (index !== -1) {
+        timers.value[index] = data
+      }
+      
+      // Update current timer if it's the same one
+      if (currentTimer.value?.id === timerId) {
+        currentTimer.value = data
+      }
+    }
+    return data
+  }
+
+  const deleteTimer = async (timerId: string) => {
+    await _handleAction(() => incidentTimerServiceInstance.deleteTimer(timerId), 'deleteTimer')
+    _handleSuccess('Timer deleted successfully')
+    
+    timers.value = timers.value.filter(t => t.id !== timerId)
+    
+    // Clear current timer if it was the deleted one
+    if (currentTimer.value?.id === timerId) {
+      currentTimer.value = null
+    }
+  }
+
+  const quickReset = async (timerId: string) => {
+    const data = await _handleAction(() => incidentTimerServiceInstance.quickReset(timerId), 'quickReset')
+    _handleSuccess('Timer reset successfully')
+    
+    if (data) {
+      const index = timers.value.findIndex(t => t.id === timerId)
+      if (index !== -1) {
+        timers.value[index] = data
+      }
+      
+      // Update current timer if it's the same one
+      if (currentTimer.value?.id === timerId) {
+        currentTimer.value = data
+      }
+    }
+    return data
+  }
+
   return {
     // State
     timers: readonly(timers),
     currentTimer: readonly(currentTimer),
     publicTimer: readonly(publicTimer),
     publicTimerUserSlug: readonly(publicTimerUserSlug),
+    isLoading: readonly(isLoading),
+    error: readonly(error),
     
     // Computed
     activeTimerBreakdown: readonly(activeTimerBreakdown),
     latestTimer,
+    hasError,
     
-    // Actions
+    // Actions (migrated from useIncidentTimerActions)
+    loadUserTimers,
+    loadPublicTimer,
+    createTimer,
+    updateTimer,
+    deleteTimer,
+    quickReset,
+    
+    // Pure state management functions (kept for backward compatibility)
     setTimers,
     setCurrentTimer,
     setPublicTimer,
     addTimer,
-    updateTimer,
+    updateTimerStore,
     removeTimer,
     clearTimers,
     clearPublicTimer,

@@ -36,7 +36,7 @@
       </div>
 
       <!-- Suggestions List -->
-      <div v-if="isLoading" class="loading-state">
+      <div v-if="phrasesStore.isLoading" class="loading-state">
         <p>Loading your suggestions...</p>
       </div>
 
@@ -118,17 +118,33 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed, onMounted } from 'vue'
-import { usePhrasesActions } from '~/composables/usePhrasesActions'
+import { ref, computed } from 'vue'
+import { usePhrasesStore } from '~/stores/phrases'
 import type { PhraseSuggestion } from '#shared/types/phrases'
 
-const { fetchPhraseSuggestions, isLoading, error } = usePhrasesActions()
+const phrasesStore = usePhrasesStore()
 
 const allSuggestions = ref<PhraseSuggestion[]>([])
 const statusFilter = ref('')
 const searchQuery = ref('')
 const isEditing = ref(false)
 const isDeleting = ref(false)
+
+const loadSuggestions = async () => {
+  try {
+    const response = await phrasesStore.loadSuggestionsForUser()
+    if (response) {
+      allSuggestions.value = response.suggestions
+    }
+  } catch (error) {
+    console.error('Error loading suggestions:', error)
+  }
+}
+
+// Load suggestions directly in setup. This runs ON THE SERVER.
+// Nuxt will wait for this to complete before sending the page.
+console.log('🔄 Loading suggestions for SuggestionHistoryTab...')
+await loadSuggestions()
 
 const filteredSuggestions = computed(() => {
   let filtered = allSuggestions.value
@@ -151,19 +167,6 @@ const filteredSuggestions = computed(() => {
     new Date(b.created_at).getTime() - new Date(a.created_at).getTime()
   )
 })
-
-onMounted(async () => {
-  await loadSuggestions()
-})
-
-const loadSuggestions = async () => {
-  try {
-    const response = await fetchPhraseSuggestions()
-    allSuggestions.value = response.suggestions
-  } catch (error) {
-    console.error('Error loading suggestions:', error)
-  }
-}
 
 const filterSuggestions = () => {
   // Filtering is handled by computed property

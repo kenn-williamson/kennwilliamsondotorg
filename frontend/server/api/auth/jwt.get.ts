@@ -7,6 +7,9 @@ export default defineEventHandler(async (event) => {
     const jwtToken = await getValidJwtToken(event)
     
     if (!jwtToken) {
+      // Clear the session and return 401 error (don't redirect during SSR)
+      console.log('🔄 [JWT API] No valid authentication, clearing session')
+      await clearUserSession(event)
       throw createError({
         statusCode: 401,
         statusMessage: 'Authentication required'

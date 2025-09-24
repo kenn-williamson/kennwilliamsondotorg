@@ -7,6 +7,8 @@
 </template>
 
 <script setup>
+import { useAdminStore } from '~/stores/admin'
+
 // Apply admin middleware
 definePageMeta({
   middleware: 'admin'
@@ -18,6 +20,27 @@ useHead({
   meta: [
     { name: 'description', content: 'Admin panel for managing users, moderating content, and viewing system statistics.' }
   ]
+})
+
+// Store for hydration
+const adminStore = useAdminStore()
+
+// SSR: Get route query parameters
+const route = useRoute()
+const tabParam = route.query.tab
+
+// SSR: Set active tab from query parameter
+if (tabParam && typeof tabParam === 'string' && ['overview', 'users', 'suggestions'].includes(tabParam)) {
+  adminStore.setActiveTab(tabParam)
+}
+
+// SSR: Fetch admin stats using store
+const stats = await adminStore.fetchStatsSSR()
+
+// Hydrate store with SSR data (already done in fetchStatsSSR)
+onMounted(() => {
+  // Stats are already set in the store from SSR fetch
+  console.log('Admin page mounted with stats:', stats)
 })
 </script>
 

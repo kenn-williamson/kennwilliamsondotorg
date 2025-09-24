@@ -28,7 +28,7 @@
       </div>
 
       <!-- Phrases Table -->
-      <div v-if="isLoading" class="loading-state">
+      <div v-if="phrasesStore.isLoading" class="loading-state">
         <p>Loading phrases...</p>
       </div>
 
@@ -87,16 +87,21 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed, onMounted } from 'vue'
+import { ref, computed } from 'vue'
 import { usePhrasesStore } from '~/stores/phrases'
-import { usePhrasesActions } from '~/composables/usePhrasesActions'
 import type { PhraseWithExclusion } from '#shared/types/phrases'
 
 const phrasesStore = usePhrasesStore()
-const { loadPhrasesForUser, togglePhraseExclusion, isLoading, error } = usePhrasesActions()
 
 const searchQuery = ref('')
 const togglingPhrases = ref(new Set<string>())
+
+// Load phrases directly in setup. This runs ON THE SERVER.
+// Nuxt will wait for this to complete before sending the page.
+if (phrasesStore.userPhrases.length === 0) {
+  console.log('🔄 Loading phrases for PhraseFilterTab...')
+  await phrasesStore.loadPhrasesForUser()
+}
 
 const filteredPhrases = computed(() => {
   if (!searchQuery.value.trim()) {
@@ -109,12 +114,8 @@ const filteredPhrases = computed(() => {
   )
 })
 
-onMounted(async () => {
-  await loadData()
-})
-
 const loadData = async () => {
-  await loadPhrasesForUser()
+  await phrasesStore.loadPhrasesForUser()
 }
 
 const filterPhrases = () => {
@@ -130,7 +131,7 @@ const handleTogglePhraseExclusion = async (phraseId: string) => {
   togglingPhrases.value.add(phraseId)
   
   try {
-    await togglePhraseExclusion(phraseId)
+    await phrasesStore.togglePhraseExclusion(phraseId)
   } catch (error) {
     console.error('Error toggling phrase exclusion:', error)
     alert('Error updating phrase filter. Please try again.')

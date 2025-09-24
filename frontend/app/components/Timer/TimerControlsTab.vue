@@ -20,7 +20,7 @@
       <div class="history-section">
         <h3 class="section-title">Timer History</h3>
         
-        <div v-if="isLoading" class="loading-state">
+        <div v-if="incidentTimerStore.isLoading" class="loading-state">
           <p>Loading timer history...</p>
         </div>
         
@@ -57,19 +57,24 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed, onMounted } from 'vue'
+import { ref, computed } from 'vue'
 import { useIncidentTimerStore } from '~/stores/incident-timers'
-import { useIncidentTimerActions } from '~/composables/useIncidentTimerActions'
 import TimerListItem from '~/components/Timer/TimerListItem.vue'
 import TimerEditModal from '~/components/Timer/TimerEditModal.vue'
 import TimerResetModal from '~/components/Timer/TimerResetModal.vue'
 
 const incidentTimerStore = useIncidentTimerStore()
-const { fetchTimers, createTimer, updateTimer, isLoading, error } = useIncidentTimerActions()
 
 const isResetting = ref(false)
 const editingTimer = ref(null)
 const showResetModal = ref(false)
+
+// Load timers directly in setup. This runs ON THE SERVER.
+// Nuxt will wait for this to complete before sending the page.
+if (incidentTimerStore.timers.length === 0) {
+  console.log('🔄 Loading timers for TimerControlsTab...')
+  await incidentTimerStore.loadUserTimers()
+}
 
 // Get timers sorted by reset_timestamp descending
 const timers = computed(() => {
@@ -80,12 +85,8 @@ const timers = computed(() => {
   )
 })
 
-onMounted(async () => {
-  await loadTimers()
-})
-
 const loadTimers = async () => {
-  await fetchTimers()
+  await incidentTimerStore.loadUserTimers()
 }
 
 const resetTimer = () => {

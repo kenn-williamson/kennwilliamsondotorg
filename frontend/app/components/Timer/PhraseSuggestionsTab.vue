@@ -84,11 +84,11 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed, onMounted } from 'vue'
-import { usePhrasesActions } from '~/composables/usePhrasesActions'
+import { ref, computed } from 'vue'
+import { usePhrasesStore } from '~/stores/phrases'
 import type { PhraseSuggestion } from '#shared/types/phrases'
 
-const { submitPhraseSuggestion, fetchPhraseSuggestions, isLoading, error } = usePhrasesActions()
+const phrasesStore = usePhrasesStore()
 
 const maxPhraseLength = 200
 
@@ -109,9 +109,21 @@ const isFormValid = computed(() => {
          !validationErrors.value.phraseText
 })
 
-onMounted(async () => {
-  await loadRecentSuggestions()
-})
+const loadRecentSuggestions = async () => {
+  try {
+    const response = await phrasesStore.loadSuggestionsForUser()
+    if (response) {
+      recentSuggestions.value = response.suggestions
+    }
+  } catch (error) {
+    console.error('Error loading recent suggestions:', error)
+  }
+}
+
+// Load suggestions directly in setup. This runs ON THE SERVER.
+// Nuxt will wait for this to complete before sending the page.
+console.log('🔄 Loading suggestions for PhraseSuggestionsTab...')
+await loadRecentSuggestions()
 
 const validatePhrase = () => {
   const text = formData.value.phraseText.trim()
@@ -146,7 +158,7 @@ const submitSuggestion = async () => {
   isSubmitting.value = true
   
   try {
-    await submitPhraseSuggestion(formData.value.phraseText.trim())
+    await phrasesStore.submitSuggestion(formData.value.phraseText.trim())
     
     // Clear form and reload recent suggestions
     clearForm()
@@ -166,15 +178,6 @@ const submitSuggestion = async () => {
 const clearForm = () => {
   formData.value.phraseText = ''
   validationErrors.value.phraseText = ''
-}
-
-const loadRecentSuggestions = async () => {
-  try {
-    const response = await fetchPhraseSuggestions()
-    recentSuggestions.value = response.suggestions
-  } catch (error) {
-    console.error('Error loading recent suggestions:', error)
-  }
 }
 
 const formatDate = (dateString: string) => {

@@ -4,7 +4,7 @@
  */
 
 import { API_ROUTES } from '#shared/config/api-routes'
-import type { LoginRequest, RegisterRequest, SlugPreviewResponse, Fetcher } from '#shared/types'
+import type { LoginRequest, RegisterRequest, SlugPreviewResponse, Fetcher, User } from '#shared/types'
 
 export const authService = (fetcher: Fetcher) => ({
   login: async (credentials: LoginRequest): Promise<{ success: boolean }> => {
@@ -38,5 +38,9 @@ export const authService = (fetcher: Fetcher) => ({
     return fetcher<void>(API_ROUTES.API.AUTH.LOGOUT, {
       method: 'POST'
     })
+  },
+
+  getCurrentUser: async (): Promise<User> => {
+    return fetcher<User>(API_ROUTES.PROTECTED.AUTH.ME)
   }
 })

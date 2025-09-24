@@ -7,22 +7,22 @@
     </div>
 
     <!-- Tab Navigation -->
-    <AdminTabNavigation v-model:activeTab="activeTab" />
+    <AdminTabNavigation />
 
     <!-- Tab Content -->
     <div class="tab-content">
       <!-- Overview Tab -->
-      <div v-if="activeTab === 'overview'" class="tab-panel">
+      <div v-if="adminStore.activeTab === 'overview'" class="tab-panel">
         <OverviewTab />
       </div>
 
       <!-- Users Tab -->
-      <div v-else-if="activeTab === 'users'" class="tab-panel">
+      <div v-else-if="adminStore.activeTab === 'users'" class="tab-panel">
         <UsersTab />
       </div>
 
       <!-- Suggestions Tab -->
-      <div v-else-if="activeTab === 'suggestions'" class="tab-panel">
+      <div v-else-if="adminStore.activeTab === 'suggestions'" class="tab-panel">
         <PhraseSuggestionApprovalTab />
       </div>
     </div>
@@ -30,20 +30,12 @@
 </template>
 
 <script setup lang="ts">
-// Tab state management
-const activeTab = ref('overview')
+import { useAdminStore } from '~/stores/admin'
 
-// Initialize tab from URL
-onMounted(() => {
-  const url = new URL(window.location.href)
-  const tabParam = url.searchParams.get('tab')
-  if (tabParam && ['overview', 'users', 'suggestions'].includes(tabParam)) {
-    activeTab.value = tabParam
-  }
-})
+const adminStore = useAdminStore()
 
 // Watch for tab changes and update URL
-watch(activeTab, (newTab) => {
+watch(() => adminStore.activeTab, (newTab) => {
   const url = new URL(window.location.href)
   url.searchParams.set('tab', newTab)
   window.history.pushState({}, '', url.toString())

@@ -1,13 +1,13 @@
 <template>
   <div class="overview-tab">
     <!-- Loading State -->
-    <div v-if="isLoading" class="flex justify-center items-center py-12">
+    <div v-if="adminStore.isLoading" class="flex justify-center items-center py-12">
       <div class="animate-spin rounded-full h-8 w-8 border-b-2 border-gray-900"></div>
     </div>
 
     <!-- Error State -->
-    <div v-else-if="error" class="bg-red-50 border border-red-200 rounded-md p-4 mb-6">
-      <p class="text-red-800 text-sm">{{ error }}</p>
+    <div v-else-if="adminStore.error" class="bg-red-50 border border-red-200 rounded-md p-4 mb-6">
+      <p class="text-red-800 text-sm">{{ adminStore.error }}</p>
       <button 
         @click="refreshStats"
         class="mt-2 text-sm text-red-600 hover:text-red-700 underline"
@@ -17,7 +17,7 @@
     </div>
 
     <!-- Stats Display -->
-    <div v-else-if="adminStore.stats" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+    <div v-else-if="displayStats" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
       <!-- Total Users -->
       <div class="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
         <div class="flex items-center">
@@ -28,7 +28,7 @@
           </div>
           <div class="ml-4">
             <p class="text-sm font-medium text-gray-500">Total Users</p>
-            <p class="text-2xl font-semibold text-gray-900">{{ adminStore.stats.total_users }}</p>
+            <p class="text-2xl font-semibold text-gray-900">{{ displayStats?.total_users || 0 }}</p>
           </div>
         </div>
       </div>
@@ -43,7 +43,7 @@
           </div>
           <div class="ml-4">
             <p class="text-sm font-medium text-gray-500">Active Users</p>
-            <p class="text-2xl font-semibold text-gray-900">{{ adminStore.stats.active_users }}</p>
+            <p class="text-2xl font-semibold text-gray-900">{{ displayStats?.active_users || 0 }}</p>
           </div>
         </div>
       </div>
@@ -58,7 +58,7 @@
           </div>
           <div class="ml-4">
             <p class="text-sm font-medium text-gray-500">Pending Suggestions</p>
-            <p class="text-2xl font-semibold text-gray-900">{{ adminStore.stats.pending_suggestions }}</p>
+            <p class="text-2xl font-semibold text-gray-900">{{ displayStats?.pending_suggestions || 0 }}</p>
           </div>
         </div>
       </div>
@@ -73,7 +73,7 @@
           </div>
           <div class="ml-4">
             <p class="text-sm font-medium text-gray-500">Total Phrases</p>
-            <p class="text-2xl font-semibold text-gray-900">{{ adminStore.stats.total_phrases }}</p>
+            <p class="text-2xl font-semibold text-gray-900">{{ displayStats?.total_phrases || 0 }}</p>
           </div>
         </div>
       </div>
@@ -96,19 +96,32 @@
 
 <script setup lang="ts">
 import { useAdminStore } from '~/stores/admin'
-import { useAdminActions } from '~/composables/useAdminActions'
+
+// Type for admin stats
+interface AdminStats {
+  total_users: number
+  active_users: number
+  pending_suggestions: number
+  total_phrases: number
+}
 
 const adminStore = useAdminStore()
-const { fetchStats, isLoading, error } = useAdminActions()
 
-// Load stats on mount
-onMounted(async () => {
-  await fetchStats()
+// Reactive data source: Use store data directly
+const displayStats = computed((): AdminStats | null => {
+  return adminStore.stats
 })
+
+// Load stats directly in setup. This runs ON THE SERVER.
+// Nuxt will wait for this to complete before sending the page.
+if (!adminStore.stats) {
+  console.log('🔄 Loading admin stats for OverviewTab...')
+  await adminStore.fetchStats()
+}
 
 // Refresh stats function
 const refreshStats = async () => {
-  await fetchStats()
+  await adminStore.fetchStats()
 }
 </script>
 

@@ -39,24 +39,21 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed, onMounted } from 'vue'
+import { ref, computed } from 'vue'
 import { storeToRefs } from 'pinia'
 import { useIncidentTimerStore } from '~/stores/incident-timers'
-import { useIncidentTimerActions } from '~/composables/useIncidentTimerActions'
 import SteamClock from '~/components/Steampunk/SteamClock.vue'
 
 const incidentTimerStore = useIncidentTimerStore()
 const { activeTimerBreakdown } = storeToRefs(incidentTimerStore)
-const { fetchTimers, isLoading, error } = useIncidentTimerActions()
 const isSharing = ref(false)
 
-// Load timers when component mounts
-onMounted(async () => {
-  if (incidentTimerStore.timers.length === 0) {
-    console.log('🔄 Loading timers for TimerDisplayTab...')
-    await fetchTimers()
-  }
-})
+// Load timers directly in setup. This runs ON THE SERVER.
+// Nuxt will wait for this to complete before sending the page.
+if (incidentTimerStore.timers.length === 0) {
+  console.log('🔄 Loading timers for TimerDisplayTab...')
+  await incidentTimerStore.loadUserTimers()
+}
 
 // Get current timer (most recent by reset_timestamp)
 const currentTimer = computed(() => {
@@ -92,15 +89,9 @@ const shareTimer = async () => {
 
 const getUserSlug = async (): Promise<string | null> => {
   try {
-    // Try to get from auth store first
-    const { user } = useUserSession()
-    if (user.value && 'slug' in user.value && user.value.slug) {
-      return user.value.slug as string
-    }
-    
-    // Fallback to API call
-    const { data: response } = await useFetch<{ slug?: string }>('/api/auth/me')
-    return response.value?.slug || null
+    // Use auth store for consistent state management
+    const authStore = useAuthStore()
+    return await authStore.getUserSlug()
   } catch (error) {
     console.error('Error getting user slug:', error)
     return null

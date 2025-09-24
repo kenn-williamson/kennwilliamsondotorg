@@ -25,6 +25,21 @@ export async function getValidJwtToken(event: any): Promise<string | null> {
     const session = await getUserSession(event)
     const jwtToken = session?.secure?.jwtToken
     
+    console.log(`🔍 [JWT Handler] Session exists:`, !!session)
+    console.log(`🔍 [JWT Handler] Session user:`, !!session?.user)
+    console.log(`🔍 [JWT Handler] Session secure:`, !!session?.secure)
+    console.log(`🔍 [JWT Handler] JWT token exists:`, !!jwtToken)
+    
+    // Check for stale session: session exists but no user/secure data
+    if (session && (!session.user || !session.secure)) {
+      console.log('🔄 [JWT Handler] Stale session detected (no user/secure data), clearing...')
+      await clearUserSession(event)
+      throw createError({
+        statusCode: 401,
+        statusMessage: 'Session expired'
+      })
+    }
+    
     // 2. Check if JWT exists and is valid
     if (jwtToken && !isJwtExpired(jwtToken)) {
       return jwtToken
@@ -58,11 +73,23 @@ export async function getValidJwtToken(event: any): Promise<string | null> {
       }
     }
     
-    // 5. If refresh fails → return null
-    return null
-  } catch (error) {
+    // 5. If refresh fails → redirect to login
+    console.log('❌ [JWT Handler] No valid authentication, redirecting to login')
+    throw createError({
+      statusCode: 401,
+      statusMessage: 'Authentication required'
+    })
+  } catch (error: any) {
     console.log('❌ [JWT Handler] Error getting valid token:', error)
-    return null
+    // If it's already a 401 error, re-throw it
+    if (error?.statusCode === 401) {
+      throw error
+    }
+    // For other errors, redirect to login
+    throw createError({
+      statusCode: 401,
+      statusMessage: 'Authentication required'
+    })
   }
 }
 
