@@ -2,10 +2,10 @@
  * useBackendFetch - Direct backend API calls with JWT authentication
  *
  * Architecture:
- * - All requests go directly to Rust backend (/backend)
+ * - Server-side: Uses useRequestFetch for SSR-safe requests with cookie forwarding
+ * - Client-side: Uses $fetch for standard client-side requests
  * - JWT tokens are added automatically for protected requests only
- * - Used for client-side operations and mutations
- * - For SSR prefetching, use $fetch('/api/*') directly in pages
+ * - URL routing: SSR uses internal Docker network, Client uses nginx proxy
  */
 
 import { requiresAuth } from '#shared/config/api-routes'
@@ -14,6 +14,9 @@ import { useJwtManager } from './useJwtManager'
 export function useBackendFetch() {
   const config = useRuntimeConfig()
   const jwtManager = useJwtManager()
+  
+  // Get requestFetch at composable level (in proper Nuxt context)
+  const requestFetch = process.server ? useRequestFetch() : null
 
   const backendFetch = async <T = any>(url: string, options: any = {}): Promise<T> => {
     // Use correct base URL based on environment
@@ -50,13 +53,20 @@ export function useBackendFetch() {
     console.log(`🔍 [useBackendFetch] Environment: ${process.server ? 'SSR' : 'Client'}`)
     console.log(`🔍 [useBackendFetch] Request options:`, JSON.stringify(requestOptions, null, 2))
 
-    // Make the request (no retry logic needed - JWT manager handles refresh)
-    const response = await $fetch<T>(targetUrl, {
-      ...requestOptions,
-      baseURL
-    })
-
-    return response as T
+    // Use appropriate fetch method based on environment
+    if (process.server && requestFetch) {
+      // Server-side: Use useRequestFetch for SSR-safe requests with cookie forwarding
+      return await requestFetch(targetUrl, {
+        ...requestOptions,
+        baseURL
+      }) as T
+    } else {
+      // Client-side: Use $fetch for standard client-side requests
+      return await $fetch(targetUrl, {
+        ...requestOptions,
+        baseURL
+      }) as T
+    }
   }
 
   return backendFetch

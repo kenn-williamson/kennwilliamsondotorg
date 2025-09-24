@@ -96,12 +96,8 @@ const phrasesStore = usePhrasesStore()
 const searchQuery = ref('')
 const togglingPhrases = ref(new Set<string>())
 
-// Load phrases directly in setup. This runs ON THE SERVER.
-// Nuxt will wait for this to complete before sending the page.
-if (phrasesStore.userPhrases.length === 0) {
-  console.log('🔄 Loading phrases for PhraseFilterTab...')
-  await phrasesStore.loadPhrasesForUser()
-}
+// ✅ CORRECT: Use callOnce to prevent double execution during SSR/hydration
+await callOnce('user-phrases', () => phrasesStore.loadPhrasesForUser())
 
 const filteredPhrases = computed(() => {
   if (!searchQuery.value.trim()) {

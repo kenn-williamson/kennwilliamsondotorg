@@ -48,32 +48,29 @@
 
         <!-- Tab Navigation -->
         <div class="bg-white/80 backdrop-blur-sm rounded-lg shadow-lg border border-blue-200 mb-6">
-          <TabNavigation 
-            :active-tab="activeTab"
-            @update:active-tab="setActiveTab"
-          />
+          <TabNavigation />
         </div>
 
         <!-- Tab Content -->
         <div class="bg-white/80 backdrop-blur-sm rounded-lg shadow-lg border border-blue-200">
           <TimerDisplayTab 
-            v-if="activeTab === 'timer-display'"
+            v-if="incidentTimerStore.activeTab === 'timer-display'"
           />
           
           <TimerControlsTab 
-            v-else-if="activeTab === 'timer-controls'"
+            v-else-if="incidentTimerStore.activeTab === 'timer-controls'"
           />
           
           <PhraseSuggestionsTab 
-            v-else-if="activeTab === 'phrase-suggestions'"
+            v-else-if="incidentTimerStore.activeTab === 'phrase-suggestions'"
           />
           
           <PhraseFilterTab 
-            v-else-if="activeTab === 'phrase-filter'"
+            v-else-if="incidentTimerStore.activeTab === 'phrase-filter'"
           />
           
           <SuggestionHistoryTab 
-            v-else-if="activeTab === 'suggestion-history'"
+            v-else-if="incidentTimerStore.activeTab === 'suggestion-history'"
           />
         </div>
       </div>
@@ -96,23 +93,13 @@ useHead({
 
 // Stores
 const { user } = useUserSession()
+const incidentTimerStore = useIncidentTimerStore()
 
-// Tab state management
-const activeTab = ref('timer-display')
-
-// Initialize tab from URL query parameter
+// Initialize tab from URL query parameter and clear public timer
 onMounted(() => {
-  const urlParams = new URLSearchParams(window.location.search)
-  const tabParam = urlParams.get('tab')
-  if (tabParam && ['timer-display', 'timer-controls', 'phrase-suggestions', 'phrase-filter', 'suggestion-history'].includes(tabParam)) {
-    activeTab.value = tabParam
-  }
+  incidentTimerStore.initializeTabFromUrl()
+  incidentTimerStore.clearPublicTimerOnNavigation()
 })
-
-// Handle tab changes
-const setActiveTab = (tabId) => {
-  activeTab.value = tabId
-}
 </script>
 
 <style scoped>

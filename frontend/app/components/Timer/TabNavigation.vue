@@ -4,8 +4,8 @@
       <button
         v-for="tab in tabs"
         :key="tab.id"
-        :class="['tab-button', { active: activeTab === tab.id }]"
-        :aria-selected="activeTab === tab.id"
+        :class="['tab-button', { active: incidentTimerStore.activeTab === tab.id }]"
+        :aria-selected="incidentTimerStore.activeTab === tab.id"
         :aria-controls="`tab-panel-${tab.id}`"
         role="tab"
         @click="setActiveTab(tab.id)"
@@ -19,14 +19,9 @@
 
 <script setup lang="ts">
 import type { Tab } from '#shared/types'
+import { useIncidentTimerStore } from '~/stores/incident-timers'
 
-const props = defineProps<{
-  activeTab: string
-}>()
-
-const emit = defineEmits<{
-  'update:activeTab': [tabId: string]
-}>()
+const incidentTimerStore = useIncidentTimerStore()
 
 const tabs: Tab[] = [
   {
@@ -57,11 +52,7 @@ const tabs: Tab[] = [
 ]
 
 const setActiveTab = (tabId: string) => {
-  emit('update:activeTab', tabId)
-  // Update URL without page reload
-  const url = new URL(window.location.href)
-  url.searchParams.set('tab', tabId)
-  window.history.pushState({}, '', url.toString())
+  incidentTimerStore.setActiveTab(tabId)
 }
 </script>
 

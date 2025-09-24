@@ -4,28 +4,9 @@
  */
 
 export interface TimerUpdateCallback {
-  (breakdown: {
-    years: number
-    months: number
-    weeks: number
-    days: number
-    hours: number
-    minutes: number
-    seconds: number
-  }): void
+  (): void
 }
 
-export interface DataRefreshCallback {
-  (): Promise<void>
-}
-
-export interface ActiveTimerProvider {
-  (): {
-    id: string
-    reset_timestamp: string
-    isPublic?: boolean
-  } | null
-}
 
 export class TimerManager {
   private intervalId: NodeJS.Timeout | null = null
@@ -35,13 +16,9 @@ export class TimerManager {
   private blurHandler: (() => void) | null = null
   private isPageVisible = true
   private isWindowFocused = true
-  private lastRefreshTime = 0
-  private refreshThrottleMs = 1000 // Prevent excessive refreshes
 
   constructor(
     private updateCallback: TimerUpdateCallback,
-    private refreshCallback: DataRefreshCallback,
-    private activeTimerProvider: ActiveTimerProvider
   ) {}
 
   /**
@@ -50,21 +27,6 @@ export class TimerManager {
   start(): void {
     this.stop()
     this.setupBrowserEventHandlers()
-    
-    const activeTimer = this.activeTimerProvider()
-    if (!activeTimer?.reset_timestamp) {
-      console.log('🔴 No active timer to track')
-      this.updateCallback({
-        years: 0, months: 0, weeks: 0, days: 0, hours: 0, minutes: 0, seconds: 0
-      })
-      return
-    }
-
-    console.log('🟢 Starting live timer updates for:', {
-      id: activeTimer.id,
-      reset_timestamp: activeTimer.reset_timestamp,
-      isPublic: activeTimer.isPublic
-    })
 
     this.intervalId = setInterval(() => {
       this.updateTimer()
@@ -80,10 +42,7 @@ export class TimerManager {
       clearInterval(this.intervalId)
       this.intervalId = null
     }
-    
-    this.updateCallback({
-      years: 0, months: 0, weeks: 0, days: 0, hours: 0, minutes: 0, seconds: 0
-    })
+
   }
 
   /**
@@ -98,20 +57,7 @@ export class TimerManager {
    * Update the timer display
    */
   private updateTimer(): void {
-    const activeTimer = this.activeTimerProvider()
-    if (!activeTimer?.reset_timestamp) {
-      console.log('🔴 No active timer found, stopping updates')
-      this.stop()
-      return
-    }
-
-    const breakdown = this.calculateElapsedTimeBreakdown(activeTimer.reset_timestamp)
-    this.updateCallback(breakdown)
-    
-    console.log('🔄 Timer tick:', {
-      seconds: breakdown.seconds,
-      total: `${breakdown.years}y ${breakdown.months}m ${breakdown.weeks}w ${breakdown.days}d ${breakdown.hours}h ${breakdown.minutes}min ${breakdown.seconds}s`
-    })
+    this.updateCallback()
   }
 
   /**
@@ -190,7 +136,8 @@ export class TimerManager {
    */
   private async handlePageVisible(): Promise<void> {
     // Always refresh when page becomes visible (tab focus)
-    await this.throttledRefresh()
+    this.stop()
+    this.start()
   }
 
   /**
@@ -200,105 +147,9 @@ export class TimerManager {
     // Only refresh if the page is also visible
     // This prevents unnecessary refreshes when window gains focus but page is hidden
     if (this.isPageVisible) {
-      await this.throttledRefresh()
+      this.stop()
+      this.start()
     }
-  }
-
-  /**
-   * Throttled refresh to prevent excessive API calls
-   */
-  private async throttledRefresh(): Promise<void> {
-    const now = Date.now()
-    if (now - this.lastRefreshTime < this.refreshThrottleMs) {
-      console.log('⏱️ Refresh throttled, skipping')
-      return
-    }
-
-    this.lastRefreshTime = now
-    try {
-      await this.refreshCallback()
-    } catch (error) {
-      console.error('❌ Error refreshing timer data:', error)
-    }
-  }
-
-  /**
-   * Calculate elapsed time breakdown (extracted from store)
-   */
-  private calculateElapsedTimeBreakdown(resetTimestamp: string): {
-    years: number
-    months: number
-    weeks: number
-    days: number
-    hours: number
-    minutes: number
-    seconds: number
-  } {
-    const startDate = new Date(resetTimestamp)
-    const now = new Date()
-    
-    if (now < startDate) {
-      return { years: 0, months: 0, weeks: 0, days: 0, hours: 0, minutes: 0, seconds: 0 }
-    }
-    
-    // Step 1: Calculate years and months properly
-    let years = now.getFullYear() - startDate.getFullYear()
-    let months = now.getMonth() - startDate.getMonth()
-    let days = now.getDate() - startDate.getDate()
-    
-    // Adjust if the current day is before the start day
-    if (days < 0) {
-      months--
-      // Add the days from the previous month
-      const prevMonth = new Date(now.getFullYear(), now.getMonth(), 0)
-      days += prevMonth.getDate()
-    }
-    
-    // Adjust if months is negative
-    if (months < 0) {
-      years--
-      months += 12
-    }
-    
-    // Step 2: Calculate remaining time (hours, minutes, seconds)
-    let hours = now.getHours() - startDate.getHours()
-    let minutes = now.getMinutes() - startDate.getMinutes()
-    let seconds = now.getSeconds() - startDate.getSeconds()
-    
-    // Adjust seconds
-    if (seconds < 0) {
-      minutes--
-      seconds += 60
-    }
-    
-    // Adjust minutes
-    if (minutes < 0) {
-      hours--
-      minutes += 60
-    }
-    
-    // Adjust hours
-    if (hours < 0) {
-      days--
-      hours += 24
-    }
-    
-    // Adjust days again if needed
-    if (days < 0) {
-      months--
-      if (months < 0) {
-        years--
-        months += 12
-      }
-      const prevMonth = new Date(now.getFullYear(), now.getMonth(), 0)
-      days += prevMonth.getDate()
-    }
-    
-    // Calculate weeks from remaining days
-    const weeks = Math.floor(days / 7)
-    days = days % 7
-    
-    return { years, months, weeks, days, hours, minutes, seconds }
   }
 
   /**
@@ -309,7 +160,6 @@ export class TimerManager {
       isRunning: this.intervalId !== null,
       isPageVisible: this.isPageVisible,
       isWindowFocused: this.isWindowFocused,
-      lastRefreshTime: this.lastRefreshTime
     }
   }
 }

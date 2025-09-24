@@ -33,14 +33,14 @@
       </div>
 
       <!-- Timer Display -->
-      <div v-else-if="timerStore.publicTimer" class="space-y-8">
+      <div v-else-if="incidentTimerStore.publicTimer" class="space-y-8">
         <!-- Steampunk Banner -->
         <SteampunkBanner :user-slug="userSlug" />
         
         <!-- User Info -->
         <div class="user-info">
           <p class="user-tracking">
-            Live tracking for <span class="user-name">{{ timerStore.publicTimer.user_display_name }}</span>
+            Live tracking for <span class="user-name">{{ incidentTimerStore.publicTimer.user_display_name }}</span>
           </p>
         </div>
 
@@ -51,9 +51,9 @@
 
         <!-- Vintage Note Card -->
         <VintageNoteCard 
-          v-if="timerStore.publicTimer.notes"
-          :notes="timerStore.publicTimer.notes"
-          :reset-timestamp="timerStore.publicTimer.reset_timestamp"
+          v-if="incidentTimerStore.publicTimer.notes"
+          :notes="incidentTimerStore.publicTimer.notes"
+          :reset-timestamp="incidentTimerStore.publicTimer.reset_timestamp"
         />
       </div>
     </div>
@@ -72,12 +72,12 @@ const userSlug = String(route.params.user_slug);
 
 // Computed meta for dynamic updates
 const pageTitle = computed(() => {
-  const displayName = timerStore.publicTimer?.user_display_name || userSlug
+  const displayName = incidentTimerStore.publicTimer?.user_display_name || userSlug
   return `${displayName}'s Incident Timer`
 })
 
 const pageDescription = computed(() => {
-  const displayName = timerStore.publicTimer?.user_display_name || userSlug
+  const displayName = incidentTimerStore.publicTimer?.user_display_name || userSlug
   return `Live incident-free timer for ${displayName}. Real-time tracking of incident-free periods.`
 })
 
@@ -93,7 +93,7 @@ useHead(() => ({
 }))
 
 // Reactive time breakdown from store - automatically updates every second
-const { activeTimerBreakdown } = storeToRefs(timerStore)
+const { activeTimerBreakdown } = storeToRefs(incidentTimerStore)
 const timeBreakdown = computed(() => activeTimerBreakdown.value)
 
 // Utility formatting functions (kept for potential future use)
@@ -102,6 +102,12 @@ const timeBreakdown = computed(() => activeTimerBreakdown.value)
 // Nuxt will wait for this to complete before sending the page.
 console.log('🔄 Loading public timer for user:', userSlug)
 await incidentTimerStore.loadPublicTimer(userSlug)
+
+// Start timers after hydration (client-side only)
+onMounted(() => {
+  console.log('🔄 Starting timers after hydration in public timer page...')
+  incidentTimerStore.startLiveTimerUpdates()
+})
 
 // Cleanup on unmount
 onUnmounted(() => {

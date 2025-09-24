@@ -6,7 +6,7 @@
 import type { User, AdminStats } from '#shared/types'
 import type { PhraseSuggestion } from '#shared/types/phrases'
 import { adminService } from '~/services/adminService'
-import { useSmartFetch } from '#shared/composables/useSmartFetch'
+import { useBackendFetch } from '~/composables/useBackendFetch'
 
 export const useAdminStore = defineStore('admin', () => {
   // State
@@ -40,8 +40,8 @@ export const useAdminStore = defineStore('admin', () => {
   const hasError = computed(() => !!error.value)
 
   // Service instance
-  const smartFetch = useSmartFetch()
-  const adminServiceInstance = adminService(smartFetch)
+  const backendFetch = useBackendFetch()
+  const adminServiceInstance = adminService(backendFetch)
 
   // Private action handler (replaces useBaseService logic)
   const _handleAction = async <T>(
@@ -99,7 +99,7 @@ export const useAdminStore = defineStore('admin', () => {
   // SSR-compatible stats fetching
   const fetchStatsSSR = async (): Promise<AdminStats | null> => {
     const result = await _handleAction(async () => {
-      // Use existing service method with useSmartFetch
+      // Use existing service method with useBackendFetch
       const response = await adminServiceInstance.getStats()
       stats.value = response
       return response

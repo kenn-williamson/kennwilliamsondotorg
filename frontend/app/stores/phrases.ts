@@ -5,7 +5,7 @@
 
 import type { Phrase, PhraseSuggestion, PhraseWithExclusion } from '#shared/types/phrases'
 import { phraseService } from '~/services/phraseService'
-import { useSmartFetch } from '#shared/composables/useSmartFetch'
+import { useBackendFetch } from '~/composables/useBackendFetch'
 
 export const usePhrasesStore = defineStore('phrases', () => {
   // State
@@ -29,8 +29,8 @@ export const usePhrasesStore = defineStore('phrases', () => {
   const pendingSuggestions = computed(() => adminSuggestions.value.filter(s => s.status === 'pending'))
 
   // Service instance
-  const smartFetch = useSmartFetch()
-  const phraseServiceInstance = phraseService(smartFetch)
+  const backendFetch = useBackendFetch()
+  const phraseServiceInstance = phraseService(backendFetch)
 
   // Private action handler (replaces useBaseService logic)
   const _handleAction = async <T>(
@@ -171,33 +171,19 @@ export const usePhrasesStore = defineStore('phrases', () => {
     return data
   }
 
-  // Get backend URL based on environment
-  const getBackendUrl = () => {
-    // During SSR, use internal Docker network
-    if (process.server) {
-      return 'http://backend:8080/backend'
-    }
-    // On client, use public URL
-    return 'https://localhost/backend'
-  }
-
   // SSR-compatible random phrase fetching
   const fetchRandomPhraseSSR = async (userSlug?: string): Promise<string | null> => {
-    const result = await _handleAction(async () => {
-      if (userSlug) {
-        // Public endpoint - use existing service method
-        const response = await phraseServiceInstance.fetchRandomPhraseClient(userSlug)
-        currentPhrase.value = response
-        return response
-      } else {
-        // Authenticated endpoint - use existing service method
-        const response = await phraseServiceInstance.fetchRandomPhraseAuth()
-        currentPhrase.value = response
-        return response
-      }
-    }, 'fetchRandomPhraseSSR')
-    
-    return result || null
+    if (userSlug) {
+      // Public endpoint - use existing service method
+      const response = await phraseServiceInstance.fetchRandomPhraseClient(userSlug)
+      currentPhrase.value = response
+      return response
+    } else {
+      // Authenticated endpoint - use existing service method
+      const response = await phraseServiceInstance.fetchRandomPhraseAuth()
+      currentPhrase.value = response
+      return response
+    }
   }
 
   // Pure state management functions (kept for backward compatibility)
@@ -260,13 +246,13 @@ export const usePhrasesStore = defineStore('phrases', () => {
 
   return {
     // State
-    userPhrases: readonly(userPhrases),
-    adminPhrases: readonly(adminPhrases),
-    userSuggestions: readonly(userSuggestions),
-    adminSuggestions: readonly(adminSuggestions),
-    currentPhrase: readonly(currentPhrase),
-    isLoading: readonly(isLoading),
-    error: readonly(error),
+    userPhrases,
+    adminPhrases,
+    userSuggestions,
+    adminSuggestions,
+    currentPhrase,
+    isLoading,
+    error,
     
     // Computed
     hasUserPhrases,

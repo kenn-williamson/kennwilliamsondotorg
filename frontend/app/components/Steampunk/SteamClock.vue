@@ -6,45 +6,52 @@
       <div class="clock-face">
         <!-- Time Groups Container -->
         <div class="time-groups-container">
-          <SlidingTimeGroup
+          <TimeGroup
             label="Years"
             :value="timeBreakdown.years"
+            :has-higher-units="hasHigherUnits.years"
             key="years"
           />
           
-          <SlidingTimeGroup
+          <TimeGroup
             label="Months"
             :value="timeBreakdown.months"
+            :has-higher-units="hasHigherUnits.months"
             key="months"
           />
           
-          <SlidingTimeGroup
+          <TimeGroup
             label="Weeks"
             :value="timeBreakdown.weeks"
+            :has-higher-units="hasHigherUnits.weeks"
             key="weeks"
           />
           
-          <SlidingTimeGroup
+          <TimeGroup
             label="Days"
             :value="timeBreakdown.days"
+            :has-higher-units="hasHigherUnits.days"
             key="days"
           />
           
-          <SlidingTimeGroup
+          <TimeGroup
             label="Hours"
             :value="timeBreakdown.hours"
+            :has-higher-units="hasHigherUnits.hours"
             key="hours"
           />
           
-          <SlidingTimeGroup
+          <TimeGroup
             label="Minutes"
             :value="timeBreakdown.minutes"
+            :has-higher-units="hasHigherUnits.minutes"
             key="minutes"
           />
           
-          <SlidingTimeGroup
+          <TimeGroup
             label="Seconds"
             :value="timeBreakdown.seconds"
+            :has-higher-units="hasHigherUnits.seconds"
             key="seconds"
           />
         </div>
@@ -99,6 +106,20 @@ const props = defineProps({
       seconds: 0
     })
   }
+})
+
+// Computed dictionary of which units have higher units
+const hasHigherUnits = computed(() => {
+  const { years, months, weeks, days, hours } = props.timeBreakdown
+  const hasHigher = {}
+  hasHigher.years = false
+  hasHigher.months = years > 0
+  hasHigher.weeks = hasHigher.months || months > 0
+  hasHigher.days = hasHigher.weeks || weeks > 0
+  hasHigher.hours = hasHigher.days || days > 0
+  hasHigher.minutes = hasHigher.hours || hours > 0
+  hasHigher.seconds = true
+  return hasHigher
 })
 
 // Left/right gears - tick with seconds from time breakdown
@@ -177,10 +198,10 @@ const spinAngle = computed(() => {
 .time-groups-container {
   display: flex;
   flex-wrap: wrap;
-  justify-content: center;
-  align-items: flex-end;
+  justify-content: space-evenly;
+  align-items: center;
   gap: 8px;
-  min-height: 140px;
+  height: 100%;
   position: relative;
   z-index: 2;
 }
@@ -360,7 +381,7 @@ const spinAngle = computed(() => {
   }
   
   .time-groups-container {
-    min-height: 120px;
+    height: 100%;
   }
 }
 
@@ -376,7 +397,7 @@ const spinAngle = computed(() => {
   }
   
   .time-groups-container {
-    min-height: 100px;
+    height: 100%;
     gap: 6px;
   }
   
@@ -400,7 +421,7 @@ const spinAngle = computed(() => {
   }
   
   .time-groups-container {
-    min-height: 80px;
+    height: 100%;
     gap: 4px;
   }
   

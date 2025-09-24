@@ -5,8 +5,8 @@
 
 import type { IncidentTimer, PublicTimerResponse, CreateTimerRequest, UpdateTimerRequest } from '#shared/types/timers'
 import { incidentTimerService } from '~/services/incidentTimerService'
-import { useRequestFetchWithAuth } from '#shared/composables/useRequestFetchWithAuth'
-import { TimerManager, type TimerUpdateCallback, type DataRefreshCallback, type ActiveTimerProvider } from '~/utils/timer-manager'
+import { useBackendFetch } from '~/composables/useBackendFetch'
+import { TimerManager, type TimerUpdateCallback } from '~/utils/timer-manager'
 
 export const useIncidentTimerStore = defineStore('incident-timers', () => {
   // State
@@ -15,6 +15,9 @@ export const useIncidentTimerStore = defineStore('incident-timers', () => {
   const publicTimer = ref<PublicTimerResponse | null>(null)
   const publicTimerUserSlug = ref<string | null>(null)
   const activeTimerBreakdown = ref({ years: 0, months: 0, weeks: 0, days: 0, hours: 0, minutes: 0, seconds: 0 })
+  
+  // Tab state for SSR consistency
+  const activeTab = ref('timer-display')
   
   // Transient state (moved from useBaseService)
   const isLoading = ref(false)
@@ -59,6 +62,32 @@ export const useIncidentTimerStore = defineStore('incident-timers', () => {
   const clearPublicTimer = () => {
     publicTimer.value = null
     publicTimerUserSlug.value = null
+    // Reset breakdown to zero when clearing public timer
+    activeTimerBreakdown.value = { years: 0, months: 0, weeks: 0, days: 0, hours: 0, minutes: 0, seconds: 0 }
+  }
+
+  // Tab state management functions
+  const setActiveTab = (tabId: string) => {
+    if (['timer-display', 'timer-controls', 'phrase-suggestions', 'phrase-filter', 'suggestion-history'].includes(tabId)) {
+      activeTab.value = tabId
+      
+      // Update URL without page reload (client-side only)
+      if (import.meta.client) {
+        const url = new URL(window.location.href)
+        url.searchParams.set('tab', tabId)
+        window.history.pushState({}, '', url.toString())
+      }
+    }
+  }
+
+  const initializeTabFromUrl = () => {
+    if (import.meta.client) {
+      const urlParams = new URLSearchParams(window.location.search)
+      const tabParam = urlParams.get('tab')
+      if (tabParam && ['timer-display', 'timer-controls', 'phrase-suggestions', 'phrase-filter', 'suggestion-history'].includes(tabParam)) {
+        activeTab.value = tabParam
+      }
+    }
   }
 
   // Utility functions for timer calculations (pure functions)
@@ -183,9 +212,9 @@ export const useIncidentTimerStore = defineStore('incident-timers', () => {
 
   const hasError = computed(() => !!error.value)
 
-  // Service instance - uses useRequestFetchWithAuth for SSR-safe requests with JWT
-  const requestFetchWithAuth = useRequestFetchWithAuth()
-  const incidentTimerServiceInstance = incidentTimerService(requestFetchWithAuth)
+  // Service instance - uses useBackendFetch for SSR-safe requests with JWT
+  const backendFetch = useBackendFetch()
+  const incidentTimerServiceInstance = incidentTimerService(backendFetch)
 
   // Private action handler (replaces useBaseService logic)
   const _handleAction = async <T>(
@@ -225,41 +254,30 @@ export const useIncidentTimerStore = defineStore('incident-timers', () => {
   let timerManager: TimerManager | null = null
 
   // Timer update callback for TimerManager
-  const timerUpdateCallback: TimerUpdateCallback = (breakdown) => {
-    activeTimerBreakdown.value = breakdown
-  }
-
-  // Data refresh callback for TimerManager
-  const dataRefreshCallback: DataRefreshCallback = async () => {
-    // This will be called by action composables when they need to refresh data
-    // The store doesn't handle data fetching - that's the action composable's job
-    console.log('🔄 TimerManager requested data refresh - action composable should handle this')
-  }
-
-  // Active timer provider for TimerManager
-  const activeTimerProvider: ActiveTimerProvider = () => {
-    const activeTimer = publicTimer.value || latestTimer.value
-    if (!activeTimer?.reset_timestamp) return null
-    
-    return {
-      id: activeTimer.id,
-      reset_timestamp: activeTimer.reset_timestamp,
-      isPublic: !!publicTimer.value
+  const timerUpdateCallback: TimerUpdateCallback = () => {
+    // Use public timer if available (for public pages), otherwise use latest timer (for authenticated users)
+    const timerToUse = publicTimer.value || latestTimer.value
+    if (timerToUse) {
+      activeTimerBreakdown.value = getElapsedTimeBreakdown(timerToUse)
     }
   }
 
   // Timer update methods
   const startLiveTimerUpdates = () => {
-    // Create timer manager if it doesn't exist
-    if (!timerManager) {
-      timerManager = new TimerManager(
-        timerUpdateCallback,
-        dataRefreshCallback,
-        activeTimerProvider
-      )
-    }
+    // Only start timers on client-side (not during SSR)
+    if (import.meta.client) {
+      // Create timer manager if it doesn't exist
+      if (!timerManager) {
+        timerManager = new TimerManager(
+          timerUpdateCallback,
+        )
+      }
 
-    timerManager.start()
+      timerManager.start()
+      console.log('🔄 [Timer Store] Started live timer updates on client-side')
+    } else {
+      console.log('ℹ️ [Timer Store] Skipping timer start during SSR')
+    }
   }
 
   const stopLiveTimerUpdates = () => {
@@ -275,16 +293,38 @@ export const useIncidentTimerStore = defineStore('incident-timers', () => {
     }
   }
 
+  // Clear public timer when navigating away from public pages
+  const clearPublicTimerOnNavigation = () => {
+    if (publicTimer.value) {
+      console.log('🔄 [Timer Store] Clearing public timer on navigation away from public page')
+      clearPublicTimer()
+    }
+  }
+
   // Actions (migrated from useIncidentTimerActions)
   const loadUserTimers = async () => {
+    console.log('🔄 [IncidentTimerStore] loadUserTimers called')
+    console.log('🔄 [IncidentTimerStore] Environment:', import.meta.server ? 'SERVER' : 'CLIENT')
+    console.log('🔄 [IncidentTimerStore] Current timers length:', timers.value.length)
+    
     const data = await _handleAction(() => incidentTimerServiceInstance.getUserTimers(), 'loadUserTimers')
     if (data) {
       timers.value = data
+      // Note: latestTimer computed property will automatically pick the most recent timer
       
-      // Start live timer updates if we have timers
+      // Calculate initial breakdown for SSR (find most recent timer directly from data)
       if (data.length > 0) {
-        startLiveTimerUpdates()
+        const mostRecentTimer = [...data]
+          .sort((a, b) => new Date(b.reset_timestamp).getTime() - new Date(a.reset_timestamp).getTime())[0]
+        
+        if (mostRecentTimer) {
+          const initialBreakdown = getElapsedTimeBreakdown(mostRecentTimer)
+          activeTimerBreakdown.value = initialBreakdown
+          console.log('✅ [Timer Store] Set initial breakdown for SSR:', initialBreakdown)
+        }
       }
+      
+      // Note: Timer starting is handled separately on client-side after hydration
     }
     return data
   }
@@ -295,8 +335,14 @@ export const useIncidentTimerStore = defineStore('incident-timers', () => {
       publicTimer.value = data
       publicTimerUserSlug.value = userSlug
       
-      // Start live timer updates for public timer
-      startLiveTimerUpdates()
+      // Calculate initial breakdown for SSR
+      if (data) {
+        const initialBreakdown = getElapsedTimeBreakdown(data)
+        activeTimerBreakdown.value = initialBreakdown
+        console.log('✅ [Timer Store] Set initial breakdown for public timer SSR:', initialBreakdown)
+      }
+      
+      // Note: Timer starting is handled separately on client-side after hydration
     }
     return data
   }
@@ -362,15 +408,16 @@ export const useIncidentTimerStore = defineStore('incident-timers', () => {
 
   return {
     // State
-    timers: readonly(timers),
-    currentTimer: readonly(currentTimer),
-    publicTimer: readonly(publicTimer),
-    publicTimerUserSlug: readonly(publicTimerUserSlug),
-    isLoading: readonly(isLoading),
-    error: readonly(error),
+    timers,
+    currentTimer,
+    publicTimer,
+    publicTimerUserSlug,
+    activeTab,
+    isLoading,
+    error,
     
     // Computed
-    activeTimerBreakdown: readonly(activeTimerBreakdown),
+    activeTimerBreakdown,
     latestTimer,
     hasError,
     
@@ -392,10 +439,15 @@ export const useIncidentTimerStore = defineStore('incident-timers', () => {
     clearTimers,
     clearPublicTimer,
     
+    // Tab state management
+    setActiveTab,
+    initializeTabFromUrl,
+    
     // Timer update methods
     startLiveTimerUpdates,
     stopLiveTimerUpdates,
     cleanupGlobalEventListeners,
+    clearPublicTimerOnNavigation,
     
     // Utility functions
     getElapsedTimeBreakdown,

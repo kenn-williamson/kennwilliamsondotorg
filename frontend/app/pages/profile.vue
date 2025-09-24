@@ -64,6 +64,10 @@ if (!loggedIn.value) {
   await navigateTo('/login')
 }
 
+// Clear public timer when navigating to authenticated pages
+const incidentTimerStore = useIncidentTimerStore()
+incidentTimerStore.clearPublicTimerOnNavigation()
+
 // Fetch fresh user data using auth store
 const authStore = useAuthStore()
 const user = await authStore.fetchCurrentUser()

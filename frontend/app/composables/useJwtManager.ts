@@ -11,6 +11,9 @@ export function useJwtManager() {
   // Cache for JWT token
   let cachedToken: string | null = null
   let tokenExpiresAt: number | null = null
+  
+  // Get requestFetch at composable level (in proper Nuxt context)
+  const requestFetch = process.server ? useRequestFetch() : null
 
   /**
    * Get JWT token from server with caching
@@ -24,10 +27,18 @@ export function useJwtManager() {
         return cachedToken
       }
 
-      // Use API endpoint for both SSR and client-side
-      // The /api/auth/jwt endpoint handles JWT extraction properly
+      // Use appropriate fetch method based on environment
       console.log('🔄 [JWT Manager] Getting fresh token from /api/auth/jwt')
-      const response = await $fetch<JwtToken>('/api/auth/jwt')
+      let response: JwtToken
+      
+      if (process.server && requestFetch) {
+        // Server-side: Use useRequestFetch for SSR-safe requests with cookie forwarding
+        response = await requestFetch<JwtToken>('/api/auth/jwt')
+      } else {
+        // Client-side: Use $fetch for standard client-side requests
+        response = await $fetch<JwtToken>('/api/auth/jwt')
+      }
+      
       console.log('✅ [JWT Manager] Got fresh token from /api/auth/jwt')
       
       // Cache the token

@@ -5,7 +5,7 @@
 
 import type { User } from '#shared/types'
 import { authService } from '~/services/authService'
-import { useSmartFetch } from '#shared/composables/useSmartFetch'
+import { useBackendFetch } from '~/composables/useBackendFetch'
 
 export const useAuthStore = defineStore('auth', () => {
   // State
@@ -52,8 +52,8 @@ export const useAuthStore = defineStore('auth', () => {
   // Actions
   const fetchCurrentUser = async (): Promise<User | null> => {
     const result = await _handleAction(async () => {
-      // Use existing service method with useSmartFetch
-      const authServiceInstance = authService(useSmartFetch())
+      // Use existing service method with useBackendFetch
+      const authServiceInstance = authService(useBackendFetch())
       const response = await authServiceInstance.getCurrentUser()
       user.value = response
       return response

@@ -141,10 +141,8 @@ const loadSuggestions = async () => {
   }
 }
 
-// Load suggestions directly in setup. This runs ON THE SERVER.
-// Nuxt will wait for this to complete before sending the page.
-console.log('🔄 Loading suggestions for SuggestionHistoryTab...')
-await loadSuggestions()
+// ✅ CORRECT: Use callOnce to prevent double execution during SSR/hydration
+await callOnce('user-suggestion-history', () => loadSuggestions())
 
 const filteredSuggestions = computed(() => {
   let filtered = allSuggestions.value

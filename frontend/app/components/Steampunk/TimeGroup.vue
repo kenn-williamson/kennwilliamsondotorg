@@ -1,31 +1,24 @@
 <template>
-  <div class="time-group-container">
-    <Transition
-      name="flip-appear"
-      @enter="onEnter"
-    >
-      <div 
-        v-if="shouldShow"
-        class="time-group"
-        :class="{ 'flipping': isFlipping }"
-      >
-        <!-- Unit Label -->
-        <div class="unit-label">
-          <span class="label-text">{{ label }}</span>
-        </div>
-        
-        <!-- Digit Container -->
-        <div class="digits-container">
-          <FlippingDigit 
-            v-for="(digit, index) in digits"
-            :key="`${label}-${index}`"
-            :value="digit"
-            class="digit-spacing"
-            :trigger-flip="triggerFlip"
-          />
-        </div>
+  <div 
+    v-if="shouldShow"
+    class="time-group-container"
+  >
+    <div class="time-group">
+      <!-- Unit Label -->
+      <div class="unit-label">
+        <span class="label-text">{{ label }}</span>
       </div>
-    </Transition>
+      
+      <!-- Digit Container -->
+      <div class="digits-container">
+        <FlippingDigit 
+          v-for="(digit, index) in digits"
+          :key="`${label}-${index}`"
+          :value="digit"
+          class="digit-spacing"
+        />
+      </div>
+    </div>
   </div>
 </template>
 
@@ -48,8 +41,6 @@ const props = defineProps({
 })
 
 const shouldShow = ref(props.value > 0 || props.hasHigherUnits)
-const isFlipping = ref(false)
-const triggerFlip = ref(0)
 
 // Convert value to individual digits - pad the whole value to at least 2 digits
 const digits = computed(() => {
@@ -66,17 +57,6 @@ watch(() => props.value, (newValue) => {
 watch(() => props.hasHigherUnits, (newValue) => {
   shouldShow.value = props.value > 0 || newValue
 }, { immediate: true })
-
-// Animation handler
-const onEnter = () => {
-  isFlipping.value = true
-  triggerFlip.value++
-  
-  // Stop flipping animation after a short delay
-  setTimeout(() => {
-    isFlipping.value = false
-  }, 600)
-}
 </script>
 
 <style scoped>
@@ -129,31 +109,7 @@ const onEnter = () => {
   margin: 0 2px;
 }
 
-/* Flip appear animations */
-.flip-appear-enter-active {
-  transition: all 0.6s cubic-bezier(0.25, 0.8, 0.25, 1);
-}
-
-.flip-appear-enter-from {
-  transform: scale(0.8) rotateY(90deg);
-  opacity: 0;
-}
-
-.time-group.flipping {
-  animation: flip-sequence 0.6s ease-in-out;
-}
-
-@keyframes flip-sequence {
-  0% {
-    transform: scale(0.8) rotateY(90deg);
-  }
-  50% {
-    transform: scale(1.1) rotateY(0deg);
-  }
-  100% {
-    transform: scale(1) rotateY(0deg);
-  }
-}
+/* Animations removed */
 
 /* Responsive adjustments */
 @media (max-width: 768px) {

@@ -6,7 +6,7 @@
         <h3 class="section-title">Current Timer</h3>
         <div class="timer-display">
           <SteamClock 
-            v-if="currentTimer" 
+            v-if="latestTimer" 
             :time-breakdown="activeTimerBreakdown"
             class="mb-4"
           />
@@ -18,7 +18,7 @@
       </div>
 
       <!-- Share Timer Section -->
-      <div v-if="currentTimer" class="share-section">
+      <div v-if="latestTimer" class="share-section">
         <h3 class="section-title">Share Timer</h3>
         <div class="share-controls">
           <button
@@ -42,32 +42,26 @@
 import { ref, computed } from 'vue'
 import { storeToRefs } from 'pinia'
 import { useIncidentTimerStore } from '~/stores/incident-timers'
+import { useAuthStore } from '~/stores/auth'
 import SteamClock from '~/components/Steampunk/SteamClock.vue'
 
 const incidentTimerStore = useIncidentTimerStore()
-const { activeTimerBreakdown } = storeToRefs(incidentTimerStore)
+const { activeTimerBreakdown, latestTimer } = storeToRefs(incidentTimerStore)
 const isSharing = ref(false)
 
-// Load timers directly in setup. This runs ON THE SERVER.
-// Nuxt will wait for this to complete before sending the page.
-if (incidentTimerStore.timers.length === 0) {
-  console.log('🔄 Loading timers for TimerDisplayTab...')
-  await incidentTimerStore.loadUserTimers()
-}
+// ✅ CORRECT: Use callOnce to prevent double execution during SSR/hydration
+await callOnce('user-timers', () => incidentTimerStore.loadUserTimers())
 
-// Get current timer (most recent by reset_timestamp)
-const currentTimer = computed(() => {
-  if (!incidentTimerStore.timers || incidentTimerStore.timers.length === 0) {
-    return null
-  }
-  
-  // Sort by reset_timestamp descending and get the first (most recent)
-  return [...incidentTimerStore.timers]
-    .sort((a: any, b: any) => new Date(b.reset_timestamp).getTime() - new Date(a.reset_timestamp).getTime())[0]
+// Start timers after hydration (client-side only)
+onMounted(() => {
+  console.log('🔄 Starting timers after hydration in TimerDisplayTab...')
+  incidentTimerStore.startLiveTimerUpdates()
 })
 
+// latestTimer is now provided by the store via storeToRefs
+
 const shareTimer = async () => {
-  if (!currentTimer.value) return
+  if (!latestTimer.value) return
   
   isSharing.value = true
   

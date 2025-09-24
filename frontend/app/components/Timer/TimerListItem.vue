@@ -18,7 +18,7 @@
         </span>
         <div class="flex gap-2">
           <button
-            @click="$emit('edit', timer)"
+            @click="handleEditTimer"
             class="p-2 text-gray-500 hover:text-blue-600 hover:bg-blue-100 rounded-md transition-colors duration-200"
             title="Edit timer"
           >
@@ -39,11 +39,21 @@
       </div>
     </div>
   </div>
+
+  <!-- Edit Timer Modal -->
+  <TimerEditModal
+    v-if="showEditModal"
+    :show="true"
+    :timer="timer"
+    @close="closeEditModal"
+  />
 </template>
 
 <script setup>
+import { ref } from 'vue'
 import { formatDisplayDate } from '~/utils/dateUtils'
 import { useIncidentTimerStore } from '~/stores/incident-timers'
+import TimerEditModal from '~/components/Timer/TimerEditModal.vue'
 
 const props = defineProps({
   timer: {
@@ -60,10 +70,11 @@ const props = defineProps({
   }
 })
 
-defineEmits(['edit'])
-
 // Get timer store for formatting non-latest timers
 const incidentTimerStore = useIncidentTimerStore()
+
+// Local state for edit modal
+const showEditModal = ref(false)
 
 // Compute elapsed time display
 const elapsedTimeDisplay = computed(() => {
@@ -77,6 +88,17 @@ const elapsedTimeDisplay = computed(() => {
 // Format date for display using utility
 const formatDate = (dateString) => {
   return formatDisplayDate(dateString)
+}
+
+// Edit timer - show modal
+const handleEditTimer = () => {
+  showEditModal.value = true
+}
+
+// Close edit modal and refresh timers
+const closeEditModal = async () => {
+  showEditModal.value = false
+  await incidentTimerStore.loadUserTimers() // Refresh the list after edit
 }
 
 // Delete timer using store
