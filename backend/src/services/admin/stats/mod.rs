@@ -50,6 +50,7 @@ mod tests {
     use crate::repositories::mocks::{MockPhraseRepository, MockAdminRepository};
 
     #[tokio::test]
+    #[allow(unused_mut)]
     async fn test_get_system_stats_success() {
         // Setup mocks
         let mut mock_phrase_repo = MockPhraseRepository::new();
@@ -95,6 +96,7 @@ mod tests {
     }
 
     #[tokio::test]
+    #[allow(unused_mut)]
     async fn test_get_system_stats_admin_repo_error() {
         // Setup mocks
         let mut mock_phrase_repo = MockPhraseRepository::new();

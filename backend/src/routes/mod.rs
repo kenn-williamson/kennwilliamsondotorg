@@ -37,6 +37,7 @@ pub fn configure_app_routes(cfg: &mut web::ServiceConfig) {
                                 .route("/revoke-all", web::post().to(auth::revoke_all))
                                 .route("/profile", web::put().to(auth::update_profile))
                                 .route("/change-password", web::put().to(auth::change_password))
+                                .route("/validate-slug", web::get().to(auth::validate_slug))
                         )
                         .service(
                             web::scope("/incident-timers")

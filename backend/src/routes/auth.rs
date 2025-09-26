@@ -2,7 +2,7 @@ use actix_web::{web, HttpMessage, HttpRequest, HttpResponse, Result as ActixResu
 use uuid::Uuid;
 use serde_json::json;
 
-use crate::models::api::{CreateUserRequest, LoginRequest, SlugPreviewRequest, RefreshTokenRequest, RevokeTokenRequest, ProfileUpdateRequest, PasswordChangeRequest};
+use crate::models::api::{CreateUserRequest, LoginRequest, SlugPreviewRequest, SlugValidationRequest, RefreshTokenRequest, RevokeTokenRequest, ProfileUpdateRequest, PasswordChangeRequest};
 use crate::services::auth::AuthService;
 
 /// Extract device information from HTTP request headers
@@ -81,6 +81,21 @@ pub async fn preview_slug(
         Ok(response) => Ok(HttpResponse::Ok().json(response)),
         Err(err) => {
             log::error!("Slug preview error: {}", err);
+            Ok(HttpResponse::InternalServerError().json(serde_json::json!({
+                "error": "Internal server error"
+            })))
+        }
+    }
+}
+
+pub async fn validate_slug(
+    query: web::Query<SlugValidationRequest>,
+    auth_service: web::Data<AuthService>,
+) -> ActixResult<HttpResponse> {
+    match auth_service.validate_slug(query.into_inner()).await {
+        Ok(response) => Ok(HttpResponse::Ok().json(response)),
+        Err(err) => {
+            log::error!("Slug validation error: {}", err);
             Ok(HttpResponse::InternalServerError().json(serde_json::json!({
                 "error": "Internal server error"
             })))

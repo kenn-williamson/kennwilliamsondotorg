@@ -2,9 +2,9 @@ use anyhow::Result;
 use uuid::Uuid;
 use rand::Rng;
 
-use crate::models::api::{UserResponse, SlugPreviewRequest, SlugPreviewResponse, ProfileUpdateRequest};
+use crate::models::api::{UserResponse, SlugPreviewRequest, SlugPreviewResponse, SlugValidationRequest, SlugValidationResponse, ProfileUpdateRequest};
 use crate::repositories::traits::user_repository::UserUpdates;
-use super::slug::generate_slug;
+use super::slug::{generate_slug, is_valid_slug};
 use super::AuthService;
 
 impl AuthService {
@@ -20,7 +20,7 @@ impl AuthService {
         }
     }
 
-    /// Preview slug availability
+    /// Preview slug availability (for registration - generates slug from display name)
     pub async fn preview_slug(&self, request: SlugPreviewRequest) -> Result<SlugPreviewResponse> {
         let slug = generate_slug(&request.display_name, &*self.user_repository).await?;
         let available = !self.user_repository.slug_exists(&slug).await?;
@@ -36,11 +36,35 @@ impl AuthService {
         })
     }
 
+    /// Validate slug format and availability (for profile updates)
+    pub async fn validate_slug(&self, request: SlugValidationRequest) -> Result<SlugValidationResponse> {
+        let slug = request.slug;
+        
+        // Check if slug format is valid
+        let valid = is_valid_slug(&slug);
+        
+        if !valid {
+            return Ok(SlugValidationResponse {
+                slug: slug.clone(),
+                valid: false,
+                available: false,
+            });
+        }
+        
+        // Check availability
+        let available = !self.user_repository.slug_exists(&slug).await?;
+        
+        Ok(SlugValidationResponse {
+            slug: slug.clone(),
+            valid: true,
+            available,
+        })
+    }
+
     /// Update user profile
     pub async fn update_profile(&self, user_id: Uuid, request: ProfileUpdateRequest) -> Result<UserResponse> {
-        // Validate slug format
-        let generated_slug = generate_slug(&request.slug, &*self.user_repository).await?;
-        if generated_slug != request.slug {
+        // Validate slug format - only check for excluded characters
+        if !is_valid_slug(&request.slug) {
             return Err(anyhow::anyhow!("Invalid slug format"));
         }
 
@@ -277,13 +301,7 @@ mod tests {
         let user_id = Uuid::new_v4();
         let updated_user = create_test_user();
 
-        // Setup mock expectations
-        user_repo
-            .expect_slug_exists()
-            .times(1)
-            .with(eq("new-slug"))
-            .returning(|_| Ok(false)); // Slug doesn't exist
-
+        // Setup mock expectations - only need slug_exists_excluding_user now
         user_repo
             .expect_slug_exists_excluding_user()
             .times(1)
@@ -324,19 +342,106 @@ mod tests {
     }
 
     #[tokio::test]
+    #[allow(unused_mut)]
     async fn update_profile_fails_with_invalid_slug_format() -> Result<()> {
         let mut user_repo = MockUserRepository::new();
         let user_id = Uuid::new_v4();
 
-        // Setup mock expectations - slug generation will return different format
-        user_repo
-            .expect_slug_exists()
-            .times(1)
-            .returning(|_| Ok(false));
+        let request = ProfileUpdateRequest {
+            display_name: "New Name".to_string(),
+            slug: "invalid!!!slug".to_string(), // Contains invalid characters
+        };
+
+        let auth_service = AuthService::new(
+            Box::new(user_repo),
+            Box::new(MockRefreshTokenRepository::new()),
+            "test-secret".to_string(),
+        );
+        let result = auth_service.update_profile(user_id, request).await;
+        assert!(result.is_err());
+        assert!(result.unwrap_err().to_string().contains("Invalid slug format"));
+        
+        Ok(())
+    }
+
+    #[tokio::test]
+    #[allow(unused_mut)]
+    async fn update_profile_fails_with_underscore_in_slug() -> Result<()> {
+        let mut user_repo = MockUserRepository::new();
+        let user_id = Uuid::new_v4();
 
         let request = ProfileUpdateRequest {
             display_name: "New Name".to_string(),
-            slug: "invalid!!!slug".to_string(), // Will be normalized to "invalidslug"
+            slug: "invalid_slug".to_string(), // Contains underscore (discouraged)
+        };
+
+        let auth_service = AuthService::new(
+            Box::new(user_repo),
+            Box::new(MockRefreshTokenRepository::new()),
+            "test-secret".to_string(),
+        );
+        let result = auth_service.update_profile(user_id, request).await;
+        assert!(result.is_err());
+        assert!(result.unwrap_err().to_string().contains("Invalid slug format"));
+        
+        Ok(())
+    }
+
+    #[tokio::test]
+    #[allow(unused_mut)]
+    async fn update_profile_fails_with_url_encoded_characters() -> Result<()> {
+        let mut user_repo = MockUserRepository::new();
+        let user_id = Uuid::new_v4();
+
+        let request = ProfileUpdateRequest {
+            display_name: "New Name".to_string(),
+            slug: "invalid%20slug".to_string(), // Contains URL-encoded characters
+        };
+
+        let auth_service = AuthService::new(
+            Box::new(user_repo),
+            Box::new(MockRefreshTokenRepository::new()),
+            "test-secret".to_string(),
+        );
+        let result = auth_service.update_profile(user_id, request).await;
+        assert!(result.is_err());
+        assert!(result.unwrap_err().to_string().contains("Invalid slug format"));
+        
+        Ok(())
+    }
+
+    #[tokio::test]
+    #[allow(unused_mut)]
+    async fn update_profile_fails_with_leading_hyphen() -> Result<()> {
+        let mut user_repo = MockUserRepository::new();
+        let user_id = Uuid::new_v4();
+
+        let request = ProfileUpdateRequest {
+            display_name: "New Name".to_string(),
+            slug: "-invalid-slug".to_string(), // Starts with hyphen
+        };
+
+        let auth_service = AuthService::new(
+            Box::new(user_repo),
+            Box::new(MockRefreshTokenRepository::new()),
+            "test-secret".to_string(),
+        );
+        let result = auth_service.update_profile(user_id, request).await;
+        assert!(result.is_err());
+        assert!(result.unwrap_err().to_string().contains("Invalid slug format"));
+        
+        Ok(())
+    }
+
+    #[tokio::test]
+    #[allow(unused_mut)]
+    async fn update_profile_fails_with_trailing_hyphen() -> Result<()> {
+        let mut user_repo = MockUserRepository::new();
+        let user_id = Uuid::new_v4();
+
+        let request = ProfileUpdateRequest {
+            display_name: "New Name".to_string(),
+            slug: "invalid-slug-".to_string(), // Ends with hyphen
         };
 
         let auth_service = AuthService::new(
@@ -356,13 +461,7 @@ mod tests {
         let mut user_repo = MockUserRepository::new();
         let user_id = Uuid::new_v4();
 
-        // Setup mock expectations
-        user_repo
-            .expect_slug_exists()
-            .times(1)
-            .with(eq("taken-slug"))
-            .returning(|_| Ok(false)); // Slug doesn't exist
-
+        // Setup mock expectations - only need slug_exists_excluding_user now
         user_repo
             .expect_slug_exists_excluding_user()
             .times(1)
@@ -391,11 +490,11 @@ mod tests {
         let mut user_repo = MockUserRepository::new();
         let user_id = Uuid::new_v4();
 
-        // Setup mock expectations
+        // Setup mock expectations - only need slug_exists_excluding_user now
         user_repo
-            .expect_slug_exists()
+            .expect_slug_exists_excluding_user()
             .times(1)
-            .returning(|_| Err(anyhow::anyhow!("Database error")));
+            .returning(|_, _| Err(anyhow::anyhow!("Database error")));
 
         let request = ProfileUpdateRequest {
             display_name: "New Name".to_string(),
@@ -419,13 +518,7 @@ mod tests {
         let mut user_repo = MockUserRepository::new();
         let user_id = Uuid::new_v4();
 
-        // Setup mock expectations
-        user_repo
-            .expect_slug_exists()
-            .times(1)
-            .with(eq("new-slug"))
-            .returning(|_| Ok(false));
-
+        // Setup mock expectations - only need slug_exists_excluding_user now
         user_repo
             .expect_slug_exists_excluding_user()
             .times(1)

@@ -47,6 +47,18 @@ pub struct SlugPreviewResponse {
 }
 
 #[derive(Debug, Serialize, Deserialize)]
+pub struct SlugValidationRequest {
+    pub slug: String,
+}
+
+#[derive(Debug, Serialize)]
+pub struct SlugValidationResponse {
+    pub slug: String,
+    pub valid: bool,
+    pub available: bool,
+}
+
+#[derive(Debug, Serialize, Deserialize)]
 pub struct RefreshTokenRequest {
     pub refresh_token: String,
 }

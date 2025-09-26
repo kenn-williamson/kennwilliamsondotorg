@@ -102,6 +102,7 @@ mod tests {
     use uuid::Uuid;
 
     #[tokio::test]
+    #[allow(unused_mut)]
     async fn test_get_users_success() {
         // Setup mocks
         let mut mock_user_repo = MockUserRepository::new();
@@ -145,6 +146,7 @@ mod tests {
     }
 
     #[tokio::test]
+    #[allow(unused_mut)]
     async fn test_deactivate_user_success() {
         // Setup mocks
         let mut mock_user_repo = MockUserRepository::new();
@@ -180,6 +182,7 @@ mod tests {
     }
 
     #[tokio::test]
+    #[allow(unused_mut)]
     async fn test_activate_user_success() {
         // Setup mocks
         let mut mock_user_repo = MockUserRepository::new();
@@ -209,6 +212,7 @@ mod tests {
     }
 
     #[tokio::test]
+    #[allow(unused_mut)]
     async fn test_reset_user_password_success() {
         // Setup mocks
         let mut mock_user_repo = MockUserRepository::new();
@@ -240,6 +244,7 @@ mod tests {
     }
 
     #[tokio::test]
+    #[allow(unused_mut)]
     async fn test_promote_to_admin_success() {
         // Setup mocks
         let mut mock_user_repo = MockUserRepository::new();
@@ -269,6 +274,7 @@ mod tests {
     }
 
     #[tokio::test]
+    #[allow(unused_mut)]
     async fn test_is_user_admin_true() {
         // Setup mocks
         let mut mock_user_repo = MockUserRepository::new();
@@ -299,6 +305,7 @@ mod tests {
     }
 
     #[tokio::test]
+    #[allow(unused_mut)]
     async fn test_is_user_admin_false() {
         // Setup mocks
         let mut mock_user_repo = MockUserRepository::new();
