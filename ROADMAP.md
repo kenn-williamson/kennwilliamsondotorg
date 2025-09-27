@@ -1,22 +1,36 @@
 # KennWilliamson.org Roadmap
 
 ## Current Status
-**Production deployment complete at kennwilliamson.org**. Full-stack application live with SSL, production infrastructure, and comprehensive development tooling. Complete admin panel system with user management, phrase moderation, 3-layer architecture refactor, comprehensive testing suite implemented with 134 total tests across all layers, and frontend architecture refactor complete with 25/25 components migrated to action composable + pure store pattern. Frontend testing infrastructure implemented with comprehensive test coverage for action composables, pure services, pure stores, and utilities.
+**Production deployment complete at kennwilliamson.org**. Full-stack application live with SSL, production infrastructure, and comprehensive development tooling. Complete admin panel system with user management, phrase moderation, 3-layer architecture refactor, comprehensive testing suite implemented with 200 total backend tests across all layers, and frontend architecture refactor complete with 25/25 components migrated to action composable + pure store pattern. Frontend testing infrastructure implemented with comprehensive test coverage for action composables, pure services, pure stores, and utilities with 175 tests achieving 100% success rate.
 
 ## Immediate Priorities
 
 ## Next Priorities
 
-### SSR vs CSR Data Fetching Optimization
-**Priority**: Medium
-**Goal**: Optimize data fetching patterns for better performance and user experience
+### Database Query Optimization
+**Priority**: High
+**Goal**: Fix critical database performance issues and optimize query patterns
 
-**Current State**: Hybrid architecture implemented with basic SSR/CSR separation
+**Current State**: Basic queries implemented with good indexing but several performance bottlenecks identified
+**Critical Issues**:
+- **N+1 Query Problem**: Admin user management executes 1 query for users + N queries for roles (50 users = 51 queries)
+- **Inefficient Random Selection**: `ORDER BY RANDOM()` scans entire phrases table for random phrase selection
+- **Missing Composite Indexes**: No optimized indexes for phrase exclusions and user search queries
+
+**Optimization Work**:
+- **Fix N+1 Admin Queries**: Replace loop with single JOIN query for users with roles
+- **Optimize Random Phrase Selection**: Use `TABLESAMPLE` or pre-calculated random ordering instead of `ORDER BY RANDOM()`
+- **Add Composite Indexes**: Create indexes for `(active, phrase_id)` and full-text search indexes
+- **Improve Search Queries**: Replace `ILIKE` with PostgreSQL full-text search for better performance
+- **Optimize Pagination**: Add proper counting and validation for large datasets
+
+### Performance Optimization
+**Priority**: Medium
+**Goal**: Optimize application performance and user experience
+
+**Current State**: Store architecture refactor complete with improved SSR hydration and smart fetch system
 **Remaining Work**:
-- **SSR Data Loading**: Ensure all initial page loads use server-side data fetching for optimal performance
-- **CSR Interactions**: Optimize client-side data fetching for user interactions and real-time updates
 - **Caching Strategy**: Implement proper caching for both SSR and CSR data
-- **Type Safety**: Ensure consistent TypeScript types across SSR and CSR data flows
 - **Performance Monitoring**: Add metrics to measure SSR vs CSR performance impact
 
 ### Feature Expansion
