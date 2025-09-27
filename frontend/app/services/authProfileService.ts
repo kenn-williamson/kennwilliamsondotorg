@@ -8,7 +8,7 @@ import type { ProfileUpdateRequest, PasswordChangeRequest, SlugPreviewResponse, 
 
 export const authProfileService = (fetcher: Fetcher) => ({
   updateProfile: async (data: ProfileUpdateRequest): Promise<{ message: string }> => {
-    return fetcher<{ message: string }>(API_ROUTES.PROTECTED.AUTH.PROFILE, {
+    return fetcher<{ message: string }>(API_ROUTES.API.AUTH.PROFILE, {
       method: 'PUT',
       body: data
     })
@@ -25,6 +25,13 @@ export const authProfileService = (fetcher: Fetcher) => ({
     return fetcher<SlugPreviewResponse>(API_ROUTES.PUBLIC.AUTH.PREVIEW_SLUG, {
       method: 'POST',
       body: { display_name: displayName }
+    })
+  },
+
+  validateSlug: async (slug: string): Promise<{ available: boolean }> => {
+    return fetcher<{ available: boolean }>(API_ROUTES.PROTECTED.AUTH.VALIDATE_SLUG, {
+      method: 'GET',
+      query: { slug }
     })
   }
 })

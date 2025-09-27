@@ -12,7 +12,7 @@
 export const API_ROUTES = {
   /**
    * Public endpoints - No authentication required
-   * Used by useBackendFetch() with /public/ prefix
+   * Used by useSmartFetch() with /public/ prefix
    */
   PUBLIC: {
     AUTH: {
@@ -35,7 +35,7 @@ export const API_ROUTES = {
 
   /**
    * Protected endpoints - JWT authentication required
-   * Used by useBackendFetch() with /protected/ prefix
+   * Used by useSmartFetch() with /protected/ prefix
    */
   PROTECTED: {
     AUTH: {
@@ -44,6 +44,7 @@ export const API_ROUTES = {
       REVOKE_ALL: '/protected/auth/revoke-all',
       PROFILE: '/protected/auth/profile',
       CHANGE_PASSWORD: '/protected/auth/change-password',
+      VALIDATE_SLUG: '/protected/auth/validate-slug',
     },
     TIMERS: {
       LIST: '/protected/incident-timers',
@@ -91,6 +92,7 @@ export const API_ROUTES = {
       REGISTER: '/api/auth/register',
       LOGOUT: '/api/auth/logout',
       ME: '/api/auth/me',
+      PROFILE: '/api/auth/profile',
     },
     TIMERS: {
       LIST: '/api/incident-timers',

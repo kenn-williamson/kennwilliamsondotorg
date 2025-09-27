@@ -6,16 +6,16 @@
         Current Password
       </label>
       <Field
-        name="current_password"
+        name="currentPassword"
         type="password"
         v-model="form.current_password"
         :class="[
           'w-full px-4 py-3 border rounded-md focus:ring-2 focus:ring-sky-500 focus:border-transparent transition-colors duration-200',
-          errors.current_password ? 'border-red-300 bg-red-50' : 'border-gray-300'
+          errors.currentPassword ? 'border-red-300 bg-red-50' : 'border-gray-300'
         ]"
         placeholder="Enter your current password"
       />
-      <ErrorMessage name="current_password" class="text-red-600 text-sm mt-1" />
+      <ErrorMessage name="currentPassword" class="text-red-600 text-sm mt-1" />
     </div>
 
     <!-- New Password Field -->
@@ -24,16 +24,16 @@
         New Password
       </label>
       <Field
-        name="new_password"
+        name="newPassword"
         type="password"
         v-model="form.new_password"
         :class="[
           'w-full px-4 py-3 border rounded-md focus:ring-2 focus:ring-sky-500 focus:border-transparent transition-colors duration-200',
-          errors.new_password ? 'border-red-300 bg-red-50' : 'border-gray-300'
+          errors.newPassword ? 'border-red-300 bg-red-50' : 'border-gray-300'
         ]"
         placeholder="Enter your new password"
       />
-      <ErrorMessage name="new_password" class="text-red-600 text-sm mt-1" />
+      <ErrorMessage name="newPassword" class="text-red-600 text-sm mt-1" />
       
       <!-- Password Requirements -->
       <div class="mt-2 text-xs text-gray-600">
@@ -61,16 +61,16 @@
         Confirm New Password
       </label>
       <Field
-        name="confirm_password"
+        name="confirmPassword"
         type="password"
         v-model="form.confirm_password"
         :class="[
           'w-full px-4 py-3 border rounded-md focus:ring-2 focus:ring-sky-500 focus:border-transparent transition-colors duration-200',
-          errors.confirm_password ? 'border-red-300 bg-red-50' : 'border-gray-300'
+          errors.confirmPassword ? 'border-red-300 bg-red-50' : 'border-gray-300'
         ]"
         placeholder="Confirm your new password"
       />
-      <ErrorMessage name="confirm_password" class="text-red-600 text-sm mt-1" />
+      <ErrorMessage name="confirmPassword" class="text-red-600 text-sm mt-1" />
     </div>
 
     <!-- Submit Button -->
@@ -113,9 +113,9 @@ const { changePassword, isLoading, error, hasError } = useAuthProfileActions()
 const { handleSubmit, errors, isSubmitting, setFieldValue, values } = useForm({
   validationSchema: passwordChangeSchema,
   initialValues: {
-    current_password: '',
-    new_password: '',
-    confirm_password: ''
+    currentPassword: '',
+    newPassword: '',
+    confirmPassword: ''
   }
 })
 
@@ -142,9 +142,9 @@ const isFormValid = computed(() => {
   return form.value.current_password && 
          form.value.new_password && 
          form.value.confirm_password &&
-         !errors.value.current_password && 
-         !errors.value.new_password && 
-         !errors.value.confirm_password &&
+         !errors.value.currentPassword && 
+         !errors.value.newPassword && 
+         !errors.value.confirmPassword &&
          passwordChecks.value.length &&
          passwordChecks.value.lowercase &&
          passwordChecks.value.uppercase &&
@@ -155,17 +155,17 @@ const isFormValid = computed(() => {
 const onSubmit = handleSubmit(async (values) => {
   try {
     await changePassword({
-      current_password: values.current_password,
-      new_password: values.new_password
+      current_password: values.currentPassword,
+      new_password: values.newPassword
     })
     
     // Clear form
     form.value.current_password = ''
     form.value.new_password = ''
     form.value.confirm_password = ''
-    setFieldValue('current_password', '')
-    setFieldValue('new_password', '')
-    setFieldValue('confirm_password', '')
+    setFieldValue('currentPassword', '')
+    setFieldValue('newPassword', '')
+    setFieldValue('confirmPassword', '')
     
   } catch (error) {
     console.error('Password change error:', error)
@@ -175,8 +175,8 @@ const onSubmit = handleSubmit(async (values) => {
 
 // Watch form values for validation
 watch(form, (newForm) => {
-  setFieldValue('current_password', newForm.current_password)
-  setFieldValue('new_password', newForm.new_password)
-  setFieldValue('confirm_password', newForm.confirm_password)
+  setFieldValue('currentPassword', newForm.current_password)
+  setFieldValue('newPassword', newForm.new_password)
+  setFieldValue('confirmPassword', newForm.confirm_password)
 }, { deep: true })
 </script>

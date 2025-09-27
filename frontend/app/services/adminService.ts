@@ -19,12 +19,13 @@ export const adminService = (fetcher: Fetcher) => ({
   },
 
   getUsers: async (searchQuery?: string): Promise<UsersResponse> => {
-    const params = new URLSearchParams()
+    const query: Record<string, string | undefined> = {}
     if (searchQuery?.trim()) {
-      params.append('search', searchQuery.trim())
+      query.search = searchQuery.trim()
     }
-    const url = `${API_ROUTES.PROTECTED.ADMIN.USERS}${params.toString() ? `?${params.toString()}` : ''}`
-    return fetcher<UsersResponse>(url)
+    return fetcher<UsersResponse>(API_ROUTES.PROTECTED.ADMIN.USERS, {
+      query
+    })
   },
 
   getSuggestions: async (): Promise<SuggestionsResponse> => {

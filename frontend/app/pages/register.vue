@@ -155,7 +155,6 @@ useHead({
   ]
 })
 
-// Redirect if already authenticated
 const { loggedIn } = useUserSession()
 const router = useRouter()
 

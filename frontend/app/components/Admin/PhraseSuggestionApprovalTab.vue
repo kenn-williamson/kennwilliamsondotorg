@@ -198,7 +198,7 @@ const confirmApproval = async () => {
   
   try {
     isProcessing.value = true
-    await phrasesStore.approveSuggestion(selectedSuggestion.value.id, approvalReason.value)
+    await adminStore.approveSuggestion(selectedSuggestion.value.id, approvalReason.value)
     showApprovalModal.value = false
     selectedSuggestion.value = null
     approvalReason.value = ''
@@ -227,7 +227,7 @@ const confirmRejection = async () => {
   
   try {
     isProcessing.value = true
-    await phrasesStore.rejectSuggestion(selectedSuggestion.value.id, rejectionReason.value)
+    await adminStore.rejectSuggestion(selectedSuggestion.value.id, rejectionReason.value)
     showRejectionModal.value = false
     selectedSuggestion.value = null
     rejectionReason.value = ''

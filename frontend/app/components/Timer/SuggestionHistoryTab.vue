@@ -124,7 +124,6 @@ import type { PhraseSuggestion } from '#shared/types/phrases'
 
 const phrasesStore = usePhrasesStore()
 
-const allSuggestions = ref<PhraseSuggestion[]>([])
 const statusFilter = ref('')
 const searchQuery = ref('')
 const isEditing = ref(false)
@@ -132,10 +131,7 @@ const isDeleting = ref(false)
 
 const loadSuggestions = async () => {
   try {
-    const response = await phrasesStore.loadSuggestionsForUser()
-    if (response) {
-      allSuggestions.value = response.suggestions
-    }
+    await phrasesStore.loadSuggestionsForUser()
   } catch (error) {
     console.error('Error loading suggestions:', error)
   }
@@ -145,7 +141,7 @@ const loadSuggestions = async () => {
 await callOnce('user-suggestion-history', () => loadSuggestions())
 
 const filteredSuggestions = computed(() => {
-  let filtered = allSuggestions.value
+  let filtered = phrasesStore.userSuggestions
 
   // Filter by status
   if (statusFilter.value) {

@@ -29,7 +29,6 @@ pub trait IncidentTimerRepository: Send + Sync {
     /// Find all timers for a user
     async fn find_by_user_id(&self, user_id: Uuid) -> Result<Vec<IncidentTimer>>;
     
-    
     /// Find latest timer for a user by slug with display name (for public display)
     async fn find_latest_by_user_slug_with_display_name(&self, slug: &str) -> Result<Option<(IncidentTimer, String)>>;
     

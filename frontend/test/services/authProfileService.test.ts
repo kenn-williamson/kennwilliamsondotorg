@@ -21,7 +21,7 @@ describe('authProfileService', () => {
       const service = authProfileService(mockFetcher)
       const result = await service.updateProfile(profileData)
 
-      expect(mockFetcher).toHaveBeenCalledWith('/protected/auth/profile', {
+      expect(mockFetcher).toHaveBeenCalledWith('/api/auth/profile', {
         method: 'PUT',
         body: profileData
       })

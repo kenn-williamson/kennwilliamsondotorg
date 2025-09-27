@@ -38,78 +38,74 @@ global.createError = vi.fn()
 global.defineEventHandler = vi.fn()
 global.$fetch = vi.fn()
 
-// Mock action composables for new architecture
-global.useIncidentTimerActions = vi.fn(() => ({
-  loadUserTimers: vi.fn(),
-  loadPublicTimer: vi.fn(),
+// Mock session watcher - prevents watch() errors in tests
+global.useSessionWatcher = vi.fn()
+
+// Mock Vue watch function
+global.watch = vi.fn()
+
+// Mock stores for new architecture
+global.useIncidentTimerStore = vi.fn(() => ({
+  timers: { value: [] },
+  currentTimer: { value: null },
+  isLoading: { value: false },
+  error: { value: null },
+  hasError: { value: false },
+  fetchTimers: vi.fn(),
   createTimer: vi.fn(),
   updateTimer: vi.fn(),
   deleteTimer: vi.fn(),
-  quickReset: vi.fn(),
-  fetchTimers: vi.fn(),
-  fetchPublicTimer: vi.fn(),
-  startLiveTimerUpdates: vi.fn(),
-  stopLiveTimerUpdates: vi.fn(),
+  getPublicTimer: vi.fn(),
+}))
+
+global.usePhrasesStore = vi.fn(() => ({
+  phrases: { value: [] },
+  userPhrases: { value: [] },
+  suggestions: { value: [] },
+  currentPhrase: { value: null },
   isLoading: { value: false },
   error: { value: null },
   hasError: { value: false },
-}))
-
-global.useAuthActions = vi.fn(() => ({
-  login: vi.fn(),
-  register: vi.fn(),
-  previewSlug: vi.fn(),
-  revokeAllSessions: vi.fn(),
-  logout: vi.fn(),
-  isLoading: { value: false },
-  error: { value: null },
-  hasError: { value: false },
-}))
-
-global.usePhrasesActions = vi.fn(() => ({
-  loadUserPhrases: vi.fn(),
-  loadAdminPhrases: vi.fn(),
-  loadUserSuggestions: vi.fn(),
-  loadAdminSuggestions: vi.fn(),
+  activePhrases: { value: [] },
+  pendingSuggestions: { value: [] },
+  fetchRandomPhrase: vi.fn(),
+  fetchUserPhrases: vi.fn(),
   excludePhrase: vi.fn(),
   removePhraseExclusion: vi.fn(),
-  submitPhraseSuggestion: vi.fn(),
-  approveSuggestion: vi.fn(),
-  rejectSuggestion: vi.fn(),
-  getRandomPhrase: vi.fn(),
+  submitSuggestion: vi.fn(),
+  fetchSuggestions: vi.fn(),
+}))
+
+global.useAdminStore = vi.fn(() => ({
+  users: { value: [] },
+  suggestions: { value: [] },
+  stats: { value: null },
+  searchQuery: { value: '' },
+  selectedUser: { value: null },
+  newPassword: { value: null },
+  activeTab: { value: 'overview' },
   isLoading: { value: false },
   error: { value: null },
   hasError: { value: false },
-}))
-
-global.useAdminActions = vi.fn(() => ({
-  loadStats: vi.fn(),
-  loadUsers: vi.fn(),
-  loadSuggestions: vi.fn(),
-  loadPhrases: vi.fn(),
+  filteredUsers: { value: [] },
+  pendingSuggestions: { value: [] },
+  fetchStats: vi.fn(),
+  fetchUsers: vi.fn(),
+  fetchSuggestions: vi.fn(),
   deactivateUser: vi.fn(),
   activateUser: vi.fn(),
   resetUserPassword: vi.fn(),
   promoteUser: vi.fn(),
   approveSuggestion: vi.fn(),
   rejectSuggestion: vi.fn(),
-  isLoading: { value: false },
-  error: { value: null },
-  hasError: { value: false },
-}))
-
-// Mock base composables
-global.useBaseService = vi.fn(() => ({
-  executeRequest: vi.fn(),
-  executeRequestWithSuccess: vi.fn(),
-  isLoading: { value: false },
-  error: { value: null },
-  hasError: { value: false },
+  setSearchQuery: vi.fn(),
+  setSelectedUser: vi.fn(),
+  clearNewPassword: vi.fn(),
+  clearState: vi.fn(),
 }))
 
 // Mock fetchers that return mock functions
-global.useBackendFetch = vi.fn(() => vi.fn())
-global.useAuthFetch = vi.fn(() => vi.fn())
+global.useSmartFetch = vi.fn(() => vi.fn())
 
 // Mock services - these are curried functions that take a fetcher and return service methods
 global.incidentTimerService = vi.fn(() => ({
@@ -161,10 +157,6 @@ global.adminService = vi.fn(() => ({
   rejectSuggestion: vi.fn()
 }))
 
-// Mock stores
-global.useIncidentTimerStore = vi.fn()
-global.usePhrasesStore = vi.fn()
-global.useAdminStore = vi.fn()
 
 // Mock console methods to reduce noise in tests
 global.console = {

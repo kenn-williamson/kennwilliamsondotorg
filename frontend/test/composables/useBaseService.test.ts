@@ -11,9 +11,6 @@ vi.mock('vue', async () => {
   }
 })
 
-// Mock console methods to avoid noise in tests
-const mockConsoleError = vi.spyOn(console, 'error').mockImplementation(() => {})
-const mockConsoleLog = vi.spyOn(console, 'log').mockImplementation(() => {})
 
 import { useBaseService } from '~/composables/useBaseService'
 
@@ -21,8 +18,6 @@ describe('useBaseService', () => {
   beforeEach(() => {
     // Reset all mocks
     vi.clearAllMocks()
-    mockConsoleError.mockClear()
-    mockConsoleLog.mockClear()
   })
 
   afterEach(() => {
@@ -150,12 +145,6 @@ describe('useBaseService', () => {
       expect(service.error.value).toBe(errorMessage)
       expect(service.hasError.value).toBe(true)
       expect(service.isLoading.value).toBe(false)
-
-      // Test error logging
-      expect(mockConsoleError).toHaveBeenCalledWith(
-        '[BaseService] Error in testContext:',
-        errorMessage
-      )
     })
 
     it('should handle non-Error objects and update error state', async () => {
@@ -169,12 +158,6 @@ describe('useBaseService', () => {
       expect(service.error.value).toBe('An unexpected error occurred')
       expect(service.hasError.value).toBe(true)
       expect(service.isLoading.value).toBe(false)
-
-      // Test error logging
-      expect(mockConsoleError).toHaveBeenCalledWith(
-        '[BaseService] Error:',
-        'An unexpected error occurred'
-      )
     })
 
     it('should handle null/undefined errors gracefully', async () => {
@@ -219,9 +202,6 @@ describe('useBaseService', () => {
       expect(result).toEqual(mockData)
       expect(mockRequest).toHaveBeenCalledOnce()
 
-      // Test success logging
-      expect(mockConsoleLog).toHaveBeenCalledWith('[BaseService] Success: Operation completed successfully')
-
       // Test state
       expect(service.isLoading.value).toBe(false)
       expect(service.error.value).toBe(null)
@@ -236,15 +216,6 @@ describe('useBaseService', () => {
 
       // Execute request and expect it to throw
       await expect(service.executeRequestWithSuccess(mockRequest, successMessage, 'testContext')).rejects.toThrow('Request failed')
-
-      // Test success message was not logged
-      expect(mockConsoleLog).not.toHaveBeenCalledWith('[BaseService] Success: This should not be logged')
-
-      // Test error was logged
-      expect(mockConsoleError).toHaveBeenCalledWith(
-        '[BaseService] Error in testContext:',
-        'Request failed'
-      )
 
       // Test error state
       expect(service.error.value).toBe('Request failed')

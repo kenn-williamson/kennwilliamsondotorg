@@ -1,6 +1,5 @@
 /**
  * Phrase-related type definitions
- * Consolidated from app/types/phrases.ts for better organization
  */
 
 export interface Phrase {
@@ -41,7 +40,12 @@ export interface PhraseExclusionResponse {
 }
 
 export interface PhraseSuggestionResponse {
-  suggestion: PhraseSuggestion
+  id: string
+  phrase_text: string
+  status: 'pending' | 'approved' | 'rejected'
+  admin_reason?: string
+  created_at: string
+  updated_at: string
 }
 
 export interface PhraseSuggestionsResponse {

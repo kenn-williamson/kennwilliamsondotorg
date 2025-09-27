@@ -22,6 +22,9 @@ useHead({
     { rel: 'apple-touch-icon', sizes: '192x192', href: '/favicon-large.png' }
   ]
 })
+
+// Set up global callOnce cache clearing on logout
+useCallOnceWatcher()
 </script>
 
 <style>

@@ -13,7 +13,6 @@ export default defineEventHandler(async (event) => {
     console.log('🔍 [Phrases API] Server config apiBase:', config.apiBase)
     console.log('🔍 [Phrases API] Public config apiBase:', config.public.apiBase)
 
-    // Forward the request to the backend with the JWT token
     const response = await $fetch(`${config.apiBase}${API_ROUTES.PROTECTED.PHRASES.RANDOM}`, {
       headers: {
         'Authorization': `Bearer ${jwtToken}`,

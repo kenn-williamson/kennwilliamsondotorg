@@ -82,14 +82,6 @@ export const createMockAuthResponse = (overrides = {}) => ({
 })
 
 // Mock composables for new architecture
-export const mockUseBaseService = () => ({
-  executeRequest: vi.fn(),
-  executeRequestWithSuccess: vi.fn(),
-  isLoading: { value: false },
-  error: { value: null },
-  hasError: { value: false },
-})
-
 export const mockUseBackendFetch = () => vi.fn()
 
 export const mockUseAuthFetch = () => vi.fn()
@@ -101,64 +93,80 @@ export const mockUseUserSession = () => ({
   fetch: vi.fn(),
 })
 
-// Mock action composables
-export const mockUseIncidentTimerActions = () => ({
-  loadUserTimers: vi.fn(),
-  loadPublicTimer: vi.fn(),
+// Mock stores for new architecture
+export const mockUseIncidentTimerStore = () => ({
+  timers: { value: [] },
+  currentTimer: { value: null },
+  isLoading: { value: false },
+  error: { value: null },
+  hasError: { value: false },
+  fetchTimers: vi.fn(),
   createTimer: vi.fn(),
   updateTimer: vi.fn(),
   deleteTimer: vi.fn(),
-  quickReset: vi.fn(),
-  fetchTimers: vi.fn(),
-  fetchPublicTimer: vi.fn(),
-  startLiveTimerUpdates: vi.fn(),
-  stopLiveTimerUpdates: vi.fn(),
+  getPublicTimer: vi.fn(),
+})
+
+export const mockUseAuthStore = () => ({
+  user: { value: null },
   isLoading: { value: false },
   error: { value: null },
   hasError: { value: false },
-})
-
-export const mockUseAuthActions = () => ({
+  isAuthenticated: { value: false },
   login: vi.fn(),
   register: vi.fn(),
-  previewSlug: vi.fn(),
-  revokeAllSessions: vi.fn(),
   logout: vi.fn(),
+  refreshToken: vi.fn(),
+  getCurrentUser: vi.fn(),
+  updateProfile: vi.fn(),
+  changePassword: vi.fn(),
+  previewSlug: vi.fn(),
+})
+
+export const mockUsePhrasesStore = () => ({
+  phrases: { value: [] },
+  userPhrases: { value: [] },
+  suggestions: { value: [] },
+  currentPhrase: { value: null },
   isLoading: { value: false },
   error: { value: null },
   hasError: { value: false },
-})
-
-export const mockUsePhrasesActions = () => ({
-  loadUserPhrases: vi.fn(),
-  loadAdminPhrases: vi.fn(),
-  loadUserSuggestions: vi.fn(),
-  loadAdminSuggestions: vi.fn(),
+  activePhrases: { value: [] },
+  pendingSuggestions: { value: [] },
+  fetchRandomPhrase: vi.fn(),
+  fetchUserPhrases: vi.fn(),
   excludePhrase: vi.fn(),
   removePhraseExclusion: vi.fn(),
-  submitPhraseSuggestion: vi.fn(),
-  approveSuggestion: vi.fn(),
-  rejectSuggestion: vi.fn(),
-  getRandomPhrase: vi.fn(),
+  submitSuggestion: vi.fn(),
+  fetchSuggestions: vi.fn(),
+})
+
+export const mockUseAdminStore = () => ({
+  users: { value: [] },
+  suggestions: { value: [] },
+  stats: { value: null },
+  searchQuery: { value: '' },
+  selectedUser: { value: null },
+  newPassword: { value: null },
+  activeTab: { value: 'overview' },
   isLoading: { value: false },
   error: { value: null },
   hasError: { value: false },
-})
-
-export const mockUseAdminActions = () => ({
-  loadStats: vi.fn(),
-  loadUsers: vi.fn(),
-  loadSuggestions: vi.fn(),
-  loadPhrases: vi.fn(),
+  filteredUsers: { value: [] },
+  pendingSuggestions: { value: [] },
+  fetchStats: vi.fn(),
+  fetchUsers: vi.fn(),
+  fetchSuggestions: vi.fn(),
   deactivateUser: vi.fn(),
   activateUser: vi.fn(),
   resetUserPassword: vi.fn(),
   promoteUser: vi.fn(),
   approveSuggestion: vi.fn(),
   rejectSuggestion: vi.fn(),
-  isLoading: { value: false },
-  error: { value: null },
-  hasError: { value: false },
+  setSearchQuery: vi.fn(),
+  setSelectedUser: vi.fn(),
+  clearNewPassword: vi.fn(),
+  clearState: vi.fn(),
 })
 
 // Mock pure services

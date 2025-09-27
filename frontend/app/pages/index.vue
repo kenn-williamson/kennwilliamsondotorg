@@ -86,9 +86,6 @@ useHead({
   ]
 })
 
-// No authentication logic needed for homepage
-
-// Control fallback display
 const showFallback = ref(false)
 
 </script>

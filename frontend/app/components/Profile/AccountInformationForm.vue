@@ -6,17 +6,17 @@
         Display Name
       </label>
       <Field
-        name="display_name"
+        name="displayName"
         type="text"
         v-model="form.display_name"
         :class="[
           'w-full px-4 py-3 border rounded-md focus:ring-2 focus:ring-sky-500 focus:border-transparent transition-colors duration-200',
-          errors.display_name ? 'border-red-300 bg-red-50' : 'border-gray-300'
+          errors.displayName ? 'border-red-300 bg-red-50' : 'border-gray-300'
         ]"
         placeholder="John Doe"
         @input="onDisplayNameChange"
       />
-      <ErrorMessage name="display_name" class="text-red-600 text-sm mt-1" />
+      <ErrorMessage name="displayName" class="text-red-600 text-sm mt-1" />
     </div>
 
     <!-- URL Slug Field -->
@@ -35,22 +35,26 @@
         ]"
         placeholder="my-custom-slug"
         @input="onSlugChange"
-        @keypress="onSlugKeypress"
       />
       <ErrorMessage name="slug" class="text-red-600 text-sm mt-1" />
-      <p class="text-xs text-gray-500 mt-1">Spaces will automatically be converted to hyphens.</p>
+      <p class="text-xs text-gray-500 mt-1">Only lowercase letters, numbers, and hyphens are allowed. No spaces or special characters.</p>
       
       <!-- Slug Preview -->
-      <div v-if="slugPreview" class="mt-2 p-3 bg-sky-50 border border-sky-200 rounded-md">
-        <p class="text-xs text-gray-600 mb-2">Your public incident timer will be available at:</p>
-        <p class="text-sm font-mono text-sky-700">
-          {{ baseUrl }}/{{ slugPreview.slug }}
-        </p>
-        <div v-if="slugPreview.available === false" class="mt-2 text-xs text-amber-600">
-          ⚠️ This username is taken. We suggest: {{ slugPreview.final_slug }}
+      <div v-if="slugPreview" class="mt-2 p-3 border rounded-md" :class="slugPreview.valid ? 'bg-sky-50 border-sky-200' : 'bg-red-50 border-red-200'">
+        <div v-if="!slugPreview.valid" class="text-xs text-red-600">
+          ❌ Invalid slug format. Only lowercase letters, numbers, and hyphens are allowed.
         </div>
-        <div v-else-if="slugPreview.available === true" class="mt-2 text-xs text-green-600">
-          ✅ This username is available
+        <div v-else>
+          <p class="text-xs text-gray-600 mb-2">Your public incident timer will be available at:</p>
+          <p class="text-sm font-mono text-sky-700">
+            {{ baseUrl }}/{{ slugPreview.slug }}/incident-timer
+          </p>
+          <div v-if="slugPreview.available === false" class="mt-2 text-xs text-amber-600">
+            ⚠️ This username is already taken. Please choose a different one.
+          </div>
+          <div v-else-if="slugPreview.available === true" class="mt-2 text-xs text-green-600">
+            ✅ This username is available
+          </div>
         </div>
       </div>
     </div>
@@ -115,13 +119,13 @@ const user = computed(() => props.user)
 // No emits needed - parent will refresh via session update
 
 // Composables
-const { updateProfile, previewSlug, isLoading, error, hasError } = useAuthProfileActions()
+const { updateProfile, validateSlug, isLoading, error, hasError } = useAuthProfileActions()
 
 // Form setup
 const { handleSubmit, errors, isSubmitting, setFieldValue, values } = useForm({
   validationSchema: profileUpdateSchema,
   initialValues: {
-    display_name: user.value?.display_name || '',
+    displayName: user.value?.display_name || '',
     slug: user.value?.slug || ''
   }
 })
@@ -146,24 +150,28 @@ const baseUrl = computed(() => {
 
 // Form validation
 const isFormValid = computed(() => {
-  return form.value.display_name && form.value.slug && !errors.value.display_name && !errors.value.slug
+  return form.value.display_name && form.value.slug && !errors.value.displayName && !errors.value.slug
 })
 
-// Debounced slug uniqueness check
+// Debounced slug validation and uniqueness check
 let slugCheckTimeout = null
-const checkSlugUniqueness = async (slug) => {
+const checkSlugValidation = async (slug) => {
   if (slugCheckTimeout) {
     clearTimeout(slugCheckTimeout)
   }
   
   slugCheckTimeout = setTimeout(async () => {
-    if (slug && slug !== props.user.slug) {
+    if (slug && slug.trim()) {
       isCheckingSlug.value = true
       try {
-        const response = await previewSlug(slug)
-        slugPreview.value = response
+        const response = await validateSlug(slug)
+        slugPreview.value = {
+          slug: slug,
+          available: response.available,
+          valid: true // Assume valid if we got a response
+        }
       } catch (error) {
-        console.error('Error checking slug uniqueness:', error)
+        console.error('Error checking slug validation:', error)
         slugPreview.value = null
       } finally {
         isCheckingSlug.value = false
@@ -177,44 +185,23 @@ const checkSlugUniqueness = async (slug) => {
 // Event handlers
 const onDisplayNameChange = (event) => {
   form.value.display_name = event.target.value
-  setFieldValue('display_name', event.target.value)
-}
-
-const onSlugKeypress = (event) => {
-  // Convert spaces to hyphens as user types
-  if (event.key === ' ') {
-    event.preventDefault()
-    const currentValue = event.target.value
-    const newValue = currentValue + '-'
-    form.value.slug = newValue
-    setFieldValue('slug', newValue)
-    event.target.value = newValue
-  }
+  setFieldValue('displayName', event.target.value)
 }
 
 const onSlugChange = (event) => {
-  let value = event.target.value
+  const value = event.target.value
+  form.value.slug = value
+  setFieldValue('slug', value)
   
-  // Auto-convert spaces to hyphens
-  if (value.includes(' ')) {
-    value = value.replace(/\s+/g, '-')
-    form.value.slug = value
-    setFieldValue('slug', value)
-    event.target.value = value
-  } else {
-    form.value.slug = value
-    setFieldValue('slug', value)
-  }
-  
-  // Check slug uniqueness
-  checkSlugUniqueness(value)
+  // Check slug validation and uniqueness
+  checkSlugValidation(value)
 }
 
 // Form submission
 const onSubmit = handleSubmit(async (values) => {
   try {
     await updateProfile({
-      display_name: values.display_name,
+      display_name: values.displayName,
       slug: values.slug
     })
     
@@ -232,7 +219,7 @@ watch(user, (newUser) => {
   if (newUser) {
     form.value.display_name = newUser.display_name
     form.value.slug = newUser.slug
-    setFieldValue('display_name', newUser.display_name)
+    setFieldValue('displayName', newUser.display_name)
     setFieldValue('slug', newUser.slug)
   }
 }, { immediate: true })

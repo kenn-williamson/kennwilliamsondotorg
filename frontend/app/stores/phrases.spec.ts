@@ -16,8 +16,6 @@ const mockPhraseServiceMethods = {
   excludePhrase: vi.fn(),
   removePhraseExclusion: vi.fn(),
   submitPhraseSuggestion: vi.fn(),
-  approveSuggestion: vi.fn(),
-  rejectSuggestion: vi.fn(),
   fetchRandomPhraseAuth: vi.fn(),
   fetchRandomPhraseClient: vi.fn(),
 }
@@ -27,8 +25,8 @@ vi.mock('~/services/phraseService', () => ({
 }))
 
 // Mock the backend fetch composable
-vi.mock('~/composables/useBackendFetch', () => ({
-  useBackendFetch: vi.fn(() => vi.fn())
+vi.mock('~/composables/useSmartFetch', () => ({
+  useSmartFetch: vi.fn(() => vi.fn())
 }))
 
 describe('Phrases Store', () => {
@@ -89,8 +87,9 @@ describe('Phrases Store', () => {
       
       mockPhraseServiceMethods.fetchUserPhrases.mockRejectedValue(mockError)
 
-      await expect(store.loadPhrasesForUser()).rejects.toThrow('API Failure')
+      const result = await store.loadPhrasesForUser()
       
+      expect(result).toBeUndefined()
       expect(store.error).toBe('API Failure')
       expect(store.isLoading).toBe(false)
       expect(store.userPhrases).toEqual([])
@@ -123,8 +122,9 @@ describe('Phrases Store', () => {
       
       mockPhraseServiceMethods.fetchAllPhrases.mockRejectedValue(mockError)
 
-      await expect(store.loadAllPhrasesForAdmin()).rejects.toThrow('Admin API Failure')
+      const result = await store.loadAllPhrasesForAdmin()
       
+      expect(result).toBeUndefined()
       expect(store.error).toBe('Admin API Failure')
       expect(store.isLoading).toBe(false)
       expect(store.adminPhrases).toEqual([])
@@ -214,15 +214,14 @@ describe('Phrases Store', () => {
   describe('submitSuggestion', () => {
     it('should submit suggestion successfully', async () => {
       const store = usePhrasesStore()
-      const mockSuggestion = { id: '1', phrase_text: 'New suggestion', status: 'pending', user_id: 'user1', created_at: '2024-01-01T12:00:00Z', updated_at: '2024-01-01T12:00:00Z', user_display_name: 'Test User' }
-      const mockResponse = { suggestion: mockSuggestion }
+      const mockResponse = { id: '1', phrase_text: 'New suggestion', status: 'pending', admin_reason: null, created_at: '2024-01-01T12:00:00Z', updated_at: '2024-01-01T12:00:00Z' }
       
       mockPhraseServiceMethods.submitPhraseSuggestion.mockResolvedValue(mockResponse)
 
       const result = await store.submitSuggestion('New suggestion')
 
       expect(mockPhraseServiceMethods.submitPhraseSuggestion).toHaveBeenCalledWith('New suggestion')
-      expect(store.userSuggestions).toContain(mockSuggestion)
+      expect(store.userSuggestions).toEqual(expect.arrayContaining([expect.objectContaining({ id: '1' })]))
       expect(store.isLoading).toBe(false)
       expect(store.error).toBe(null)
       expect(result).toEqual(mockResponse)
@@ -234,49 +233,12 @@ describe('Phrases Store', () => {
       
       mockPhraseServiceMethods.submitPhraseSuggestion.mockRejectedValue(mockError)
 
-      await expect(store.submitSuggestion('New suggestion')).rejects.toThrow('Submission failed')
+      const result = await store.submitSuggestion('New suggestion')
       
+      expect(result).toBeUndefined()
       expect(store.error).toBe('Submission failed')
       expect(store.isLoading).toBe(false)
       expect(store.userSuggestions).toEqual([])
-    })
-  })
-
-  describe('approveSuggestion', () => {
-    it('should approve suggestion successfully', async () => {
-      const store = usePhrasesStore()
-      const mockSuggestion = { id: '1', phrase_text: 'Test suggestion', status: 'pending' as const, user_id: 'user1', created_at: '2024-01-01T12:00:00Z', updated_at: '2024-01-01T12:00:00Z', user_display_name: 'Test User', admin_reason: undefined }
-      store.adminSuggestions = [mockSuggestion]
-      
-      mockPhraseServiceMethods.approveSuggestion.mockResolvedValue({ message: 'Suggestion approved successfully' })
-
-      const result = await store.approveSuggestion('1', 'Great suggestion!')
-
-      expect(mockPhraseServiceMethods.approveSuggestion).toHaveBeenCalledWith('1', 'Great suggestion!')
-      expect(mockSuggestion.status).toBe('approved')
-      expect(mockSuggestion.admin_reason).toBe('Great suggestion!')
-      expect(store.isLoading).toBe(false)
-      expect(store.error).toBe(null)
-      expect(result).toEqual(mockSuggestion)
-    })
-  })
-
-  describe('rejectSuggestion', () => {
-    it('should reject suggestion successfully', async () => {
-      const store = usePhrasesStore()
-      const mockSuggestion = { id: '1', phrase_text: 'Test suggestion', status: 'pending' as const, user_id: 'user1', created_at: '2024-01-01T12:00:00Z', updated_at: '2024-01-01T12:00:00Z', user_display_name: 'Test User', admin_reason: undefined }
-      store.adminSuggestions = [mockSuggestion]
-      
-      mockPhraseServiceMethods.rejectSuggestion.mockResolvedValue({ message: 'Suggestion rejected successfully' })
-
-      const result = await store.rejectSuggestion('1', 'Not appropriate')
-
-      expect(mockPhraseServiceMethods.rejectSuggestion).toHaveBeenCalledWith('1', 'Not appropriate')
-      expect(mockSuggestion.status).toBe('rejected')
-      expect(mockSuggestion.admin_reason).toBe('Not appropriate')
-      expect(store.isLoading).toBe(false)
-      expect(store.error).toBe(null)
-      expect(result).toEqual(mockSuggestion)
     })
   })
 

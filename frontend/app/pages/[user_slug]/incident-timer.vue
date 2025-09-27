@@ -96,12 +96,10 @@ useHead(() => ({
 const { activeTimerBreakdown } = storeToRefs(incidentTimerStore)
 const timeBreakdown = computed(() => activeTimerBreakdown.value)
 
-// Utility formatting functions (kept for potential future use)
-
 // Load public timer data directly in setup. This runs ON THE SERVER.
 // Nuxt will wait for this to complete before sending the page.
 console.log('🔄 Loading public timer for user:', userSlug)
-await incidentTimerStore.loadPublicTimer(userSlug)
+await callOnce('public-timer', () => incidentTimerStore.loadPublicTimer(userSlug))
 
 // Start timers after hydration (client-side only)
 onMounted(() => {
@@ -109,9 +107,7 @@ onMounted(() => {
   incidentTimerStore.startLiveTimerUpdates()
 })
 
-// Cleanup on unmount
 onUnmounted(() => {
-  // Stop live timer when component unmounts
   incidentTimerStore.stopLiveTimerUpdates()
 })
 </script>

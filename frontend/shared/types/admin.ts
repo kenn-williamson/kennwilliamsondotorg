@@ -1,6 +1,5 @@
 /**
  * Admin-related type definitions
- * Consolidated from scattered locations for better organization
  */
 
 import type { User } from './auth'

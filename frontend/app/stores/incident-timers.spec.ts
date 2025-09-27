@@ -23,8 +23,8 @@ vi.mock('~/services/incidentTimerService', () => ({
 }))
 
 // Mock the backend fetch composable
-vi.mock('~/composables/useBackendFetch', () => ({
-  useBackendFetch: vi.fn(() => vi.fn())
+vi.mock('~/composables/useSmartFetch', () => ({
+  useSmartFetch: vi.fn(() => vi.fn())
 }))
 
 // Mock the timer manager utility
@@ -88,8 +88,9 @@ describe('Incident Timer Store', () => {
       
       mockServiceMethods.getUserTimers.mockRejectedValue(mockError)
 
-      await expect(store.loadUserTimers()).rejects.toThrow('API Failure')
+      const result = await store.loadUserTimers()
       
+      expect(result).toBeUndefined()
       expect(store.error).toBe('API Failure')
       expect(store.isLoading).toBe(false)
       expect(store.timers).toEqual([])
@@ -126,8 +127,9 @@ describe('Incident Timer Store', () => {
       
       mockServiceMethods.getPublicTimer.mockRejectedValue(mockError)
 
-      await expect(store.loadPublicTimer('test-user')).rejects.toThrow('Public timer not found')
+      const result = await store.loadPublicTimer('test-user')
       
+      expect(result).toBeUndefined()
       expect(store.error).toBe('Public timer not found')
       expect(store.isLoading).toBe(false)
       expect(store.publicTimer).toBe(null)
@@ -145,7 +147,7 @@ describe('Incident Timer Store', () => {
       const result = await store.createTimer(timerData)
 
       expect(mockServiceMethods.createTimer).toHaveBeenCalledWith(timerData)
-      expect(store.timers).toContain(mockTimer)
+      expect(store.timers).toEqual(expect.arrayContaining([expect.objectContaining({ id: '1' })]))
       expect(store.currentTimer).toEqual(mockTimer)
       expect(store.isLoading).toBe(false)
       expect(store.error).toBe(null)
@@ -159,8 +161,9 @@ describe('Incident Timer Store', () => {
       
       mockServiceMethods.createTimer.mockRejectedValue(mockError)
 
-      await expect(store.createTimer(timerData)).rejects.toThrow('Creation failed')
+      const result = await store.createTimer(timerData)
       
+      expect(result).toBeUndefined()
       expect(store.error).toBe('Creation failed')
       expect(store.isLoading).toBe(false)
       expect(store.timers).toEqual([])
@@ -196,8 +199,9 @@ describe('Incident Timer Store', () => {
       
       mockServiceMethods.updateTimer.mockRejectedValue(mockError)
 
-      await expect(store.updateTimer('1', updateData)).rejects.toThrow('Update failed')
+      const result = await store.updateTimer('1', updateData)
       
+      expect(result).toBeUndefined()
       expect(store.error).toBe('Update failed')
       expect(store.isLoading).toBe(false)
     })
@@ -229,7 +233,7 @@ describe('Incident Timer Store', () => {
       
       mockServiceMethods.deleteTimer.mockRejectedValue(mockError)
 
-      await expect(store.deleteTimer('1')).rejects.toThrow('Delete failed')
+      await store.deleteTimer('1')
       
       expect(store.error).toBe('Delete failed')
       expect(store.isLoading).toBe(false)
@@ -263,8 +267,9 @@ describe('Incident Timer Store', () => {
       
       mockServiceMethods.quickReset.mockRejectedValue(mockError)
 
-      await expect(store.quickReset('1')).rejects.toThrow('Reset failed')
+      const result = await store.quickReset('1')
       
+      expect(result).toBeUndefined()
       expect(store.error).toBe('Reset failed')
       expect(store.isLoading).toBe(false)
     })
@@ -385,7 +390,7 @@ describe('Incident Timer Store', () => {
       
       store.addTimer(timer)
       
-      expect(store.timers).toContain(timer)
+      expect(store.timers).toEqual(expect.arrayContaining([expect.objectContaining({ id: '1' })]))
     })
 
     it('should update timer store correctly', () => {

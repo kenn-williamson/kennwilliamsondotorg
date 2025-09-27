@@ -66,7 +66,7 @@
               </button>
               <hr class="my-1 border-gray-100">
               <button 
-                @click="logout"
+                @click="handleLogout"
                 class="block w-full px-4 py-2 text-sm text-gray-700 hover:bg-gray-50 text-left transition-colors duration-200"
               >
                 Sign Out
@@ -159,7 +159,7 @@
               Admin Panel
             </button>
             <button 
-              @click="logout"
+              @click="handleLogout"
               class="mobile-nav-link text-left"
             >
               Sign Out
@@ -191,14 +191,12 @@
 import { useAuthActions } from '~/composables/useAuthActions'
 
 const { loggedIn, user, clear } = useUserSession()
-const { logout: authLogout } = useAuthActions()
+const { logout, isLoading } = useAuthActions()
 const router = useRouter()
 
-// Reactive state
 const showMobileMenu = ref(false)
 const showUserMenu = ref(false)
 
-// Computed properties
 const userInitial = computed(() => {
   if (!user.value?.email) return 'U'
   return user.value.email.charAt(0).toUpperCase()
@@ -207,8 +205,6 @@ const userInitial = computed(() => {
 const isAdmin = computed(() => {
   return user.value?.roles?.includes('admin') || false
 })
-
-// Methods
 const toggleMobileMenu = () => {
   showMobileMenu.value = !showMobileMenu.value
   if (showMobileMenu.value) {
@@ -223,8 +219,8 @@ const toggleUserMenu = () => {
   }
 }
 
-const logout = async () => {
-  await authLogout()
+const handleLogout = async () => {
+  await logout()
   showUserMenu.value = false
   showMobileMenu.value = false
   await router.push('/')

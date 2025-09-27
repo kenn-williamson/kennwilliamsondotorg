@@ -1,15 +1,14 @@
 /**
  * Centralized Admin Store - State management with actions
- * Refactored to eliminate action composable middleman
  */
 
 import type { User, AdminStats } from '#shared/types'
 import type { PhraseSuggestion } from '#shared/types/phrases'
 import { adminService } from '~/services/adminService'
-import { useBackendFetch } from '~/composables/useBackendFetch'
+import { useSmartFetch } from '~/composables/useSmartFetch'
+import { useSessionWatcher } from '~/composables/useSessionWatcher'
 
 export const useAdminStore = defineStore('admin', () => {
-  // State
   const users = ref<User[]>([])
   const suggestions = ref<PhraseSuggestion[]>([])
   const stats = ref<AdminStats | null>(null)
@@ -18,11 +17,8 @@ export const useAdminStore = defineStore('admin', () => {
   const newPassword = ref<string | null>(null)
   const activeTab = ref('overview')
   
-  // Transient state (moved from useBaseService)
   const isLoading = ref(false)
   const error = ref<string | null>(null)
-
-  // Computed
   const filteredUsers = computed((): User[] => {
     if (!searchQuery.value.trim()) return users.value
     
@@ -40,8 +36,8 @@ export const useAdminStore = defineStore('admin', () => {
   const hasError = computed(() => !!error.value)
 
   // Service instance
-  const backendFetch = useBackendFetch()
-  const adminServiceInstance = adminService(backendFetch)
+  const smartFetch = useSmartFetch()
+  const adminServiceInstance = adminService(smartFetch)
 
   // Private action handler (replaces useBaseService logic)
   const _handleAction = async <T>(
@@ -59,13 +55,8 @@ export const useAdminStore = defineStore('admin', () => {
       error.value = errorMessage
       console.error(`[AdminStore] Error${context ? ` in ${context}` : ''}:`, errorMessage)
       
-      // Handle authentication errors gracefully (don't crash during SSR)
-      if (err.statusCode === 401) {
-        console.log(`[AdminStore] Authentication error in ${context}, returning null instead of crashing`)
-        return undefined
-      }
-      
-      throw err
+      // Handle all errors gracefully - keep them in state for UI to display
+      return undefined
     } finally {
       isLoading.value = false
     }
@@ -87,7 +78,6 @@ export const useAdminStore = defineStore('admin', () => {
     return 'https://localhost/backend'
   }
 
-  // Actions (migrated from useAdminActions)
   const fetchStats = async () => {
     const data = await _handleAction(() => adminServiceInstance.getStats(), 'fetchStats')
     if (data) {
@@ -99,7 +89,7 @@ export const useAdminStore = defineStore('admin', () => {
   // SSR-compatible stats fetching
   const fetchStatsSSR = async (): Promise<AdminStats | null> => {
     const result = await _handleAction(async () => {
-      // Use existing service method with useBackendFetch
+      // Use existing service method with useSmartFetch
       const response = await adminServiceInstance.getStats()
       stats.value = response
       return response
@@ -248,8 +238,29 @@ export const useAdminStore = defineStore('admin', () => {
     error.value = null
   }
 
+  const clearAllData = () => {
+    users.value = []
+    suggestions.value = []
+    stats.value = null
+    searchQuery.value = ''
+    selectedUser.value = null
+    newPassword.value = null
+    activeTab.value = 'overview'
+    isLoading.value = false
+    error.value = null
+    
+    console.log('🧹 [AdminStore] All data cleared')
+  }
+
+  // Test utility method (only for testing)
+  const setError = (errorMessage: string | null) => {
+    error.value = errorMessage
+  }
+
+  // Set up session watcher for automatic cleanup on logout
+  useSessionWatcher(clearAllData)
+
   return {
-    // State
     users: readonly(users),
     suggestions: readonly(suggestions),
     stats: readonly(stats),
@@ -260,12 +271,10 @@ export const useAdminStore = defineStore('admin', () => {
     isLoading: readonly(isLoading),
     error: readonly(error),
     
-    // Computed
     filteredUsers,
     pendingSuggestions,
     hasError,
     
-    // Actions (migrated from useAdminActions)
     fetchStats,
     fetchStatsSSR,
     fetchUsers,
@@ -277,7 +286,6 @@ export const useAdminStore = defineStore('admin', () => {
     approveSuggestion,
     rejectSuggestion,
     
-    // Utility actions
     setUsers,
     setSuggestions,
     setStats,
@@ -289,6 +297,8 @@ export const useAdminStore = defineStore('admin', () => {
     updateUserRoles,
     removeSuggestion,
     clearNewPassword,
-    clearState
+    clearState,
+    clearAllData,
+    setError
   }
 })

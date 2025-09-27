@@ -97,9 +97,9 @@ backend/
 │   ├── 20250914134643_initial_schema.sql
 │   ├── 20250914134654_add_refresh_tokens_and_user_active.sql
 │   └── 20250914134703_add_phrases_system.sql
-├── tests/               # Comprehensive test suite
+├── tests/               # Test suite
 │   ├── mod.rs           # Test module organization
-│   ├── test_helpers.rs  # Consolidated test utilities with container scope management
+│   ├── test_helpers.rs  # Test utilities
 │   ├── refresh_token_validation.rs # Refresh token validation tests
 │   └── api/             # API endpoint tests
 │       ├── mod.rs
@@ -124,11 +124,11 @@ backend/
 - **Database Integration**: SQLx with compile-time query verification
 - **3-Layer Architecture**: Clean separation with repository pattern and dependency injection
 - **Modular Services**: Auth service split into focused modules (register, login, refresh, profile, password, slug)
-- **Modular Incident Timer Service**: Split into focused modules (create, read, update, delete) with 19 unit tests
-- **Modular Phrase Service**: Split into focused modules (public_access, user_management, admin_management, exclusions, suggestions) with comprehensive test coverage
-- **Modular Admin Services**: Split into focused modules (user_management, phrase_moderation, stats) with 15 unit tests
+- **Modular Incident Timer Service**: Split into focused modules (create, read, update, delete)
+- **Modular Phrase Service**: Split into focused modules (public_access, user_management, admin_management, exclusions, suggestions)
+- **Modular Admin Services**: Split into focused modules (user_management, phrase_moderation, stats)
 - **Route Scoping**: Public/protected/admin route organization with appropriate middleware
-- **Testing**: Comprehensive test suite with unit, integration, API, and testcontainers tests
+- **Testing**: See [IMPLEMENTATION-TESTING.md](IMPLEMENTATION-TESTING.md) for comprehensive testing details
 
 ## Architecture Patterns
 
@@ -205,7 +205,7 @@ cargo test
 
 ## Testing
 
-See [IMPLEMENTATION-TESTING.md](IMPLEMENTATION-TESTING.md) for comprehensive testing documentation including 134 total tests across all layers with parallel execution and container isolation.
+See [IMPLEMENTATION-TESTING.md](IMPLEMENTATION-TESTING.md) for comprehensive testing documentation.
 
 ## Database Integration
 - **Connection**: SQLx with connection pooling

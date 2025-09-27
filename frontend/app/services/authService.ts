@@ -4,7 +4,7 @@
  */
 
 import { API_ROUTES } from '#shared/config/api-routes'
-import type { LoginRequest, RegisterRequest, SlugPreviewResponse, Fetcher, User } from '#shared/types'
+import type { LoginRequest, RegisterRequest, SlugPreviewResponse, SlugValidationResponse, Fetcher, AuthenticatedUser } from '#shared/types'
 
 export const authService = (fetcher: Fetcher) => ({
   login: async (credentials: LoginRequest): Promise<{ success: boolean }> => {
@@ -28,6 +28,13 @@ export const authService = (fetcher: Fetcher) => ({
     })
   },
 
+  validateSlug: async (slug: string): Promise<SlugValidationResponse> => {
+    return fetcher<SlugValidationResponse>(API_ROUTES.PROTECTED.AUTH.VALIDATE_SLUG, {
+      method: 'GET',
+      query: { slug }
+    })
+  },
+
   revokeAllSessions: async (): Promise<{ success: boolean }> => {
     return fetcher<{ success: boolean }>(API_ROUTES.PROTECTED.AUTH.REVOKE_ALL, {
       method: 'POST'
@@ -40,7 +47,7 @@ export const authService = (fetcher: Fetcher) => ({
     })
   },
 
-  getCurrentUser: async (): Promise<User> => {
-    return fetcher<User>(API_ROUTES.PROTECTED.AUTH.ME)
+  getCurrentUser: async (): Promise<AuthenticatedUser> => {
+    return fetcher<AuthenticatedUser>(API_ROUTES.API.AUTH.ME)
   }
 })

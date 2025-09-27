@@ -1,6 +1,5 @@
 /**
  * Authentication validation schemas using VeeValidate + Yup
- * Consolidated for better organization and reusability
  */
 
 import * as yup from 'yup'
@@ -23,7 +22,7 @@ export const registerSchema = yup.object({
     .string()
     .required('Email is required')
     .email('Please enter a valid email address'),
-  display_name: yup
+  displayName: yup
     .string()
     .required('Display name is required')
     .min(2, 'Display name must be at least 2 characters')
@@ -44,7 +43,7 @@ export const registerSchema = yup.object({
 
 // Profile update validation
 export const profileUpdateSchema = yup.object({
-  display_name: yup
+  displayName: yup
     .string()
     .required('Display name is required')
     .min(2, 'Display name must be at least 2 characters')
@@ -72,25 +71,25 @@ export const profileUpdateSchema = yup.object({
 
 // Password change validation
 export const passwordChangeSchema = yup.object({
-  current_password: yup
+  currentPassword: yup
     .string()
     .required('Current password is required'),
-  new_password: yup
+  newPassword: yup
     .string()
     .required('New password is required')
     .min(8, 'Password must be at least 8 characters')
     .matches(/(?=.*[a-z])/, 'Password must contain at least one lowercase letter')
     .matches(/(?=.*[A-Z])/, 'Password must contain at least one uppercase letter')
     .matches(/(?=.*\d)/, 'Password must contain at least one number'),
-  confirm_password: yup
+  confirmPassword: yup
     .string()
     .required('Please confirm your new password')
-    .oneOf([yup.ref('new_password')], 'Passwords must match'),
+    .oneOf([yup.ref('newPassword')], 'Passwords must match'),
 })
 
 // Slug preview validation (for registration)
 export const slugPreviewSchema = yup.object({
-  display_name: yup
+  displayName: yup
     .string()
     .required('Display name is required')
     .min(2, 'Display name must be at least 2 characters')

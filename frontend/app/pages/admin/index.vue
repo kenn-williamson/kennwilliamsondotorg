@@ -37,9 +37,7 @@ if (tabParam && typeof tabParam === 'string' && ['overview', 'users', 'suggestio
 // SSR: Fetch admin stats using store
 const stats = await adminStore.fetchStatsSSR()
 
-// Hydrate store with SSR data (already done in fetchStatsSSR)
 onMounted(() => {
-  // Stats are already set in the store from SSR fetch
   console.log('Admin page mounted with stats:', stats)
 })
 </script>

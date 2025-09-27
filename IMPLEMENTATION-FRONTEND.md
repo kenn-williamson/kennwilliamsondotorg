@@ -68,35 +68,43 @@ frontend/
 │   │   │   └── index.vue  # Admin panel main page
 │   │   └── [user_slug]/
 │   │       └── incident-timer.vue # Public timer display
-│   ├── stores/            # Pure Pinia stores (no service calls)
-│   │   ├── incident-timers.ts # Pure timer state management
-│   │   ├── phrases.ts     # Pure phrase state management
-│   │   └── admin.ts       # Pure admin state management
+│   ├── stores/            # Pinia stores with embedded actions for SSR hydration
+│   │   ├── incident-timers.ts # Timer state management with actions
+│   │   ├── phrases.ts     # Phrase state management with actions
+│   │   ├── admin.ts       # Admin state management with actions
+│   │   ├── incident-timers.spec.ts # Timer store tests
+│   │   ├── phrases.spec.ts # Phrase store tests
+│   │   └── admin.spec.ts  # Admin store tests
 │   ├── middleware/        # Route middleware
 │   │   ├── auth.ts        # Route protection
 │   │   └── admin.ts       # Admin route protection
-│   ├── composables/       # Composition API logic
+│   ├── composables/       # Composition API utilities
+│   │   ├── useAuthActions.ts # Authentication operations (only remaining action composable)
+│   │   ├── useAuthProfileActions.ts # Profile management operations
 │   │   ├── useAuthFetch.ts # HTTP client with auth interceptors
 │   │   ├── useBackendFetch.ts # Direct backend client with automatic JWT management
 │   │   ├── useJwtManager.ts # JWT token management with automatic refresh
 │   │   ├── useBaseService.ts # Base service utilities (loading states, error handling)
-│   │   ├── useAuthActions.ts # Authentication operations orchestration
-│   │   ├── useAuthProfileActions.ts # Profile management operations orchestration
-│   │   ├── usePhrasesActions.ts # Phrase operations orchestration
-│   │   ├── useAdminActions.ts # Admin operations orchestration
-│   │   └── useIncidentTimerActions.ts # Timer operations orchestration
+│   │   ├── useSmartFetch.ts # Smart routing fetcher with SSR/client detection
+│   │   ├── useSessionWatcher.ts # Session state watcher for automatic cleanup
+│   │   └── useCallOnceWatcher.ts # One-time watcher utility
 │   ├── services/          # Pure services with curried dependency injection
 │   │   ├── authService.ts # Authentication operations
 │   │   ├── authProfileService.ts # Profile operations
 │   │   ├── phraseService.ts # Phrase operations
 │   │   ├── adminService.ts # Admin operations
 │   │   └── incidentTimerService.ts # Timer operations
-│   └── utils/             # Utility functions
-│       ├── dateUtils.ts   # Date formatting utilities
-│       └── timer-manager.ts # Timer management utilities
+│   ├── utils/             # Utility functions
+│   │   └── timer-manager.ts # Timer management utilities
+│   ├── types/             # TypeScript definitions
+│   │   └── phrases.ts     # Phrases type definitions
+│   ├── constants/         # Application constants
+│   ├── layouts/           # Layout components
+│   └── plugins/           # Nuxt plugins
 ├── shared/                # Shared utilities and types
 │   ├── types/             # Shared type definitions
 │   │   ├── admin.ts       # Admin type definitions
+│   │   ├── api-routes.ts  # API route type definitions
 │   │   ├── auth.d.ts      # Authentication type definitions
 │   │   ├── auth.ts        # Authentication types
 │   │   ├── common.ts      # Common type definitions
@@ -186,19 +194,19 @@ Page-specific aesthetics following [UX-LAYOUT.md](UX-LAYOUT.md):
 
 ## Component Architecture
 
-**Refactored Architecture**: All 26 components have been migrated to the new action composable + pure store pattern, eliminating event emission antipatterns and improving maintainability. The data layer has been completely refactored for testability with pure services, action composables, and pure stores.
+**Refactored Architecture**: All components have been migrated to the new store-based actions pattern, eliminating event emission antipatterns and improving maintainability. The data layer has been completely refactored for SSR hydration with stores containing embedded actions and curried services.
 
 **Layout**: AppHeader.vue (responsive header with auth states and mobile menu) ✅ **Refactored**
 
 **Timer Components** (10 components) ✅ **All Refactored**:
 - TimerStats.vue, TimerListItem.vue, TimerEditModal.vue, TimerResetModal.vue
 - TimerDisplayTab.vue, TimerControlsTab.vue, PhraseSuggestionsTab.vue, PhraseFilterTab.vue, SuggestionHistoryTab.vue, TabNavigation.vue
-- **Pattern**: All use `useIncidentTimerActions()` + `useIncidentTimerStore()`
+- **Pattern**: All use `useIncidentTimerStore()` with embedded actions for SSR hydration
 
 **Profile Components** (2 components) ✅ **All Refactored**:
 - AccountInformationForm.vue (display name and slug editing with validation)
 - SecurityForm.vue (password change with current password verification)
-- **Pattern**: All use `useAuthProfileActions()` (no store needed)
+- **Pattern**: All use `useAuthProfileActions()` composable (only remaining action composable)
 
 **Admin Components** (6 components) ✅ **All Refactored**:
 - AdminPanel.vue (main admin interface with tabbed navigation and URL state management)
@@ -207,11 +215,11 @@ Page-specific aesthetics following [UX-LAYOUT.md](UX-LAYOUT.md):
 - UsersTab.vue (user management with search and actions)
 - PhraseSuggestionApprovalTab.vue (phrase suggestion moderation)
 - UserSearchBox.vue (user search functionality)
-- **Pattern**: All use `useAdminActions()` + `useAdminStore()`
+- **Pattern**: All use `useAdminStore()` with embedded actions for SSR hydration
 
 **Auth Components** (3 components) ✅ **All Refactored**:
 - login.vue, register.vue, AppHeader.vue
-- **Pattern**: All use `useAuthActions()` + `useAuthStore()`
+- **Pattern**: All use `useAuthActions()` composable + `useAuthStore()` for session management
 
 **Steampunk Design** (6 components):
 - SteamClock.vue, FlippingDigit.vue, SlidingTimeGroup.vue, SteampunkBackground.vue, SteampunkBanner.vue, VintageNoteCard.vue
@@ -220,7 +228,7 @@ Page-specific aesthetics following [UX-LAYOUT.md](UX-LAYOUT.md):
 
 **Page Structure**: 5-tab interface in incidents.vue with TimerDisplayTab, TimerControlsTab, PhraseSuggestionsTab, PhraseFilterTab, SuggestionHistoryTab ✅ **All Refactored**
 
-**Migration Status**: 26/26 components (100% complete) - All components now use action composables + pure stores pattern
+**Migration Status**: All components (100% complete) - All components now use store-based actions pattern for SSR hydration
 
 ## Steampunk Design System
 - **Flip Clock**: FlippingDigit.vue (split-flap animation), SlidingTimeGroup.vue (time units), SteamClock.vue (main assembly)
@@ -237,66 +245,67 @@ Page-specific aesthetics following [UX-LAYOUT.md](UX-LAYOUT.md):
 
 ### State Management
 
-**Refactored Architecture**: Pure stores with action composables for clean separation of concerns and comprehensive testability.
+**Refactored Architecture**: Stores with embedded actions for SSR hydration and rendering. Actions are embedded within stores to enable proper server-side rendering and client-side hydration.
 
-**Pure Stores (3 Complete):**
-- `stores/phrases.ts` - Pure phrase state management (no service calls, only state mutations)
-- `stores/admin.ts` - Pure admin state management (no service calls, only state mutations)  
-- `stores/incident-timers.ts` - Pure timer state management (no service calls, only state mutations)
+**Stores with Embedded Actions (3 Complete):**
+- `stores/phrases.ts` - Phrase state management with embedded actions for SSR hydration
+- `stores/admin.ts` - Admin state management with embedded actions for SSR hydration  
+- `stores/incident-timers.ts` - Timer state management with embedded actions for SSR hydration
 
-**Action Composables (5 Complete):**
-- `useAuthActions.ts` - Authentication operations orchestration
+**Action Composables (2 Remaining):**
+- `useAuthActions.ts` - Authentication operations orchestration (session management)
 - `useAuthProfileActions.ts` - Profile management operations orchestration
-- `usePhrasesActions.ts` - Phrase operations orchestration
-- `useAdminActions.ts` - Admin operations orchestration
-- `useIncidentTimerActions.ts` - Timer operations orchestration
 
 **Architecture Benefits:**
-- **Clear Separation**: Stores only manage state, actions orchestrate services
-- **Easy Testing**: Each layer can be tested in isolation with comprehensive mocking
-- **Better Patterns**: Direct action calls instead of event emissions
-- **Maintainable**: Clean separation of concerns across all layers
-- **Testable**: Pure functions enable comprehensive unit testing
+- **SSR Hydration**: Stores with embedded actions enable proper server-side rendering
+- **State Persistence**: Actions within stores maintain state across SSR/client boundary
+- **Easy Testing**: Each store can be tested in isolation with comprehensive mocking
+- **Better Patterns**: Direct store action calls instead of event emissions
+- **Maintainable**: Clean separation of concerns with actions co-located with state
+- **Testable**: Store actions enable comprehensive unit testing with embedded service calls
 
 **Forms**: All forms use VeeValidate + Yup validation
 
 ### Service Architecture
 
 **Refactored Architecture Pattern:**
-The frontend has been completely refactored to use a clean separation of concerns with action composables orchestrating pure services and pure stores. All services use curried dependency injection for maximum testability:
+The frontend has been completely refactored to use stores with embedded actions and curried services for maximum testability and SSR hydration:
 
 ```
-Components <-> Action Composables <-> Pure Services (curried) + Pure Stores
+Components <-> Stores (with embedded actions) <-> Curried Services <-> Smart Fetch
 ```
 
-**Action Composables (5 Complete):**
-- `useAuthActions.ts` - Authentication operations orchestration
+**Stores with Embedded Actions (3 Complete):**
+- `stores/phrases.ts` - Phrase state management with embedded actions
+- `stores/admin.ts` - Admin state management with embedded actions
+- `stores/incident-timers.ts` - Timer state management with embedded actions
+
+**Action Composables (2 Remaining):**
+- `useAuthActions.ts` - Authentication operations orchestration (session management)
 - `useAuthProfileActions.ts` - Profile management operations orchestration
-- `usePhrasesActions.ts` - Phrase operations orchestration
-- `useAdminActions.ts` - Admin operations orchestration
-- `useIncidentTimerActions.ts` - Timer operations orchestration
 
-**Pure Services with Curried Dependency Injection (5 Complete):**
+**Curried Services with Dependency Injection (5 Complete):**
 - `services/authService.ts` - Authentication operations
 - `services/authProfileService.ts` - Profile operations
 - `services/phraseService.ts` - Phrase operations
 - `services/adminService.ts` - Admin operations
 - `services/incidentTimerService.ts` - Timer operations
 
-**Pure Stores (3 Complete):**
-- `stores/phrases.ts` - Phrase state management
-- `stores/admin.ts` - Admin state management
-- `stores/incident-timers.ts` - Timer state management
+**Smart Fetch System:**
+- `useSmartFetch.ts` - Smart routing fetcher with SSR/client detection
+- `useSessionWatcher.ts` - Session state watcher for automatic cleanup
+- `useJwtManager.ts` - JWT token management with automatic refresh
 
 **Timer Management Utilities:**
 - `utils/timer-manager.ts` - Timer utilities (live updates, calculations, formatting)
 
 **Architecture Benefits:**
-- **Clear Separation**: Action composables orchestrate, services handle API calls, stores manage state
+- **SSR Hydration**: Stores with embedded actions enable proper server-side rendering
+- **State Persistence**: Actions within stores maintain state across SSR/client boundary
 - **Easy Testing**: Each layer can be tested in isolation with comprehensive mocking
-- **Reusable Services**: Pure services can be used outside Vue context
-- **Better Component Patterns**: Direct action calls instead of event emissions
-- **Maintainable**: Clean separation of concerns across all layers
+- **Reusable Services**: Curried services can be used outside Vue context
+- **Better Component Patterns**: Direct store action calls instead of event emissions
+- **Maintainable**: Clean separation of concerns with actions co-located with state
 - **Testable**: Curried services enable easy mocking and comprehensive test coverage
 
 **Centralized API Routes:**
@@ -305,59 +314,75 @@ Components <-> Action Composables <-> Pure Services (curried) + Pure Stores
 - **Type Safety**: TypeScript support with route parameter functions
 - **Maintainability**: Centralized route definitions eliminate duplication
 
-**JWT Management:**
-- **Server-Side**: `frontend/server/utils/jwt-handler.ts` - Centralized JWT handling with automatic refresh
-- **Client-Side**: `useBackendFetch()` automatically adds JWT tokens to protected routes
-- **Refresh Logic**: Server-side refresh with session delegation and refresh locks
-- **Error Handling**: Automatic token refresh on expiration with fallback to login
+**Smart Fetch System:**
+- **Server-Side**: Uses `useRequestFetch()` for SSR-safe requests with cookie forwarding
+- **Client-Side**: Uses `$fetch` for standard client-side requests
+- **JWT Management**: Automatic JWT token addition for protected requests only
+- **URL Routing**: SSR uses internal Docker network, Client uses nginx proxy
+- **Smart Routing**: Automatically chooses passthrough vs direct based on route config
 
 **API Route Usage:**
 - `API_ROUTES.PUBLIC.*` - Public endpoints (no auth needed)
 - `API_ROUTES.PROTECTED.*` - Protected endpoints (JWT required)
 - `API_ROUTES.API.*` - SSR proxy routes (session-based)
 
-**Action Composable Pattern:**
+**Store with Embedded Actions Pattern:**
 
 ```typescript
-// ✅ CORRECT: Action composable pattern with curried services
-export const useMyActions = () => {
-  const { executeRequest, executeRequestWithSuccess, isLoading, error, hasError } = useBaseService()
-  const backendFetch = useBackendFetch()
+// ✅ CORRECT: Store with embedded actions for SSR hydration
+export const useMyStore = defineStore('my-store', () => {
+  const data = ref<MyData[]>([])
+  const isLoading = ref(false)
+  const error = ref<string | null>(null)
   
-  // Create service instance with curried dependency injection
-  const myService = myService(backendFetch)
+  // Service instance with curried dependency injection
+  const smartFetch = useSmartFetch()
+  const myService = myService(smartFetch)
   
-  // Destructure store methods (pure state management)
-  const { setData, updateData } = useMyStore()
-  
+  // Embedded actions for SSR hydration
   const loadData = async () => {
-    const data = await executeRequest(() => myService.getData(), 'loadData')
-    setData(data) // Pure store mutation
-    return data
+    isLoading.value = true
+    error.value = null
+    
+    try {
+      const result = await myService.getData()
+      data.value = result
+    } catch (err) {
+      error.value = 'Failed to load data'
+    } finally {
+      isLoading.value = false
+    }
   }
   
   const updateSomething = async (id: string, updates: any) => {
-    const result = await executeRequestWithSuccess(
-      () => myService.updateSomething(id, updates),
-      'Updated successfully',
-      'updateSomething'
-    )
-    updateData(id, result) // Pure store mutation
-    return result
+    isLoading.value = true
+    error.value = null
+    
+    try {
+      const result = await myService.updateSomething(id, updates)
+      const index = data.value.findIndex(item => item.id === id)
+      if (index !== -1) {
+        data.value[index] = { ...data.value[index], ...result }
+      }
+    } catch (err) {
+      error.value = 'Failed to update data'
+    } finally {
+      isLoading.value = false
+    }
   }
   
   return {
-    loadData,
-    updateSomething,
+    data,
     isLoading,
     error,
-    hasError
+    loadData,
+    updateSomething
   }
-}
+})
 
 // ✅ CORRECT: Component usage
-const { loadData, updateSomething, isLoading } = useMyActions()
-await loadData() // Action calls curried service + updates pure store
+const { data, loadData, isLoading } = useMyStore()
+await loadData() // Store action calls curried service
 ```
 
 **Service Currying Pattern:**
@@ -380,7 +405,7 @@ expect(mockFetcher).toHaveBeenCalledWith('/protected/data')
 **Environment Configuration:**
 - `NUXT_API_BASE=http://backend:8080/backend` (SSR - internal Docker network)
 - `NUXT_PUBLIC_API_BASE=https://localhost/backend` (CSR - browser access)
-- `useBackendFetch()` automatically adds JWT tokens to protected routes only
+- `useSmartFetch()` automatically handles routing and JWT tokens
 
 ### Form Validation Standards
 - **Required**: All forms must use VeeValidate + Yup for validation

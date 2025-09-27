@@ -3,7 +3,9 @@
  */
 
 // Generic fetcher type for service functions
-export type Fetcher = <T = any>(url: string, options?: any) => Promise<T>
+import type { SmartFetchOptions } from './api-routes'
+
+export type Fetcher = <T = any>(route: string, options?: SmartFetchOptions) => Promise<T>
 
 // API response wrapper
 export interface ApiResponse<T = any> {

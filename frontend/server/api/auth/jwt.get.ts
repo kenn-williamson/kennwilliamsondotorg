@@ -30,7 +30,6 @@ export default defineEventHandler(async (event) => {
       expiresAt = new Date(Date.now() + 60 * 60 * 1000).toISOString() // 1 hour from now
     }
 
-    // Return the JWT token to the client
     return {
       token: jwtToken,
       expiresAt

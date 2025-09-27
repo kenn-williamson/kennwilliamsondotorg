@@ -96,8 +96,8 @@ const phrasesStore = usePhrasesStore()
 const searchQuery = ref('')
 const togglingPhrases = ref(new Set<string>())
 
-// ✅ CORRECT: Use callOnce to prevent double execution during SSR/hydration
-await callOnce('user-phrases', () => phrasesStore.loadPhrasesForUser())
+// Load phrases on component mount (no callOnce - needs fresh data from other users)
+await phrasesStore.loadPhrasesForUser()
 
 const filteredPhrases = computed(() => {
   if (!searchQuery.value.trim()) {

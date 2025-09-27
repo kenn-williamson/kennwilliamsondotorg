@@ -6,6 +6,7 @@
  */
 
 import type { JwtToken } from '#shared/types'
+import { useSessionWatcher } from '~/composables/useSessionWatcher'
 
 export function useJwtManager() {
   // Cache for JWT token
@@ -55,7 +56,7 @@ export function useJwtManager() {
     tokenExpiresAt = null
     
     // If this is a 401 (session expired), clear the session and redirect
-    if (error.statusCode === 401 && process.client) {
+    if (error && typeof error === 'object' && 'statusCode' in error && error.statusCode === 401 && process.client) {
       console.log('🔄 [JWT Manager] Session expired, clearing session and redirecting to login')
       const { clear } = useUserSession()
       await clear()
@@ -75,6 +76,9 @@ export function useJwtManager() {
     tokenExpiresAt = null
     console.log('🧹 [JWT Manager] Cleared cached token')
   }
+
+  // Set up session watcher for automatic cleanup on logout
+  useSessionWatcher(clearToken)
 
   return {
     getToken,

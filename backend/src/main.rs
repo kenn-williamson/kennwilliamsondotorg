@@ -34,7 +34,6 @@ async fn main() -> std::io::Result<()> {
         .await
         .expect("Failed to connect to database");
 
-    // Create service container
     let jwt_secret = env::var("JWT_SECRET")
         .expect("JWT_SECRET must be set");
     

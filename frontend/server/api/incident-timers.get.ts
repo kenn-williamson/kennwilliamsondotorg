@@ -8,7 +8,6 @@ export default defineEventHandler(async (event) => {
     
     console.log('🔍 [SSR API] Getting user timers')
     
-    // Call the backend with the JWT token
     const config = useRuntimeConfig()
     const timers = await $fetch(`${config.apiBase}${API_ROUTES.PROTECTED.TIMERS.LIST}`, {
       headers: {

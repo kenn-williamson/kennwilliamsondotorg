@@ -6,7 +6,7 @@ This document defines the exact API contracts between the Nuxt.js frontend and R
 ## Authentication Contracts
 
 ### User Registration
-**Endpoint:** `POST /backend/auth/register`
+**Endpoint:** `POST /backend/public/auth/register`
 
 **Request:**
 ```json
@@ -52,7 +52,7 @@ This document defines the exact API contracts between the Nuxt.js frontend and R
 ```
 
 ### User Login
-**Endpoint:** `POST /backend/auth/login`
+**Endpoint:** `POST /backend/public/auth/login`
 
 **Request:**
 ```json
@@ -87,7 +87,7 @@ This document defines the exact API contracts between the Nuxt.js frontend and R
 ```
 
 ### Slug Preview
-**Endpoint:** `POST /backend/auth/preview-slug`
+**Endpoint:** `POST /backend/public/auth/preview-slug`
 
 **Request:**
 ```json
@@ -114,7 +114,7 @@ This document defines the exact API contracts between the Nuxt.js frontend and R
 ```
 
 ### Current User Info
-**Endpoint:** `GET /backend/auth/me`  
+**Endpoint:** `GET /backend/protected/auth/me`  
 **Authentication:** Required (Bearer token)
 
 **Response (200 OK):**
@@ -130,7 +130,7 @@ This document defines the exact API contracts between the Nuxt.js frontend and R
 ```
 
 ### Token Refresh
-**Endpoint:** `POST /backend/auth/refresh`
+**Endpoint:** `POST /backend/public/auth/refresh`
 **Authentication:** Not required (uses refresh token from request body)
 
 **Request:**
@@ -165,7 +165,7 @@ This document defines the exact API contracts between the Nuxt.js frontend and R
 ```
 
 ### Token Revocation
-**Endpoint:** `POST /backend/auth/revoke`
+**Endpoint:** `POST /backend/protected/auth/revoke`
 **Authentication:** Required (Bearer token)
 
 **Request:**
@@ -183,18 +183,18 @@ This document defines the exact API contracts between the Nuxt.js frontend and R
 ```
 
 ### Revoke All Tokens
-**Endpoint:** `POST /backend/auth/revoke-all`
+**Endpoint:** `POST /backend/protected/auth/revoke-all`
 **Authentication:** Required (Bearer token)
 
 **Response (200 OK):**
 ```json
 {
-  "message": "All tokens revoked successfully"
+  "message": "Revoked 3 tokens"
 }
 ```
 
 ### Profile Update
-**Endpoint:** `PUT /backend/auth/profile`
+**Endpoint:** `PUT /backend/protected/auth/profile`
 **Authentication:** Required (Bearer token)
 
 **Request:**
@@ -231,7 +231,7 @@ This document defines the exact API contracts between the Nuxt.js frontend and R
 ```
 
 ### Password Change
-**Endpoint:** `PUT /backend/auth/change-password`
+**Endpoint:** `PUT /backend/protected/auth/change-password`
 **Authentication:** Required (Bearer token)
 
 **Request:**
@@ -262,10 +262,39 @@ This document defines the exact API contracts between the Nuxt.js frontend and R
 }
 ```
 
+### Slug Validation
+**Endpoint:** `GET /backend/protected/auth/validate-slug`
+**Authentication:** Required (Bearer token)
+
+**Query Parameters:**
+- `slug` (required): Slug to validate
+
+**Response (200 OK):**
+```json
+{
+  "slug": "john-doe",
+  "valid": true,
+  "available": true
+}
+```
+
+**Error Responses:**
+```json
+// 400 Bad Request (invalid slug format)
+{
+  "error": "Invalid slug format"
+}
+
+// 500 Internal Server Error
+{
+  "error": "Internal server error"
+}
+```
+
 ## Incident Timer Contracts
 
 ### Get User's Timers
-**Endpoint:** `GET /backend/incident-timers`  
+**Endpoint:** `GET /backend/protected/incident-timers`  
 **Authentication:** Required (Bearer token)
 
 **Response (200 OK):**
@@ -289,7 +318,7 @@ This document defines the exact API contracts between the Nuxt.js frontend and R
 ```
 
 ### Create Timer
-**Endpoint:** `POST /backend/incident-timers`  
+**Endpoint:** `POST /backend/protected/incident-timers`  
 **Authentication:** Required (Bearer token)
 
 **Request:**
@@ -320,7 +349,7 @@ This document defines the exact API contracts between the Nuxt.js frontend and R
 ```
 
 ### Update Timer
-**Endpoint:** `PUT /backend/incident-timers/{id}`  
+**Endpoint:** `PUT /backend/protected/incident-timers/{id}`  
 **Authentication:** Required (Bearer token)
 
 **Request:**
@@ -348,13 +377,13 @@ This document defines the exact API contracts between the Nuxt.js frontend and R
 ```
 
 ### Delete Timer
-**Endpoint:** `DELETE /backend/incident-timers/{id}`  
+**Endpoint:** `DELETE /backend/protected/incident-timers/{id}`  
 **Authentication:** Required (Bearer token)
 
 **Response (204 No Content):** Empty body
 
 ### Get Public Timer
-**Endpoint:** `GET /backend/{user_slug}/incident-timer`  
+**Endpoint:** `GET /backend/public/{user_slug}/incident-timer`  
 **Authentication:** Not required
 
 **Response (200 OK):**
@@ -380,22 +409,36 @@ This document defines the exact API contracts between the Nuxt.js frontend and R
 ## Health Check Contracts
 
 ### Basic Health Check
-**Endpoint:** `GET /backend/health`
+**Endpoint:** `GET /backend/public/health`
 
 **Response (200 OK):**
 ```json
 {
-  "status": "ok"
+  "status": "healthy",
+  "service": "kennwilliamson-backend",
+  "version": "0.1.0"
 }
 ```
 
 ### Database Health Check
-**Endpoint:** `GET /backend/health/db`
+**Endpoint:** `GET /backend/public/health/db`
 
 **Response (200 OK):**
 ```json
 {
-  "status": "ok"
+  "status": "healthy",
+  "database": "connected",
+  "service": "kennwilliamson-backend",
+  "version": "0.1.0"
+}
+```
+
+**Error Response (503 Service Unavailable):**
+```json
+{
+  "status": "unhealthy",
+  "database": "disconnected",
+  "error": "Connection failed"
 }
 ```
 
@@ -476,7 +519,7 @@ Optional fields are either included with a value or `null`:
 ## Phrases System Contracts
 
 ### Get Random Phrase (Authenticated)
-**Endpoint:** `GET /backend/phrases/random`  
+**Endpoint:** `GET /backend/protected/phrases/random`  
 **Authentication:** Required (Bearer token)
 
 **Response (200 OK):**
@@ -485,7 +528,7 @@ Optional fields are either included with a value or `null`:
 ```
 
 ### Get Random Phrase (Public)
-**Endpoint:** `GET /backend/{user_slug}/phrase`  
+**Endpoint:** `GET /backend/public/{user_slug}/phrase`  
 **Authentication:** Not required
 
 **Response (200 OK):**
@@ -494,7 +537,7 @@ Optional fields are either included with a value or `null`:
 ```
 
 ### Get User's Phrases with Exclusion Status
-**Endpoint:** `GET /backend/phrases/user`  
+**Endpoint:** `GET /backend/protected/phrases/user`  
 **Authentication:** Required (Bearer token)
 
 **Response (200 OK):**
@@ -516,7 +559,7 @@ Optional fields are either included with a value or `null`:
 ```
 
 ### Exclude Phrase from User's Feed
-**Endpoint:** `POST /backend/phrases/exclude/{id}`  
+**Endpoint:** `POST /backend/protected/phrases/exclude/{id}`  
 **Authentication:** Required (Bearer token)
 
 **Response (200 OK):**
@@ -527,7 +570,7 @@ Optional fields are either included with a value or `null`:
 ```
 
 ### Remove Phrase Exclusion
-**Endpoint:** `DELETE /backend/phrases/exclude/{id}`  
+**Endpoint:** `DELETE /backend/protected/phrases/exclude/{id}`  
 **Authentication:** Required (Bearer token)
 
 **Response (200 OK):**
@@ -538,7 +581,7 @@ Optional fields are either included with a value or `null`:
 ```
 
 ### Submit Phrase Suggestion
-**Endpoint:** `POST /backend/phrases/suggestions`  
+**Endpoint:** `POST /backend/protected/phrases/suggestions`  
 **Authentication:** Required (Bearer token)
 
 **Request:**
@@ -551,21 +594,19 @@ Optional fields are either included with a value or `null`:
 **Response (201 Created):**
 ```json
 {
-  "suggestion": {
-    "id": "01234567-89ab-cdef-0123-456789abcdef",
-    "user_id": "01234567-89ab-cdef-0123-456789abcdef",
-    "phrase_text": "A new motivational phrase suggestion",
-    "status": "pending",
-    "admin_id": null,
-    "admin_reason": null,
-    "created_at": "2024-01-01T12:00:00Z",
-    "updated_at": "2024-01-01T12:00:00Z"
-  }
+  "id": "01234567-89ab-cdef-0123-456789abcdef",
+  "user_id": "01234567-89ab-cdef-0123-456789abcdef",
+  "phrase_text": "A new motivational phrase suggestion",
+  "status": "pending",
+  "admin_id": null,
+  "admin_reason": null,
+  "created_at": "2024-01-01T12:00:00Z",
+  "updated_at": "2024-01-01T12:00:00Z"
 }
 ```
 
 ### Get User's Phrase Suggestions
-**Endpoint:** `GET /backend/phrases/suggestions`  
+**Endpoint:** `GET /backend/protected/phrases/suggestions`  
 **Authentication:** Required (Bearer token)
 
 **Response (200 OK):**
@@ -587,10 +628,54 @@ Optional fields are either included with a value or `null`:
 }
 ```
 
+### Get All Phrases for User
+**Endpoint:** `GET /backend/protected/phrases`  
+**Authentication:** Required (Bearer token)
+
+**Query Parameters:**
+- `limit` (optional): Number of phrases to return
+- `offset` (optional): Number of phrases to skip
+
+**Response (200 OK):**
+```json
+{
+  "phrases": [
+    {
+      "id": "01234567-89ab-cdef-0123-456789abcdef",
+      "phrase_text": "Vigilance Maintained - Until the Next Challenge Arises",
+      "active": true,
+      "created_by": "01234567-89ab-cdef-0123-456789abcdef",
+      "created_at": "2024-01-01T12:00:00Z",
+      "updated_at": "2024-01-01T12:00:00Z"
+    }
+  ],
+  "total": 1
+}
+```
+
+### Get User's Excluded Phrases
+**Endpoint:** `GET /backend/protected/phrases/excluded`  
+**Authentication:** Required (Bearer token)
+
+**Response (200 OK):**
+```json
+{
+  "excluded_phrases": [
+    {
+      "id": "01234567-89ab-cdef-0123-456789abcdef",
+      "phrase_id": "01234567-89ab-cdef-0123-456789abcdef",
+      "phrase_text": "Excluded phrase text",
+      "excluded_at": "2024-01-01T12:00:00Z"
+    }
+  ],
+  "total": 1
+}
+```
+
 ## Admin User Management Contracts
 
 ### System Statistics
-**Endpoint:** `GET /backend/admin/stats`
+**Endpoint:** `GET /backend/protected/admin/stats`
 **Authentication:** Required (Admin role)
 
 **Response (200 OK):**
@@ -604,7 +689,7 @@ Optional fields are either included with a value or `null`:
 ```
 
 ### User Management
-**Endpoint:** `GET /backend/admin/users`
+**Endpoint:** `GET /backend/protected/admin/users`
 **Authentication:** Required (Admin role)
 
 **Query Parameters:**
@@ -629,7 +714,7 @@ Optional fields are either included with a value or `null`:
 ```
 
 ### Deactivate User
-**Endpoint:** `POST /backend/admin/users/{id}/deactivate`
+**Endpoint:** `POST /backend/protected/admin/users/{id}/deactivate`
 **Authentication:** Required (Admin role)
 
 **Response (200 OK):**
@@ -640,7 +725,7 @@ Optional fields are either included with a value or `null`:
 ```
 
 ### Activate User
-**Endpoint:** `POST /backend/admin/users/{id}/activate`
+**Endpoint:** `POST /backend/protected/admin/users/{id}/activate`
 **Authentication:** Required (Admin role)
 
 **Response (200 OK):**
@@ -651,7 +736,7 @@ Optional fields are either included with a value or `null`:
 ```
 
 ### Reset User Password
-**Endpoint:** `POST /backend/admin/users/{id}/reset-password`
+**Endpoint:** `POST /backend/protected/admin/users/{id}/reset-password`
 **Authentication:** Required (Admin role)
 
 **Response (200 OK):**
@@ -662,7 +747,7 @@ Optional fields are either included with a value or `null`:
 ```
 
 ### Promote User to Admin
-**Endpoint:** `POST /backend/admin/users/{id}/promote`
+**Endpoint:** `POST /backend/protected/admin/users/{id}/promote`
 **Authentication:** Required (Admin role)
 
 **Response (200 OK):**
@@ -675,7 +760,7 @@ Optional fields are either included with a value or `null`:
 ## Admin Phrases Contracts
 
 ### Get All Phrases (Admin)
-**Endpoint:** `GET /backend/admin/phrases`  
+**Endpoint:** `GET /backend/protected/admin/phrases`  
 **Authentication:** Required (Admin role)
 
 **Query Parameters:**
@@ -701,7 +786,7 @@ Optional fields are either included with a value or `null`:
 ```
 
 ### Create Phrase (Admin)
-**Endpoint:** `POST /backend/admin/phrases`  
+**Endpoint:** `POST /backend/protected/admin/phrases`  
 **Authentication:** Required (Admin role)
 
 **Request:**
@@ -724,7 +809,7 @@ Optional fields are either included with a value or `null`:
 ```
 
 ### Update Phrase (Admin)
-**Endpoint:** `PUT /backend/admin/phrases/{id}`  
+**Endpoint:** `PUT /backend/protected/admin/phrases/{id}`  
 **Authentication:** Required (Admin role)
 
 **Request:**
@@ -748,7 +833,7 @@ Optional fields are either included with a value or `null`:
 ```
 
 ### Deactivate Phrase (Admin)
-**Endpoint:** `DELETE /backend/admin/phrases/{id}`  
+**Endpoint:** `DELETE /backend/protected/admin/phrases/{id}`  
 **Authentication:** Required (Admin role)
 
 **Response (200 OK):**
@@ -759,7 +844,7 @@ Optional fields are either included with a value or `null`:
 ```
 
 ### Get Pending Suggestions (Admin)
-**Endpoint:** `GET /backend/admin/suggestions`  
+**Endpoint:** `GET /backend/protected/admin/suggestions`  
 **Authentication:** Required (Admin role)
 
 **Response (200 OK):**
@@ -782,7 +867,7 @@ Optional fields are either included with a value or `null`:
 ```
 
 ### Approve Suggestion (Admin)
-**Endpoint:** `POST /backend/admin/suggestions/{id}/approve`  
+**Endpoint:** `POST /backend/protected/admin/suggestions/{id}/approve`  
 **Authentication:** Required (Admin role)
 
 **Request:**
@@ -800,7 +885,7 @@ Optional fields are either included with a value or `null`:
 ```
 
 ### Reject Suggestion (Admin)
-**Endpoint:** `POST /backend/admin/suggestions/{id}/reject`  
+**Endpoint:** `POST /backend/protected/admin/suggestions/{id}/reject`  
 **Authentication:** Required (Admin role)
 
 **Request:**
@@ -820,45 +905,61 @@ Optional fields are either included with a value or `null`:
 ## Route Structure
 
 ### API Base
-All backend API endpoints are prefixed with `/backend/`
+All backend API endpoints are prefixed with `/backend/` and organized into public and protected scopes.
 
-### Public Routes
-- `/backend/health` - Service health
-- `/backend/health/db` - Database health  
-- `/backend/auth/register` - User registration
-- `/backend/auth/login` - User login
-- `/backend/auth/preview-slug` - Slug preview
-- `/backend/{user_slug}/incident-timer` - Public timer display with user display name
-- `/backend/{user_slug}/phrase` - Public phrase display
+### Public Routes (`/backend/public/`)
+No authentication required:
+- `/backend/public/health` - Service health
+- `/backend/public/health/db` - Database health  
+- `/backend/public/auth/register` - User registration
+- `/backend/public/auth/login` - User login
+- `/backend/public/auth/preview-slug` - Slug preview
+- `/backend/public/auth/refresh` - Token refresh (uses refresh token in request body)
+- `/backend/public/{user_slug}/incident-timer` - Public timer display with user display name
+- `/backend/public/{user_slug}/phrase` - Public phrase display
 
-### Protected Routes
+### Protected Routes (`/backend/protected/`)
 All require `Authorization: Bearer {token}` header:
-- `/backend/auth/me` - Current user info
-- `/backend/auth/revoke` - Revoke specific refresh token
-- `/backend/auth/revoke-all` - Revoke all user's refresh tokens
-- `/backend/incident-timers` - Timer CRUD operations
-- `/backend/incident-timers/{id}` - Specific timer operations
-- `/backend/phrases/random` - Get random phrase for authenticated user
-- `/backend/phrases/user` - Get user's phrases with exclusion status
-- `/backend/phrases/exclude/{id}` - Exclude/remove phrase exclusion
-- `/backend/phrases/suggestions` - Submit/get phrase suggestions
 
-### Admin Routes
+#### Authentication Routes
+- `/backend/protected/auth/me` - Current user info
+- `/backend/protected/auth/revoke` - Revoke specific refresh token
+- `/backend/protected/auth/revoke-all` - Revoke all user's refresh tokens
+- `/backend/protected/auth/profile` - Update user profile
+- `/backend/protected/auth/change-password` - Change user password
+- `/backend/protected/auth/validate-slug` - Validate slug availability
+
+#### Incident Timer Routes
+- `/backend/protected/incident-timers` - Timer CRUD operations
+- `/backend/protected/incident-timers/{id}` - Specific timer operations
+
+#### Phrase Routes
+- `/backend/protected/phrases` - Get all phrases for user (with pagination)
+- `/backend/protected/phrases/random` - Get random phrase for authenticated user
+- `/backend/protected/phrases/user` - Get user's phrases with exclusion status
+- `/backend/protected/phrases/excluded` - Get user's excluded phrases
+- `/backend/protected/phrases/exclude/{id}` - Exclude/remove phrase exclusion
+- `/backend/protected/phrases/suggestions` - Submit/get phrase suggestions
+
+#### Admin Routes (`/backend/protected/admin/`)
 All require `Authorization: Bearer {token}` header with admin role:
-- `/backend/admin/stats` - System statistics
-- `/backend/admin/users` - User list with search
-- `/backend/admin/users/{id}/deactivate` - Deactivate user
-- `/backend/admin/users/{id}/activate` - Activate user
-- `/backend/admin/users/{id}/reset-password` - Reset user password
-- `/backend/admin/users/{id}/promote` - Promote to admin
-- `/backend/admin/phrases` - Admin phrase management
-- `/backend/admin/phrases/{id}` - Specific phrase operations
-- `/backend/admin/suggestions` - Get all pending suggestions
-- `/backend/admin/suggestions/{id}/approve` - Approve suggestion
-- `/backend/admin/suggestions/{id}/reject` - Reject suggestion
 
-### Refresh Token Routes
-- `/backend/auth/refresh` - Token refresh (uses refresh token in request body)
+##### User Management
+- `/backend/protected/admin/stats` - System statistics
+- `/backend/protected/admin/users` - User list with search
+- `/backend/protected/admin/users/{id}/deactivate` - Deactivate user
+- `/backend/protected/admin/users/{id}/activate` - Activate user
+- `/backend/protected/admin/users/{id}/reset-password` - Reset user password
+- `/backend/protected/admin/users/{id}/promote` - Promote to admin
+
+##### Phrase Management
+- `/backend/protected/admin/phrases` - Admin phrase management
+- `/backend/protected/admin/phrases/{id}` - Specific phrase operations
+
+##### Suggestion Moderation
+- `/backend/protected/admin/suggestions` - Get all pending suggestions
+- `/backend/protected/admin/suggestions/{id}/approve` - Approve suggestion
+- `/backend/protected/admin/suggestions/{id}/reject` - Reject suggestion
 
 ---
 

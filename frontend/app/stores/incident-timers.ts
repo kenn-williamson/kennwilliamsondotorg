@@ -1,15 +1,14 @@
 /**
  * Enhanced Incident Timer Store - Centralized state management with actions
- * Refactored from action composable pattern to store-with-actions pattern
  */
 
 import type { IncidentTimer, PublicTimerResponse, CreateTimerRequest, UpdateTimerRequest } from '#shared/types/timers'
 import { incidentTimerService } from '~/services/incidentTimerService'
-import { useBackendFetch } from '~/composables/useBackendFetch'
+import { useSmartFetch } from '~/composables/useSmartFetch'
+import { useSessionWatcher } from '~/composables/useSessionWatcher'
 import { TimerManager, type TimerUpdateCallback } from '~/utils/timer-manager'
 
 export const useIncidentTimerStore = defineStore('incident-timers', () => {
-  // State
   const timers = ref<IncidentTimer[]>([])
   const currentTimer = ref<IncidentTimer | null>(null)
   const publicTimer = ref<PublicTimerResponse | null>(null)
@@ -19,7 +18,6 @@ export const useIncidentTimerStore = defineStore('incident-timers', () => {
   // Tab state for SSR consistency
   const activeTab = ref('timer-display')
   
-  // Transient state (moved from useBaseService)
   const isLoading = ref(false)
   const error = ref<string | null>(null)
 
@@ -64,6 +62,23 @@ export const useIncidentTimerStore = defineStore('incident-timers', () => {
     publicTimerUserSlug.value = null
     // Reset breakdown to zero when clearing public timer
     activeTimerBreakdown.value = { years: 0, months: 0, weeks: 0, days: 0, hours: 0, minutes: 0, seconds: 0 }
+  }
+
+  const clearAllData = () => {
+    timers.value = []
+    currentTimer.value = null
+    publicTimer.value = null
+    publicTimerUserSlug.value = null
+    activeTimerBreakdown.value = { years: 0, months: 0, weeks: 0, days: 0, hours: 0, minutes: 0, seconds: 0 }
+    activeTab.value = 'timer-display'
+    isLoading.value = false
+    error.value = null
+    
+    // Stop any running timers
+    stopLiveTimerUpdates()
+    cleanupGlobalEventListeners()
+    
+    console.log('🧹 [IncidentTimerStore] All data cleared')
   }
 
   // Tab state management functions
@@ -212,9 +227,9 @@ export const useIncidentTimerStore = defineStore('incident-timers', () => {
 
   const hasError = computed(() => !!error.value)
 
-  // Service instance - uses useBackendFetch for SSR-safe requests with JWT
-  const backendFetch = useBackendFetch()
-  const incidentTimerServiceInstance = incidentTimerService(backendFetch)
+  // Service instance - uses useSmartFetch for automatic routing
+  const smartFetch = useSmartFetch()
+  const incidentTimerServiceInstance = incidentTimerService(smartFetch)
 
   // Private action handler (replaces useBaseService logic)
   const _handleAction = async <T>(
@@ -232,13 +247,8 @@ export const useIncidentTimerStore = defineStore('incident-timers', () => {
       error.value = errorMessage
       console.error(`[IncidentTimerStore] Error${context ? ` in ${context}` : ''}:`, errorMessage)
       
-      // Handle authentication errors gracefully (don't crash during SSR)
-      if (err.statusCode === 401) {
-        console.log(`[IncidentTimerStore] Authentication error in ${context}, returning null instead of crashing`)
-        return undefined
-      }
-      
-      throw err
+      // Handle all errors gracefully - keep them in state for UI to display
+      return undefined
     } finally {
       isLoading.value = false
     }
@@ -301,7 +311,6 @@ export const useIncidentTimerStore = defineStore('incident-timers', () => {
     }
   }
 
-  // Actions (migrated from useIncidentTimerActions)
   const loadUserTimers = async () => {
     console.log('🔄 [IncidentTimerStore] loadUserTimers called')
     console.log('🔄 [IncidentTimerStore] Environment:', import.meta.server ? 'SERVER' : 'CLIENT')
@@ -406,8 +415,10 @@ export const useIncidentTimerStore = defineStore('incident-timers', () => {
     return data
   }
 
+  // Set up session watcher for automatic cleanup on logout
+  useSessionWatcher(clearAllData)
+
   return {
-    // State
     timers,
     currentTimer,
     publicTimer,
@@ -416,12 +427,10 @@ export const useIncidentTimerStore = defineStore('incident-timers', () => {
     isLoading,
     error,
     
-    // Computed
     activeTimerBreakdown,
     latestTimer,
     hasError,
     
-    // Actions (migrated from useIncidentTimerActions)
     loadUserTimers,
     loadPublicTimer,
     createTimer,
@@ -429,7 +438,6 @@ export const useIncidentTimerStore = defineStore('incident-timers', () => {
     deleteTimer,
     quickReset,
     
-    // Pure state management functions (kept for backward compatibility)
     setTimers,
     setCurrentTimer,
     setPublicTimer,
@@ -438,18 +446,16 @@ export const useIncidentTimerStore = defineStore('incident-timers', () => {
     removeTimer,
     clearTimers,
     clearPublicTimer,
+    clearAllData,
     
-    // Tab state management
     setActiveTab,
     initializeTabFromUrl,
     
-    // Timer update methods
     startLiveTimerUpdates,
     stopLiveTimerUpdates,
     cleanupGlobalEventListeners,
     clearPublicTimerOnNavigation,
     
-    // Utility functions
     getElapsedTimeBreakdown,
     getElapsedSeconds,
     formatElapsedTime,

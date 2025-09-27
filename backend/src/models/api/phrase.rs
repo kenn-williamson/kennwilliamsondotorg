@@ -43,8 +43,10 @@ pub struct PhraseSuggestionRequest {
 #[derive(Debug, Serialize)]
 pub struct PhraseSuggestionResponse {
     pub id: Uuid,
+    pub user_id: Uuid,
     pub phrase_text: String,
     pub status: String,
+    pub admin_id: Option<Uuid>,
     pub admin_reason: Option<String>,
     pub created_at: DateTime<Utc>,
     pub updated_at: DateTime<Utc>,
@@ -108,8 +110,10 @@ impl From<PhraseSuggestion> for PhraseSuggestionResponse {
     fn from(suggestion: PhraseSuggestion) -> Self {
         PhraseSuggestionResponse {
             id: suggestion.id,
+            user_id: suggestion.user_id,
             phrase_text: suggestion.phrase_text,
             status: suggestion.status,
+            admin_id: suggestion.admin_id,
             admin_reason: suggestion.admin_reason,
             created_at: suggestion.created_at,
             updated_at: suggestion.updated_at,

@@ -5,12 +5,8 @@ vi.mock('~/composables/useBaseService', () => ({
   useBaseService: vi.fn()
 }))
 
-vi.mock('~/composables/useBackendFetch', () => ({
-  useBackendFetch: vi.fn()
-}))
-
-vi.mock('~/composables/useAuthFetch', () => ({
-  useAuthFetch: vi.fn()
+vi.mock('~/composables/useSmartFetch', () => ({
+  useSmartFetch: vi.fn()
 }))
 
 vi.mock('~/services/authService', () => ({
@@ -53,11 +49,8 @@ describe('useAuthActions', () => {
       hasError: { value: false }
     })
     
-    const { useBackendFetch } = await import('~/composables/useBackendFetch')
-    vi.mocked(useBackendFetch).mockReturnValue(vi.fn())
-    
-    const { useAuthFetch } = await import('~/composables/useAuthFetch')
-    vi.mocked(useAuthFetch).mockReturnValue(vi.fn())
+    const { useSmartFetch } = await import('~/composables/useSmartFetch')
+    vi.mocked(useSmartFetch).mockReturnValue(vi.fn())
     
     const { authService } = await import('~/services/authService')
     vi.mocked(authService).mockReturnValue(mockAuthService)

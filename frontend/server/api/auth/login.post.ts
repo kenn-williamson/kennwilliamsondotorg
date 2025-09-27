@@ -13,7 +13,6 @@ export default defineEventHandler(async (event: any) => {
   const { email, password } = await readValidatedBody(event, bodySchema.parse)
   
   try {
-    // Call the Rust backend for authentication
     const config = useRuntimeConfig()
     
     // Extract client information for proper IP forwarding
@@ -44,7 +43,6 @@ export default defineEventHandler(async (event: any) => {
       }
     })
     
-    // Set the user session using Nuxt Auth Utils
     await setUserSession(event, {
       user: {
         id: response.user.id,

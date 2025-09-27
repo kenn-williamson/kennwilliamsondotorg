@@ -8,7 +8,6 @@ export default defineEventHandler(async (event) => {
     
     console.log('🔍 [SSR API] Getting admin stats')
     
-    // Call the backend with the JWT token
     const config = useRuntimeConfig()
     const stats = await $fetch(`${config.apiBase}${API_ROUTES.PROTECTED.ADMIN.STATS}`, {
       headers: {

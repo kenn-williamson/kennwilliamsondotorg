@@ -5,24 +5,27 @@ import { describe, it, expect, vi, beforeEach } from 'vitest'
 import type { User, AdminStats, UsersResponse, SuggestionsResponse, ResetPasswordResponse } from '#shared/types'
 import type { PhraseSuggestion } from '#shared/types/phrases'
 
-// Mock the service layer
+// Create a shared mock service instance that will be used by all stores
+const mockAdminServiceInstance = {
+  getStats: vi.fn(),
+  getUsers: vi.fn(),
+  getSuggestions: vi.fn(),
+  deactivateUser: vi.fn(),
+  activateUser: vi.fn(),
+  resetUserPassword: vi.fn(),
+  promoteUser: vi.fn(),
+  approveSuggestion: vi.fn(),
+  rejectSuggestion: vi.fn(),
+}
+
+// Mock the service layer to return the shared mock instance
 vi.mock('~/services/adminService', () => ({
-  adminService: vi.fn(() => ({
-    getStats: vi.fn(),
-    getUsers: vi.fn(),
-    getSuggestions: vi.fn(),
-    deactivateUser: vi.fn(),
-    activateUser: vi.fn(),
-    resetUserPassword: vi.fn(),
-    promoteUser: vi.fn(),
-    approveSuggestion: vi.fn(),
-    rejectSuggestion: vi.fn(),
-  })),
+  adminService: vi.fn(() => mockAdminServiceInstance),
 }))
 
-// Mock useBackendFetch
-vi.mock('~/composables/useBackendFetch', () => ({
-  useBackendFetch: vi.fn(() => vi.fn()),
+// Mock useSmartFetch
+vi.mock('~/composables/useSmartFetch', () => ({
+  useSmartFetch: vi.fn(() => vi.fn()),
 }))
 
 describe('Admin Store', () => {
@@ -42,14 +45,13 @@ describe('Admin Store', () => {
         total_phrases: 15
       }
       
-      const mockAdminService = adminService(vi.fn())
-      vi.mocked(mockAdminService.getStats).mockResolvedValue(mockStats)
+      vi.mocked(mockAdminServiceInstance.getStats).mockResolvedValue(mockStats)
 
       // Act
       await store.fetchStats()
 
       // Assert
-      expect(mockAdminService.getStats).toHaveBeenCalled()
+      expect(mockAdminServiceInstance.getStats).toHaveBeenCalled()
       expect(store.stats).toEqual(mockStats)
       expect(store.isLoading).toBe(false)
       expect(store.error).toBe(null)
@@ -60,14 +62,13 @@ describe('Admin Store', () => {
       const store = useAdminStore()
       const mockError = new Error('API Failure')
       
-      const mockAdminService = adminService(vi.fn())
-      vi.mocked(mockAdminService.getStats).mockRejectedValue(mockError)
+      vi.mocked(mockAdminServiceInstance.getStats).mockRejectedValue(mockError)
 
       // Act
       await store.fetchStats()
 
       // Assert
-      expect(store.error).toEqual(mockError)
+      expect(store.error).toEqual('API Failure')
       expect(store.stats).toBe(null)
       expect(store.isLoading).toBe(false)
     })
@@ -82,14 +83,13 @@ describe('Admin Store', () => {
       ]
       const mockResponse: UsersResponse = { users: mockUsers, total: 1 }
       
-      const mockAdminService = adminService(vi.fn())
-      vi.mocked(mockAdminService.getUsers).mockResolvedValue(mockResponse)
+      vi.mocked(mockAdminServiceInstance.getUsers).mockResolvedValue(mockResponse)
 
       // Act
       await store.fetchUsers('john')
 
       // Assert
-      expect(mockAdminService.getUsers).toHaveBeenCalledWith('john')
+      expect(mockAdminServiceInstance.getUsers).toHaveBeenCalledWith('john')
       expect(store.users).toEqual(mockUsers)
       expect(store.isLoading).toBe(false)
       expect(store.error).toBe(null)
@@ -102,14 +102,13 @@ describe('Admin Store', () => {
       const mockUsers: User[] = []
       const mockResponse: UsersResponse = { users: mockUsers, total: 0 }
       
-      const mockAdminService = adminService(vi.fn())
-      vi.mocked(mockAdminService.getUsers).mockResolvedValue(mockResponse)
+      vi.mocked(mockAdminServiceInstance.getUsers).mockResolvedValue(mockResponse)
 
       // Act
       await store.fetchUsers()
 
       // Assert
-      expect(mockAdminService.getUsers).toHaveBeenCalledWith('test query')
+      expect(mockAdminServiceInstance.getUsers).toHaveBeenCalledWith('test query')
     })
   })
 
@@ -122,14 +121,13 @@ describe('Admin Store', () => {
       ]
       const mockResponse: SuggestionsResponse = { suggestions: mockSuggestions, total: 1 }
       
-      const mockAdminService = adminService(vi.fn())
-      vi.mocked(mockAdminService.getSuggestions).mockResolvedValue(mockResponse)
+      vi.mocked(mockAdminServiceInstance.getSuggestions).mockResolvedValue(mockResponse)
 
       // Act
       await store.fetchSuggestions()
 
       // Assert
-      expect(mockAdminService.getSuggestions).toHaveBeenCalled()
+      expect(mockAdminServiceInstance.getSuggestions).toHaveBeenCalled()
       expect(store.suggestions).toEqual(mockSuggestions)
       expect(store.isLoading).toBe(false)
       expect(store.error).toBe(null)
@@ -143,14 +141,13 @@ describe('Admin Store', () => {
       const mockUser: User = { id: '1', display_name: 'John Doe', email: 'john@example.com', slug: 'john-doe', roles: ['user'], created_at: '2024-01-01T00:00:00Z', active: true }
       store.setUsers([mockUser])
       
-      const mockAdminService = adminService(vi.fn())
-      vi.mocked(mockAdminService.deactivateUser).mockResolvedValue({ message: 'User deactivated successfully' })
+      vi.mocked(mockAdminServiceInstance.deactivateUser).mockResolvedValue({ message: 'User deactivated successfully' })
 
       // Act
       await store.deactivateUser('1')
 
       // Assert
-      expect(mockAdminService.deactivateUser).toHaveBeenCalledWith('1')
+      expect(mockAdminServiceInstance.deactivateUser).toHaveBeenCalledWith('1')
       expect(store.users[0]?.active).toBe(false)
       expect(store.isLoading).toBe(false)
       expect(store.error).toBe(null)
@@ -164,14 +161,13 @@ describe('Admin Store', () => {
       const mockUser: User = { id: '1', display_name: 'John Doe', email: 'john@example.com', slug: 'john-doe', roles: ['user'], created_at: '2024-01-01T00:00:00Z', active: false }
       store.setUsers([mockUser])
       
-      const mockAdminService = adminService(vi.fn())
-      vi.mocked(mockAdminService.activateUser).mockResolvedValue({ message: 'User activated successfully' })
+      vi.mocked(mockAdminServiceInstance.activateUser).mockResolvedValue({ message: 'User activated successfully' })
 
       // Act
       await store.activateUser('1')
 
       // Assert
-      expect(mockAdminService.activateUser).toHaveBeenCalledWith('1')
+      expect(mockAdminServiceInstance.activateUser).toHaveBeenCalledWith('1')
       expect(store.users[0]?.active).toBe(true)
       expect(store.isLoading).toBe(false)
       expect(store.error).toBe(null)
@@ -184,14 +180,13 @@ describe('Admin Store', () => {
       const store = useAdminStore()
       const mockResponse: ResetPasswordResponse = { new_password: 'generatedPassword123', message: 'Password reset successfully' }
       
-      const mockAdminService = adminService(vi.fn())
-      vi.mocked(mockAdminService.resetUserPassword).mockResolvedValue(mockResponse)
+      vi.mocked(mockAdminServiceInstance.resetUserPassword).mockResolvedValue(mockResponse)
 
       // Act
       await store.resetUserPassword('1')
 
       // Assert
-      expect(mockAdminService.resetUserPassword).toHaveBeenCalledWith('1')
+      expect(mockAdminServiceInstance.resetUserPassword).toHaveBeenCalledWith('1')
       expect(store.newPassword).toBe('generatedPassword123')
       expect(store.isLoading).toBe(false)
       expect(store.error).toBe(null)
@@ -205,14 +200,13 @@ describe('Admin Store', () => {
       const mockUser: User = { id: '1', display_name: 'John Doe', email: 'john@example.com', slug: 'john-doe', roles: ['user'], created_at: '2024-01-01T00:00:00Z', active: true }
       store.setUsers([mockUser])
       
-      const mockAdminService = adminService(vi.fn())
-      vi.mocked(mockAdminService.promoteUser).mockResolvedValue({ message: 'User promoted to admin successfully' })
+      vi.mocked(mockAdminServiceInstance.promoteUser).mockResolvedValue({ message: 'User promoted to admin successfully' })
 
       // Act
       await store.promoteUser('1')
 
       // Assert
-      expect(mockAdminService.promoteUser).toHaveBeenCalledWith('1')
+      expect(mockAdminServiceInstance.promoteUser).toHaveBeenCalledWith('1')
       expect(store.users[0]?.roles).toEqual(['user', 'admin'])
       expect(store.isLoading).toBe(false)
       expect(store.error).toBe(null)
@@ -226,14 +220,13 @@ describe('Admin Store', () => {
       const mockSuggestion: PhraseSuggestion = { id: '1', user_id: '1', phrase_text: 'Test phrase', status: 'pending', admin_id: undefined, admin_reason: undefined, created_at: '2024-01-01T00:00:00Z', updated_at: '2024-01-01T00:00:00Z', user_display_name: 'John Doe' }
       store.setSuggestions([mockSuggestion])
       
-      const mockAdminService = adminService(vi.fn())
-      vi.mocked(mockAdminService.approveSuggestion).mockResolvedValue({ message: 'Suggestion approved successfully' })
+      vi.mocked(mockAdminServiceInstance.approveSuggestion).mockResolvedValue({ message: 'Suggestion approved successfully' })
 
       // Act
       await store.approveSuggestion('1', 'Great suggestion!')
 
       // Assert
-      expect(mockAdminService.approveSuggestion).toHaveBeenCalledWith('1', 'Great suggestion!')
+      expect(mockAdminServiceInstance.approveSuggestion).toHaveBeenCalledWith('1', 'Great suggestion!')
       expect(store.suggestions).toEqual([])
       expect(store.isLoading).toBe(false)
       expect(store.error).toBe(null)
@@ -247,14 +240,13 @@ describe('Admin Store', () => {
       const mockSuggestion: PhraseSuggestion = { id: '1', user_id: '1', phrase_text: 'Test phrase', status: 'pending', admin_id: undefined, admin_reason: undefined, created_at: '2024-01-01T00:00:00Z', updated_at: '2024-01-01T00:00:00Z', user_display_name: 'John Doe' }
       store.setSuggestions([mockSuggestion])
       
-      const mockAdminService = adminService(vi.fn())
-      vi.mocked(mockAdminService.rejectSuggestion).mockResolvedValue({ message: 'Suggestion rejected successfully' })
+      vi.mocked(mockAdminServiceInstance.rejectSuggestion).mockResolvedValue({ message: 'Suggestion rejected successfully' })
 
       // Act
       await store.rejectSuggestion('1', 'Too similar to existing content')
 
       // Assert
-      expect(mockAdminService.rejectSuggestion).toHaveBeenCalledWith('1', 'Too similar to existing content')
+      expect(mockAdminServiceInstance.rejectSuggestion).toHaveBeenCalledWith('1', 'Too similar to existing content')
       expect(store.suggestions).toEqual([])
       expect(store.isLoading).toBe(false)
       expect(store.error).toBe(null)
@@ -351,7 +343,7 @@ describe('Admin Store', () => {
       const store = useAdminStore()
       expect(store.hasError).toBe(false)
       
-      store.error = 'Test error'
+      store.setError('Test error')
       expect(store.hasError).toBe(true)
     })
   })

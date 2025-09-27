@@ -18,5 +18,8 @@ export * from './common'
 // Admin types
 export * from './admin'
 
+// API Routes types
+export * from './api-routes'
+
 // UI types
 export * from './ui'

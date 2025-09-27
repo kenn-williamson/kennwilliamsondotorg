@@ -18,10 +18,7 @@ const refreshLocks = new Map<string, Promise<string | null>>()
  */
 export async function getValidJwtToken(event: any): Promise<string | null> {
   try {
-    // Log which endpoint is calling the JWT handler
     console.log(`🔍 [JWT Handler] Called from: ${event.node.req.method} ${event.node.req.url}`)
-    
-    // 1. Get JWT token from session
     const session = await getUserSession(event)
     const jwtToken = session?.secure?.jwtToken
     
@@ -40,12 +37,9 @@ export async function getValidJwtToken(event: any): Promise<string | null> {
       })
     }
     
-    // 2. Check if JWT exists and is valid
     if (jwtToken && !isJwtExpired(jwtToken)) {
       return jwtToken
     }
-    
-    // 3. If no valid JWT but refresh token exists → attempt refresh
     const refreshToken = session?.secure?.refreshToken
     if (refreshToken) {
       // Create a unique key for this user's refresh operation
@@ -73,7 +67,6 @@ export async function getValidJwtToken(event: any): Promise<string | null> {
       }
     }
     
-    // 5. If refresh fails → redirect to login
     console.log('❌ [JWT Handler] No valid authentication, redirecting to login')
     throw createError({
       statusCode: 401,
@@ -81,11 +74,9 @@ export async function getValidJwtToken(event: any): Promise<string | null> {
     })
   } catch (error: any) {
     console.log('❌ [JWT Handler] Error getting valid token:', error)
-    // If it's already a 401 error, re-throw it
     if (error?.statusCode === 401) {
       throw error
     }
-    // For other errors, redirect to login
     throw createError({
       statusCode: 401,
       statusMessage: 'Authentication required'
@@ -111,7 +102,6 @@ async function performRefresh(event: any, session: any, refreshToken: string): P
     console.log('🔄 [JWT Handler] New JWT:', refreshResponse.token.substring(0, 20) + '...')
     console.log('🔄 [JWT Handler] New refresh token:', refreshResponse.refresh_token.substring(0, 20) + '...')
     
-    // 4. If refresh succeeds → update session and return new JWT
     if (refreshResponse.token) {
       console.log('🔄 [JWT Handler] Updating session with new tokens...')
       await setUserSession(event, {

@@ -54,11 +54,11 @@
       </div>
 
       <!-- Recent Submissions -->
-      <div v-if="recentSuggestions.length > 0" class="recent-submissions">
+      <div v-if="phrasesStore.userSuggestions.length > 0" class="recent-submissions">
         <h3 class="section-title">Your Recent Submissions</h3>
         <div class="submission-list">
           <div
-            v-for="suggestion in recentSuggestions"
+            v-for="suggestion in phrasesStore.userSuggestions"
             :key="suggestion.id"
             class="submission-item"
           >
@@ -101,7 +101,6 @@ const validationErrors = ref({
 })
 
 const isSubmitting = ref(false)
-const recentSuggestions = ref<PhraseSuggestion[]>([])
 
 const isFormValid = computed(() => {
   return formData.value.phraseText.trim().length > 0 && 
@@ -111,10 +110,7 @@ const isFormValid = computed(() => {
 
 const loadRecentSuggestions = async () => {
   try {
-    const response = await phrasesStore.loadSuggestionsForUser()
-    if (response) {
-      recentSuggestions.value = response.suggestions
-    }
+    await phrasesStore.loadSuggestionsForUser()
   } catch (error) {
     console.error('Error loading recent suggestions:', error)
   }
@@ -158,9 +154,8 @@ const submitSuggestion = async () => {
   try {
     await phrasesStore.submitSuggestion(formData.value.phraseText.trim())
     
-    // Clear form and reload recent suggestions
+    // Clear form - store will automatically update with new suggestion
     clearForm()
-    await loadRecentSuggestions()
     
     // Show success message (could be a toast in the future)
     alert('Suggestion submitted successfully!')

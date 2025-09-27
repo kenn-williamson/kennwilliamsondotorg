@@ -5,33 +5,31 @@
 
 import { authProfileService } from '~/services/authProfileService'
 import { useBaseService } from '~/composables/useBaseService'
-import { useBackendFetch } from '~/composables/useBackendFetch'
-import { useAuthFetch } from '~/composables/useAuthFetch'
+import { useSmartFetch } from '~/composables/useSmartFetch'
 import type { ProfileUpdateRequest, PasswordChangeRequest, SlugPreviewResponse } from '#shared/types'
 
 export const useAuthProfileActions = () => {
   // Destructure base service utilities
   const { executeRequest, executeRequestWithSuccess, isLoading, error, hasError } = useBaseService()
-  const backendFetch = useBackendFetch()
-  const authFetch = useAuthFetch()
+  const smartFetch = useSmartFetch()
   const { fetch: refreshSession } = useUserSession()
   
-  // Create service instances
-  const authProfileServiceBackend = authProfileService(backendFetch)
-  const authProfileServiceAuth = authProfileService(authFetch)
+  // Create service instance
+  const authProfileServiceInstance = authProfileService(smartFetch)
   
-  // Destructure service methods (use backend for protected routes, auth for session management)
+  // Destructure service methods
   const { 
-    updateProfile: updateProfileBackend, 
-    changePassword: changePasswordBackend, 
-    previewSlug: previewSlugBackend 
-  } = authProfileServiceBackend
+    updateProfile: updateProfileService, 
+    changePassword: changePasswordService, 
+    previewSlug: previewSlugService,
+    validateSlug: validateSlugService 
+  } = authProfileServiceInstance
 
   const updateProfile = async (data: ProfileUpdateRequest): Promise<{ message: string }> => {
     return executeRequestWithSuccess(
       async () => {
         // Call service
-        const result = await updateProfileBackend(data)
+        const result = await updateProfileService(data)
         
         // Refresh session to get updated user data
         await refreshSession()
@@ -45,7 +43,7 @@ export const useAuthProfileActions = () => {
 
   const changePassword = async (data: PasswordChangeRequest): Promise<{ message: string }> => {
     return executeRequestWithSuccess(
-      () => changePasswordBackend(data),
+      () => changePasswordService(data),
       'Password changed successfully',
       'changePassword'
     )
@@ -53,8 +51,15 @@ export const useAuthProfileActions = () => {
 
   const previewSlug = async (displayName: string): Promise<SlugPreviewResponse> => {
     return executeRequest(
-      () => previewSlugBackend(displayName),
+      () => previewSlugService(displayName),
       'previewSlug'
+    )
+  }
+
+  const validateSlug = async (slug: string): Promise<{ available: boolean }> => {
+    return executeRequest(
+      () => validateSlugService(slug),
+      'validateSlug'
     )
   }
 
@@ -62,6 +67,7 @@ export const useAuthProfileActions = () => {
     updateProfile,
     changePassword,
     previewSlug,
+    validateSlug,
     isLoading,
     error,
     hasError

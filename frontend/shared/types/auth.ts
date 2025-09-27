@@ -4,6 +4,15 @@
  */
 
 // User types (from shared/types/auth.d.ts)
+export interface AuthenticatedUser {
+  id: string
+  email: string
+  display_name: string
+  slug: string
+  roles: string[]
+  created_at: string
+}
+
 export interface User {
   id: string
   email: string
@@ -15,7 +24,7 @@ export interface User {
 }
 
 export interface UserSession {
-  user: User
+  user: AuthenticatedUser
   loggedInAt: Date
 }
 
@@ -54,7 +63,7 @@ export interface RegisterRequest {
 export interface AuthResponse {
   token: string
   refresh_token: string
-  user: User
+  user: AuthenticatedUser
 }
 
 export interface SlugPreviewRequest {
@@ -65,6 +74,16 @@ export interface SlugPreviewResponse {
   slug: string
   available: boolean
   final_slug: string
+}
+
+export interface SlugValidationRequest {
+  slug: string
+}
+
+export interface SlugValidationResponse {
+  slug: string
+  valid: boolean
+  available: boolean
 }
 
 // Profile management types

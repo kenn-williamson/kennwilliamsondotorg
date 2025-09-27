@@ -1,6 +1,5 @@
 /**
  * UI component type definitions
- * Consolidated from scattered component locations for better organization
  */
 
 // Tab navigation types

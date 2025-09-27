@@ -68,19 +68,13 @@ if (!loggedIn.value) {
 const incidentTimerStore = useIncidentTimerStore()
 incidentTimerStore.clearPublicTimerOnNavigation()
 
-// Fetch fresh user data using auth store
-const authStore = useAuthStore()
-const user = await authStore.fetchCurrentUser()
-
-// Handle authentication errors
-if (authStore.error && authStore.error.includes('401')) {
-  await navigateTo('/login')
-}
+// Get user data from session
+const { user, refresh: refreshSession } = useUserSession()
 
 // Reactive references for template compatibility
-const refreshUser = () => authStore.refreshUser()
-const userPending = computed(() => authStore.isLoading)
-const userError = computed(() => authStore.error ? { statusCode: 401 } : null)
+const refreshUser = () => refreshSession()
+const userPending = computed(() => false) // Session data is already loaded
+const userError = computed(() => null) // Session handles auth errors
 
 // Event handlers removed - components handle success via action composables
 </script>

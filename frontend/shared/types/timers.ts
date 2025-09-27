@@ -1,6 +1,5 @@
 /**
  * Timer-related type definitions
- * Consolidated for better organization
  */
 
 export interface IncidentTimer {

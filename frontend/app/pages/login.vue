@@ -102,11 +102,9 @@ useHead({
   ]
 })
 
-// Redirect if already authenticated
 const { loggedIn } = useUserSession()
 const router = useRouter()
 
-// Redirect if already authenticated
 if (loggedIn.value) {
   await navigateTo('/')
 }

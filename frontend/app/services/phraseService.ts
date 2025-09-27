@@ -53,19 +53,5 @@ export const phraseService = (fetcher: Fetcher) => ({
 
   fetchRandomPhraseClient: async (userSlug: string): Promise<string> => {
     return fetcher<string>(API_ROUTES.PUBLIC.PHRASES.BY_USER_SLUG(userSlug))
-  },
-
-  approveSuggestion: async (suggestionId: string, adminReason: string): Promise<{ message: string }> => {
-    return fetcher<{ message: string }>(API_ROUTES.PROTECTED.ADMIN.SUGGESTIONS.APPROVE(suggestionId), {
-      method: 'POST',
-      body: { admin_reason: adminReason }
-    })
-  },
-
-  rejectSuggestion: async (suggestionId: string, adminReason: string): Promise<{ message: string }> => {
-    return fetcher<{ message: string }>(API_ROUTES.PROTECTED.ADMIN.SUGGESTIONS.REJECT(suggestionId), {
-      method: 'POST',
-      body: { admin_reason: adminReason }
-    })
   }
 })

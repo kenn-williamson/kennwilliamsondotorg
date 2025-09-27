@@ -4,7 +4,6 @@ import { API_ROUTES } from '#shared/config/api-routes'
 
 export default defineEventHandler(async (event: any) => {
   try {
-    // Get the user session to access the refresh token
     const session = await getUserSession(event)
     
     // If no user data, just clear the session (handles stale sessions)

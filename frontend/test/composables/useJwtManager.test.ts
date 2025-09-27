@@ -3,16 +3,12 @@ import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest'
 // Mock $fetch globally
 global.$fetch = vi.fn()
 
-// Mock console methods to avoid noise in tests
-const mockConsoleLog = vi.spyOn(console, 'log').mockImplementation(() => {})
-
 import { useJwtManager } from '~/composables/useJwtManager'
 
 describe('useJwtManager', () => {
   beforeEach(() => {
     // Reset all mocks
     vi.clearAllMocks()
-    mockConsoleLog.mockClear()
   })
 
   afterEach(() => {
@@ -36,10 +32,6 @@ describe('useJwtManager', () => {
       
       // Test $fetch was called with correct endpoint
       expect($fetch).toHaveBeenCalledWith('/api/auth/jwt')
-      
-      // Test console logging
-      expect(mockConsoleLog).toHaveBeenCalledWith('🔄 [JWT Manager] Getting token from server')
-      expect(mockConsoleLog).toHaveBeenCalledWith('✅ [JWT Manager] Got token from server')
     })
 
     it('should handle server response with null token', async () => {
@@ -57,9 +49,6 @@ describe('useJwtManager', () => {
       // Test $fetch was called
       expect($fetch).toHaveBeenCalledWith('/api/auth/jwt')
       
-      // Test console logging
-      expect(mockConsoleLog).toHaveBeenCalledWith('🔄 [JWT Manager] Getting token from server')
-      expect(mockConsoleLog).toHaveBeenCalledWith('✅ [JWT Manager] Got token from server')
     })
 
     it('should handle server response with undefined token', async () => {
@@ -80,82 +69,61 @@ describe('useJwtManager', () => {
   })
 
   describe('getToken error scenarios', () => {
-    it('should handle network errors and return null', async () => {
+    it('should handle network errors and throw error', async () => {
       const mockError = new Error('Network error')
       
       // Mock $fetch to throw error
       vi.mocked($fetch).mockRejectedValue(mockError)
 
       const { getToken } = useJwtManager()
-      const result = await getToken()
-
-      // Test result
-      expect(result).toBe(null)
+      
+      // Test that error is thrown
+      await expect(getToken()).rejects.toThrow('Network error')
       
       // Test $fetch was called
       expect($fetch).toHaveBeenCalledWith('/api/auth/jwt')
-      
-      // Test console logging
-      expect(mockConsoleLog).toHaveBeenCalledWith('🔄 [JWT Manager] Getting token from server')
-      expect(mockConsoleLog).toHaveBeenCalledWith('❌ [JWT Manager] No token available:', 'Network error')
     })
 
-    it('should handle server errors and return null', async () => {
+    it('should handle server errors and throw error', async () => {
       const mockError = new Error('Unauthorized')
       
       // Mock $fetch to throw error
       vi.mocked($fetch).mockRejectedValue(mockError)
 
       const { getToken } = useJwtManager()
-      const result = await getToken()
-
-      // Test result
-      expect(result).toBe(null)
       
-      // Test console logging
-      expect(mockConsoleLog).toHaveBeenCalledWith('❌ [JWT Manager] No token available:', 'Unauthorized')
+      // Test that error is thrown
+      await expect(getToken()).rejects.toThrow('Unauthorized')
     })
 
-    it('should handle non-Error objects gracefully', async () => {
+    it('should handle non-Error objects and throw error', async () => {
       // Mock $fetch to throw non-Error object
       vi.mocked($fetch).mockRejectedValue('String error')
 
       const { getToken } = useJwtManager()
-      const result = await getToken()
-
-      // Test result
-      expect(result).toBe(null)
       
-      // Test console logging (non-Error objects are converted to strings)
-      expect(mockConsoleLog).toHaveBeenCalledWith('❌ [JWT Manager] No token available:', 'String error')
+      // Test that error is thrown
+      await expect(getToken()).rejects.toThrow('String error')
     })
 
-    it('should handle null/undefined errors gracefully', async () => {
+    it('should handle null/undefined errors and throw error', async () => {
       // Mock $fetch to throw null
       vi.mocked($fetch).mockRejectedValue(null)
 
       const { getToken } = useJwtManager()
-      const result = await getToken()
-
-      // Test result
-      expect(result).toBe(null)
       
-      // Test console logging (null is converted to string 'null')
-      expect(mockConsoleLog).toHaveBeenCalledWith('❌ [JWT Manager] No token available:', 'null')
+      // Test that error is thrown
+      await expect(getToken()).rejects.toThrow()
     })
 
-    it('should handle undefined errors gracefully', async () => {
+    it('should handle undefined errors and throw error', async () => {
       // Mock $fetch to throw undefined
       vi.mocked($fetch).mockRejectedValue(undefined)
 
       const { getToken } = useJwtManager()
-      const result = await getToken()
-
-      // Test result
-      expect(result).toBe(null)
       
-      // Test console logging (undefined is converted to string 'undefined')
-      expect(mockConsoleLog).toHaveBeenCalledWith('❌ [JWT Manager] No token available:', 'undefined')
+      // Test that error is thrown
+      await expect(getToken()).rejects.toThrow()
     })
   })
 
@@ -197,17 +165,20 @@ describe('useJwtManager', () => {
 
       const { getToken } = useJwtManager()
       
-      // Make calls
-      const [result1, result2, result3] = await Promise.all([
+      // Make calls - first and third should succeed, second should throw
+      const [result1, result2, result3] = await Promise.allSettled([
         getToken(),
         getToken(),
         getToken()
       ])
 
       // Test results
-      expect(result1).toBe(mockToken)
-      expect(result2).toBe(null)
-      expect(result3).toBe(mockToken)
+      expect(result1.status).toBe('fulfilled')
+      expect(result1.value).toBe(mockToken)
+      expect(result2.status).toBe('rejected')
+      expect(result2.reason.message).toBe('Network error')
+      expect(result3.status).toBe('fulfilled')
+      expect(result3.value).toBe(mockToken)
       
       // Test $fetch was called multiple times
       expect($fetch).toHaveBeenCalledTimes(3)

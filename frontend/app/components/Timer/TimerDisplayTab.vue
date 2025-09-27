@@ -42,7 +42,6 @@
 import { ref, computed } from 'vue'
 import { storeToRefs } from 'pinia'
 import { useIncidentTimerStore } from '~/stores/incident-timers'
-import { useAuthStore } from '~/stores/auth'
 import SteamClock from '~/components/Steampunk/SteamClock.vue'
 
 const incidentTimerStore = useIncidentTimerStore()
@@ -83,9 +82,9 @@ const shareTimer = async () => {
 
 const getUserSlug = async (): Promise<string | null> => {
   try {
-    // Use auth store for consistent state management
-    const authStore = useAuthStore()
-    return await authStore.getUserSlug()
+    // Get user slug directly from session
+    const { user } = useUserSession()
+    return user.value?.slug || null
   } catch (error) {
     console.error('Error getting user slug:', error)
     return null
