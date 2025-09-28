@@ -23,6 +23,10 @@ export const adminService = (fetcher: Fetcher) => ({
     if (searchQuery?.trim()) {
       query.search = searchQuery.trim()
     }
+    // Set reasonable limit to prevent performance issues
+    query.limit = '100'
+    query.offset = '0'
+    
     return fetcher<UsersResponse>(API_ROUTES.PROTECTED.ADMIN.USERS, {
       query
     })

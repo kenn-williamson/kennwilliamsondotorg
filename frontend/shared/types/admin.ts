@@ -13,11 +13,8 @@ export interface AdminStats {
   total_phrases: number
 }
 
-// User management response types
-export interface UsersResponse {
-  users: User[]
-  total: number
-}
+// User management response types - now returns array directly
+export type UsersResponse = User[]
 
 // Phrase suggestion management response types
 export interface SuggestionsResponse {

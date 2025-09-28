@@ -1,7 +1,6 @@
 use std::sync::Arc;
 use uuid::Uuid;
 
-use crate::models::api::UserWithRoles;
 use crate::repositories::traits::{UserRepository, RefreshTokenRepository, AdminRepository};
 
 /// User management service for admin operations
@@ -30,8 +29,15 @@ impl UserManagementService {
         search: Option<String>,
         limit: Option<i64>,
         offset: Option<i64>,
-    ) -> anyhow::Result<Vec<UserWithRoles>> {
-        self.admin_repository.get_all_users_with_roles(search, limit, offset).await
+    ) -> anyhow::Result<Vec<crate::models::api::admin::AdminUserListItem>> {
+        let users_db = self.admin_repository.get_all_users_with_roles(search, limit, offset).await?;
+        
+        // Convert database structs to API structs using the from_db method
+        let users = users_db.into_iter()
+            .map(crate::models::api::admin::AdminUserListItem::from_db)
+            .collect();
+        
+        Ok(users)
     }
 
     /// Deactivate a user
@@ -98,7 +104,7 @@ mod tests {
     use super::*;
     use mockall::predicate::*;
     use crate::repositories::mocks::{MockUserRepository, MockRefreshTokenRepository, MockAdminRepository};
-    use crate::models::api::UserWithRoles;
+    use crate::models::db::UserWithRoles;
     use uuid::Uuid;
 
     #[tokio::test]
@@ -116,7 +122,7 @@ mod tests {
             display_name: "Test User".to_string(),
             slug: "test-user".to_string(),
             active: true,
-            roles: vec!["user".to_string()],
+            roles: Some(vec!["user".to_string()]),
             created_at: chrono::Utc::now(),
             updated_at: chrono::Utc::now(),
         };

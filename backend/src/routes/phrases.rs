@@ -2,7 +2,7 @@ use actix_web::{web, HttpMessage, HttpRequest, HttpResponse, Result};
 use uuid::Uuid;
 
 use crate::models::api::{
-    PhraseSuggestionRequest, PhraseListResponse, SuggestionListResponse,
+    PhraseSuggestionRequest, PhraseSuggestionResponse, PhraseListResponse, SuggestionListResponse,
     ExcludedPhrasesResponse, UserExcludedPhraseResponse
 };
 use crate::services::phrase::PhraseService;
@@ -75,10 +75,14 @@ pub async fn get_user_phrases(
 pub async fn get_user_phrases_with_exclusions(
     phrase_service: web::Data<PhraseService>,
     req: HttpRequest,
+    query: web::Query<PhraseListQuery>,
 ) -> Result<HttpResponse> {
     let user_id = req.extensions().get::<Uuid>().cloned().unwrap();
+    let limit = query.limit;
+    let offset = query.offset;
+    let search = query.search.clone();
 
-    match phrase_service.get_user_phrases_with_exclusions(user_id).await {
+    match phrase_service.get_user_phrases_with_exclusions(user_id, limit, offset, search).await {
         Ok(response) => Ok(HttpResponse::Ok().json(response)),
         Err(e) => {
             log::error!("Failed to get user phrases with exclusions: {}", e);
@@ -175,7 +179,10 @@ pub async fn submit_suggestion(
 ) -> Result<HttpResponse> {
     let user_id = req.extensions().get::<Uuid>().cloned().unwrap();
     match phrase_service.submit_phrase_suggestion(user_id, request.into_inner()).await {
-        Ok(suggestion) => Ok(HttpResponse::Created().json(suggestion)),
+        Ok(suggestion) => {
+            let response: PhraseSuggestionResponse = suggestion.into();
+            Ok(HttpResponse::Created().json(response))
+        },
         Err(e) => {
             log::error!("Failed to submit suggestion: {}", e);
             Ok(HttpResponse::InternalServerError().json(serde_json::json!({
@@ -214,4 +221,5 @@ pub async fn get_user_suggestions(
 pub struct PhraseListQuery {
     pub limit: Option<i64>,
     pub offset: Option<i64>,
+    pub search: Option<String>,
 }

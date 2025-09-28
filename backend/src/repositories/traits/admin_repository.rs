@@ -21,7 +21,7 @@ pub trait AdminRepository: Send + Sync {
         search: Option<String>,
         limit: Option<i64>,
         offset: Option<i64>,
-    ) -> Result<Vec<crate::models::api::UserWithRoles>>;
+    ) -> Result<Vec<crate::models::db::UserWithRoles>>;
     
     /// Count all users (admin only)
     async fn count_all_users(&self) -> Result<i64>;

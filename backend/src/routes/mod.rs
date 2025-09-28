@@ -81,7 +81,7 @@ pub fn configure_app_routes(cfg: &mut web::ServiceConfig) {
                                 )
                                 .service(
                                     web::resource("/phrases")
-                                        .route(web::get().to(admin::get_all_phrases))
+                                        .route(web::get().to(admin::get_phrases))
                                         .route(web::post().to(admin::create_phrase))
                                 )
                                 .service(

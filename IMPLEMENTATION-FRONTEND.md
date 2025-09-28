@@ -173,6 +173,7 @@ frontend/
 ### Phrases System
 - **Display**: Random motivational phrases
 - **User Features**: Submit suggestions, filter phrases, track status
+- **Search Capabilities**: Enhanced search with full-text search and intelligent fallback
 - **Admin Features**: Approve/reject suggestions, manage phrases
 - **State Management**: Pinia stores for data management
 

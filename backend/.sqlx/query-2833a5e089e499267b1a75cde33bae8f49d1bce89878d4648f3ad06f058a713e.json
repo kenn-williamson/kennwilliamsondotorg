@@ -1,0 +1,22 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "\n                SELECT p.phrase_text\n                FROM phrases p TABLESAMPLE SYSTEM(5)\n                WHERE p.active = true \n                AND p.id NOT IN (\n                    SELECT phrase_id \n                    FROM user_excluded_phrases \n                    WHERE user_id = $1\n                )\n                LIMIT 1\n                ",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "phrase_text",
+        "type_info": "Varchar"
+      }
+    ],
+    "parameters": {
+      "Left": [
+        "Uuid"
+      ]
+    },
+    "nullable": [
+      false
+    ]
+  },
+  "hash": "2833a5e089e499267b1a75cde33bae8f49d1bce89878d4648f3ad06f058a713e"
+}

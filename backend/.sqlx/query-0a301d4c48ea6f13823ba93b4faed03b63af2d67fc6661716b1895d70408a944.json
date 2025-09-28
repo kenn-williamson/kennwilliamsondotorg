@@ -1,6 +1,6 @@
 {
   "db_name": "PostgreSQL",
-  "query": "\n                SELECT id, email, password_hash, display_name, slug, active, created_at, updated_at\n                FROM users\n                ORDER BY created_at DESC\n                LIMIT $1 OFFSET $2\n                ",
+  "query": "\n                SELECT \n                    u.id, u.email, u.display_name, u.slug, u.active, u.created_at, u.updated_at,\n                    array_agg(r.name) as roles\n                FROM users u\n                INNER JOIN user_roles ur ON u.id = ur.user_id\n                INNER JOIN roles r ON ur.role_id = r.id\n                GROUP BY u.id, u.email, u.display_name, u.slug, u.active, u.created_at, u.updated_at\n                ORDER BY u.created_at DESC\n                LIMIT $1 OFFSET $2\n                ",
   "describe": {
     "columns": [
       {
@@ -15,33 +15,33 @@
       },
       {
         "ordinal": 2,
-        "name": "password_hash",
-        "type_info": "Varchar"
-      },
-      {
-        "ordinal": 3,
         "name": "display_name",
         "type_info": "Varchar"
       },
       {
-        "ordinal": 4,
+        "ordinal": 3,
         "name": "slug",
         "type_info": "Varchar"
       },
       {
-        "ordinal": 5,
+        "ordinal": 4,
         "name": "active",
         "type_info": "Bool"
       },
       {
-        "ordinal": 6,
+        "ordinal": 5,
         "name": "created_at",
         "type_info": "Timestamptz"
       },
       {
-        "ordinal": 7,
+        "ordinal": 6,
         "name": "updated_at",
         "type_info": "Timestamptz"
+      },
+      {
+        "ordinal": 7,
+        "name": "roles",
+        "type_info": "VarcharArray"
       }
     ],
     "parameters": {
@@ -58,8 +58,8 @@
       false,
       false,
       false,
-      false
+      null
     ]
   },
-  "hash": "16e337be9635480dfc2421da39521d55f5bb504b659f47aa3e2a9b90b2e5f2e3"
+  "hash": "0a301d4c48ea6f13823ba93b4faed03b63af2d67fc6661716b1895d70408a944"
 }

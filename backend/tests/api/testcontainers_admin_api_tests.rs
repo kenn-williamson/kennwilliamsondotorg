@@ -127,10 +127,9 @@ async fn test_get_users_success() {
     assert!(resp.status().is_success());
     
     let body: serde_json::Value = resp.json().await.unwrap();
-    assert!(body.get("users").is_some());
-    assert!(body.get("total").is_some());
+    assert!(body.is_array());
     
-    let users = body.get("users").unwrap().as_array().unwrap();
+    let users = body.as_array().unwrap();
     assert!(users.len() >= 1); // At least the admin user
 }
 
@@ -155,8 +154,7 @@ async fn test_get_users_with_search() {
     assert!(resp.status().is_success());
     
     let body: serde_json::Value = resp.json().await.unwrap();
-    assert!(body.get("users").is_some());
-    assert!(body.get("total").is_some());
+    assert!(body.is_array());
 }
 
 #[actix_web::test]

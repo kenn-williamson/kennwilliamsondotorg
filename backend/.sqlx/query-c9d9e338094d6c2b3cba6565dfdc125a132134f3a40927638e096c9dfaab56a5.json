@@ -1,0 +1,67 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "\n                    SELECT \n                        p.id,\n                        p.phrase_text,\n                        p.active,\n                        p.created_by,\n                        p.created_at,\n                        p.updated_at,\n                        COALESCE(uep.phrase_id IS NOT NULL, false) as is_excluded,\n                        0.0::real as rank\n                    FROM phrases p\n                    LEFT JOIN user_excluded_phrases uep ON p.id = uep.phrase_id AND uep.user_id = $1\n                    WHERE p.active = true AND p.phrase_text ILIKE $2\n                    ORDER BY p.created_at DESC\n                    LIMIT $3 OFFSET $4\n                    ",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "id",
+        "type_info": "Uuid"
+      },
+      {
+        "ordinal": 1,
+        "name": "phrase_text",
+        "type_info": "Varchar"
+      },
+      {
+        "ordinal": 2,
+        "name": "active",
+        "type_info": "Bool"
+      },
+      {
+        "ordinal": 3,
+        "name": "created_by",
+        "type_info": "Uuid"
+      },
+      {
+        "ordinal": 4,
+        "name": "created_at",
+        "type_info": "Timestamptz"
+      },
+      {
+        "ordinal": 5,
+        "name": "updated_at",
+        "type_info": "Timestamptz"
+      },
+      {
+        "ordinal": 6,
+        "name": "is_excluded",
+        "type_info": "Bool"
+      },
+      {
+        "ordinal": 7,
+        "name": "rank",
+        "type_info": "Float4"
+      }
+    ],
+    "parameters": {
+      "Left": [
+        "Uuid",
+        "Text",
+        "Int8",
+        "Int8"
+      ]
+    },
+    "nullable": [
+      false,
+      false,
+      false,
+      false,
+      false,
+      false,
+      null,
+      null
+    ]
+  },
+  "hash": "c9d9e338094d6c2b3cba6565dfdc125a132134f3a40927638e096c9dfaab56a5"
+}

@@ -20,9 +20,9 @@
     </div>
 
     <!-- Users List -->
-    <div v-else-if="adminStore.filteredUsers.length > 0" class="space-y-4">
+    <div v-else-if="adminStore.users.length > 0" class="space-y-4">
       <div 
-        v-for="user in adminStore.filteredUsers" 
+        v-for="user in adminStore.users" 
         :key="user.id"
         class="bg-white rounded-lg shadow-sm border border-gray-200 p-6 hover:shadow-md transition-shadow"
       >

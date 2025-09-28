@@ -2,16 +2,9 @@ use serde::{Deserialize, Serialize};
 use uuid::Uuid;
 use chrono::{DateTime, Utc};
 
-/// User list response for admin
+/// User list item for admin display (API DTO)
 #[derive(Debug, Clone, Serialize)]
-pub struct UserListResponse {
-    pub users: Vec<UserWithRoles>,
-    pub total: i64,
-}
-
-/// User with roles for admin display
-#[derive(Debug, Clone, Serialize)]
-pub struct UserWithRoles {
+pub struct AdminUserListItem {
     pub id: Uuid,
     pub email: String,
     pub display_name: String,
@@ -20,6 +13,22 @@ pub struct UserWithRoles {
     pub created_at: DateTime<Utc>,
     pub updated_at: DateTime<Utc>,
     pub roles: Vec<String>,
+}
+
+impl AdminUserListItem {
+    /// Convert from database struct to API struct
+    pub fn from_db(user_db: crate::models::db::UserWithRoles) -> Self {
+        Self {
+            id: user_db.id,
+            email: user_db.email,
+            display_name: user_db.display_name,
+            slug: user_db.slug,
+            active: user_db.active,
+            created_at: user_db.created_at,
+            updated_at: user_db.updated_at,
+            roles: user_db.roles.unwrap_or_default(),
+        }
+    }
 }
 
 /// System statistics response

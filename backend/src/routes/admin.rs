@@ -3,14 +3,14 @@ use uuid::Uuid;
 
 use crate::models::api::{
     CreatePhraseRequest, UpdatePhraseRequest,
-    PhraseListResponse, UserListResponse,
+    PhraseListResponse,
     PasswordResetResponse, UserSearchQuery, AdminActionRequest
 };
 use crate::services::phrase::PhraseService;
 use crate::services::admin::{UserManagementService, PhraseModerationService, StatsService};
 
-/// Get all phrases (admin only)
-pub async fn get_all_phrases(
+/// Get phrases (admin only)
+pub async fn get_phrases(
     phrase_service: web::Data<PhraseService>,
     _req: HttpRequest, // Middleware ensures admin role
     query: web::Query<AdminPhraseQuery>,
@@ -18,8 +18,9 @@ pub async fn get_all_phrases(
     let include_inactive = query.include_inactive.unwrap_or(false);
     let limit = query.limit;
     let offset = query.offset;
+    let search = query.search.clone();
 
-    match phrase_service.get_all_phrases(include_inactive, limit, offset).await {
+    match phrase_service.get_phrases(include_inactive, limit, offset, search).await {
         Ok(phrases) => {
             let total = phrases.len() as i64;
             let response = PhraseListResponse {
@@ -108,6 +109,7 @@ pub struct AdminPhraseQuery {
     pub include_inactive: Option<bool>,
     pub limit: Option<i64>,
     pub offset: Option<i64>,
+    pub search: Option<String>,
 }
 
 // === NEW ADMIN ENDPOINTS ===
@@ -140,9 +142,7 @@ pub async fn get_users(
         query.offset,
     ).await {
         Ok(users) => {
-            let total = users.len() as i64;
-            let response = UserListResponse { users, total };
-            Ok(HttpResponse::Ok().json(response))
+            Ok(HttpResponse::Ok().json(users))
         }
         Err(e) => {
             log::error!("Failed to get users: {}", e);

@@ -69,8 +69,8 @@ mod tests {
             async fn get_random_phrase_by_slug(&self, user_slug: &str) -> Result<String>;
             async fn get_random_phrase(&self, user_id: uuid::Uuid) -> Result<String>;
             async fn get_user_phrases(&self, user_id: uuid::Uuid, limit: Option<i64>, offset: Option<i64>) -> Result<Vec<crate::models::db::Phrase>>;
-            async fn get_user_phrases_with_exclusions(&self, user_id: uuid::Uuid) -> Result<Vec<crate::models::db::PhraseWithUserExclusionView>>;
-            async fn get_all_phrases(&self, include_inactive: bool, limit: Option<i64>, offset: Option<i64>) -> Result<Vec<crate::models::db::Phrase>>;
+            async fn get_user_phrases_with_exclusions(&self, user_id: uuid::Uuid, limit: Option<i64>, offset: Option<i64>, search: Option<String>) -> Result<Vec<crate::models::db::PhraseSearchResultWithUserExclusionView>>;
+            async fn get_phrases(&self, include_inactive: bool, limit: Option<i64>, offset: Option<i64>, search: Option<String>) -> Result<Vec<crate::models::db::Phrase>>;
             async fn create_phrase(&self, request: crate::models::api::CreatePhraseRequest, created_by: uuid::Uuid) -> Result<crate::models::db::Phrase>;
             async fn update_phrase(&self, phrase_id: uuid::Uuid, request: crate::models::api::UpdatePhraseRequest) -> Result<crate::models::db::Phrase>;
             async fn exclude_phrase_for_user(&self, user_id: uuid::Uuid, phrase_id: uuid::Uuid) -> Result<()>;

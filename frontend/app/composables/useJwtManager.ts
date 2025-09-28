@@ -20,7 +20,7 @@ export function useJwtManager() {
    * Get JWT token from server with caching
    * Server handles all validation and refresh logic automatically
    */
-  const getToken = async (): Promise<string | null> => {
+  const getToken = async (): Promise<string> => {
     try {
       // Check if we have a valid cached token
       if (cachedToken && tokenExpiresAt && Date.now() < tokenExpiresAt) {

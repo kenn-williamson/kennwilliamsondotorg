@@ -17,12 +17,12 @@
             type="text"
             placeholder="Search phrases..."
             class="search-input"
-            @input="filterPhrases"
+            @input="handleSearchInput"
           />
         </div>
         <div class="filter-stats">
           <span class="stat">
-            Showing {{ filteredPhrases.length }} of {{ phrasesStore.userPhrases.length }} phrases
+            Showing {{ phrasesStore.userPhrases.length }} phrases
           </span>
         </div>
       </div>
@@ -32,7 +32,7 @@
         <p>Loading phrases...</p>
       </div>
 
-      <div v-else-if="filteredPhrases.length === 0" class="empty-state">
+      <div v-else-if="phrasesStore.userPhrases.length === 0" class="empty-state">
         <p v-if="searchQuery" class="text-gray-500">
           No phrases match your search
         </p>
@@ -51,7 +51,7 @@
         
         <div class="table-body">
           <div
-            v-for="phrase in filteredPhrases"
+            v-for="phrase in phrasesStore.userPhrases"
             :key="phrase.id"
             class="table-row"
           >
@@ -87,7 +87,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed } from 'vue'
+import { ref, computed, watch } from 'vue'
 import { usePhrasesStore } from '~/stores/phrases'
 import type { PhraseWithExclusion } from '#shared/types/phrases'
 
@@ -96,30 +96,21 @@ const phrasesStore = usePhrasesStore()
 const searchQuery = ref('')
 const togglingPhrases = ref(new Set<string>())
 
-// Load phrases on component mount (no callOnce - needs fresh data from other users)
+// Load phrases on component mount
 await phrasesStore.loadPhrasesForUser()
 
-const filteredPhrases = computed(() => {
-  if (!searchQuery.value.trim()) {
-    return phrasesStore.userPhrases
-  }
-  
-  const query = searchQuery.value.toLowerCase()
-  return phrasesStore.userPhrases.filter(phrase => 
-    phrase.phrase_text.toLowerCase().includes(query)
-  )
-})
-
-const loadData = async () => {
-  await phrasesStore.loadPhrasesForUser()
+// Handle search input with debouncing (handled by store)
+const handleSearchInput = () => {
+  phrasesStore.searchPhrases(searchQuery.value)
 }
 
-const filterPhrases = () => {
-  // Filtering is handled by computed property
-}
+// Sync local search query with store
+watch(() => phrasesStore.searchQuery, (newQuery) => {
+  searchQuery.value = newQuery
+}, { immediate: true })
 
 const isPhraseExcluded = (phraseId: string) => {
-  const phrase = phrasesStore.userPhrases.find(p => p.id === phraseId)
+  const phrase = phrasesStore.userPhrases.find((p: PhraseWithExclusion) => p.id === phraseId)
   return phrase?.is_excluded || false
 }
 

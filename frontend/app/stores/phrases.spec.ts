@@ -65,8 +65,14 @@ describe('Phrases Store', () => {
     it('should load user phrases successfully', async () => {
       const store = usePhrasesStore()
       const mockPhrases = [
-        { id: '1', phrase_text: 'Test phrase 1', is_excluded: false, active: true, created_by: 'user1', created_at: '2024-01-01T12:00:00Z', updated_at: '2024-01-01T12:00:00Z' },
-        { id: '2', phrase_text: 'Test phrase 2', is_excluded: true, active: true, created_by: 'user1', created_at: '2024-01-01T12:00:00Z', updated_at: '2024-01-01T12:00:00Z' }
+        { 
+          id: '1', phrase_text: 'Test phrase 1', active: true, created_by: 'user1', created_at: '2024-01-01T12:00:00Z', updated_at: '2024-01-01T12:00:00Z', 
+          is_excluded: false 
+        },
+        { 
+          id: '2', phrase_text: 'Test phrase 2', active: true, created_by: 'user1', created_at: '2024-01-01T12:00:00Z', updated_at: '2024-01-01T12:00:00Z', 
+          is_excluded: true 
+        }
       ]
       const mockResponse = { phrases: mockPhrases }
       
@@ -176,7 +182,10 @@ describe('Phrases Store', () => {
   describe('togglePhraseExclusion', () => {
     it('should exclude phrase successfully', async () => {
       const store = usePhrasesStore()
-      const mockPhrase = { id: '1', phrase_text: 'Test phrase', is_excluded: false, active: true, created_by: 'user1', created_at: '2024-01-01T12:00:00Z', updated_at: '2024-01-01T12:00:00Z' }
+      const mockPhrase = { 
+        id: '1', phrase_text: 'Test phrase', active: true, created_by: 'user1', created_at: '2024-01-01T12:00:00Z', updated_at: '2024-01-01T12:00:00Z', 
+        is_excluded: false 
+      }
       store.userPhrases = [mockPhrase]
       
       mockPhraseServiceMethods.excludePhrase.mockResolvedValue({ message: 'Phrase excluded successfully' })
@@ -191,7 +200,10 @@ describe('Phrases Store', () => {
 
     it('should remove phrase exclusion successfully', async () => {
       const store = usePhrasesStore()
-      const mockPhrase = { id: '1', phrase_text: 'Test phrase', is_excluded: true, active: true, created_by: 'user1', created_at: '2024-01-01T12:00:00Z', updated_at: '2024-01-01T12:00:00Z' }
+      const mockPhrase = { 
+        id: '1', phrase_text: 'Test phrase', active: true, created_by: 'user1', created_at: '2024-01-01T12:00:00Z', updated_at: '2024-01-01T12:00:00Z', 
+        is_excluded: true 
+      }
       store.userPhrases = [mockPhrase]
       
       mockPhraseServiceMethods.removePhraseExclusion.mockResolvedValue({ message: 'Phrase exclusion removed successfully' })
@@ -282,15 +294,18 @@ describe('Phrases Store', () => {
       
       expect(store.hasUserPhrases).toBe(false)
       
-      store.userPhrases = [{ id: '1', phrase_text: 'Test', is_excluded: false, active: true, created_by: 'user1', created_at: '2024-01-01T12:00:00Z', updated_at: '2024-01-01T12:00:00Z' }]
+      store.userPhrases = [{ 
+        id: '1', phrase_text: 'Test', active: true, created_by: 'user1', created_at: '2024-01-01T12:00:00Z', updated_at: '2024-01-01T12:00:00Z', 
+        is_excluded: false 
+      }]
       expect(store.hasUserPhrases).toBe(true)
     })
 
     it('should correctly compute activePhrases', () => {
       const store = usePhrasesStore()
-      store.adminPhrases = [
-        { id: '1', phrase_text: 'Active phrase', active: true, created_by: 'admin1', created_at: '2024-01-01T12:00:00Z', updated_at: '2024-01-01T12:00:00Z' },
-        { id: '2', phrase_text: 'Inactive phrase', active: false, created_by: 'admin1', created_at: '2024-01-01T12:00:00Z', updated_at: '2024-01-01T12:00:00Z' }
+      store.userPhrases = [
+        { id: '1', phrase_text: 'Active phrase', active: true, created_by: 'admin1', created_at: '2024-01-01T12:00:00Z', updated_at: '2024-01-01T12:00:00Z', is_excluded: false },
+        { id: '2', phrase_text: 'Inactive phrase', active: false, created_by: 'admin1', created_at: '2024-01-01T12:00:00Z', updated_at: '2024-01-01T12:00:00Z', is_excluded: false }
       ]
       
       expect(store.activePhrases).toHaveLength(1)
@@ -312,7 +327,10 @@ describe('Phrases Store', () => {
   describe('Utility Functions', () => {
     it('should clear user data', () => {
       const store = usePhrasesStore()
-      store.userPhrases = [{ id: '1', phrase_text: 'Test', is_excluded: false, active: true, created_by: 'user1', created_at: '2024-01-01T12:00:00Z', updated_at: '2024-01-01T12:00:00Z' }]
+      store.userPhrases = [{ 
+        id: '1', phrase_text: 'Test', active: true, created_by: 'user1', created_at: '2024-01-01T12:00:00Z', updated_at: '2024-01-01T12:00:00Z', 
+        is_excluded: false 
+      }]
       store.userSuggestions = [{ id: '1', phrase_text: 'Test', status: 'pending', user_id: 'user1', created_at: '2024-01-01T12:00:00Z', updated_at: '2024-01-01T12:00:00Z', user_display_name: 'Test User' }]
       
       store.clearUserData()
@@ -334,7 +352,10 @@ describe('Phrases Store', () => {
 
     it('should clear all data', () => {
       const store = usePhrasesStore()
-      store.userPhrases = [{ id: '1', phrase_text: 'Test', is_excluded: false, active: true, created_by: 'user1', created_at: '2024-01-01T12:00:00Z', updated_at: '2024-01-01T12:00:00Z' }]
+      store.userPhrases = [{ 
+        id: '1', phrase_text: 'Test', active: true, created_by: 'user1', created_at: '2024-01-01T12:00:00Z', updated_at: '2024-01-01T12:00:00Z', 
+        is_excluded: false 
+      }]
       store.adminPhrases = [{ id: '1', phrase_text: 'Test', active: true, created_by: 'admin1', created_at: '2024-01-01T12:00:00Z', updated_at: '2024-01-01T12:00:00Z' }]
       store.userSuggestions = [{ id: '1', phrase_text: 'Test', status: 'pending', user_id: 'user1', created_at: '2024-01-01T12:00:00Z', updated_at: '2024-01-01T12:00:00Z', user_display_name: 'Test User' }]
       store.adminSuggestions = [{ id: '1', phrase_text: 'Test', status: 'pending', user_id: 'user1', created_at: '2024-01-01T12:00:00Z', updated_at: '2024-01-01T12:00:00Z', user_display_name: 'Test User' }]

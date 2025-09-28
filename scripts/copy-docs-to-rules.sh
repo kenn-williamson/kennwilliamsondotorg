@@ -1,17 +1,11 @@
 #!/bin/bash
 
-# Copy Documentation to .cursor/rules Script
-# Copies all .md files from root to .cursor/rules/ with .mdc formatting
-# Excludes README.md, ROADMAP.md, CLAUDE.md, and PROJECT_HISTORY.md
-# Use --check-unexpected flag to prompt for unexpected files
+# Enhanced Copy Documentation to .cursor/rules Script
+# Copies documentation files to .cursor/rules/ with .mdc formatting
+# Default: Only core rules (coding standards, communication, architecture, dev workflow)
+# Options: Add specific implementation areas as needed
 
 set -e
-
-# Parse command line arguments
-CHECK_UNEXPECTED=false
-if [[ "$1" == "--check-unexpected" ]]; then
-    CHECK_UNEXPECTED=true
-fi
 
 # Colors for output
 RED='\033[0;31m'
@@ -25,38 +19,182 @@ SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 PROJECT_ROOT="$(dirname "$SCRIPT_DIR")"
 RULES_DIR="$PROJECT_ROOT/.cursor/rules"
 
-# Files to exclude
-EXCLUDE_FILES=("README.md" "ROADMAP.md" "CLAUDE.md" "PROJECT_HISTORY.md")
-
-# Expected documentation files to copy
-EXPECTED_FILES=(
+# Default core files (always included)
+CORE_FILES=(
+    "CODING-RULES.md"
     "ARCHITECTURE.md"
-    "CODING-RULES.md" 
     "DEVELOPMENT-WORKFLOW.md"
     "DOCUMENTATION-GUIDELINES.md"
-    "IMPLEMENTATION-AUTH.md"
-    "IMPLEMENTATION-BACKEND.md"
-    "IMPLEMENTATION-DATA-CONTRACTS.md"
-    "IMPLEMENTATION-DATABASE.md"
+)
+
+# Optional implementation files (included with flags)
+OPTIONAL_FILES=(
     "IMPLEMENTATION-FRONTEND.md"
-    "IMPLEMENTATION-NGINX.md"
-    "IMPLEMENTATION-SCRIPTS.md"
+    "IMPLEMENTATION-BACKEND.md"
+    "IMPLEMENTATION-DATABASE.md"
+    "IMPLEMENTATION-SECURITY.md"
     "IMPLEMENTATION-TESTING.md"
+    "IMPLEMENTATION-SCRIPTS.md"
+    "IMPLEMENTATION-NGINX.md"
+    "IMPLEMENTATION-DATA-CONTRACTS.md"
     "IMPLEMENTATION-UTILS.md"
     "UX-LAYOUT.md"
 )
 
+# Files to always exclude
+EXCLUDE_FILES=("README.md" "ROADMAP.md" "CLAUDE.md" "PROJECT_HISTORY.md")
+
+# Parse command line arguments
+FRONTEND=false
+BACKEND=false
+DATABASE=false
+SECURITY=false
+TESTING=false
+SCRIPTS=false
+NGINX=false
+DATA_CONTRACTS=false
+UTILS=false
+UX=false
+DOCS=false
+ALL=false
+CLEAR=false
+CHECK_UNEXPECTED=false
+
+show_help() {
+    echo "Enhanced Copy Documentation to .cursor/rules Script"
+    echo
+    echo "Usage: $0 [OPTIONS]"
+    echo
+    echo "Default behavior: Copy only core rules (coding standards, architecture, dev workflow, documentation guidelines)"
+    echo "Note: communication-standards.mdc is preserved and not overwritten"
+    echo
+    echo "Options:"
+    echo "  -f, --frontend        Include frontend implementation docs"
+    echo "  -b, --backend         Include backend implementation docs"
+    echo "  -d, --database        Include database implementation docs"
+    echo "  -s, --security        Include security implementation docs"
+    echo "  -t, --testing         Include testing implementation docs"
+    echo "  --scripts             Include scripts implementation docs"
+    echo "  --nginx               Include nginx implementation docs"
+    echo "  --data-contracts      Include data contracts implementation docs"
+    echo "  --utils                Include utils implementation docs"
+    echo "  --ux                  Include UX/layout docs"
+    echo "  --docs                Include documentation guidelines"
+    echo "  -a, --all             Include all implementation docs"
+    echo "  -c, --clear           Clear all files except communication-standards.mdc"
+    echo "  --check-unexpected    Prompt for unexpected files"
+    echo "  -h, --help            Show this help message"
+    echo
+    echo "Examples:"
+    echo "  $0                    # Copy only core rules"
+    echo "  $0 -f -b             # Copy core + frontend + backend"
+    echo "  $0 -t --testing      # Copy core + testing docs"
+    echo "  $0 -a                # Copy everything"
+}
+
+# Parse arguments
+while [[ $# -gt 0 ]]; do
+    case $1 in
+        -f|--frontend)
+            FRONTEND=true
+            shift
+            ;;
+        -b|--backend)
+            BACKEND=true
+            shift
+            ;;
+        -d|--database)
+            DATABASE=true
+            shift
+            ;;
+        -s|--security)
+            SECURITY=true
+            shift
+            ;;
+        -t|--testing)
+            TESTING=true
+            shift
+            ;;
+        --scripts)
+            SCRIPTS=true
+            shift
+            ;;
+        --nginx)
+            NGINX=true
+            shift
+            ;;
+        --data-contracts)
+            DATA_CONTRACTS=true
+            shift
+            ;;
+        --utils)
+            UTILS=true
+            shift
+            ;;
+        --ux)
+            UX=true
+            shift
+            ;;
+        --docs)
+            DOCS=true
+            shift
+            ;;
+        -a|--all)
+            ALL=true
+            shift
+            ;;
+        -c|--clear)
+            CLEAR=true
+            shift
+            ;;
+        --check-unexpected)
+            CHECK_UNEXPECTED=true
+            shift
+            ;;
+        -h|--help)
+            show_help
+            exit 0
+            ;;
+        *)
+            echo -e "${RED}Unknown option: $1${NC}"
+            show_help
+            exit 1
+            ;;
+    esac
+done
+
+# Build list of files to copy
+FILES_TO_COPY=("${CORE_FILES[@]}")
+
+if [[ "$ALL" == true ]]; then
+    FILES_TO_COPY=("${CORE_FILES[@]}" "${OPTIONAL_FILES[@]}")
+else
+    # Add optional files based on flags
+    [[ "$FRONTEND" == true ]] && FILES_TO_COPY+=("IMPLEMENTATION-FRONTEND.md")
+    [[ "$BACKEND" == true ]] && FILES_TO_COPY+=("IMPLEMENTATION-BACKEND.md")
+    [[ "$DATABASE" == true ]] && FILES_TO_COPY+=("IMPLEMENTATION-DATABASE.md")
+    [[ "$SECURITY" == true ]] && FILES_TO_COPY+=("IMPLEMENTATION-SECURITY.md")
+    [[ "$TESTING" == true ]] && FILES_TO_COPY+=("IMPLEMENTATION-TESTING.md")
+    [[ "$SCRIPTS" == true ]] && FILES_TO_COPY+=("IMPLEMENTATION-SCRIPTS.md")
+    [[ "$NGINX" == true ]] && FILES_TO_COPY+=("IMPLEMENTATION-NGINX.md")
+    [[ "$DATA_CONTRACTS" == true ]] && FILES_TO_COPY+=("IMPLEMENTATION-DATA-CONTRACTS.md")
+    [[ "$UTILS" == true ]] && FILES_TO_COPY+=("IMPLEMENTATION-UTILS.md")
+    [[ "$UX" == true ]] && FILES_TO_COPY+=("UX-LAYOUT.md")
+    [[ "$DOCS" == true ]] && FILES_TO_COPY+=("DOCUMENTATION-GUIDELINES.md")
+fi
+
 echo -e "${BLUE}📚 Copying documentation files to .cursor/rules/ with .mdc formatting${NC}"
 echo "Project root: $PROJECT_ROOT"
 echo "Rules directory: $RULES_DIR"
+echo "Mode: ${ALL:+All files}${ALL:-Minimal core + selected options}"
 if [[ "$CHECK_UNEXPECTED" == true ]]; then
-    echo "Mode: Check unexpected files (will prompt for unexpected files)"
+    echo "Unexpected files: Will prompt"
 else
-    echo "Mode: Auto-skip unexpected files (use --check-unexpected to prompt)"
+    echo "Unexpected files: Auto-skip"
 fi
 echo
-echo -e "${YELLOW}📋 Expected documentation files to copy:${NC}"
-for file in "${EXPECTED_FILES[@]}"; do
+echo -e "${YELLOW}📋 Files to copy:${NC}"
+for file in "${FILES_TO_COPY[@]}"; do
     echo "   • $file"
 done
 echo
@@ -65,6 +203,24 @@ echo
 if [ ! -d "$RULES_DIR" ]; then
     echo -e "${YELLOW}Creating .cursor/rules directory...${NC}"
     mkdir -p "$RULES_DIR"
+fi
+
+# Handle clear option
+if [[ "$CLEAR" == true ]]; then
+    echo -e "${YELLOW}🧹 Clearing all files except communication-standards.mdc...${NC}"
+    for mdc_file in "$RULES_DIR"/*.mdc; do
+        if [ -f "$mdc_file" ]; then
+            filename=$(basename "$mdc_file")
+            if [[ "$filename" != "communication-standards.mdc" ]]; then
+                echo -e "${BLUE}🗑️  Removing: $filename${NC}"
+                rm "$mdc_file"
+            else
+                echo -e "${GREEN}✅ Preserving: $filename${NC}"
+            fi
+        fi
+    done
+    echo -e "${GREEN}🎉 Clear operation completed!${NC}"
+    exit 0
 fi
 
 # Function to convert filename to description
@@ -88,6 +244,19 @@ filename_to_mdc() {
     echo "${basename,,}.mdc"
 }
 
+# Clear existing files (except communication-standards.mdc) before copying new ones
+echo -e "${YELLOW}🧹 Clearing existing files (preserving communication-standards.mdc)...${NC}"
+for mdc_file in "$RULES_DIR"/*.mdc; do
+    if [ -f "$mdc_file" ]; then
+        filename=$(basename "$mdc_file")
+        if [[ "$filename" != "communication-standards.mdc" ]]; then
+            echo -e "${BLUE}🗑️  Removing: $filename${NC}"
+            rm "$mdc_file"
+        fi
+    fi
+done
+echo
+
 # Counter for processed files
 processed=0
 skipped=0
@@ -110,11 +279,11 @@ for md_file in "$PROJECT_ROOT"/*.md; do
         continue
     fi
     
-    # Check if file is in expected list
-    if [[ ! " ${EXPECTED_FILES[@]} " =~ " ${filename} " ]]; then
+    # Check if file is in our list to copy
+    if [[ ! " ${FILES_TO_COPY[@]} " =~ " ${filename} " ]]; then
         if [[ "$CHECK_UNEXPECTED" == true ]]; then
             echo -e "${RED}⚠️  Unexpected file found: $filename${NC}"
-            echo -e "${YELLOW}   This file wasn't in the expected documentation list.${NC}"
+            echo -e "${YELLOW}   This file wasn't selected for copying.${NC}"
             echo -n "   Do you want to process this file? (y/N): "
             read -r response
             if [[ ! "$response" =~ ^[Yy]$ ]]; then
@@ -125,7 +294,7 @@ for md_file in "$PROJECT_ROOT"/*.md; do
             echo -e "${GREEN}✅ Processing unexpected file: $filename${NC}"
             unexpected=$((unexpected + 1))
         else
-            echo -e "${YELLOW}⏭️  Auto-skipping unexpected file: $filename${NC}"
+            echo -e "${YELLOW}⏭️  Auto-skipping unselected file: $filename${NC}"
             skipped=$((skipped + 1))
             continue
         fi
@@ -174,3 +343,4 @@ done || echo "   (No .mdc files found)"
 
 echo
 echo -e "${GREEN}✨ All done! Your documentation is now available as Cursor rules.${NC}"
+echo -e "${BLUE}💡 Tip: Use specific flags to add only the implementation docs you need!${NC}"

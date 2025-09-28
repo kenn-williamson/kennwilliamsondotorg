@@ -145,19 +145,19 @@ const filteredSuggestions = computed(() => {
 
   // Filter by status
   if (statusFilter.value) {
-    filtered = filtered.filter(s => s.status === statusFilter.value)
+    filtered = filtered.filter((s: PhraseSuggestion) => s.status === statusFilter.value)
   }
 
   // Filter by search query
   if (searchQuery.value.trim()) {
     const query = searchQuery.value.toLowerCase()
-    filtered = filtered.filter(s => 
+    filtered = filtered.filter((s: PhraseSuggestion) => 
       s.phrase_text.toLowerCase().includes(query)
     )
   }
 
   // Sort by created_at descending (newest first)
-  return filtered.sort((a, b) => 
+  return filtered.sort((a: PhraseSuggestion, b: PhraseSuggestion) => 
     new Date(b.created_at).getTime() - new Date(a.created_at).getTime()
   )
 })

@@ -7,6 +7,7 @@ import type { PhraseSuggestion } from '#shared/types/phrases'
 import { adminService } from '~/services/adminService'
 import { useSmartFetch } from '~/composables/useSmartFetch'
 import { useSessionWatcher } from '~/composables/useSessionWatcher'
+import { useDebounceFn } from '@vueuse/core'
 
 export const useAdminStore = defineStore('admin', () => {
   const users = ref<User[]>([])
@@ -19,21 +20,13 @@ export const useAdminStore = defineStore('admin', () => {
   
   const isLoading = ref(false)
   const error = ref<string | null>(null)
-  const filteredUsers = computed((): User[] => {
-    if (!searchQuery.value.trim()) return users.value
-    
-    const query = searchQuery.value.toLowerCase()
-    return users.value.filter(user => 
-      user.display_name.toLowerCase().includes(query) ||
-      user.email.toLowerCase().includes(query)
-    )
-  })
-
+  
+  // Remove client-side filtering - use server-side search instead
+  const hasError = computed(() => !!error.value)
+  
   const pendingSuggestions = computed((): PhraseSuggestion[] => {
     return suggestions.value
   })
-
-  const hasError = computed(() => !!error.value)
 
   // Service instance
   const smartFetch = useSmartFetch()
@@ -104,9 +97,20 @@ export const useAdminStore = defineStore('admin', () => {
       'fetchUsers'
     )
     if (data) {
-      users.value = data.users
+      users.value = data
     }
     return data
+  }
+
+  // Debounced search function
+  const debouncedUserSearch = useDebounceFn(async (query: string) => {
+    await fetchUsers(query)
+  }, 300)
+
+  // Search function that triggers debounced search
+  const searchUsers = (query: string) => {
+    searchQuery.value = query
+    debouncedUserSearch(query)
   }
 
   const fetchSuggestions = async () => {
@@ -271,7 +275,6 @@ export const useAdminStore = defineStore('admin', () => {
     isLoading: readonly(isLoading),
     error: readonly(error),
     
-    filteredUsers,
     pendingSuggestions,
     hasError,
     
@@ -279,6 +282,7 @@ export const useAdminStore = defineStore('admin', () => {
     fetchStatsSSR,
     fetchUsers,
     fetchSuggestions,
+    searchUsers,
     deactivateUser,
     activateUser,
     resetUserPassword,

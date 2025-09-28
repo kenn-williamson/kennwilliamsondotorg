@@ -81,7 +81,7 @@ describe('Admin Store', () => {
       const mockUsers: User[] = [
         { id: '1', display_name: 'John Doe', email: 'john@example.com', slug: 'john-doe', roles: ['user'], created_at: '2024-01-01T00:00:00Z', active: true }
       ]
-      const mockResponse: UsersResponse = { users: mockUsers, total: 1 }
+      const mockResponse: UsersResponse = mockUsers
       
       vi.mocked(mockAdminServiceInstance.getUsers).mockResolvedValue(mockResponse)
 
@@ -100,7 +100,7 @@ describe('Admin Store', () => {
       const store = useAdminStore()
       store.setSearchQuery('test query')
       const mockUsers: User[] = []
-      const mockResponse: UsersResponse = { users: mockUsers, total: 0 }
+      const mockResponse: UsersResponse = mockUsers
       
       vi.mocked(mockAdminServiceInstance.getUsers).mockResolvedValue(mockResponse)
 
@@ -305,28 +305,20 @@ describe('Admin Store', () => {
   })
 
   describe('computed properties', () => {
-    it('should filter users based on search query', () => {
+    it('should update search query when searchUsers is called', async () => {
       const store = useAdminStore()
-      const mockUsers: User[] = [
-        { id: '1', display_name: 'John Doe', email: 'john@example.com', slug: 'john-doe', roles: ['user'], created_at: '2024-01-01T00:00:00Z', active: true },
-        { id: '2', display_name: 'Jane Smith', email: 'jane@example.com', slug: 'jane-smith', roles: ['user'], created_at: '2024-01-01T00:00:00Z', active: true }
-      ]
-      store.setUsers(mockUsers)
-      store.setSearchQuery('john')
       
-      expect(store.filteredUsers).toEqual([mockUsers[0]])
+      store.searchUsers('john')
+      
+      expect(store.searchQuery).toBe('john')
     })
 
-    it('should return all users when search query is empty', () => {
+    it('should clear search query when empty string provided', async () => {
       const store = useAdminStore()
-      const mockUsers: User[] = [
-        { id: '1', display_name: 'John Doe', email: 'john@example.com', slug: 'john-doe', roles: ['user'], created_at: '2024-01-01T00:00:00Z', active: true },
-        { id: '2', display_name: 'Jane Smith', email: 'jane@example.com', slug: 'jane-smith', roles: ['user'], created_at: '2024-01-01T00:00:00Z', active: true }
-      ]
-      store.setUsers(mockUsers)
-      store.setSearchQuery('')
       
-      expect(store.filteredUsers).toEqual(mockUsers)
+      store.searchUsers('')
+      
+      expect(store.searchQuery).toBe('')
     })
 
     it('should return pending suggestions', () => {

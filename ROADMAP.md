@@ -7,23 +7,6 @@
 
 ## Next Priorities
 
-### Database Query Optimization
-**Priority**: High
-**Goal**: Fix critical database performance issues and optimize query patterns
-
-**Current State**: Basic queries implemented with good indexing but several performance bottlenecks identified
-**Critical Issues**:
-- **N+1 Query Problem**: Admin user management executes 1 query for users + N queries for roles (50 users = 51 queries)
-- **Inefficient Random Selection**: `ORDER BY RANDOM()` scans entire phrases table for random phrase selection
-- **Missing Composite Indexes**: No optimized indexes for phrase exclusions and user search queries
-
-**Optimization Work**:
-- **Fix N+1 Admin Queries**: Replace loop with single JOIN query for users with roles
-- **Optimize Random Phrase Selection**: Use `TABLESAMPLE` or pre-calculated random ordering instead of `ORDER BY RANDOM()`
-- **Add Composite Indexes**: Create indexes for `(active, phrase_id)` and full-text search indexes
-- **Improve Search Queries**: Replace `ILIKE` with PostgreSQL full-text search for better performance
-- **Optimize Pagination**: Add proper counting and validation for large datasets
-
 ### Performance Optimization
 **Priority**: Medium
 **Goal**: Optimize application performance and user experience

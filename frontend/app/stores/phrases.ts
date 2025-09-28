@@ -6,6 +6,7 @@ import type { Phrase, PhraseSuggestion, PhraseWithExclusion } from '#shared/type
 import { phraseService } from '~/services/phraseService'
 import { useSmartFetch } from '~/composables/useSmartFetch'
 import { useSessionWatcher } from '~/composables/useSessionWatcher'
+import { useDebounceFn } from '@vueuse/core'
 
 export const usePhrasesStore = defineStore('phrases', () => {
   const userPhrases = ref<PhraseWithExclusion[]>([])
@@ -13,16 +14,20 @@ export const usePhrasesStore = defineStore('phrases', () => {
   const userSuggestions = ref<PhraseSuggestion[]>([])
   const adminSuggestions = ref<PhraseSuggestion[]>([])
   const currentPhrase = ref<string | null>(null)
-  
   const isLoading = ref(false)
   const error = ref<string | null>(null)
+  
+  // State for search (no pagination)
+  const searchQuery = ref<string>('')
+  const pendingSuggestions = computed(() => adminSuggestions.value.filter(s => s.status === 'pending'))
+
+  // Computed properties
   const hasUserPhrases = computed(() => userPhrases.value.length > 0)
   const hasAdminPhrases = computed(() => adminPhrases.value.length > 0)
   const hasUserSuggestions = computed(() => userSuggestions.value.length > 0)
   const hasAdminSuggestions = computed(() => adminSuggestions.value.length > 0)
   const hasError = computed(() => !!error.value)
-  const activePhrases = computed(() => adminPhrases.value.filter(p => p.active))
-  const pendingSuggestions = computed(() => adminSuggestions.value.filter(s => s.status === 'pending'))
+  const activePhrases = computed(() => userPhrases.value.filter(p => p.active))
 
   const smartFetch = useSmartFetch()
   const phraseServiceInstance = phraseService(smartFetch)
@@ -56,20 +61,34 @@ export const usePhrasesStore = defineStore('phrases', () => {
     // TODO: Add toast notifications here
   }
 
-  const loadPhrasesForUser = async () => {
-    const data = await _handleAction(() => phraseServiceInstance.fetchUserPhrases(), 'loadPhrasesForUser')
+  const loadPhrasesForUser = async (search?: string) => {
+    const searchTerm = search !== undefined ? search : searchQuery.value
+    
+    const params = {
+      limit: 100, // Reasonable limit to prevent performance issues
+      offset: 0,
+      search: searchTerm || undefined
+    }
+    
+    const data = await _handleAction(() => phraseServiceInstance.fetchUserPhrases(params), 'loadPhrasesForUser')
     if (data) {
       userPhrases.value = data.phrases
+      if (search !== undefined) {
+        searchQuery.value = search
+      }
     }
     return data
   }
 
-  const loadAllPhrasesForAdmin = async () => {
-    const data = await _handleAction(() => phraseServiceInstance.fetchAllPhrases(), 'loadAllPhrasesForAdmin')
-    if (data) {
-      adminPhrases.value = data.phrases
-    }
-    return data
+  // Debounced search function
+  const debouncedSearch = useDebounceFn(async (query: string) => {
+    await loadPhrasesForUser(query)
+  }, 300)
+
+  // Search function that triggers debounced search
+  const searchPhrases = (query: string) => {
+    searchQuery.value = query
+    debouncedSearch(query)
   }
 
   const loadSuggestionsForUser = async () => {
@@ -88,6 +107,14 @@ export const usePhrasesStore = defineStore('phrases', () => {
     return data
   }
 
+  const loadAllPhrasesForAdmin = async () => {
+    const data = await _handleAction(() => phraseServiceInstance.fetchAllPhrases(), 'loadAllPhrasesForAdmin')
+    if (data) {
+      adminPhrases.value = data.phrases
+    }
+    return data
+  }
+
   const togglePhraseExclusion = async (phraseId: string) => {
     const phrase = userPhrases.value.find(p => p.id === phraseId)
     if (!phrase) throw new Error('Phrase not found')
@@ -99,7 +126,7 @@ export const usePhrasesStore = defineStore('phrases', () => {
       await _handleAction(() => phraseServiceInstance.excludePhrase(phraseId), 'excludePhrase')
       _handleSuccess('Phrase excluded successfully')
     }
-
+    
     // Update local state
     phrase.is_excluded = !phrase.is_excluded
   }
@@ -214,6 +241,9 @@ export const usePhrasesStore = defineStore('phrases', () => {
     isLoading,
     error,
     
+    // Search state
+    searchQuery,
+    
     hasUserPhrases,
     hasAdminPhrases,
     hasUserSuggestions,
@@ -228,6 +258,9 @@ export const usePhrasesStore = defineStore('phrases', () => {
     loadAllSuggestionsForAdmin,
     togglePhraseExclusion,
     submitSuggestion,
+    
+    // Search function
+    searchPhrases,
     fetchRandomPhraseAuth,
     fetchRandomPhraseClient,
     fetchRandomPhraseSSR,

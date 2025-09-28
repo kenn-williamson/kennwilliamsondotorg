@@ -28,6 +28,7 @@
 </template>
 
 <script setup lang="ts">
+import { ref, watch } from 'vue'
 import { useAdminStore } from '~/stores/admin'
 
 const adminStore = useAdminStore()
@@ -35,41 +36,20 @@ const adminStore = useAdminStore()
 // Local search query
 const searchQuery = ref('')
 
-// Debounced search function
-let searchTimeout: NodeJS.Timeout | null = null
-
+// Handle search input with debouncing (handled by store)
 const onSearchInput = () => {
-  // Clear existing timeout
-  if (searchTimeout) {
-    clearTimeout(searchTimeout)
-  }
-
-  // Set new timeout for debounced search
-  searchTimeout = setTimeout(async () => {
-    adminStore.setSearchQuery(searchQuery.value)
-    await adminStore.fetchUsers(searchQuery.value)
-  }, 300) // 300ms debounce
+  adminStore.searchUsers(searchQuery.value)
 }
 
 const clearSearch = () => {
   searchQuery.value = ''
-  adminStore.setSearchQuery('')
-  adminStore.fetchUsers('')
+  adminStore.searchUsers('')
 }
 
-// Watch for external search query changes
+// Sync local search query with store
 watch(() => adminStore.searchQuery, (newQuery) => {
-  if (newQuery !== searchQuery.value) {
-    searchQuery.value = newQuery
-  }
-})
-
-// Cleanup timeout on unmount
-onUnmounted(() => {
-  if (searchTimeout) {
-    clearTimeout(searchTimeout)
-  }
-})
+  searchQuery.value = newQuery
+}, { immediate: true })
 </script>
 
 <style scoped>

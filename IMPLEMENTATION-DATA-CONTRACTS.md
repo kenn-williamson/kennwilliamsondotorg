@@ -697,20 +697,17 @@ Optional fields are either included with a value or `null`:
 
 **Response (200 OK):**
 ```json
-{
-  "users": [
-    {
-      "id": "01234567-89ab-cdef-0123-456789abcdef",
-      "email": "user@example.com",
-      "display_name": "User Name",
-      "slug": "user-name",
-      "active": true,
-      "roles": ["user"],
-      "created_at": "2024-01-01T12:00:00Z"
-    }
-  ],
-  "total": 1
-}
+[
+  {
+    "id": "01234567-89ab-cdef-0123-456789abcdef",
+    "email": "user@example.com",
+    "display_name": "User Name",
+    "slug": "user-name",
+    "active": true,
+    "roles": ["user"],
+    "created_at": "2024-01-01T12:00:00Z"
+  }
+]
 ```
 
 ### Deactivate User

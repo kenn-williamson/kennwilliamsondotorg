@@ -5,15 +5,16 @@ use anyhow::Result;
 use crate::repositories::traits::PhraseRepository;
 use crate::models::api::{CreatePhraseRequest, UpdatePhraseRequest, PhraseResponse};
 
-/// Get all phrases (admin only)
-pub async fn get_all_phrases(
+/// Get phrases (admin only)
+pub async fn get_phrases(
     repository: &Arc<dyn PhraseRepository>,
     include_inactive: bool,
     limit: Option<i64>,
     offset: Option<i64>,
+    search: Option<String>,
 ) -> Result<Vec<PhraseResponse>> {
     // Validate pagination parameters
-    let limit = limit.unwrap_or(50);
+    let limit = limit.unwrap_or(100); // Reasonable limit to prevent performance issues
     let offset = offset.unwrap_or(0);
     
     if limit < 0 {
@@ -24,7 +25,7 @@ pub async fn get_all_phrases(
     }
 
     // Get phrases from repository
-    let phrases = repository.get_all_phrases(include_inactive, Some(limit), Some(offset)).await?;
+    let phrases = repository.get_phrases(include_inactive, Some(limit), Some(offset), search).await?;
     
     // Transform to API response format
     let phrase_responses: Vec<PhraseResponse> = phrases
@@ -108,8 +109,8 @@ mod tests {
             async fn get_random_phrase_by_slug(&self, user_slug: &str) -> Result<String>;
             async fn get_random_phrase(&self, user_id: uuid::Uuid) -> Result<String>;
             async fn get_user_phrases(&self, user_id: uuid::Uuid, limit: Option<i64>, offset: Option<i64>) -> Result<Vec<crate::models::db::Phrase>>;
-            async fn get_user_phrases_with_exclusions(&self, user_id: uuid::Uuid) -> Result<Vec<crate::models::db::PhraseWithUserExclusionView>>;
-            async fn get_all_phrases(&self, include_inactive: bool, limit: Option<i64>, offset: Option<i64>) -> Result<Vec<crate::models::db::Phrase>>;
+            async fn get_user_phrases_with_exclusions(&self, user_id: uuid::Uuid, limit: Option<i64>, offset: Option<i64>, search: Option<String>) -> Result<Vec<crate::models::db::PhraseSearchResultWithUserExclusionView>>;
+            async fn get_phrases(&self, include_inactive: bool, limit: Option<i64>, offset: Option<i64>, search: Option<String>) -> Result<Vec<crate::models::db::Phrase>>;
             async fn create_phrase(&self, request: crate::models::api::CreatePhraseRequest, created_by: uuid::Uuid) -> Result<crate::models::db::Phrase>;
             async fn update_phrase(&self, phrase_id: uuid::Uuid, request: crate::models::api::UpdatePhraseRequest) -> Result<crate::models::db::Phrase>;
             async fn exclude_phrase_for_user(&self, user_id: uuid::Uuid, phrase_id: uuid::Uuid) -> Result<()>;
@@ -142,13 +143,13 @@ mod tests {
         let test_phrase = create_test_phrase();
         
         mock_repo
-            .expect_get_all_phrases()
-            .with(mockall::predicate::eq(false), mockall::predicate::eq(Some(50)), mockall::predicate::eq(Some(0)))
+            .expect_get_phrases()
+            .with(mockall::predicate::eq(false), mockall::predicate::eq(Some(50)), mockall::predicate::eq(Some(0)), mockall::predicate::eq(None))
             .times(1)
-            .returning(move |_, _, _| Ok(vec![test_phrase.clone()]));
+            .returning(move |_, _, _, _| Ok(vec![test_phrase.clone()]));
 
         let repo = Arc::new(mock_repo) as Arc<dyn PhraseRepository>;
-        let result = get_all_phrases(&repo, false, Some(50), Some(0)).await;
+        let result = get_phrases(&repo, false, Some(50), Some(0), None).await;
         
         assert!(result.is_ok());
         let phrases = result.unwrap();
@@ -160,7 +161,7 @@ mod tests {
     async fn test_get_all_phrases_negative_limit() {
         let mock_repo = MockPhraseRepository::new();
         let repo = Arc::new(mock_repo) as Arc<dyn PhraseRepository>;
-        let result = get_all_phrases(&repo, false, Some(-1), Some(0)).await;
+        let result = get_phrases(&repo, false, Some(-1), Some(0), None).await;
         
         assert!(result.is_err());
         assert!(result.unwrap_err().to_string().contains("Limit cannot be negative"));

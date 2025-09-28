@@ -66,19 +66,23 @@ impl AdminRepository for PostgresAdminRepository {
         search: Option<String>,
         limit: Option<i64>,
         offset: Option<i64>,
-    ) -> Result<Vec<crate::models::api::UserWithRoles>> {
-        let limit = limit.unwrap_or(50).min(100); // Cap at 100 for safety
+    ) -> Result<Vec<crate::models::db::UserWithRoles>> {
+        let limit = limit.unwrap_or(100).min(100); // Default 100, cap at 100 for safety
         let offset = offset.unwrap_or(0);
 
-        // First, get the users
-        let users = if let Some(search_term) = search {
+        if let Some(search_term) = search {
             sqlx::query_as!(
-                crate::models::db::user::User,
+                crate::models::db::UserWithRoles,
                 r#"
-                SELECT id, email, password_hash, display_name, slug, active, created_at, updated_at
-                FROM users
-                WHERE email ILIKE $1 OR display_name ILIKE $1 OR slug ILIKE $1
-                ORDER BY created_at DESC
+                SELECT 
+                    u.id, u.email, u.display_name, u.slug, u.active, u.created_at, u.updated_at,
+                    array_agg(r.name) as roles
+                FROM users u
+                INNER JOIN user_roles ur ON u.id = ur.user_id
+                INNER JOIN roles r ON ur.role_id = r.id
+                WHERE u.display_name ILIKE $1 OR u.email ILIKE $1 OR u.slug ILIKE $1
+                GROUP BY u.id, u.email, u.display_name, u.slug, u.active, u.created_at, u.updated_at
+                ORDER BY u.created_at DESC
                 LIMIT $2 OFFSET $3
                 "#,
                 format!("%{}%", search_term),
@@ -86,41 +90,29 @@ impl AdminRepository for PostgresAdminRepository {
                 offset
             )
             .fetch_all(&self.pool)
-            .await?
+            .await
+            .map_err(|e| anyhow::anyhow!("Failed to fetch users with roles: {}", e))
         } else {
             sqlx::query_as!(
-                crate::models::db::user::User,
+                crate::models::db::UserWithRoles,
                 r#"
-                SELECT id, email, password_hash, display_name, slug, active, created_at, updated_at
-                FROM users
-                ORDER BY created_at DESC
+                SELECT 
+                    u.id, u.email, u.display_name, u.slug, u.active, u.created_at, u.updated_at,
+                    array_agg(r.name) as roles
+                FROM users u
+                INNER JOIN user_roles ur ON u.id = ur.user_id
+                INNER JOIN roles r ON ur.role_id = r.id
+                GROUP BY u.id, u.email, u.display_name, u.slug, u.active, u.created_at, u.updated_at
+                ORDER BY u.created_at DESC
                 LIMIT $1 OFFSET $2
                 "#,
                 limit,
                 offset
             )
             .fetch_all(&self.pool)
-            .await?
-        };
-
-        // Then, for each user, get their roles
-        let mut users_with_roles = Vec::new();
-        for user in users {
-            let roles = self.get_user_roles(user.id).await?;
-            
-            users_with_roles.push(crate::models::api::UserWithRoles {
-                id: user.id,
-                email: user.email,
-                display_name: user.display_name,
-                slug: user.slug,
-                active: user.active,
-                created_at: user.created_at,
-                updated_at: user.updated_at,
-                roles,
-            });
+            .await
+            .map_err(|e| anyhow::anyhow!("Failed to fetch users with roles: {}", e))
         }
-
-        Ok(users_with_roles)
     }
 
     async fn count_all_users(&self) -> Result<i64> {
@@ -145,20 +137,5 @@ impl AdminRepository for PostgresAdminRepository {
 }
 
 impl PostgresAdminRepository {
-    /// Helper method to get user roles (used internally)
-    async fn get_user_roles(&self, user_id: Uuid) -> Result<Vec<String>> {
-        let roles = sqlx::query!(
-            r#"
-            SELECT r.name
-            FROM roles r
-            JOIN user_roles ur ON r.id = ur.role_id
-            WHERE ur.user_id = $1
-            "#,
-            user_id
-        )
-        .fetch_all(&self.pool)
-        .await?;
-
-        Ok(roles.into_iter().map(|r| r.name).collect())
-    }
+    // Helper method removed - no longer needed with array_agg() approach
 }

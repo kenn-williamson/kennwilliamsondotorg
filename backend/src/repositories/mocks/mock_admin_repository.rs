@@ -4,7 +4,7 @@ use uuid::Uuid;
 use anyhow::Result;
 
 use crate::repositories::traits::admin_repository::AdminRepository;
-use crate::models::api::UserWithRoles;
+use crate::models::db::UserWithRoles;
 
 // Generate mock for AdminRepository trait
 mock! {
@@ -33,7 +33,7 @@ mod tests {
     use mockall::predicate::eq;
     use chrono::Utc;
 
-    // Helper function to create a test user with roles
+    // Helper function to create a test user with roles (repository DTO)
     fn create_test_user_with_roles() -> UserWithRoles {
         UserWithRoles {
             id: Uuid::new_v4(),
@@ -43,11 +43,11 @@ mod tests {
             active: true,
             created_at: Utc::now(),
             updated_at: Utc::now(),
-            roles: vec!["user".to_string()],
+            roles: Some(vec!["user".to_string()]),
         }
     }
 
-    // Helper function to create an admin user with roles
+    // Helper function to create an admin user with roles (repository DTO)
     fn create_test_admin_user() -> UserWithRoles {
         UserWithRoles {
             id: Uuid::new_v4(),
@@ -57,11 +57,11 @@ mod tests {
             active: true,
             created_at: Utc::now(),
             updated_at: Utc::now(),
-            roles: vec!["user".to_string(), "admin".to_string()],
+            roles: Some(vec!["user".to_string(), "admin".to_string()]),
         }
     }
 
-    // Helper function to create multiple test users
+    // Helper function to create multiple test users (repository DTOs)
     fn create_test_users() -> Vec<UserWithRoles> {
         vec![
             create_test_user_with_roles(),
@@ -74,7 +74,7 @@ mod tests {
                 active: false,
                 created_at: Utc::now(),
                 updated_at: Utc::now(),
-                roles: vec!["user".to_string()],
+                roles: Some(vec!["user".to_string()]),
             },
         ]
     }

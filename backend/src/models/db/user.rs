@@ -14,3 +14,16 @@ pub struct User {
     pub created_at: DateTime<Utc>,
     pub updated_at: DateTime<Utc>,
 }
+
+/// User with roles from database (raw SQLx result)
+#[derive(Debug, Clone, FromRow, Serialize)]
+pub struct UserWithRoles {
+    pub id: Uuid,
+    pub email: String,
+    pub display_name: String,
+    pub slug: String,
+    pub active: bool,
+    pub created_at: DateTime<Utc>,
+    pub updated_at: DateTime<Utc>,
+    pub roles: Option<Vec<String>>,
+}

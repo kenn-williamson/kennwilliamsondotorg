@@ -120,6 +120,7 @@ backend/
 - **Admin Management**: User deactivation, password reset, user promotion, system statistics
 - **Incident Timers**: CRUD operations with user ownership
 - **Phrases System**: Dynamic phrases with user suggestions and admin approval
+- **Enhanced Search**: PostgreSQL full-text search with `ts_rank` ranking and ILIKE fallback
 - **Public API**: Unauthenticated access to user timers and phrases
 - **Database Integration**: SQLx with compile-time query verification
 - **3-Layer Architecture**: Clean separation with repository pattern and dependency injection
@@ -143,6 +144,7 @@ backend/
 - **Mock Implementations**: Complete mock implementations for unit testing
 - **Dependency Injection**: ServiceContainer manages all dependencies
 - **Admin Repository**: Dedicated repository for admin operations and system statistics
+- **Search Implementation**: PostgreSQL full-text search with `ts_rank` ranking and ILIKE fallback for phrase search
 
 ### Service Layer
 - **Repository Dependencies**: All services use repository traits instead of direct database access

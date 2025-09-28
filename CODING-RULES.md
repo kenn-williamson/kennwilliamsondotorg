@@ -21,6 +21,7 @@ This document establishes coding standards and development conventions for the K
 - Ask questions instead of assuming when core decisions are involved
 - Challenge potentially problematic requests with reasoned objections
 - Balance thoroughness with practical progress
+- Focus on current implementation - avoid referencing "old behavior" or "previous approaches" when making changes
 
 ## Language-Specific Standards
 

@@ -16,12 +16,31 @@ import type {
 } from '#shared/types'
 
 export const phraseService = (fetcher: Fetcher) => ({
-  fetchUserPhrases: async (): Promise<{ phrases: PhraseWithExclusion[] }> => {
-    return fetcher<{ phrases: PhraseWithExclusion[] }>(API_ROUTES.PROTECTED.PHRASES.USER)
+  fetchUserPhrases: async (params?: { limit?: number; offset?: number; search?: string }): Promise<{ phrases: PhraseWithExclusion[] }> => {
+    const searchParams = new URLSearchParams()
+    if (params?.limit) searchParams.set('limit', params.limit.toString())
+    if (params?.offset) searchParams.set('offset', params.offset.toString())
+    if (params?.search) searchParams.set('search', params.search)
+    
+    const url = searchParams.toString() 
+      ? `${API_ROUTES.PROTECTED.PHRASES.USER}?${searchParams.toString()}`
+      : API_ROUTES.PROTECTED.PHRASES.USER
+    
+    return fetcher<{ phrases: PhraseWithExclusion[] }>(url)
   },
 
-  fetchAllPhrases: async (): Promise<AllPhrasesResponse> => {
-    return fetcher<AllPhrasesResponse>(API_ROUTES.PROTECTED.PHRASES.LIST)
+  fetchAllPhrases: async (params?: { limit?: number; offset?: number; search?: string; include_inactive?: boolean }): Promise<AllPhrasesResponse> => {
+    const searchParams = new URLSearchParams()
+    if (params?.limit) searchParams.set('limit', params.limit.toString())
+    if (params?.offset) searchParams.set('offset', params.offset.toString())
+    if (params?.search) searchParams.set('search', params.search)
+    if (params?.include_inactive) searchParams.set('include_inactive', params.include_inactive.toString())
+    
+    const url = searchParams.toString() 
+      ? `${API_ROUTES.PROTECTED.PHRASES.LIST}?${searchParams.toString()}`
+      : API_ROUTES.PROTECTED.PHRASES.LIST
+    
+    return fetcher<AllPhrasesResponse>(url)
   },
 
   excludePhrase: async (phraseId: string): Promise<PhraseExclusionResponse> => {
