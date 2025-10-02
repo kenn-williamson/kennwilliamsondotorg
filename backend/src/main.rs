@@ -28,6 +28,8 @@ async fn main() -> std::io::Result<()> {
     let port = env::var("PORT").unwrap_or_else(|_| "8080".to_string());
     let database_url = env::var("DATABASE_URL")
         .expect("DATABASE_URL must be set");
+    let redis_url = env::var("REDIS_URL")
+        .unwrap_or_else(|_| "redis://localhost:6379".to_string());
 
     // Create database connection pool
     let pool = PgPool::connect(&database_url)
@@ -39,12 +41,13 @@ async fn main() -> std::io::Result<()> {
     
     let container = match env::var("ENVIRONMENT").unwrap_or_else(|_| "development".to_string()).as_str() {
         "testing" => services::container::ServiceContainer::new_testing(jwt_secret),
-        "production" => services::container::ServiceContainer::new_production(pool.clone(), jwt_secret),
-        _ => services::container::ServiceContainer::new_development(pool.clone(), jwt_secret),
+        "production" => services::container::ServiceContainer::new_production(pool.clone(), jwt_secret, redis_url.clone()),
+        _ => services::container::ServiceContainer::new_development(pool.clone(), jwt_secret, redis_url.clone()),
     };
 
     println!("🚀 Starting server at http://{}:{}", host, port);
     println!("📊 Database connected successfully");
+    println!("🚦 Rate limiting service initialized");
 
     HttpServer::new(move || {
         let cors_origin = env::var("CORS_ORIGIN")
@@ -67,6 +70,7 @@ async fn main() -> std::io::Result<()> {
             .app_data(web::Data::from(container.admin_service.clone()))
             .app_data(web::Data::from(container.phrase_moderation_service.clone()))
             .app_data(web::Data::from(container.stats_service.clone()))
+            .app_data(web::Data::from(container.rate_limit_service.clone()))
             .configure(routes::configure_app_routes)
     })
     .bind(format!("{}:{}", host, port))?

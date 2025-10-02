@@ -5,167 +5,98 @@
 
 ## Immediate Priorities
 
+### Content Development
+**Priority**: High
+**Goal**: Replace construction pages with actual content
+
+**Tasks**:
+- Landing page content and design
+- About page content and design
+- Professional presentation for portfolio project
+
+### Public Timer List Feature
+**Priority**: High  
+**Goal**: Make public incidents page functional and interesting
+
+**Tasks**:
+- Display actual user timers on public page
+- Implement privacy controls (hide from list vs hide completely)
+- User interface for privacy settings
+- Public timer browsing experience
+
+### Steampunk Asset Integration
+**Priority**: High (Contingent on receiving assets)
+**Goal**: Integrate custom steampunk graphics and assets from contracted designer
+
+**Dependencies**: 
+- Receipt of steampunk assets from graphic designer
+- Asset format and specifications review
+
+**Tasks**:
+- Asset review and optimization
+- Integration into existing UI components
+- Landing page visual redesign
+- About page visual redesign
+- Icon and image asset implementation
+- Responsive asset handling
+- Asset performance optimization
+
+### Mobile Development Tooling
+**Priority**: Medium
+**Goal**: Enable easier mobile testing and development
+
+**Tasks**:
+- Set up mobile testing workflow
+- Browser dev tools mobile simulation setup
+- Local network access for phone testing
+- Mobile-specific development tools
+
 ## Next Priorities
 
-### Performance Optimization
+### QR Code Networking System
 **Priority**: Medium
-**Goal**: Optimize application performance and user experience
+**Goal**: Create QR code system for easy project sharing and networking
 
-**Current State**: Store architecture refactor complete with improved SSR hydration and smart fetch system
-**Remaining Work**:
-- **Caching Strategy**: Implement proper caching for both SSR and CSR data
-- **Performance Monitoring**: Add metrics to measure SSR vs CSR performance impact
+**Tasks**:
+- QR code generation for project links
+- Custom QR code landing pages
+- Analytics for QR code usage
+- Professional networking integration
+
+### Mobile Experience Polish
+**Priority**: Medium
+**Goal**: Optimize mobile user experience
+
+**Tasks**:
+- Mobile-responsive design improvements
+- Touch interaction optimizations
+- Mobile-specific UI patterns
+- Cross-device testing and refinement
 
 ### Feature Expansion
 **Goal**: Enhanced application functionality and user experience
 
-**Content Management**:
-- Blog/article system
-- Portfolio project showcase
-- Content creation and editing interface
-
-**Advanced Timer Features**:
-- Timer categories and tagging
-- Historical data analysis
-- Export functionality (CSV, JSON)
-- Timer sharing and collaboration
-
-**User Experience**:
-- Advanced responsive design
-- Progressive Web App (PWA) features
-- Offline functionality
-- Performance optimizations
+*Advanced features moved to [ROADMAP-DEFERRED.md](ROADMAP-DEFERRED.md) - focusing on core functionality for example project*
 
 ## Future Architecture
 
-### Authentication Enhancement  
-**Goal**: Extended authentication options and improved security
-
-**OAuth Integration**:
-- Google OAuth 2.0 provider
-- GitHub OAuth provider  
-- Account linking for existing users (email as anchor point)
-- Multi-provider authentication support
-
-**Database Extensions**:
-- OAuth provider tables
-- Account linking relationships
-- Enhanced user profile data
-
-**Security Improvements**:
-- Enhanced session management
-- Account security settings
-- Login history and monitoring
-- Email integration for password reset notifications
-
-### CI/CD Pipeline
-**Goal**: Automated testing and deployment
-**Components**:
-- GitHub Actions workflow
-- Automated testing (unit, integration, e2e)
-- Blue-green deployment strategy
-- Rollback capabilities
-
-### Monitoring and Observability
-**Goal**: Production-ready monitoring
-**Components**:
-- Application performance monitoring
-- Error tracking and alerting
-- Log aggregation and search
-- Uptime monitoring
-
-### Scalability Improvements
-**Goal**: Handle increased traffic and data
-**Components**:
-- Database read replicas
-- Redis caching layer
-- CDN integration
-- Load balancing
+*Infrastructure and advanced architecture items moved to [ROADMAP-DEFERRED.md](ROADMAP-DEFERRED.md) - focusing on current needs*
 
 ## Technical Debt and Improvements
 
-### Security and DDoS Protection
-**Status**: Deferred - requires investigation
-**Issue**: Nginx rate limiting with `limit_req_zone` fails in Docker containers with "zero size shared memory zone" error
-**Attempted Solutions**:
-- Increased Docker memory limits (100MB → 256MB)
-- Explicit shared memory allocation (`shm_size: 128m`)
-- Various zone size configurations
-- Different zone naming strategies
-
-**Next Steps**:
-- Investigate alternative DDoS protection methods (Cloudflare, AWS WAF)
-- Research nginx shared memory allocation in containerized environments
-- Consider application-level rate limiting in Rust backend
-- Evaluate third-party security services
-
-### Code Quality
-- End-to-end testing automation
-- Code quality metrics and monitoring
-
-### Performance Optimization
-- Frontend bundle optimization
-- Database query optimization
-- Caching strategy implementation
-- Image optimization and delivery
-
-### Developer Experience
-- Enhanced development tooling
-- Automated code formatting and linting
-- Git hooks for quality assurance
-- Development environment improvements
+*Most technical debt items moved to [ROADMAP-DEFERRED.md](ROADMAP-DEFERRED.md) - focusing on immediate needs*
 
 ## Decision Points
 
-### Database Strategy
-**Current**: PostgreSQL in Docker container
-**Future Options**:
-- AWS RDS for managed database
-- Database clustering for high availability
-- Read replicas for performance
-
-**Decision Factors**: Cost, maintenance burden, performance requirements
-
-### Authentication Strategy
-**Current**: JWT with bcrypt password hashing
-**Future Enhancement**: OAuth integration
-**Long-term**: Consider session-based auth for security
-
-### Deployment Strategy
-**Current**: Manual deployment planned
-**Future**: Full CI/CD automation
-**Considerations**: Blue-green vs rolling updates
+*Strategic decisions moved to [ROADMAP-DEFERRED.md](ROADMAP-DEFERRED.md) - current architecture sufficient*
 
 ## Success Metrics
 
-### Admin User Management Phase
-- User profile editing interface complete
-- Admin user management dashboard functional
-- Password reset system operational
-- User promotion system functional
-
-### Testing & Quality Phase
-- CI/CD pipeline operational
-- Performance monitoring in place
-
-### Feature Expansion Phase
-- Content management system
-- Advanced timer features
-- User engagement metrics
-- PWA functionality
+*Success metrics moved to [ROADMAP-DEFERRED.md](ROADMAP-DEFERRED.md) - focusing on current completion status*
 
 ## Risk Mitigation
 
-### Technical Risks
-- **Database corruption**: Automated backup testing
-- **SSL certificate expiry**: Automated renewal monitoring
-- **Service outages**: Health checks and auto-restart
-- **Security vulnerabilities**: Regular dependency updates
-
-### Business Risks
-- **Feature scope creep**: Prioritized roadmap discipline
-- **Performance degradation**: Continuous monitoring
-- **User experience issues**: Regular usability testing
+*Risk mitigation strategies moved to [ROADMAP-DEFERRED.md](ROADMAP-DEFERRED.md) - current setup sufficient for example project*
 
 ---
 

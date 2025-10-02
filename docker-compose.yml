@@ -17,6 +17,11 @@ services:
       timeout: 10s
       retries: 3
     restart: unless-stopped
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+        max-file: "3"
 
   # Rust Backend
   backend:
@@ -25,6 +30,7 @@ services:
       dockerfile: Dockerfile
     environment:
       DATABASE_URL: postgresql://${DB_USER:-postgres}:${DB_PASSWORD:-password}@postgres:5432/kennwilliamson
+      REDIS_URL: redis://redis:6379
       JWT_SECRET: ${JWT_SECRET}
       HOST: 0.0.0.0
       PORT: 8080
@@ -35,6 +41,8 @@ services:
     depends_on:
       postgres:
         condition: service_healthy
+      redis:
+        condition: service_started
     restart: unless-stopped
     deploy:
       resources:
@@ -42,6 +50,11 @@ services:
           memory: 200m
         reservations:
           memory: 100m
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+        max-file: "3"
 
   # Nuxt.js Frontend
   frontend:
@@ -50,11 +63,13 @@ services:
       dockerfile: Dockerfile
     environment:
       NUXT_PUBLIC_API_BASE: ${NUXT_PUBLIC_API_BASE:-http://localhost:8080/backend}
+      REDIS_URL: redis://redis:6379
       JWT_SECRET: ${JWT_SECRET}
     ports:
       - "3000:3000"  # Remove in production
     depends_on:
       - backend
+      - redis
     restart: unless-stopped
     deploy:
       resources:
@@ -62,6 +77,31 @@ services:
           memory: 250m
         reservations:
           memory: 150m
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+        max-file: "3"
+
+  # Redis for Rate Limiting and Caching
+  redis:
+    image: redis:alpine
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis_data:/data
+    restart: unless-stopped
+    deploy:
+      resources:
+        limits:
+          memory: 128m
+        reservations:
+          memory: 64m
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+        max-file: "3"
 
   # Nginx Reverse Proxy
   nginx:
@@ -79,7 +119,13 @@ services:
     depends_on:
       - frontend
       - backend
+      - redis
     restart: unless-stopped
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+        max-file: "3"
 
   # Database Migration Service
   # Runs automatically in production unless SKIP_MIGRATIONS=true
@@ -111,6 +157,8 @@ services:
 
 volumes:
   postgres_data:
+    driver: local
+  redis_data:
     driver: local
   certbot_certs:
     driver: local

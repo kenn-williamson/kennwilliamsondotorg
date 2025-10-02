@@ -3,6 +3,7 @@ import { defineEventHandler, readValidatedBody, createError } from 'h3'
 import { useRuntimeConfig } from '#imports'
 import { getClientInfo } from '../../utils/client-ip'
 import { API_ROUTES } from '#shared/config/api-routes'
+import { rateLimitMiddleware } from '../../utils/rate-limiter'
 
 const bodySchema = z.object({
   email: z.string().email(),
@@ -12,6 +13,15 @@ const bodySchema = z.object({
 
 export default defineEventHandler(async (event: any) => {
   const { email, display_name, password } = await readValidatedBody(event, bodySchema.parse)
+  
+  // Check rate limit for registration
+  const isRateLimited = await rateLimitMiddleware(event, '/auth/register')
+  if (isRateLimited) {
+    throw createError({
+      statusCode: 429,
+      statusMessage: 'Too many registration attempts. Please wait 5 minutes before trying again.'
+    })
+  }
   
   try {
     const config = useRuntimeConfig()

@@ -115,7 +115,7 @@ pub async fn create_test_app_with_testcontainers() -> (actix_test::TestServer, P
     
     // Create service container
     let jwt_secret = "test-jwt-secret-for-api-tests".to_string();
-    let container = ServiceContainer::new_development(test_container.pool.clone(), jwt_secret);
+    let container = ServiceContainer::new_development(test_container.pool.clone(), jwt_secret, "redis://localhost:6379".to_string());
     
     // Create test server
     let pool_clone = test_container.pool.clone();
@@ -128,6 +128,7 @@ pub async fn create_test_app_with_testcontainers() -> (actix_test::TestServer, P
             .app_data(web::Data::from(container.admin_service.clone()))
             .app_data(web::Data::from(container.phrase_moderation_service.clone()))
             .app_data(web::Data::from(container.stats_service.clone()))
+            .app_data(web::Data::from(container.rate_limit_service.clone()))
             .configure(routes::configure_app_routes)
     });
     

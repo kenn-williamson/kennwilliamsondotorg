@@ -6,6 +6,7 @@ pub mod admin;
 
 use actix_web::web;
 use crate::middleware;
+use crate::middleware::rate_limiter::{rate_limit_middleware, admin_rate_limit_middleware};
 
 
 pub fn configure_app_routes(cfg: &mut web::ServiceConfig) {
@@ -13,9 +14,10 @@ pub fn configure_app_routes(cfg: &mut web::ServiceConfig) {
         // Backend API routes with base public/protected grouping
         .service(
             web::scope("/backend")
-                // Public routes (no middleware)
+                // Public routes (with rate limiting only)
                 .service(
                     web::scope("/public")
+                        .wrap(actix_web::middleware::from_fn(rate_limit_middleware))
                         .route("/health", web::get().to(health::health))
                         .route("/health/db", web::get().to(health::health_db))
                         .route("/auth/register", web::post().to(auth::register))
@@ -26,10 +28,11 @@ pub fn configure_app_routes(cfg: &mut web::ServiceConfig) {
                         .route("/{user_slug}/phrase", web::get().to(phrases::get_random_phrase_for_user))
                 )
                 
-                // Protected routes (with global auth middleware)
+                // Protected routes (with auth and rate limiting middleware)
                 .service(
                     web::scope("/protected")
                         .wrap(actix_web::middleware::from_fn(middleware::auth::jwt_auth_middleware))
+                        .wrap(actix_web::middleware::from_fn(rate_limit_middleware))
                         .service(
                             web::scope("/auth")
                                 .route("/me", web::get().to(auth::get_current_user))
@@ -61,6 +64,7 @@ pub fn configure_app_routes(cfg: &mut web::ServiceConfig) {
                         .service(
                             web::scope("/admin")
                                 .wrap(actix_web::middleware::from_fn(middleware::admin::admin_auth_middleware))
+                                .wrap(actix_web::middleware::from_fn(admin_rate_limit_middleware))
                                 .route("/stats", web::get().to(admin::get_system_stats))
                                 .route("/users", web::get().to(admin::get_users))
                                 .service(

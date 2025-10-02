@@ -11,6 +11,9 @@ Automation scripts for development, database management, deployment, and environ
 - **`dev-logs.sh`**: View and filter service logs
 - **`health-check.sh`**: Verify service health and connectivity
 
+### Production Monitoring Scripts
+- **`log-monitor.sh`**: Production log monitoring and management
+
 ### Database Scripts
 - **`setup-db.sh`**: Run migrations (preserves existing data)
 - **`reset-db.sh`**: Drop and recreate database with fresh data
@@ -61,3 +64,49 @@ All scripts located in `scripts/` directory at project root.
 
 ### Usage
 For detailed usage examples and workflows, see [DEVELOPMENT-WORKFLOW.md](DEVELOPMENT-WORKFLOW.md#development-scripts-reference).
+
+## Production Monitoring
+
+### log-monitor.sh
+
+**Purpose**: Monitor and manage Docker container logs in production environment.
+
+**Container Naming**:
+- **Production**: Uses Docker Compose default naming (`kennwilliamsondotorg-{service}-1`)
+- **Development**: Uses custom naming (`kennwilliamson-{service}-dev`)
+- **Note**: This script is designed for production monitoring only
+
+**Testing Before Deployment**:
+```bash
+# Start local production environment
+./scripts/setup-local-prod.sh
+
+# Test log monitoring commands
+./scripts/log-monitor.sh status           # View all service log status
+./scripts/log-monitor.sh tail backend     # Tail backend logs
+./scripts/log-monitor.sh size             # Check log file sizes
+./scripts/log-monitor.sh monitor          # Real-time monitoring
+```
+
+**Available Commands**:
+- `status` - Show log status for all services
+- `tail [service]` - Tail logs for specific service (nginx, frontend, backend, postgres, redis)
+- `size` - Show Docker log file sizes and system usage
+- `rotate` - Force log rotation by restarting containers
+- `clean` - Clean old logs and prune Docker system
+- `monitor` - Monitor all services in real-time
+
+**Options**:
+- `-n, --lines N` - Number of lines to show (default: 100)
+- `-f, --follow` - Follow logs in real-time
+- `-s, --since T` - Show logs since time (default: 1h)
+
+**Production Usage**:
+```bash
+# On production server after deployment
+./scripts/log-monitor.sh status
+./scripts/log-monitor.sh tail backend -n 50
+./scripts/log-monitor.sh tail backend -f  # Follow in real-time
+```
+
+**Important**: Cannot be used with dev environment due to different container naming. Use `./scripts/dev-logs.sh` for development log viewing.

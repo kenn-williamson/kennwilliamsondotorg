@@ -1,13 +1,14 @@
 # CLAUDE.md - Project Context
 
 ## Project Overview
-**KennWilliamson.org** is a fully functional full-stack web application with:
-- **Frontend**: Nuxt.js 4.0.3 (Vue 3 + SSR + TypeScript + TailwindCSS)  
+**KennWilliamson.org** is a production-deployed full-stack web application with:
+- **Frontend**: Nuxt.js 4.0.3 (Vue 3 + SSR + TypeScript + TailwindCSS)
 - **Backend**: Rust 1.89.0 + Actix-web 4.x + PostgreSQL 17
 - **Development**: Docker Compose + Hot Reload Environment
 - **Infrastructure**: Nginx reverse proxy with SSL
+- **Deployment**: Live at kennwilliamson.org
 
-**Current State**: Complete end-to-end application with comprehensive development tooling.
+**Current State**: Production application with complete feature set including authentication, incident timers, phrases system, admin panel, 3-layer architecture refactor, and comprehensive test coverage (375 tests total: 200 backend + 175 frontend).
 
 ## Quick Start
 ```bash
@@ -24,27 +25,38 @@
 ```
 
 ## Key Features
-- **Authentication**: JWT-based register/login system
-- **Incident Timers**: Full CRUD operations with public sharing
-- **Responsive UI**: Mobile-first design with TailwindCSS
-- **Route Protection**: Middleware-based authentication
+- **Authentication**: JWT + refresh token system with session management
+- **Incident Timers**: Full CRUD operations with public sharing and steampunk UI
+- **Phrases System**: Random motivational phrases with user suggestions and filtering
+- **Admin Panel**: User management, phrase moderation, and system statistics
+- **Profile Management**: Display name, slug editing, and password changes
+- **Public Display**: Public timer and phrase endpoints (no auth required)
+- **Testing**: 375 tests (200 backend unit/integration + 175 frontend)
+- **Architecture**: 3-layer backend (API/Service/Repository) with dependency injection
+- **Frontend Architecture**: Stores with embedded actions for SSR hydration
+- **Responsive UI**: Mobile-first design with TailwindCSS and steampunk aesthetics
+- **Route Protection**: Middleware-based authentication with role-based access
 - **Hot Reload**: Instant updates for both frontend and backend
 
-# Architecture & Implementation Documentation
+# Core Documentation (Loaded in Memory)
 - @ARCHITECTURE.md - System architecture and service design
-- @UX-LAYOUT.md - Design system and responsive breakpoints  
-- @IMPLEMENTATION-AUTH.md - Authentication system design
-- @IMPLEMENTATION-BACKEND.md - Rust backend implementation
-- @IMPLEMENTATION-DATA-CONTRACTS.md - API request/response schemas
-- @IMPLEMENTATION-DATABASE.md - PostgreSQL schema and migrations
-- @IMPLEMENTATION-FRONTEND.md - Nuxt.js frontend implementation
-- @IMPLEMENTATION-NGINX.md - Reverse proxy configuration
-- @IMPLEMENTATION-SCRIPTS.md - Development automation scripts
-- @IMPLEMENTATION-TESTING.md - Testing implementation and patterns
-- @IMPLEMENTATION-UTILS.md - Development utilities
-- @ROADMAP.md - Future development priorities
 - @CODING-RULES.md - Development standards and conventions
 - @DEVELOPMENT-WORKFLOW.md - Common development workflows
+
+## Implementation Documentation (Reference as Needed)
+- IMPLEMENTATION-AUTH.md - Authentication system design
+- IMPLEMENTATION-BACKEND.md - Rust backend implementation
+- IMPLEMENTATION-DATA-CONTRACTS.md - API request/response schemas
+- IMPLEMENTATION-DATABASE.md - PostgreSQL schema and migrations
+- IMPLEMENTATION-FRONTEND.md - Nuxt.js frontend implementation
+- IMPLEMENTATION-NGINX.md - Reverse proxy configuration
+- IMPLEMENTATION-SCRIPTS.md - Development automation scripts
+- IMPLEMENTATION-TESTING.md - Testing implementation and patterns
+- IMPLEMENTATION-UTILS.md - Development utilities
+
+## Additional Documentation
+- UX-LAYOUT.md - Design system and responsive breakpoints
+- ROADMAP.md - Future development priorities
 
 ## Development Context7 Usage
 When working on this project, use Context7 MCP to look up framework documentation:

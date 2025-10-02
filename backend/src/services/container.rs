@@ -20,6 +20,11 @@ use super::auth::AuthService;
 use super::incident_timer::IncidentTimerService;
 use super::phrase::PhraseService;
 use super::admin::{UserManagementService, PhraseModerationService, StatsService};
+use crate::middleware::rate_limiter::{
+    RedisRateLimitService,
+    RateLimitServiceTrait,
+    MockRateLimitService,
+};
 
 /// Centralized service container for dependency injection
 pub struct ServiceContainer {
@@ -30,12 +35,12 @@ pub struct ServiceContainer {
     pub admin_service: Arc<UserManagementService>,
     pub phrase_moderation_service: Arc<PhraseModerationService>,
     pub stats_service: Arc<StatsService>,
-    
+    pub rate_limit_service: Arc<dyn RateLimitServiceTrait>,
 }
 
 impl ServiceContainer {
     /// Create service container for development/production with PostgreSQL
-    pub fn new(pool: PgPool, jwt_secret: String) -> Self {
+    pub fn new(pool: PgPool, jwt_secret: String, redis_url: String) -> Self {
         // Create services with repository dependencies
         let auth_service = Arc::new(AuthService::new(
             Box::new(PostgresUserRepository::new(pool.clone())),
@@ -66,6 +71,12 @@ impl ServiceContainer {
             Box::new(PostgresAdminRepository::new(pool.clone())),
         ));
         
+        // Create rate limiting service
+        let rate_limit_service: Arc<dyn RateLimitServiceTrait> = Arc::new(
+            RedisRateLimitService::new(&redis_url)
+                .expect("Failed to create rate limit service")
+        );
+
         Self {
             auth_service,
             incident_timer_service,
@@ -73,6 +84,7 @@ impl ServiceContainer {
             admin_service,
             phrase_moderation_service,
             stats_service,
+            rate_limit_service,
         }
     }
     
@@ -107,7 +119,10 @@ impl ServiceContainer {
             Box::new(MockPhraseRepository::new()),
             Box::new(MockAdminRepository::new()),
         ));
-        
+
+        // For testing, use mock rate limiting service
+        let rate_limit_service: Arc<dyn RateLimitServiceTrait> = Arc::new(MockRateLimitService::new());
+
         Self {
             auth_service,
             incident_timer_service,
@@ -115,12 +130,13 @@ impl ServiceContainer {
             admin_service,
             phrase_moderation_service,
             stats_service,
+            rate_limit_service,
         }
     }
     
     /// Development environment - use PostgreSQL
-    pub fn new_development(pool: PgPool, jwt_secret: String) -> Self {
-        Self::new(pool, jwt_secret)
+    pub fn new_development(pool: PgPool, jwt_secret: String, redis_url: String) -> Self {
+        Self::new(pool, jwt_secret, redis_url)
     }
     
     /// Testing environment - use mocks
@@ -129,7 +145,7 @@ impl ServiceContainer {
     }
     
     /// Production environment - use PostgreSQL with connection pooling
-    pub fn new_production(pool: PgPool, jwt_secret: String) -> Self {
-        Self::new(pool, jwt_secret)
+    pub fn new_production(pool: PgPool, jwt_secret: String, redis_url: String) -> Self {
+        Self::new(pool, jwt_secret, redis_url)
     }
 }

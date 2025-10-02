@@ -81,10 +81,9 @@ export const API_ROUTES = {
     },
   },
 
-
   /**
    * SSR Passthrough routes - Server-side only
-   * Used by server API routes for SSR data fetching
+   * Used by auth services for SSR session management
    */
   API: {
     AUTH: {
@@ -93,17 +92,6 @@ export const API_ROUTES = {
       LOGOUT: '/api/auth/logout',
       ME: '/api/auth/me',
       PROFILE: '/api/auth/profile',
-    },
-    TIMERS: {
-      LIST: '/api/incident-timers',
-      BY_USER_SLUG: (userSlug: string) => `/api/${userSlug}/incident-timer`,
-    },
-    PHRASES: {
-      RANDOM: '/api/phrases/random',
-      BY_USER_SLUG: (userSlug: string) => `/api/${userSlug}/phrase`,
-    },
-    HEALTH: {
-      BASIC: '/api/health',
     },
   },
 } as const
