@@ -1,15 +1,15 @@
-use mockall::mock;
-use async_trait::async_trait;
-use uuid::Uuid;
 use anyhow::Result;
+use async_trait::async_trait;
+use mockall::mock;
+use uuid::Uuid;
 
-use crate::repositories::traits::admin_repository::AdminRepository;
 use crate::models::db::UserWithRoles;
+use crate::repositories::traits::admin_repository::AdminRepository;
 
 // Generate mock for AdminRepository trait
 mock! {
     pub AdminRepository {}
-    
+
     #[async_trait]
     impl AdminRepository for AdminRepository {
         async fn update_user_status(&self, user_id: Uuid, active: bool) -> Result<()>;
@@ -29,9 +29,9 @@ mock! {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use uuid::Uuid;
-    use mockall::predicate::eq;
     use chrono::Utc;
+    use mockall::predicate::eq;
+    use uuid::Uuid;
 
     // Helper function to create a test user with roles (repository DTO)
     fn create_test_user_with_roles() -> UserWithRoles {
@@ -40,6 +40,8 @@ mod tests {
             email: "test@example.com".to_string(),
             display_name: "Test User".to_string(),
             slug: "test-user".to_string(),
+            real_name: None,
+            google_user_id: None,
             active: true,
             created_at: Utc::now(),
             updated_at: Utc::now(),
@@ -54,6 +56,8 @@ mod tests {
             email: "admin@example.com".to_string(),
             display_name: "Admin User".to_string(),
             slug: "admin-user".to_string(),
+            real_name: None,
+            google_user_id: None,
             active: true,
             created_at: Utc::now(),
             updated_at: Utc::now(),
@@ -71,6 +75,8 @@ mod tests {
                 email: "inactive@example.com".to_string(),
                 display_name: "Inactive User".to_string(),
                 slug: "inactive-user".to_string(),
+                real_name: None,
+                google_user_id: None,
                 active: false,
                 created_at: Utc::now(),
                 updated_at: Utc::now(),
@@ -217,7 +223,9 @@ mod tests {
             .with(eq(Some("admin".to_string())), eq(None), eq(None))
             .returning(move |_, _, _| Ok(test_users.clone()));
 
-        let result = mock.get_all_users_with_roles(Some("admin".to_string()), None, None).await;
+        let result = mock
+            .get_all_users_with_roles(Some("admin".to_string()), None, None)
+            .await;
         assert!(result.is_ok());
         let users = result.unwrap();
         assert_eq!(users.len(), 3);
@@ -249,16 +257,17 @@ mod tests {
 
         let result = mock.get_all_users_with_roles(None, None, None).await;
         assert!(result.is_err());
-        assert!(result.unwrap_err().to_string().contains("Database connection failed"));
+        assert!(result
+            .unwrap_err()
+            .to_string()
+            .contains("Database connection failed"));
     }
 
     #[tokio::test]
     async fn test_count_all_users() {
         let mut mock = MockAdminRepository::new();
 
-        mock.expect_count_all_users()
-            .times(1)
-            .returning(|| Ok(42));
+        mock.expect_count_all_users().times(1).returning(|| Ok(42));
 
         let result = mock.count_all_users().await;
         assert!(result.is_ok());
@@ -326,9 +335,7 @@ mod tests {
             .with(eq(None), eq(None), eq(None))
             .returning(move |_, _, _| Ok(test_users.clone()));
 
-        mock.expect_count_all_users()
-            .times(1)
-            .returning(|| Ok(3));
+        mock.expect_count_all_users().times(1).returning(|| Ok(3));
 
         // Execute multiple operations
         let deactivate_result = mock.update_user_status(user_id, false).await;

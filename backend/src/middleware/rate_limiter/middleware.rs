@@ -1,12 +1,12 @@
 use actix_web::{
     dev::{ServiceRequest, ServiceResponse},
     middleware::Next,
-    HttpMessage, Error, Result,
     web::Data,
+    Error, HttpMessage, Result,
 };
 use uuid::Uuid;
 
-use super::config::{RateLimitConfig, get_rate_limit_configs};
+use super::config::{get_rate_limit_configs, RateLimitConfig};
 use super::trait_def::RateLimitServiceTrait;
 
 /// Extract client identifier from request
@@ -45,17 +45,24 @@ pub async fn rate_limit_middleware(
     req: ServiceRequest,
     next: Next<impl actix_web::body::MessageBody>,
 ) -> Result<ServiceResponse<impl actix_web::body::MessageBody>, Error> {
-    log::debug!("Rate limit middleware called for: {} {}", req.method(), req.path());
+    log::debug!(
+        "Rate limit middleware called for: {} {}",
+        req.method(),
+        req.path()
+    );
 
     // Get rate limit service from app data
     let rate_limit_service = match req.app_data::<Data<dyn RateLimitServiceTrait>>() {
         Some(service) => {
             log::debug!("Rate limit service found in app data");
             service
-        },
+        }
         None => {
             log::error!("Rate limit service not found in app data");
-            log::error!("Looking for type: {}", std::any::type_name::<Data<dyn RateLimitServiceTrait>>());
+            log::error!(
+                "Looking for type: {}",
+                std::any::type_name::<Data<dyn RateLimitServiceTrait>>()
+            );
             return Ok(next.call(req).await?);
         }
     };
@@ -74,16 +81,26 @@ pub async fn rate_limit_middleware(
     };
 
     // Check rate limit
-    match rate_limit_service.check_rate_limit(&identifier, &endpoint_type, config).await {
+    match rate_limit_service
+        .check_rate_limit(&identifier, &endpoint_type, config)
+        .await
+    {
         Ok(true) => {
-            log::warn!("Rate limit exceeded for {} on {}", identifier, endpoint_type);
+            log::warn!(
+                "Rate limit exceeded for {} on {}",
+                identifier,
+                endpoint_type
+            );
             return Err(actix_web::error::ErrorTooManyRequests(
-                "Rate limit exceeded"
+                "Rate limit exceeded",
             ));
         }
         Ok(false) => {
             // Increment counters
-            if let Err(e) = rate_limit_service.increment_rate_limit(&identifier, &endpoint_type, config).await {
+            if let Err(e) = rate_limit_service
+                .increment_rate_limit(&identifier, &endpoint_type, config)
+                .await
+            {
                 log::error!("Failed to increment rate limit: {}", e);
             }
         }
@@ -120,16 +137,22 @@ pub async fn admin_rate_limit_middleware(
     };
 
     // Check rate limit
-    match rate_limit_service.check_rate_limit(&identifier, "admin", &config).await {
+    match rate_limit_service
+        .check_rate_limit(&identifier, "admin", &config)
+        .await
+    {
         Ok(true) => {
             log::warn!("Admin rate limit exceeded for {}", identifier);
             return Err(actix_web::error::ErrorTooManyRequests(
-                "Admin rate limit exceeded"
+                "Admin rate limit exceeded",
             ));
         }
         Ok(false) => {
             // Increment counters
-            if let Err(e) = rate_limit_service.increment_rate_limit(&identifier, "admin", &config).await {
+            if let Err(e) = rate_limit_service
+                .increment_rate_limit(&identifier, "admin", &config)
+                .await
+            {
                 log::error!("Failed to increment admin rate limit: {}", e);
             }
         }
@@ -148,11 +171,23 @@ mod tests {
 
     #[test]
     fn test_endpoint_type_detection() {
-        assert_eq!(get_endpoint_type("/backend/public/auth/register"), "register");
+        assert_eq!(
+            get_endpoint_type("/backend/public/auth/register"),
+            "register"
+        );
         assert_eq!(get_endpoint_type("/backend/public/auth/login"), "login");
-        assert_eq!(get_endpoint_type("/backend/protected/phrases/random"), "phrases");
-        assert_eq!(get_endpoint_type("/backend/protected/incident-timers"), "timers");
+        assert_eq!(
+            get_endpoint_type("/backend/protected/phrases/random"),
+            "phrases"
+        );
+        assert_eq!(
+            get_endpoint_type("/backend/protected/incident-timers"),
+            "timers"
+        );
         assert_eq!(get_endpoint_type("/backend/public/health"), "general");
-        assert_eq!(get_endpoint_type("/backend/protected/admin/users"), "general");
+        assert_eq!(
+            get_endpoint_type("/backend/protected/admin/users"),
+            "general"
+        );
     }
 }

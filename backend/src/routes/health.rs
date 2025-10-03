@@ -21,6 +21,6 @@ pub async fn health_db(pool: web::Data<PgPool>) -> Result<HttpResponse> {
             "status": "unhealthy",
             "database": "disconnected",
             "error": e.to_string()
-        })))
+        }))),
     }
 }

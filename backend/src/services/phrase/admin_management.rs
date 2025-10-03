@@ -1,9 +1,9 @@
+use anyhow::Result;
 use std::sync::Arc;
 use uuid::Uuid;
-use anyhow::Result;
 
+use crate::models::api::{CreatePhraseRequest, PhraseResponse, UpdatePhraseRequest};
 use crate::repositories::traits::PhraseRepository;
-use crate::models::api::{CreatePhraseRequest, UpdatePhraseRequest, PhraseResponse};
 
 /// Get phrases (admin only)
 pub async fn get_phrases(
@@ -16,7 +16,7 @@ pub async fn get_phrases(
     // Validate pagination parameters
     let limit = limit.unwrap_or(100); // Reasonable limit to prevent performance issues
     let offset = offset.unwrap_or(0);
-    
+
     if limit < 0 {
         return Err(anyhow::anyhow!("Limit cannot be negative"));
     }
@@ -25,13 +25,13 @@ pub async fn get_phrases(
     }
 
     // Get phrases from repository
-    let phrases = repository.get_phrases(include_inactive, Some(limit), Some(offset), search).await?;
-    
+    let phrases = repository
+        .get_phrases(include_inactive, Some(limit), Some(offset), search)
+        .await?;
+
     // Transform to API response format
-    let phrase_responses: Vec<PhraseResponse> = phrases
-        .into_iter()
-        .map(PhraseResponse::from)
-        .collect();
+    let phrase_responses: Vec<PhraseResponse> =
+        phrases.into_iter().map(PhraseResponse::from).collect();
 
     Ok(phrase_responses)
 }
@@ -58,7 +58,7 @@ pub async fn create_phrase(
 
     // Create phrase in repository
     let phrase = repository.create_phrase(request, created_by).await?;
-    
+
     // Transform to API response format
     Ok(PhraseResponse::from(phrase))
 }
@@ -86,7 +86,7 @@ pub async fn update_phrase(
 
     // Update phrase in repository
     let phrase = repository.update_phrase(phrase_id, request).await?;
-    
+
     // Transform to API response format
     Ok(PhraseResponse::from(phrase))
 }
@@ -94,12 +94,12 @@ pub async fn update_phrase(
 #[cfg(test)]
 mod tests {
     use super::*;
-    use std::sync::Arc;
-    use mockall::mock;
-    use crate::repositories::traits::PhraseRepository;
     use crate::models::db::Phrase;
-    use chrono::Utc;
+    use crate::repositories::traits::PhraseRepository;
     use async_trait::async_trait;
+    use chrono::Utc;
+    use mockall::mock;
+    use std::sync::Arc;
 
     mock! {
         PhraseRepository {}
@@ -141,16 +141,21 @@ mod tests {
     async fn test_get_all_phrases_success() {
         let mut mock_repo = MockPhraseRepository::new();
         let test_phrase = create_test_phrase();
-        
+
         mock_repo
             .expect_get_phrases()
-            .with(mockall::predicate::eq(false), mockall::predicate::eq(Some(50)), mockall::predicate::eq(Some(0)), mockall::predicate::eq(None))
+            .with(
+                mockall::predicate::eq(false),
+                mockall::predicate::eq(Some(50)),
+                mockall::predicate::eq(Some(0)),
+                mockall::predicate::eq(None),
+            )
             .times(1)
             .returning(move |_, _, _, _| Ok(vec![test_phrase.clone()]));
 
         let repo = Arc::new(mock_repo) as Arc<dyn PhraseRepository>;
         let result = get_phrases(&repo, false, Some(50), Some(0), None).await;
-        
+
         assert!(result.is_ok());
         let phrases = result.unwrap();
         assert_eq!(phrases.len(), 1);
@@ -162,9 +167,12 @@ mod tests {
         let mock_repo = MockPhraseRepository::new();
         let repo = Arc::new(mock_repo) as Arc<dyn PhraseRepository>;
         let result = get_phrases(&repo, false, Some(-1), Some(0), None).await;
-        
+
         assert!(result.is_err());
-        assert!(result.unwrap_err().to_string().contains("Limit cannot be negative"));
+        assert!(result
+            .unwrap_err()
+            .to_string()
+            .contains("Limit cannot be negative"));
     }
 
     #[tokio::test]
@@ -176,16 +184,19 @@ mod tests {
             phrase_text: "New phrase".to_string(),
             active: Some(true),
         };
-        
+
         mock_repo
             .expect_create_phrase()
-            .with(mockall::predicate::eq(request.clone()), mockall::predicate::eq(created_by))
+            .with(
+                mockall::predicate::eq(request.clone()),
+                mockall::predicate::eq(created_by),
+            )
             .times(1)
             .returning(move |_, _| Ok(test_phrase.clone()));
 
         let repo = Arc::new(mock_repo) as Arc<dyn PhraseRepository>;
         let result = create_phrase(&repo, request, created_by).await;
-        
+
         assert!(result.is_ok());
         let phrase = result.unwrap();
         assert_eq!(phrase.phrase_text, "Test phrase");
@@ -200,9 +211,12 @@ mod tests {
             active: Some(true),
         };
         let result = create_phrase(&repo, request, Uuid::new_v4()).await;
-        
+
         assert!(result.is_err());
-        assert!(result.unwrap_err().to_string().contains("Phrase text cannot be empty"));
+        assert!(result
+            .unwrap_err()
+            .to_string()
+            .contains("Phrase text cannot be empty"));
     }
 
     #[tokio::test]
@@ -214,9 +228,12 @@ mod tests {
             active: Some(true),
         };
         let result = create_phrase(&repo, request, Uuid::new_v4()).await;
-        
+
         assert!(result.is_err());
-        assert!(result.unwrap_err().to_string().contains("Phrase text cannot exceed 500 characters"));
+        assert!(result
+            .unwrap_err()
+            .to_string()
+            .contains("Phrase text cannot exceed 500 characters"));
     }
 
     #[tokio::test]
@@ -228,16 +245,19 @@ mod tests {
             phrase_text: Some("Updated phrase".to_string()),
             active: Some(false),
         };
-        
+
         mock_repo
             .expect_update_phrase()
-            .with(mockall::predicate::eq(phrase_id), mockall::predicate::eq(request.clone()))
+            .with(
+                mockall::predicate::eq(phrase_id),
+                mockall::predicate::eq(request.clone()),
+            )
             .times(1)
             .returning(move |_, _| Ok(test_phrase.clone()));
 
         let repo = Arc::new(mock_repo) as Arc<dyn PhraseRepository>;
         let result = update_phrase(&repo, phrase_id, request).await;
-        
+
         assert!(result.is_ok());
         let phrase = result.unwrap();
         assert_eq!(phrase.phrase_text, "Test phrase");
@@ -252,8 +272,11 @@ mod tests {
             active: Some(false),
         };
         let result = update_phrase(&repo, Uuid::nil(), request).await;
-        
+
         assert!(result.is_err());
-        assert!(result.unwrap_err().to_string().contains("Phrase ID cannot be nil"));
+        assert!(result
+            .unwrap_err()
+            .to_string()
+            .contains("Phrase ID cannot be nil"));
     }
 }

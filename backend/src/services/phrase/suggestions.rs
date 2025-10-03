@@ -1,10 +1,10 @@
+use anyhow::Result;
 use std::sync::Arc;
 use uuid::Uuid;
-use anyhow::Result;
 
-use crate::repositories::traits::PhraseRepository;
 use crate::models::api::PhraseSuggestionRequest;
 use crate::models::db::PhraseSuggestion;
+use crate::repositories::traits::PhraseRepository;
 
 /// Submit a phrase suggestion
 pub async fn submit_phrase_suggestion(
@@ -35,7 +35,9 @@ pub async fn submit_phrase_suggestion(
     };
 
     // Submit suggestion to repository
-    let suggestion = repository.submit_phrase_suggestion(user_id, sanitized_request).await?;
+    let suggestion = repository
+        .submit_phrase_suggestion(user_id, sanitized_request)
+        .await?;
 
     Ok(suggestion)
 }
@@ -54,12 +56,12 @@ fn sanitize_phrase_text(text: &str) -> String {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use std::sync::Arc;
-    use mockall::mock;
-    use crate::repositories::traits::PhraseRepository;
     use crate::models::db::PhraseSuggestion;
-    use chrono::Utc;
+    use crate::repositories::traits::PhraseRepository;
     use async_trait::async_trait;
+    use chrono::Utc;
+    use mockall::mock;
+    use std::sync::Arc;
 
     mock! {
         PhraseRepository {}
@@ -107,16 +109,19 @@ mod tests {
             phrase_text: "Test suggestion".to_string(),
         };
         let test_suggestion = create_test_suggestion();
-        
+
         mock_repo
             .expect_submit_phrase_suggestion()
-            .with(mockall::predicate::eq(user_id), mockall::predicate::eq(request.clone()))
+            .with(
+                mockall::predicate::eq(user_id),
+                mockall::predicate::eq(request.clone()),
+            )
             .times(1)
             .returning(move |_, _| Ok(test_suggestion.clone()));
 
         let repo = Arc::new(mock_repo) as Arc<dyn PhraseRepository>;
         let result = submit_phrase_suggestion(&repo, user_id, request).await;
-        
+
         assert!(result.is_ok());
         let suggestion = result.unwrap();
         assert_eq!(suggestion.phrase_text, "Test suggestion");
@@ -130,9 +135,12 @@ mod tests {
             phrase_text: "Test suggestion".to_string(),
         };
         let result = submit_phrase_suggestion(&repo, Uuid::nil(), request).await;
-        
+
         assert!(result.is_err());
-        assert!(result.unwrap_err().to_string().contains("User ID cannot be nil"));
+        assert!(result
+            .unwrap_err()
+            .to_string()
+            .contains("User ID cannot be nil"));
     }
 
     #[tokio::test]
@@ -143,9 +151,12 @@ mod tests {
             phrase_text: "".to_string(),
         };
         let result = submit_phrase_suggestion(&repo, Uuid::new_v4(), request).await;
-        
+
         assert!(result.is_err());
-        assert!(result.unwrap_err().to_string().contains("Phrase text cannot be empty"));
+        assert!(result
+            .unwrap_err()
+            .to_string()
+            .contains("Phrase text cannot be empty"));
     }
 
     #[tokio::test]
@@ -156,9 +167,12 @@ mod tests {
             phrase_text: "a".repeat(501),
         };
         let result = submit_phrase_suggestion(&repo, Uuid::new_v4(), request).await;
-        
+
         assert!(result.is_err());
-        assert!(result.unwrap_err().to_string().contains("Phrase text cannot exceed 500 characters"));
+        assert!(result
+            .unwrap_err()
+            .to_string()
+            .contains("Phrase text cannot exceed 500 characters"));
     }
 
     #[tokio::test]
@@ -169,21 +183,24 @@ mod tests {
             phrase_text: "  Test   suggestion  ".to_string(),
         };
         let test_suggestion = create_test_suggestion();
-        
+
         // Expect sanitized text (trimmed and normalized whitespace)
         let expected_request = PhraseSuggestionRequest {
             phrase_text: "Test suggestion".to_string(),
         };
-        
+
         mock_repo
             .expect_submit_phrase_suggestion()
-            .with(mockall::predicate::eq(user_id), mockall::predicate::eq(expected_request))
+            .with(
+                mockall::predicate::eq(user_id),
+                mockall::predicate::eq(expected_request),
+            )
             .times(1)
             .returning(move |_, _| Ok(test_suggestion.clone()));
 
         let repo = Arc::new(mock_repo) as Arc<dyn PhraseRepository>;
         let result = submit_phrase_suggestion(&repo, user_id, request).await;
-        
+
         assert!(result.is_ok());
     }
 }

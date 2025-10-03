@@ -37,7 +37,11 @@ pub async fn get_latest_by_user_slug(
             "error": "No timer found for this user"
         }))),
         Err(err) => {
-            log::error!("Failed to get timer for user slug {}: {}", path.user_slug, err);
+            log::error!(
+                "Failed to get timer for user slug {}: {}",
+                path.user_slug,
+                err
+            );
             Ok(HttpResponse::InternalServerError().json(serde_json::json!({
                 "error": "Internal server error"
             })))
@@ -53,7 +57,8 @@ pub async fn get_user_timers(
     let user_id = req.extensions().get::<Uuid>().cloned().unwrap();
     match service.get_all_by_user(user_id).await {
         Ok(timers) => {
-            let response: Vec<IncidentTimerResponse> = timers.into_iter().map(|t| t.into()).collect();
+            let response: Vec<IncidentTimerResponse> =
+                timers.into_iter().map(|t| t.into()).collect();
             Ok(HttpResponse::Ok().json(response))
         }
         Err(err) => {
@@ -103,7 +108,12 @@ pub async fn update_timer(
             "error": "Timer not found"
         }))),
         Err(err) => {
-            log::error!("Failed to update timer {} for user {}: {}", path.id, user_id, err);
+            log::error!(
+                "Failed to update timer {} for user {}: {}",
+                path.id,
+                user_id,
+                err
+            );
             Ok(HttpResponse::InternalServerError().json(serde_json::json!({
                 "error": "Internal server error"
             })))
@@ -124,11 +134,15 @@ pub async fn delete_timer(
             "error": "Timer not found"
         }))),
         Err(err) => {
-            log::error!("Failed to delete timer {} for user {}: {}", path.id, user_id, err);
+            log::error!(
+                "Failed to delete timer {} for user {}: {}",
+                path.id,
+                user_id,
+                err
+            );
             Ok(HttpResponse::InternalServerError().json(serde_json::json!({
                 "error": "Internal server error"
             })))
         }
     }
 }
-

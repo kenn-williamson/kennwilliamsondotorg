@@ -1,8 +1,8 @@
-use std::sync::Arc;
 use anyhow::Result;
+use std::sync::Arc;
 
 use crate::models::api::SystemStatsResponse;
-use crate::repositories::traits::{PhraseRepository, AdminRepository};
+use crate::repositories::traits::{AdminRepository, PhraseRepository};
 
 /// Statistics service for admin operations
 pub struct StatsService {
@@ -25,13 +25,13 @@ impl StatsService {
     pub async fn get_system_stats(&self) -> Result<SystemStatsResponse> {
         // Get total users count
         let total_users = self.admin_repository.count_all_users().await?;
-        
+
         // Get active users count
         let active_users = self.admin_repository.count_active_users().await?;
-        
+
         // Get pending suggestions count
         let pending_suggestions = self.phrase_repository.count_pending_suggestions().await?;
-        
+
         // Get total phrases count
         let total_phrases = self.phrase_repository.count_all_phrases().await?;
 
@@ -47,7 +47,7 @@ impl StatsService {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::repositories::mocks::{MockPhraseRepository, MockAdminRepository};
+    use crate::repositories::mocks::{MockAdminRepository, MockPhraseRepository};
 
     #[tokio::test]
     #[allow(unused_mut)]
@@ -78,10 +78,7 @@ mod tests {
             .returning(|| Ok(50));
 
         // Create service
-        let service = StatsService::new(
-            Box::new(mock_phrase_repo),
-            Box::new(mock_admin_repo),
-        );
+        let service = StatsService::new(Box::new(mock_phrase_repo), Box::new(mock_admin_repo));
 
         // Test
         let result = service.get_system_stats().await;
@@ -109,10 +106,7 @@ mod tests {
             .returning(|| Err(anyhow::anyhow!("Database error")));
 
         // Create service
-        let service = StatsService::new(
-            Box::new(mock_phrase_repo),
-            Box::new(mock_admin_repo),
-        );
+        let service = StatsService::new(Box::new(mock_phrase_repo), Box::new(mock_admin_repo));
 
         // Test
         let result = service.get_system_stats().await;
@@ -145,16 +139,16 @@ mod tests {
             .returning(|| Err(anyhow::anyhow!("Phrase repo error")));
 
         // Create service
-        let service = StatsService::new(
-            Box::new(mock_phrase_repo),
-            Box::new(mock_admin_repo),
-        );
+        let service = StatsService::new(Box::new(mock_phrase_repo), Box::new(mock_admin_repo));
 
         // Test
         let result = service.get_system_stats().await;
 
         // Assert
         assert!(result.is_err());
-        assert!(result.unwrap_err().to_string().contains("Phrase repo error"));
+        assert!(result
+            .unwrap_err()
+            .to_string()
+            .contains("Phrase repo error"));
     }
 }

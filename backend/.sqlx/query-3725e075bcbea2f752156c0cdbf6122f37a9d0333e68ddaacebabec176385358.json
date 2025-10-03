@@ -1,6 +1,6 @@
 {
   "db_name": "PostgreSQL",
-  "query": "SELECT id, email, password_hash, display_name, slug, active, created_at, updated_at FROM users WHERE email = $1",
+  "query": "SELECT id, email, password_hash, display_name, slug, active, real_name, google_user_id, created_at, updated_at FROM users WHERE email = $1",
   "describe": {
     "columns": [
       {
@@ -35,11 +35,21 @@
       },
       {
         "ordinal": 6,
+        "name": "real_name",
+        "type_info": "Varchar"
+      },
+      {
+        "ordinal": 7,
+        "name": "google_user_id",
+        "type_info": "Varchar"
+      },
+      {
+        "ordinal": 8,
         "name": "created_at",
         "type_info": "Timestamptz"
       },
       {
-        "ordinal": 7,
+        "ordinal": 9,
         "name": "updated_at",
         "type_info": "Timestamptz"
       }
@@ -52,13 +62,15 @@
     "nullable": [
       false,
       false,
+      true,
       false,
       false,
       false,
-      false,
+      true,
+      true,
       false,
       false
     ]
   },
-  "hash": "6882d7d3cc40d85b67808144596c56e21c53789237fecbf8dbb88867f0bce735"
+  "hash": "3725e075bcbea2f752156c0cdbf6122f37a9d0333e68ddaacebabec176385358"
 }

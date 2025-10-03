@@ -1,7 +1,7 @@
 use actix_web::{
     dev::{ServiceRequest, ServiceResponse},
     middleware::Next,
-    HttpMessage, Error, Result,
+    Error, HttpMessage, Result,
 };
 use uuid::Uuid;
 
@@ -12,32 +12,33 @@ pub async fn jwt_auth_middleware(
     next: Next<impl actix_web::body::MessageBody>,
 ) -> Result<ServiceResponse<impl actix_web::body::MessageBody>, Error> {
     log::debug!("JWT middleware called for: {} {}", req.method(), req.path());
-    
+
     // Extract token from Authorization header
     let token = match req.headers().get("Authorization") {
         Some(auth_header) => {
             let auth_str = auth_header.to_str().map_err(|_| {
                 actix_web::error::ErrorUnauthorized("Invalid authorization header encoding")
             })?;
-            
+
             if let Some(token) = auth_str.strip_prefix("Bearer ") {
                 token
             } else {
                 return Err(actix_web::error::ErrorUnauthorized(
-                    "Authorization header must be in format: Bearer <token>"
+                    "Authorization header must be in format: Bearer <token>",
                 ));
             }
         }
         None => {
             log::debug!("No Authorization header found");
             return Err(actix_web::error::ErrorUnauthorized(
-                "Authorization header missing"
+                "Authorization header missing",
             ));
         }
     };
 
     // Get auth service from app data
-    let auth_service = req.app_data::<actix_web::web::Data<AuthService>>()
+    let auth_service = req
+        .app_data::<actix_web::web::Data<AuthService>>()
         .ok_or_else(|| actix_web::error::ErrorInternalServerError("Auth service not found"))?;
 
     // Verify token
@@ -45,9 +46,10 @@ pub async fn jwt_auth_middleware(
     match auth_service.verify_token(token).await {
         Ok(Some(claims)) => {
             // Parse user ID from claims
-            let user_id = claims.sub.parse::<Uuid>().map_err(|_| {
-                actix_web::error::ErrorUnauthorized("Invalid user ID in token")
-            })?;
+            let user_id = claims
+                .sub
+                .parse::<Uuid>()
+                .map_err(|_| actix_web::error::ErrorUnauthorized("Invalid user ID in token"))?;
 
             log::debug!("Token verified successfully for user: {}", user_id);
 
@@ -61,11 +63,15 @@ pub async fn jwt_auth_middleware(
         }
         Ok(None) => {
             log::debug!("Token verification returned None - invalid token");
-            Err(actix_web::error::ErrorUnauthorized("Invalid or expired token"))
+            Err(actix_web::error::ErrorUnauthorized(
+                "Invalid or expired token",
+            ))
         }
         Err(e) => {
             log::debug!("Token verification failed: {}", e);
-            Err(actix_web::error::ErrorUnauthorized("Invalid or expired token"))
+            Err(actix_web::error::ErrorUnauthorized(
+                "Invalid or expired token",
+            ))
         }
     }
 }

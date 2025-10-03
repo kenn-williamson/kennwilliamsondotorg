@@ -10,7 +10,7 @@ use uuid::Uuid;
 #[actix_web::test]
 #[allow(unused_mut)]
 async fn test_admin_endpoints_require_authentication() {
-    let (srv, _pool, _test_container) = crate::test_helpers::create_test_app_with_testcontainers().await;
+    let (srv, _pool, _test_container, _email_service) = crate::test_helpers::create_test_app_with_testcontainers().await;
     
     // Test stats endpoint without auth
     let mut resp = srv.get("/backend/protected/admin/stats")
@@ -30,7 +30,7 @@ async fn test_admin_endpoints_require_authentication() {
 #[actix_web::test]
 #[allow(unused_mut)]
 async fn test_admin_endpoints_require_admin_role() {
-    let (srv, _pool, _test_container) = crate::test_helpers::create_test_app_with_testcontainers().await;
+    let (srv, _pool, _test_container, _email_service) = crate::test_helpers::create_test_app_with_testcontainers().await;
     
     // Create a regular user (not admin)
     let email = crate::test_helpers::unique_test_email();

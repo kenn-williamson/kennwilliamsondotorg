@@ -3,8 +3,7 @@ use testcontainers::{
     runners::AsyncRunner,
     GenericImage,
 };
-use backend::middleware::rate_limit::{RateLimitService, RateLimitConfig};
-use backend::middleware::rate_limit_trait::RateLimitServiceTrait;
+use backend::middleware::rate_limiter::{RedisRateLimitService, RateLimitConfig, RateLimitServiceTrait};
 
 #[actix_web::test]
 async fn test_redis_rate_limiting_integration() {
@@ -18,7 +17,7 @@ async fn test_redis_rate_limiting_integration() {
     let redis_url = format!("redis://127.0.0.1:{}", redis_port);
     
     // Create rate limit service
-    let rate_limit_service = RateLimitService::new(&redis_url)
+    let rate_limit_service = RedisRateLimitService::new(&redis_url)
         .expect("Failed to create rate limit service");
     
     // Test configuration

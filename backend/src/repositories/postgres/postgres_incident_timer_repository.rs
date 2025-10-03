@@ -1,10 +1,12 @@
+use anyhow::Result;
 use async_trait::async_trait;
 use sqlx::PgPool;
 use uuid::Uuid;
-use anyhow::Result;
 
 use crate::models::db::incident_timer::IncidentTimer;
-use crate::repositories::traits::incident_timer_repository::{IncidentTimerRepository, CreateTimerData, TimerUpdates};
+use crate::repositories::traits::incident_timer_repository::{
+    CreateTimerData, IncidentTimerRepository, TimerUpdates,
+};
 
 /// PostgreSQL implementation of IncidentTimerRepository
 pub struct PostgresIncidentTimerRepository {
@@ -56,8 +58,10 @@ impl IncidentTimerRepository for PostgresIncidentTimerRepository {
         Ok(timers)
     }
 
-
-    async fn find_latest_by_user_slug_with_display_name(&self, slug: &str) -> Result<Option<(IncidentTimer, String)>> {
+    async fn find_latest_by_user_slug_with_display_name(
+        &self,
+        slug: &str,
+    ) -> Result<Option<(IncidentTimer, String)>> {
         // Query to get both timer and user display name
         let result = sqlx::query!(
             r#"

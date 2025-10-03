@@ -1,14 +1,18 @@
 use anyhow::Result;
 use bcrypt::verify;
 
-use crate::models::api::{AuthResponse, LoginRequest, UserResponse};
-use crate::repositories::traits::refresh_token_repository::RefreshTokenRepository;
-use crate::models::db::refresh_token::CreateRefreshToken;
 use super::AuthService;
+use crate::models::api::{AuthResponse, LoginRequest, UserResponse};
+use crate::models::db::refresh_token::CreateRefreshToken;
+use crate::repositories::traits::refresh_token_repository::RefreshTokenRepository;
 
 impl AuthService {
     /// Login a user with email and password
-    pub async fn login(&self, data: LoginRequest, device_info: Option<serde_json::Value>) -> Result<Option<AuthResponse>> {
+    pub async fn login(
+        &self,
+        data: LoginRequest,
+        device_info: Option<serde_json::Value>,
+    ) -> Result<Option<AuthResponse>> {
         // Get user by email
         let user = self.user_repository.find_by_email(&data.email).await?;
         let user = match user {
@@ -16,17 +20,23 @@ impl AuthService {
             None => return Ok(None), // User not found
         };
 
-        // Verify password
-        if !verify(&data.password, &user.password_hash)? {
+        // Verify password (return None if user has no password - OAuth-only user)
+        let password_hash = match &user.password_hash {
+            Some(hash) => hash,
+            None => return Ok(None), // OAuth-only user, cannot login with password
+        };
+
+        if !verify(&data.password, password_hash)? {
             return Ok(None); // Invalid password
         }
 
         // Get user roles
         let roles = self.user_repository.get_user_roles(user.id).await?;
-        
+
         // Generate JWT token and refresh token
         let token = self.jwt_service.generate_token(&user)?;
-        let refresh_token = create_refresh_token(user.id, device_info, &*self.refresh_token_repository).await?;
+        let refresh_token =
+            create_refresh_token(user.id, device_info, &*self.refresh_token_repository).await?;
 
         Ok(Some(AuthResponse {
             token,
@@ -45,10 +55,10 @@ async fn create_refresh_token(
     // Generate random token
     let token = generate_refresh_token_string();
     let token_hash = hash_token(&token);
-    
+
     // Set expiration (7 days)
     let expires_at = chrono::Utc::now() + chrono::Duration::days(7);
-    
+
     // Create token data
     let token_data = CreateRefreshToken {
         user_id,
@@ -56,10 +66,10 @@ async fn create_refresh_token(
         device_info,
         expires_at,
     };
-    
+
     // Store in database
     refresh_token_repository.create_token(&token_data).await?;
-    
+
     // Return plain token (not hash)
     Ok(token)
 }
@@ -83,24 +93,26 @@ fn hash_token(token: &str) -> String {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use anyhow::Result;
-    use crate::repositories::mocks::mock_user_repository::MockUserRepository;
+    use crate::models::db::refresh_token::RefreshToken;
     use crate::repositories::mocks::mock_refresh_token_repository::MockRefreshTokenRepository;
+    use crate::repositories::mocks::mock_user_repository::MockUserRepository;
+    use crate::services::auth::jwt::JwtService;
+    use anyhow::Result;
+    use bcrypt::{hash, DEFAULT_COST};
+    use chrono::Utc;
     use mockall::predicate::eq;
     use uuid::Uuid;
-    use chrono::Utc;
-    use bcrypt::{hash, DEFAULT_COST};
-    use crate::models::db::refresh_token::RefreshToken;
-    use crate::services::auth::jwt::JwtService;
 
     fn create_test_user() -> crate::models::db::User {
         crate::models::db::User {
             id: Uuid::new_v4(),
             email: "test@example.com".to_string(),
-            password_hash: hash("password123", DEFAULT_COST).unwrap(),
+            password_hash: Some(hash("password123", DEFAULT_COST).unwrap()),
             display_name: "Test User".to_string(),
             slug: "test-user".to_string(),
             active: true,
+            real_name: None,
+            google_user_id: None,
             created_at: Utc::now(),
             updated_at: Utc::now(),
         }
@@ -153,13 +165,13 @@ mod tests {
             "test-secret".to_string(),
         );
         let result = auth_service.login(request, None).await?;
-        
+
         assert!(result.is_some());
         let auth_response = result.unwrap();
         assert!(!auth_response.token.is_empty());
         assert!(!auth_response.refresh_token.is_empty());
         assert_eq!(auth_response.user.email, "test@example.com");
-        
+
         Ok(())
     }
 
@@ -189,7 +201,7 @@ mod tests {
         );
         let result = auth_service.login(request, None).await?;
         assert!(result.is_none());
-        
+
         Ok(())
     }
 
@@ -219,7 +231,7 @@ mod tests {
         );
         let result = auth_service.login(request, None).await?;
         assert!(result.is_none());
-        
+
         Ok(())
     }
 
@@ -249,7 +261,7 @@ mod tests {
         let result = auth_service.login(request, None).await;
         assert!(result.is_err());
         assert!(result.unwrap_err().to_string().contains("Database error"));
-        
+
         Ok(())
     }
 
@@ -288,8 +300,7 @@ mod tests {
         );
         let result = auth_service.login(request, None).await;
         assert!(result.is_err());
-        
+
         Ok(())
     }
 }
-

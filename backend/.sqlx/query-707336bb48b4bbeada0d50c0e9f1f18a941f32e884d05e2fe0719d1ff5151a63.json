@@ -1,6 +1,6 @@
 {
   "db_name": "PostgreSQL",
-  "query": "\n            INSERT INTO users (email, password_hash, display_name, slug)\n            VALUES ($1, $2, $3, $4)\n            RETURNING id, email, password_hash, display_name, slug, active, created_at, updated_at\n            ",
+  "query": "\n            INSERT INTO users (email, password_hash, display_name, slug)\n            VALUES ($1, $2, $3, $4)\n            RETURNING id, email, password_hash, display_name, slug, active, real_name, google_user_id, created_at, updated_at\n            ",
   "describe": {
     "columns": [
       {
@@ -35,11 +35,21 @@
       },
       {
         "ordinal": 6,
+        "name": "real_name",
+        "type_info": "Varchar"
+      },
+      {
+        "ordinal": 7,
+        "name": "google_user_id",
+        "type_info": "Varchar"
+      },
+      {
+        "ordinal": 8,
         "name": "created_at",
         "type_info": "Timestamptz"
       },
       {
-        "ordinal": 7,
+        "ordinal": 9,
         "name": "updated_at",
         "type_info": "Timestamptz"
       }
@@ -55,13 +65,15 @@
     "nullable": [
       false,
       false,
+      true,
       false,
       false,
       false,
-      false,
+      true,
+      true,
       false,
       false
     ]
   },
-  "hash": "62a1ae3487359a8a5ce2d919315f2753aa81c5f74e607e8ef32c989ec1c902eb"
+  "hash": "707336bb48b4bbeada0d50c0e9f1f18a941f32e884d05e2fe0719d1ff5151a63"
 }

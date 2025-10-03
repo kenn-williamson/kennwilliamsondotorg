@@ -16,7 +16,6 @@ pub struct PhraseResponse {
     pub updated_at: DateTime<Utc>,
 }
 
-
 #[derive(Debug, Serialize)]
 pub struct PhraseListResponse {
     pub phrases: Vec<PhraseResponse>,
@@ -57,7 +56,6 @@ pub struct SuggestionListResponse {
     pub suggestions: Vec<PhraseSuggestionResponse>,
     pub total: i64,
 }
-
 
 #[derive(Debug, Serialize)]
 pub struct UserExcludedPhraseResponse {

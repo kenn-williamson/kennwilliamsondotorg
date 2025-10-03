@@ -1,15 +1,17 @@
 use anyhow::Result;
 use uuid::Uuid;
 
-use crate::models::api::CreateIncidentTimer;
 use super::IncidentTimerService;
+use crate::models::api::CreateIncidentTimer;
 
 impl IncidentTimerService {
     /// Create a new incident timer
-    pub async fn create(&self, user_id: Uuid, data: CreateIncidentTimer) -> Result<crate::models::db::IncidentTimer> {
-        let reset_timestamp = data.reset_timestamp.unwrap_or_else(|| {
-            chrono::Utc::now()
-        });
+    pub async fn create(
+        &self,
+        user_id: Uuid,
+        data: CreateIncidentTimer,
+    ) -> Result<crate::models::db::IncidentTimer> {
+        let reset_timestamp = data.reset_timestamp.unwrap_or_else(|| chrono::Utc::now());
 
         // Validate that reset_timestamp is not in the future
         validate_timestamp(&reset_timestamp)?;
@@ -37,8 +39,8 @@ fn validate_timestamp(timestamp: &chrono::DateTime<chrono::Utc>) -> Result<()> {
 mod tests {
     use super::*;
     use crate::models::api::CreateIncidentTimer;
-    use crate::repositories::traits::incident_timer_repository::CreateTimerData;
     use crate::models::db::IncidentTimer;
+    use crate::repositories::traits::incident_timer_repository::CreateTimerData;
     use mockall::predicate::*;
     use uuid::Uuid;
 
@@ -135,7 +137,10 @@ mod tests {
 
         // Verify
         assert!(result.is_err());
-        assert!(result.unwrap_err().to_string().contains("Reset timestamp cannot be in the future"));
+        assert!(result
+            .unwrap_err()
+            .to_string()
+            .contains("Reset timestamp cannot be in the future"));
     }
 
     #[tokio::test]

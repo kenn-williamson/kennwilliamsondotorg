@@ -1,6 +1,6 @@
+use anyhow::Result;
 use std::sync::Arc;
 use uuid::Uuid;
-use anyhow::Result;
 
 use crate::repositories::traits::PhraseRepository;
 
@@ -19,7 +19,9 @@ pub async fn exclude_phrase_for_user(
     }
 
     // Exclude phrase in repository (handles duplicate exclusion gracefully)
-    repository.exclude_phrase_for_user(user_id, phrase_id).await?;
+    repository
+        .exclude_phrase_for_user(user_id, phrase_id)
+        .await?;
 
     Ok(())
 }
@@ -39,7 +41,9 @@ pub async fn remove_phrase_exclusion(
     }
 
     // Remove phrase exclusion in repository
-    repository.remove_phrase_exclusion(user_id, phrase_id).await?;
+    repository
+        .remove_phrase_exclusion(user_id, phrase_id)
+        .await?;
 
     Ok(())
 }
@@ -47,10 +51,10 @@ pub async fn remove_phrase_exclusion(
 #[cfg(test)]
 mod tests {
     use super::*;
-    use std::sync::Arc;
-    use mockall::mock;
     use crate::repositories::traits::PhraseRepository;
     use async_trait::async_trait;
+    use mockall::mock;
+    use std::sync::Arc;
 
     mock! {
         PhraseRepository {}
@@ -82,16 +86,19 @@ mod tests {
         let mut mock_repo = MockPhraseRepository::new();
         let user_id = Uuid::new_v4();
         let phrase_id = Uuid::new_v4();
-        
+
         mock_repo
             .expect_exclude_phrase_for_user()
-            .with(mockall::predicate::eq(user_id), mockall::predicate::eq(phrase_id))
+            .with(
+                mockall::predicate::eq(user_id),
+                mockall::predicate::eq(phrase_id),
+            )
             .times(1)
             .returning(|_, _| Ok(()));
 
         let repo = Arc::new(mock_repo) as Arc<dyn PhraseRepository>;
         let result = exclude_phrase_for_user(&repo, user_id, phrase_id).await;
-        
+
         assert!(result.is_ok());
     }
 
@@ -100,9 +107,12 @@ mod tests {
         let mock_repo = MockPhraseRepository::new();
         let repo = Arc::new(mock_repo) as Arc<dyn PhraseRepository>;
         let result = exclude_phrase_for_user(&repo, Uuid::nil(), Uuid::new_v4()).await;
-        
+
         assert!(result.is_err());
-        assert!(result.unwrap_err().to_string().contains("User ID cannot be nil"));
+        assert!(result
+            .unwrap_err()
+            .to_string()
+            .contains("User ID cannot be nil"));
     }
 
     #[tokio::test]
@@ -110,9 +120,12 @@ mod tests {
         let mock_repo = MockPhraseRepository::new();
         let repo = Arc::new(mock_repo) as Arc<dyn PhraseRepository>;
         let result = exclude_phrase_for_user(&repo, Uuid::new_v4(), Uuid::nil()).await;
-        
+
         assert!(result.is_err());
-        assert!(result.unwrap_err().to_string().contains("Phrase ID cannot be nil"));
+        assert!(result
+            .unwrap_err()
+            .to_string()
+            .contains("Phrase ID cannot be nil"));
     }
 
     #[tokio::test]
@@ -120,16 +133,19 @@ mod tests {
         let mut mock_repo = MockPhraseRepository::new();
         let user_id = Uuid::new_v4();
         let phrase_id = Uuid::new_v4();
-        
+
         mock_repo
             .expect_remove_phrase_exclusion()
-            .with(mockall::predicate::eq(user_id), mockall::predicate::eq(phrase_id))
+            .with(
+                mockall::predicate::eq(user_id),
+                mockall::predicate::eq(phrase_id),
+            )
             .times(1)
             .returning(|_, _| Ok(()));
 
         let repo = Arc::new(mock_repo) as Arc<dyn PhraseRepository>;
         let result = remove_phrase_exclusion(&repo, user_id, phrase_id).await;
-        
+
         assert!(result.is_ok());
     }
 
@@ -138,9 +154,12 @@ mod tests {
         let mock_repo = MockPhraseRepository::new();
         let repo = Arc::new(mock_repo) as Arc<dyn PhraseRepository>;
         let result = remove_phrase_exclusion(&repo, Uuid::nil(), Uuid::new_v4()).await;
-        
+
         assert!(result.is_err());
-        assert!(result.unwrap_err().to_string().contains("User ID cannot be nil"));
+        assert!(result
+            .unwrap_err()
+            .to_string()
+            .contains("User ID cannot be nil"));
     }
 
     #[tokio::test]
@@ -148,8 +167,11 @@ mod tests {
         let mock_repo = MockPhraseRepository::new();
         let repo = Arc::new(mock_repo) as Arc<dyn PhraseRepository>;
         let result = remove_phrase_exclusion(&repo, Uuid::new_v4(), Uuid::nil()).await;
-        
+
         assert!(result.is_err());
-        assert!(result.unwrap_err().to_string().contains("Phrase ID cannot be nil"));
+        assert!(result
+            .unwrap_err()
+            .to_string()
+            .contains("Phrase ID cannot be nil"));
     }
 }

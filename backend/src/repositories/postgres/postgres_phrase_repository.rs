@@ -1,13 +1,11 @@
-use async_trait::async_trait;
-use uuid::Uuid;
 use anyhow::Result;
+use async_trait::async_trait;
 use sqlx::PgPool;
+use uuid::Uuid;
 
+use crate::models::api::{CreatePhraseRequest, PhraseSuggestionRequest, UpdatePhraseRequest};
+use crate::models::db::{Phrase, PhraseSearchResultWithUserExclusionView, PhraseSuggestion};
 use crate::repositories::traits::PhraseRepository;
-use crate::models::db::{Phrase, PhraseSuggestion, PhraseSearchResultWithUserExclusionView};
-use crate::models::api::{
-    CreatePhraseRequest, UpdatePhraseRequest, PhraseSuggestionRequest
-};
 
 pub struct PostgresPhraseRepository {
     pool: PgPool,
@@ -163,10 +161,10 @@ impl PhraseRepository for PostgresPhraseRepository {
     }
 
     async fn get_user_phrases(
-        &self, 
-        user_id: Uuid, 
-        limit: Option<i64>, 
-        offset: Option<i64>
+        &self,
+        user_id: Uuid,
+        limit: Option<i64>,
+        offset: Option<i64>,
     ) -> Result<Vec<Phrase>> {
         let limit = limit.unwrap_or(50);
         let offset = offset.unwrap_or(0);
@@ -197,10 +195,10 @@ impl PhraseRepository for PostgresPhraseRepository {
 
     async fn get_user_phrases_with_exclusions(
         &self,
-        user_id: Uuid, 
-        limit: Option<i64>, 
+        user_id: Uuid,
+        limit: Option<i64>,
         offset: Option<i64>,
-        search: Option<String>
+        search: Option<String>,
     ) -> Result<Vec<PhraseSearchResultWithUserExclusionView>> {
         let limit = limit.unwrap_or(50);
         let offset = offset.unwrap_or(0);
@@ -234,10 +232,11 @@ impl PhraseRepository for PostgresPhraseRepository {
             .await?;
 
             // If no results from full-text search, try ILIKE fallback
-            let search_results: Vec<PhraseSearchResultWithUserExclusionView> = if fulltext_results.is_empty() {
-                sqlx::query_as!(
-                    PhraseSearchResultWithUserExclusionView,
-                    r#"
+            let search_results: Vec<PhraseSearchResultWithUserExclusionView> =
+                if fulltext_results.is_empty() {
+                    sqlx::query_as!(
+                        PhraseSearchResultWithUserExclusionView,
+                        r#"
                     SELECT 
                         p.id,
                         p.phrase_text,
@@ -253,16 +252,16 @@ impl PhraseRepository for PostgresPhraseRepository {
                     ORDER BY p.created_at DESC
                     LIMIT $3 OFFSET $4
                     "#,
-                    user_id,
-                    format!("%{}%", search_term),
-                    limit,
-                    offset
-                )
-                .fetch_all(&self.pool)
-                .await?
-            } else {
-                fulltext_results
-            };
+                        user_id,
+                        format!("%{}%", search_term),
+                        limit,
+                        offset
+                    )
+                    .fetch_all(&self.pool)
+                    .await?
+                } else {
+                    fulltext_results
+                };
 
             Ok(search_results)
         } else {
@@ -296,11 +295,11 @@ impl PhraseRepository for PostgresPhraseRepository {
     }
 
     async fn get_phrases(
-        &self, 
-        include_inactive: bool, 
-        limit: Option<i64>, 
+        &self,
+        include_inactive: bool,
+        limit: Option<i64>,
         offset: Option<i64>,
-        search: Option<String>
+        search: Option<String>,
     ) -> Result<Vec<Phrase>> {
         let limit = limit.unwrap_or(50);
         let offset = offset.unwrap_or(0);
@@ -359,7 +358,11 @@ impl PhraseRepository for PostgresPhraseRepository {
         }
     }
 
-    async fn create_phrase(&self, request: CreatePhraseRequest, created_by: Uuid) -> Result<Phrase> {
+    async fn create_phrase(
+        &self,
+        request: CreatePhraseRequest,
+        created_by: Uuid,
+    ) -> Result<Phrase> {
         let active = request.active.unwrap_or(true);
 
         let phrase = sqlx::query_as!(
@@ -433,7 +436,10 @@ impl PhraseRepository for PostgresPhraseRepository {
         Ok(())
     }
 
-    async fn get_user_excluded_phrases(&self, user_id: Uuid) -> Result<Vec<(Uuid, String, chrono::DateTime<chrono::Utc>)>> {
+    async fn get_user_excluded_phrases(
+        &self,
+        user_id: Uuid,
+    ) -> Result<Vec<(Uuid, String, chrono::DateTime<chrono::Utc>)>> {
         let exclusions = sqlx::query!(
             r#"
             SELECT uep.id, p.phrase_text, uep.excluded_at
@@ -453,7 +459,11 @@ impl PhraseRepository for PostgresPhraseRepository {
             .collect())
     }
 
-    async fn submit_phrase_suggestion(&self, user_id: Uuid, request: PhraseSuggestionRequest) -> Result<PhraseSuggestion> {
+    async fn submit_phrase_suggestion(
+        &self,
+        user_id: Uuid,
+        request: PhraseSuggestionRequest,
+    ) -> Result<PhraseSuggestion> {
         let suggestion = sqlx::query_as!(
             PhraseSuggestion,
             r#"
@@ -487,7 +497,10 @@ impl PhraseRepository for PostgresPhraseRepository {
         Ok(suggestions)
     }
 
-    async fn get_pending_suggestions(&self) -> Result<Vec<crate::repositories::traits::phrase_repository::PendingSuggestionWithUser>> {
+    async fn get_pending_suggestions(
+        &self,
+    ) -> Result<Vec<crate::repositories::traits::phrase_repository::PendingSuggestionWithUser>>
+    {
         let suggestions = sqlx::query!(
             r#"
             SELECT 
@@ -507,13 +520,15 @@ impl PhraseRepository for PostgresPhraseRepository {
 
         Ok(suggestions
             .into_iter()
-            .map(|row| crate::repositories::traits::phrase_repository::PendingSuggestionWithUser {
-                id: row.id,
-                phrase_text: row.phrase_text,
-                created_at: row.created_at,
-                user_display_name: Some(row.user_display_name),
-                user_email: Some(row.user_email),
-            })
+            .map(
+                |row| crate::repositories::traits::phrase_repository::PendingSuggestionWithUser {
+                    id: row.id,
+                    phrase_text: row.phrase_text,
+                    created_at: row.created_at,
+                    user_display_name: Some(row.user_display_name),
+                    user_email: Some(row.user_email),
+                },
+            )
             .collect())
     }
 
@@ -602,22 +617,20 @@ impl PhraseRepository for PostgresPhraseRepository {
     }
 
     async fn count_all_phrases(&self) -> Result<i64> {
-        let count = sqlx::query_scalar::<_, i64>(
-            "SELECT COUNT(*) FROM phrases"
-        )
-        .fetch_one(&self.pool)
-        .await?;
-        
+        let count = sqlx::query_scalar::<_, i64>("SELECT COUNT(*) FROM phrases")
+            .fetch_one(&self.pool)
+            .await?;
+
         Ok(count)
     }
 
     async fn count_pending_suggestions(&self) -> Result<i64> {
         let count = sqlx::query_scalar::<_, i64>(
-            "SELECT COUNT(*) FROM phrase_suggestions WHERE status = 'pending'"
+            "SELECT COUNT(*) FROM phrase_suggestions WHERE status = 'pending'",
         )
         .fetch_one(&self.pool)
         .await?;
-        
+
         Ok(count)
     }
 }

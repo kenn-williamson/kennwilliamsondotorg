@@ -4,7 +4,7 @@ use serde_json::json;
 
 #[actix_web::test]
 async fn test_get_random_phrase_success() {
-    let (srv, _pool, _test_container) = crate::test_helpers::create_test_app_with_testcontainers().await;
+    let (srv, _pool, _test_container, _email_service) = crate::test_helpers::create_test_app_with_testcontainers().await;
     
     // First register a user to get proper authentication
     let email = crate::test_helpers::unique_test_email();
@@ -48,7 +48,7 @@ async fn test_get_random_phrase_success() {
 
 #[actix_web::test]
 async fn test_get_random_phrase_unauthorized() {
-    let (srv, _pool, _test_container) = crate::test_helpers::create_test_app_with_testcontainers().await;
+    let (srv, _pool, _test_container, _email_service) = crate::test_helpers::create_test_app_with_testcontainers().await;
     
     let mut resp = srv.get("/backend/protected/phrases/random")
         .send()
@@ -65,7 +65,7 @@ async fn test_get_random_phrase_unauthorized() {
 
 #[actix_web::test]
 async fn test_get_user_phrases_success() {
-    let (srv, _pool, _test_container) = crate::test_helpers::create_test_app_with_testcontainers().await;
+    let (srv, _pool, _test_container, _email_service) = crate::test_helpers::create_test_app_with_testcontainers().await;
     
     // First register a user to get proper authentication
     let email = crate::test_helpers::unique_test_email();
@@ -119,7 +119,7 @@ async fn test_get_user_phrases_success() {
 
 #[actix_web::test]
 async fn test_get_user_phrases_unauthorized() {
-    let (srv, _pool, _test_container) = crate::test_helpers::create_test_app_with_testcontainers().await;
+    let (srv, _pool, _test_container, _email_service) = crate::test_helpers::create_test_app_with_testcontainers().await;
     
     let mut resp = srv.get("/backend/protected/phrases/user")
         .send()
@@ -136,7 +136,7 @@ async fn test_get_user_phrases_unauthorized() {
 
 #[actix_web::test]
 async fn test_exclude_phrase_success() {
-    let (srv, pool, _test_container) = crate::test_helpers::create_test_app_with_testcontainers().await;
+    let (srv, pool, _test_container, _email_service) = crate::test_helpers::create_test_app_with_testcontainers().await;
     
     // First register a user to get proper authentication
     let email = crate::test_helpers::unique_test_email();
@@ -185,7 +185,7 @@ async fn test_exclude_phrase_success() {
 
 #[actix_web::test]
 async fn test_exclude_phrase_unauthorized() {
-    let (srv, pool, _test_container) = crate::test_helpers::create_test_app_with_testcontainers().await;
+    let (srv, pool, _test_container, _email_service) = crate::test_helpers::create_test_app_with_testcontainers().await;
     
     // Get a phrase ID from the database
     let phrase_id: uuid::Uuid = sqlx::query_scalar("SELECT id FROM phrases LIMIT 1")
@@ -209,7 +209,7 @@ async fn test_exclude_phrase_unauthorized() {
 #[actix_web::test]
 #[allow(unused_mut)]
 async fn test_remove_phrase_exclusion_success() {
-    let (srv, pool, _test_container) = crate::test_helpers::create_test_app_with_testcontainers().await;
+    let (srv, pool, _test_container, _email_service) = crate::test_helpers::create_test_app_with_testcontainers().await;
     
     // First register a user to get proper authentication
     let email = crate::test_helpers::unique_test_email();
@@ -268,7 +268,7 @@ async fn test_remove_phrase_exclusion_success() {
 
 #[actix_web::test]
 async fn test_remove_phrase_exclusion_unauthorized() {
-    let (srv, pool, _test_container) = crate::test_helpers::create_test_app_with_testcontainers().await;
+    let (srv, pool, _test_container, _email_service) = crate::test_helpers::create_test_app_with_testcontainers().await;
     
     // Get a phrase ID from the database
     let phrase_id: uuid::Uuid = sqlx::query_scalar("SELECT id FROM phrases LIMIT 1")
@@ -291,7 +291,7 @@ async fn test_remove_phrase_exclusion_unauthorized() {
 
 #[actix_web::test]
 async fn test_submit_suggestion_success() {
-    let (srv, _pool, _test_container) = crate::test_helpers::create_test_app_with_testcontainers().await;
+    let (srv, _pool, _test_container, _email_service) = crate::test_helpers::create_test_app_with_testcontainers().await;
     
     // First register a user to get proper authentication
     let email = crate::test_helpers::unique_test_email();
@@ -340,7 +340,7 @@ async fn test_submit_suggestion_success() {
 
 #[actix_web::test]
 async fn test_submit_suggestion_unauthorized() {
-    let (srv, _pool, _test_container) = crate::test_helpers::create_test_app_with_testcontainers().await;
+    let (srv, _pool, _test_container, _email_service) = crate::test_helpers::create_test_app_with_testcontainers().await;
     
     let suggestion_request = json!({
         "phrase_text": "This is a test phrase suggestion"
@@ -362,7 +362,7 @@ async fn test_submit_suggestion_unauthorized() {
 #[actix_web::test]
 #[allow(unused_mut)]
 async fn test_get_public_phrase_success() {
-    let (srv, _pool, _test_container) = crate::test_helpers::create_test_app_with_testcontainers().await;
+    let (srv, _pool, _test_container, _email_service) = crate::test_helpers::create_test_app_with_testcontainers().await;
     
     // First register a user to get a slug
     let email = crate::test_helpers::unique_test_email();
@@ -404,7 +404,7 @@ async fn test_get_public_phrase_success() {
 
 #[actix_web::test]
 async fn test_get_public_phrase_nonexistent_user() {
-    let (srv, _pool, _test_container) = crate::test_helpers::create_test_app_with_testcontainers().await;
+    let (srv, _pool, _test_container, _email_service) = crate::test_helpers::create_test_app_with_testcontainers().await;
     
     // Test getting a phrase for a non-existent user
     let mut resp = srv.get("/backend/public/nonexistent-user/phrase")

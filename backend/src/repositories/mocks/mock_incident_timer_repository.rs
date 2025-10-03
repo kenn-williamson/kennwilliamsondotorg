@@ -1,15 +1,17 @@
-use mockall::mock;
-use async_trait::async_trait;
-use uuid::Uuid;
 use anyhow::Result;
+use async_trait::async_trait;
+use mockall::mock;
+use uuid::Uuid;
 
 use crate::models::db::incident_timer::IncidentTimer;
-use crate::repositories::traits::incident_timer_repository::{IncidentTimerRepository, CreateTimerData, TimerUpdates};
+use crate::repositories::traits::incident_timer_repository::{
+    CreateTimerData, IncidentTimerRepository, TimerUpdates,
+};
 
 // Generate mock for IncidentTimerRepository trait
 mock! {
     pub IncidentTimerRepository {}
-    
+
     #[async_trait]
     impl IncidentTimerRepository for IncidentTimerRepository {
         async fn create_timer(&self, timer_data: &CreateTimerData) -> Result<IncidentTimer>;
@@ -24,9 +26,9 @@ mock! {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use uuid::Uuid;
     use chrono::Utc;
     use mockall::predicate::eq;
+    use uuid::Uuid;
 
     // Helper function to create a test incident timer
     fn create_test_incident_timer() -> IncidentTimer {
@@ -53,13 +55,13 @@ mod tests {
     async fn test_mock_create_timer() {
         let mut mock_repo = MockIncidentTimerRepository::new();
         let timer_data = create_test_timer_data();
-        
+
         // Setup mock expectation
         mock_repo
             .expect_create_timer()
             .times(1)
             .returning(|_| Ok(create_test_incident_timer()));
-        
+
         // Test the mock
         let result = mock_repo.create_timer(&timer_data).await;
         assert!(result.is_ok());
@@ -71,14 +73,14 @@ mod tests {
     async fn test_mock_find_by_user_id() {
         let mut mock_repo = MockIncidentTimerRepository::new();
         let user_id = Uuid::new_v4();
-        
+
         // Setup mock expectation
         mock_repo
             .expect_find_by_user_id()
             .times(1)
             .with(eq(user_id))
             .returning(|_| Ok(vec![create_test_incident_timer()]));
-        
+
         // Test the mock
         let result = mock_repo.find_by_user_id(user_id).await;
         assert!(result.is_ok());
@@ -86,20 +88,19 @@ mod tests {
         assert_eq!(timers.len(), 1);
     }
 
-
     #[tokio::test]
     async fn test_mock_timer_belongs_to_user() {
         let mut mock_repo = MockIncidentTimerRepository::new();
         let timer_id = Uuid::new_v4();
         let user_id = Uuid::new_v4();
-        
+
         // Setup mock expectation
         mock_repo
             .expect_timer_belongs_to_user()
             .times(1)
             .with(eq(timer_id), eq(user_id))
             .returning(|_, _| Ok(true));
-        
+
         // Test the mock
         let result = mock_repo.timer_belongs_to_user(timer_id, user_id).await;
         assert!(result.is_ok());
@@ -110,17 +111,16 @@ mod tests {
     async fn test_mock_delete_timer() {
         let mut mock_repo = MockIncidentTimerRepository::new();
         let timer_id = Uuid::new_v4();
-        
+
         // Setup mock expectation
         mock_repo
             .expect_delete_timer()
             .times(1)
             .with(eq(timer_id))
             .returning(|_| Ok(()));
-        
+
         // Test the mock
         let result = mock_repo.delete_timer(timer_id).await;
         assert!(result.is_ok());
     }
-
 }

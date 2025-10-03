@@ -6,7 +6,7 @@
 
 #[actix_web::test]
 async fn test_health_endpoint_success() {
-    let (srv, _pool, _test_container) = crate::test_helpers::create_test_app_with_testcontainers().await;
+    let (srv, _pool, _test_container, _email_service) = crate::test_helpers::create_test_app_with_testcontainers().await;
     
     let mut resp = srv.get("/backend/public/health")
         .send()
@@ -28,7 +28,7 @@ async fn test_health_endpoint_success() {
 
 #[actix_web::test]
 async fn test_health_db_endpoint_success() {
-    let (srv, _pool, _test_container) = crate::test_helpers::create_test_app_with_testcontainers().await;
+    let (srv, _pool, _test_container, _email_service) = crate::test_helpers::create_test_app_with_testcontainers().await;
     
     let mut resp = srv.get("/backend/public/health/db")
         .send()
@@ -52,7 +52,7 @@ async fn test_health_db_endpoint_success() {
 #[actix_web::test]
 #[allow(unused_mut)]
 async fn test_health_endpoints_are_public() {
-    let (srv, _pool, _test_container) = crate::test_helpers::create_test_app_with_testcontainers().await;
+    let (srv, _pool, _test_container, _email_service) = crate::test_helpers::create_test_app_with_testcontainers().await;
     
     // Test basic health endpoint without authentication
     let mut resp = srv.get("/backend/public/health")
@@ -71,7 +71,7 @@ async fn test_health_endpoints_are_public() {
 
 #[actix_web::test]
 async fn test_health_endpoints_response_format() {
-    let (srv, _pool, _test_container) = crate::test_helpers::create_test_app_with_testcontainers().await;
+    let (srv, _pool, _test_container, _email_service) = crate::test_helpers::create_test_app_with_testcontainers().await;
     
     // Test basic health endpoint response format
     let mut resp = srv.get("/backend/public/health")
@@ -97,7 +97,7 @@ async fn test_health_endpoints_response_format() {
 
 #[actix_web::test]
 async fn test_health_db_endpoint_response_format() {
-    let (srv, _pool, _test_container) = crate::test_helpers::create_test_app_with_testcontainers().await;
+    let (srv, _pool, _test_container, _email_service) = crate::test_helpers::create_test_app_with_testcontainers().await;
     
     // Test database health endpoint response format
     let mut resp = srv.get("/backend/public/health/db")

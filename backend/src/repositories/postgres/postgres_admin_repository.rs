@@ -1,7 +1,7 @@
+use anyhow::Result;
 use async_trait::async_trait;
 use sqlx::PgPool;
 use uuid::Uuid;
-use anyhow::Result;
 
 use crate::repositories::traits::admin_repository::AdminRepository;
 
@@ -74,14 +74,14 @@ impl AdminRepository for PostgresAdminRepository {
             sqlx::query_as!(
                 crate::models::db::UserWithRoles,
                 r#"
-                SELECT 
-                    u.id, u.email, u.display_name, u.slug, u.active, u.created_at, u.updated_at,
+                SELECT
+                    u.id, u.email, u.display_name, u.slug, u.active, u.real_name, u.google_user_id, u.created_at, u.updated_at,
                     array_agg(r.name) as roles
                 FROM users u
                 INNER JOIN user_roles ur ON u.id = ur.user_id
                 INNER JOIN roles r ON ur.role_id = r.id
                 WHERE u.display_name ILIKE $1 OR u.email ILIKE $1 OR u.slug ILIKE $1
-                GROUP BY u.id, u.email, u.display_name, u.slug, u.active, u.created_at, u.updated_at
+                GROUP BY u.id, u.email, u.display_name, u.slug, u.active, u.real_name, u.google_user_id, u.created_at, u.updated_at
                 ORDER BY u.created_at DESC
                 LIMIT $2 OFFSET $3
                 "#,
@@ -96,13 +96,13 @@ impl AdminRepository for PostgresAdminRepository {
             sqlx::query_as!(
                 crate::models::db::UserWithRoles,
                 r#"
-                SELECT 
-                    u.id, u.email, u.display_name, u.slug, u.active, u.created_at, u.updated_at,
+                SELECT
+                    u.id, u.email, u.display_name, u.slug, u.active, u.real_name, u.google_user_id, u.created_at, u.updated_at,
                     array_agg(r.name) as roles
                 FROM users u
                 INNER JOIN user_roles ur ON u.id = ur.user_id
                 INNER JOIN roles r ON ur.role_id = r.id
-                GROUP BY u.id, u.email, u.display_name, u.slug, u.active, u.created_at, u.updated_at
+                GROUP BY u.id, u.email, u.display_name, u.slug, u.active, u.real_name, u.google_user_id, u.created_at, u.updated_at
                 ORDER BY u.created_at DESC
                 LIMIT $1 OFFSET $2
                 "#,
@@ -116,22 +116,18 @@ impl AdminRepository for PostgresAdminRepository {
     }
 
     async fn count_all_users(&self) -> Result<i64> {
-        let count = sqlx::query_scalar::<_, i64>(
-            "SELECT COUNT(*) FROM users"
-        )
-        .fetch_one(&self.pool)
-        .await?;
-        
+        let count = sqlx::query_scalar::<_, i64>("SELECT COUNT(*) FROM users")
+            .fetch_one(&self.pool)
+            .await?;
+
         Ok(count)
     }
 
     async fn count_active_users(&self) -> Result<i64> {
-        let count = sqlx::query_scalar::<_, i64>(
-            "SELECT COUNT(*) FROM users WHERE active = true"
-        )
-        .fetch_one(&self.pool)
-        .await?;
-        
+        let count = sqlx::query_scalar::<_, i64>("SELECT COUNT(*) FROM users WHERE active = true")
+            .fetch_one(&self.pool)
+            .await?;
+
         Ok(count)
     }
 }

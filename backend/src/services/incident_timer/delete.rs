@@ -18,8 +18,15 @@ impl IncidentTimerService {
 }
 
 /// Validate that timer belongs to user
-async fn validate_ownership(service: &IncidentTimerService, timer_id: Uuid, user_id: Uuid) -> Result<bool> {
-    service.repository.timer_belongs_to_user(timer_id, user_id).await
+async fn validate_ownership(
+    service: &IncidentTimerService,
+    timer_id: Uuid,
+    user_id: Uuid,
+) -> Result<bool> {
+    service
+        .repository
+        .timer_belongs_to_user(timer_id, user_id)
+        .await
 }
 
 #[cfg(test)]

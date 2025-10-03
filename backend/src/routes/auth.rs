@@ -1,28 +1,37 @@
 use actix_web::{web, HttpMessage, HttpRequest, HttpResponse, Result as ActixResult};
-use uuid::Uuid;
 use serde_json::json;
+use uuid::Uuid;
 
-use crate::models::api::{CreateUserRequest, LoginRequest, SlugPreviewRequest, SlugValidationRequest, RefreshTokenRequest, RevokeTokenRequest, ProfileUpdateRequest, PasswordChangeRequest};
+use crate::models::api::{
+    CreateUserRequest, LoginRequest, PasswordChangeRequest, ProfileUpdateRequest,
+    RefreshTokenRequest, RevokeTokenRequest, SlugPreviewRequest, SlugValidationRequest,
+    VerifyEmailRequest,
+};
 use crate::services::auth::AuthService;
 
 /// Extract device information from HTTP request headers
 /// Handles forwarded headers from proxies/load balancers using Actix Web's built-in support
 fn extract_device_info(req: &HttpRequest) -> Option<serde_json::Value> {
-    let user_agent = req.headers().get("User-Agent")
+    let user_agent = req
+        .headers()
+        .get("User-Agent")
         .and_then(|h| h.to_str().ok())
         .unwrap_or("Unknown");
-    
+
     // Extract real IP address using Actix Web's built-in forwarded header support
     // This handles Forwarded, X-Forwarded-For, and X-Real-IP headers automatically
-    let ip_address = req.connection_info().realip_remote_addr()
+    let ip_address = req
+        .connection_info()
+        .realip_remote_addr()
         .map(|ip| ip.to_string())
         .unwrap_or_else(|| {
             // Fallback to direct connection IP if no forwarded headers
-            req.connection_info().peer_addr()
+            req.connection_info()
+                .peer_addr()
                 .map(|addr| addr.to_string())
                 .unwrap_or_else(|| "Unknown".to_string())
         });
-    
+
     Some(json!({
         "user_agent": user_agent,
         "ip_address": ip_address,
@@ -36,7 +45,11 @@ pub async fn register(
     auth_service: web::Data<AuthService>,
 ) -> ActixResult<HttpResponse> {
     let device_info = extract_device_info(&req);
-    match auth_service.register(data.into_inner(), device_info).await {
+    let frontend_url = std::env::var("FRONTEND_URL").ok();
+    match auth_service
+        .register(data.into_inner(), device_info, frontend_url.as_deref())
+        .await
+    {
         Ok(auth_response) => Ok(HttpResponse::Created().json(auth_response)),
         Err(err) => {
             if err.to_string().contains("duplicate key") {
@@ -187,7 +200,10 @@ pub async fn update_profile(
 ) -> ActixResult<HttpResponse> {
     let user_id = req.extensions().get::<Uuid>().cloned().unwrap();
 
-    match auth_service.update_profile(user_id, data.into_inner()).await {
+    match auth_service
+        .update_profile(user_id, data.into_inner())
+        .await
+    {
         Ok(user) => Ok(HttpResponse::Ok().json(user)),
         Err(err) => {
             if err.to_string().contains("Invalid slug format") {
@@ -215,7 +231,10 @@ pub async fn change_password(
 ) -> ActixResult<HttpResponse> {
     let user_id = req.extensions().get::<Uuid>().cloned().unwrap();
 
-    match auth_service.change_password(user_id, data.into_inner()).await {
+    match auth_service
+        .change_password(user_id, data.into_inner())
+        .await
+    {
         Ok(()) => Ok(HttpResponse::Ok().json(serde_json::json!({
             "message": "Password changed successfully"
         }))),
@@ -238,3 +257,44 @@ pub async fn change_password(
     }
 }
 
+/// Send verification email to authenticated user
+/// POST /backend/protected/auth/send-verification
+pub async fn send_verification_email_handler(
+    req: HttpRequest,
+    auth_service: web::Data<AuthService>,
+) -> ActixResult<HttpResponse> {
+    let user_id = req.extensions().get::<Uuid>().cloned().unwrap();
+    let frontend_url = std::env::var("FRONTEND_URL")
+        .ok()
+        .unwrap_or_else(|| "https://kennwilliamson.org".to_string());
+
+    match auth_service
+        .send_verification_email(user_id, &frontend_url)
+        .await
+    {
+        Ok(response) => Ok(HttpResponse::Ok().json(response)),
+        Err(err) => {
+            log::error!("Send verification email error: {}", err);
+            Ok(HttpResponse::InternalServerError().json(json!({
+                "error": "Failed to send verification email"
+            })))
+        }
+    }
+}
+
+/// Verify email with token from email link
+/// GET /backend/public/auth/verify-email?token=XXX
+pub async fn verify_email_handler(
+    query: web::Query<VerifyEmailRequest>,
+    auth_service: web::Data<AuthService>,
+) -> ActixResult<HttpResponse> {
+    match auth_service.verify_email(&query.token).await {
+        Ok(response) => Ok(HttpResponse::Ok().json(response)),
+        Err(err) => {
+            log::error!("Email verification error: {}", err);
+            Ok(HttpResponse::BadRequest().json(json!({
+                "error": "Invalid or expired verification token"
+            })))
+        }
+    }
+}

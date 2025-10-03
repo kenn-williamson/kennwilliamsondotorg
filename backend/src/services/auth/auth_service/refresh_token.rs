@@ -1,21 +1,27 @@
 use anyhow::Result;
-use uuid::Uuid;
 use chrono::{Duration, Utc};
-use sha2::{Digest, Sha256};
 use rand::{rng, Rng};
+use sha2::{Digest, Sha256};
+use uuid::Uuid;
 
+use super::AuthService;
 use crate::models::api::{RefreshTokenRequest, RefreshTokenResponse};
 use crate::models::db::refresh_token::CreateRefreshToken;
-use super::AuthService;
 
 impl AuthService {
     /// Refresh a JWT token using a refresh token
-    pub async fn refresh_token(&self, request: RefreshTokenRequest) -> Result<Option<RefreshTokenResponse>> {
+    pub async fn refresh_token(
+        &self,
+        request: RefreshTokenRequest,
+    ) -> Result<Option<RefreshTokenResponse>> {
         // Hash the provided token to lookup in database
         let token_hash = hash_token(&request.refresh_token);
-        
+
         // Find refresh token
-        let token_record = self.refresh_token_repository.find_by_token(&token_hash).await?;
+        let token_record = self
+            .refresh_token_repository
+            .find_by_token(&token_hash)
+            .await?;
         let token_record = match token_record {
             Some(token) => token,
             None => return Ok(None), // Token not found or expired
@@ -25,12 +31,17 @@ impl AuthService {
         let six_months_ago = Utc::now() - Duration::days(180);
         if token_record.created_at < six_months_ago {
             // Delete the expired token
-            self.refresh_token_repository.revoke_token(&token_hash).await?;
+            self.refresh_token_repository
+                .revoke_token(&token_hash)
+                .await?;
             return Ok(None);
         }
 
         // Get user
-        let user = self.user_repository.find_by_id(token_record.user_id).await?;
+        let user = self
+            .user_repository
+            .find_by_id(token_record.user_id)
+            .await?;
         let user = match user {
             Some(user) => user,
             None => return Ok(None), // User no longer exists
@@ -42,8 +53,10 @@ impl AuthService {
         let new_token_hash = hash_token(&new_refresh_token);
 
         // Delete old token and create new token
-        self.refresh_token_repository.revoke_token(&token_hash).await?;
-        
+        self.refresh_token_repository
+            .revoke_token(&token_hash)
+            .await?;
+
         // Create new refresh token
         let expires_at = Utc::now() + Duration::days(7);
         let token_data = CreateRefreshToken {
@@ -52,7 +65,9 @@ impl AuthService {
             device_info: token_record.device_info,
             expires_at,
         };
-        self.refresh_token_repository.create_token(&token_data).await?;
+        self.refresh_token_repository
+            .create_token(&token_data)
+            .await?;
 
         Ok(Some(RefreshTokenResponse {
             token: new_jwt,
@@ -61,15 +76,23 @@ impl AuthService {
     }
 
     /// Revoke a specific refresh token
-    pub async fn revoke_refresh_token(&self, request: crate::models::api::RevokeTokenRequest) -> Result<bool> {
+    pub async fn revoke_refresh_token(
+        &self,
+        request: crate::models::api::RevokeTokenRequest,
+    ) -> Result<bool> {
         let token_hash = hash_token(&request.refresh_token);
-        let result = self.refresh_token_repository.revoke_token(&token_hash).await;
+        let result = self
+            .refresh_token_repository
+            .revoke_token(&token_hash)
+            .await;
         Ok(result.is_ok())
     }
 
     /// Revoke all refresh tokens for a user
     pub async fn revoke_all_user_tokens(&self, user_id: Uuid) -> Result<u64> {
-        self.refresh_token_repository.revoke_all_user_tokens(user_id).await?;
+        self.refresh_token_repository
+            .revoke_all_user_tokens(user_id)
+            .await?;
         Ok(1) // Return count of affected tokens
     }
 }
@@ -91,22 +114,24 @@ fn hash_token(token: &str) -> String {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use anyhow::Result;
-    use crate::repositories::mocks::mock_user_repository::MockUserRepository;
-    use crate::repositories::mocks::mock_refresh_token_repository::MockRefreshTokenRepository;
-    use crate::services::auth::jwt::JwtService;
     use crate::models::db::refresh_token::RefreshToken;
+    use crate::repositories::mocks::mock_refresh_token_repository::MockRefreshTokenRepository;
+    use crate::repositories::mocks::mock_user_repository::MockUserRepository;
+    use crate::services::auth::jwt::JwtService;
+    use anyhow::Result;
+    use chrono::Utc;
     use mockall::predicate::eq;
     use uuid::Uuid;
-    use chrono::Utc;
 
     fn create_test_user() -> crate::models::db::User {
         crate::models::db::User {
             id: Uuid::new_v4(),
             email: "test@example.com".to_string(),
-            password_hash: "hashed".to_string(),
+            password_hash: Some("hashed".to_string()),
             display_name: "Test User".to_string(),
             slug: "test-user".to_string(),
+            real_name: None,
+            google_user_id: None,
             active: true,
             created_at: Utc::now(),
             updated_at: Utc::now(),
@@ -184,12 +209,12 @@ mod tests {
             "test-secret".to_string(),
         );
         let result = auth_service.refresh_token(request).await?;
-        
+
         assert!(result.is_some());
         let response = result.unwrap();
         assert!(!response.token.is_empty());
         assert!(!response.refresh_token.is_empty());
-        
+
         Ok(())
     }
 
@@ -220,7 +245,7 @@ mod tests {
         );
         let result = auth_service.refresh_token(request).await?;
         assert!(result.is_none());
-        
+
         Ok(())
     }
 
@@ -258,7 +283,7 @@ mod tests {
         );
         let result = auth_service.refresh_token(request).await?;
         assert!(result.is_none());
-        
+
         Ok(())
     }
 
@@ -296,7 +321,7 @@ mod tests {
         );
         let result = auth_service.refresh_token(request).await?;
         assert!(result.is_none());
-        
+
         Ok(())
     }
 
@@ -328,7 +353,7 @@ mod tests {
         let result = auth_service.refresh_token(request).await;
         assert!(result.is_err());
         assert!(result.unwrap_err().to_string().contains("Database error"));
-        
+
         Ok(())
     }
 
@@ -356,7 +381,7 @@ mod tests {
         );
         let result = auth_service.revoke_refresh_token(request).await?;
         assert!(result);
-        
+
         Ok(())
     }
 
@@ -384,7 +409,7 @@ mod tests {
         );
         let result = auth_service.revoke_refresh_token(request).await?;
         assert!(!result); // Should return false on error
-        
+
         Ok(())
     }
 
@@ -407,7 +432,7 @@ mod tests {
         );
         let result = auth_service.revoke_all_user_tokens(user_id).await?;
         assert_eq!(result, 1); // Returns 1 as per implementation
-        
+
         Ok(())
     }
 
@@ -431,8 +456,7 @@ mod tests {
         let result = auth_service.revoke_all_user_tokens(user_id).await;
         assert!(result.is_err());
         assert!(result.unwrap_err().to_string().contains("Database error"));
-        
+
         Ok(())
     }
 }
-

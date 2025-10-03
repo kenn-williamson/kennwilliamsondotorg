@@ -24,6 +24,8 @@ pub struct UserResponse {
     pub display_name: String,
     pub slug: String,
     pub roles: Vec<String>,
+    pub real_name: Option<String>,
+    pub email_verified: bool,
     pub created_at: DateTime<Utc>,
 }
 
@@ -88,13 +90,50 @@ pub struct PasswordChangeRequest {
 
 impl UserResponse {
     pub fn from_user_with_roles(user: User, roles: Vec<String>) -> Self {
+        let email_verified = roles.contains(&"email-verified".to_string());
+
         UserResponse {
             id: user.id,
             email: user.email,
             display_name: user.display_name,
             slug: user.slug,
             roles,
+            real_name: user.real_name,
+            email_verified,
             created_at: user.created_at,
         }
     }
+}
+
+// Email verification request/response types
+#[derive(Debug, Serialize, Deserialize)]
+pub struct SendVerificationEmailRequest {
+    // No fields - uses authenticated user from JWT
+}
+
+#[derive(Debug, Serialize)]
+pub struct SendVerificationEmailResponse {
+    pub message: String,
+}
+
+#[derive(Debug, Deserialize)]
+pub struct VerifyEmailRequest {
+    pub token: String,
+}
+
+#[derive(Debug, Serialize)]
+pub struct VerifyEmailResponse {
+    pub message: String,
+    pub email_verified: bool,
+}
+
+// Google OAuth request/response types
+#[derive(Debug, Serialize)]
+pub struct GoogleOAuthUrlResponse {
+    pub url: String,
+}
+
+#[derive(Debug, Deserialize)]
+pub struct GoogleOAuthCallbackRequest {
+    pub code: String,
 }

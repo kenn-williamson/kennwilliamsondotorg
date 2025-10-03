@@ -29,6 +29,7 @@ backend/
 │   │   │   ├── mod.rs
 │   │   │   ├── user_repository.rs
 │   │   │   ├── refresh_token_repository.rs
+│   │   │   ├── verification_token_repository.rs
 │   │   │   ├── incident_timer_repository.rs
 │   │   │   ├── phrase_repository.rs
 │   │   │   └── admin_repository.rs
@@ -36,6 +37,7 @@ backend/
 │   │   │   ├── mod.rs
 │   │   │   ├── postgres_user_repository.rs
 │   │   │   ├── postgres_refresh_token_repository.rs
+│   │   │   ├── postgres_verification_token_repository.rs
 │   │   │   ├── postgres_incident_timer_repository.rs
 │   │   │   ├── postgres_phrase_repository.rs
 │   │   │   └── postgres_admin_repository.rs
@@ -43,6 +45,7 @@ backend/
 │   │       ├── mod.rs
 │   │       ├── mock_user_repository.rs
 │   │       ├── mock_refresh_token_repository.rs
+│   │       ├── mock_verification_token_repository.rs
 │   │       ├── mock_incident_timer_repository.rs
 │   │       ├── mock_phrase_repository.rs
 │   │       └── mock_admin_repository.rs
@@ -66,7 +69,14 @@ backend/
 │   │   │       ├── refresh_token.rs # Token refresh logic
 │   │   │       ├── profile.rs  # Profile management
 │   │   │       ├── password.rs # Password operations
-│   │   │       └── slug.rs     # Username slug generation
+│   │   │       ├── slug.rs     # Username slug generation
+│   │   │       └── email_verification.rs # Email verification logic
+│   │   ├── email/         # Email service abstraction
+│   │   │   ├── mod.rs     # EmailService trait
+│   │   │   ├── mock_email_service.rs # Mock for testing
+│   │   │   └── ses_email_service.rs  # AWS SES implementation
+│   │   ├── cleanup/       # Token cleanup service
+│   │   │   └── mod.rs     # CleanupService for expired tokens
 │   │   ├── incident_timer/ # Timer business logic (modularized)
 │   │   │   ├── mod.rs
 │   │   │   ├── create.rs
@@ -115,6 +125,8 @@ backend/
 
 ## Core Features
 - **Authentication**: JWT-based with refresh tokens (see [IMPLEMENTATION-SECURITY.md](IMPLEMENTATION-SECURITY.md#authentication-system))
+- **Email Verification**: Token-based email verification with role-based access control
+- **Token Cleanup**: Automatic background cleanup of expired tokens (refresh + verification)
 - **User Management**: Registration, login, slug generation, profile updates
 - **Profile Management**: Display name and slug editing, password changes
 - **Admin Management**: User deactivation, password reset, user promotion, system statistics
@@ -124,10 +136,11 @@ backend/
 - **Public API**: Unauthenticated access to user timers and phrases
 - **Database Integration**: SQLx with compile-time query verification
 - **3-Layer Architecture**: Clean separation with repository pattern and dependency injection
-- **Modular Services**: Auth service split into focused modules (register, login, refresh, profile, password, slug)
+- **Modular Services**: Auth service split into focused modules (register, login, refresh, profile, password, slug, email_verification)
 - **Modular Incident Timer Service**: Split into focused modules (create, read, update, delete)
 - **Modular Phrase Service**: Split into focused modules (public_access, user_management, admin_management, exclusions, suggestions)
 - **Modular Admin Services**: Split into focused modules (user_management, phrase_moderation, stats)
+- **Background Tasks**: Scheduled cleanup service for token expiration management
 - **Route Scoping**: Public/protected/admin route organization with appropriate middleware
 - **Testing**: See [IMPLEMENTATION-TESTING.md](IMPLEMENTATION-TESTING.md) for comprehensive testing details
 
@@ -208,6 +221,48 @@ cargo test
 ## Testing
 
 See [IMPLEMENTATION-TESTING.md](IMPLEMENTATION-TESTING.md) for comprehensive testing documentation.
+
+## Token Cleanup Service
+
+### Overview
+Automated background service that removes expired tokens from the database to prevent unbounded growth and maintain system performance.
+
+### Architecture
+- **Service**: `CleanupService` in `services/cleanup/mod.rs`
+- **Repository Dependencies**: Uses `RefreshTokenRepository` and `VerificationTokenRepository` traits
+- **Background Task**: Spawned via `actix_web::rt::spawn` on application startup
+- **Scheduling**: Uses `actix_web::rt::time::interval` for periodic execution
+
+### Behavior
+- **Startup**: Runs immediately on application startup to clean any existing expired tokens
+- **Interval**: Runs every N hours (configurable via `CLEANUP_INTERVAL_HOURS`, default: 24)
+- **Target**: Cleans both refresh tokens and verification tokens in a single operation
+- **Logging**: Logs cleanup results (count of deleted tokens) at INFO level
+
+### Configuration
+```bash
+# .env.development
+CLEANUP_INTERVAL_HOURS=24  # Run cleanup every 24 hours
+```
+
+### Implementation Details
+```rust
+// Spawned in main.rs on startup
+actix_web::rt::spawn(async move {
+    let mut interval = actix_web::rt::time::interval(
+        std::time::Duration::from_secs(cleanup_interval_hours * 3600)
+    );
+
+    loop {
+        interval.tick().await;  // First tick completes immediately
+        // Cleanup logic...
+    }
+});
+```
+
+### Testing
+- **Unit Tests**: 5 tests with mock repositories (service creation, repository calls, error handling)
+- **Integration Tests**: 5 tests with testcontainers (expired refresh tokens, verification tokens, both types, no expired tokens, empty database)
 
 ## Database Integration
 - **Connection**: SQLx with connection pooling

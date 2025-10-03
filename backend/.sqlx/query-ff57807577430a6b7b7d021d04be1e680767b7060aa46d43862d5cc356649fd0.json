@@ -1,6 +1,6 @@
 {
   "db_name": "PostgreSQL",
-  "query": "\n            UPDATE users \n            SET display_name = $1, slug = $2, updated_at = NOW()\n            WHERE id = $3\n            RETURNING id, email, password_hash, display_name, slug, active, created_at, updated_at\n            ",
+  "query": "SELECT id, email, password_hash, display_name, slug, active, real_name, google_user_id, created_at, updated_at FROM users WHERE id = $1",
   "describe": {
     "columns": [
       {
@@ -35,32 +35,42 @@
       },
       {
         "ordinal": 6,
+        "name": "real_name",
+        "type_info": "Varchar"
+      },
+      {
+        "ordinal": 7,
+        "name": "google_user_id",
+        "type_info": "Varchar"
+      },
+      {
+        "ordinal": 8,
         "name": "created_at",
         "type_info": "Timestamptz"
       },
       {
-        "ordinal": 7,
+        "ordinal": 9,
         "name": "updated_at",
         "type_info": "Timestamptz"
       }
     ],
     "parameters": {
       "Left": [
-        "Varchar",
-        "Varchar",
         "Uuid"
       ]
     },
     "nullable": [
       false,
       false,
+      true,
       false,
       false,
       false,
-      false,
+      true,
+      true,
       false,
       false
     ]
   },
-  "hash": "6ff3b0f3c9a117f53562fbc5f1fc231e8e74da60be11c6c1e822101e6a54612f"
+  "hash": "ff57807577430a6b7b7d021d04be1e680767b7060aa46d43862d5cc356649fd0"
 }

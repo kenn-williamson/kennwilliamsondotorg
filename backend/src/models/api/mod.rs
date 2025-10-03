@@ -1,9 +1,9 @@
-pub mod user;
+pub mod admin;
 pub mod incident_timer;
 pub mod phrase;
-pub mod admin;
+pub mod user;
 
-pub use user::*;
+pub use admin::*;
 pub use incident_timer::*;
 pub use phrase::*;
-pub use admin::*;
+pub use user::*;

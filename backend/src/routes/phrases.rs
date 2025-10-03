@@ -2,8 +2,8 @@ use actix_web::{web, HttpMessage, HttpRequest, HttpResponse, Result};
 use uuid::Uuid;
 
 use crate::models::api::{
-    PhraseSuggestionRequest, PhraseSuggestionResponse, PhraseListResponse, SuggestionListResponse,
-    ExcludedPhrasesResponse, UserExcludedPhraseResponse
+    ExcludedPhrasesResponse, PhraseListResponse, PhraseSuggestionRequest, PhraseSuggestionResponse,
+    SuggestionListResponse, UserExcludedPhraseResponse,
 };
 use crate::services::phrase::PhraseService;
 
@@ -13,7 +13,7 @@ pub async fn get_random_phrase_for_user(
     path: web::Path<String>,
 ) -> Result<HttpResponse> {
     let user_slug = path.into_inner();
-    
+
     match phrase_service.get_random_phrase_by_slug(&user_slug).await {
         Ok(phrase_text) => Ok(HttpResponse::Ok().json(phrase_text)),
         Err(e) => {
@@ -31,7 +31,7 @@ pub async fn get_random_phrase_for_auth_user(
     req: HttpRequest,
 ) -> Result<HttpResponse> {
     let user_id = req.extensions().get::<Uuid>().cloned().unwrap();
-    
+
     match phrase_service.get_random_phrase(user_id).await {
         Ok(phrase_text) => Ok(HttpResponse::Ok().json(phrase_text)),
         Err(e) => {
@@ -53,13 +53,13 @@ pub async fn get_user_phrases(
     let limit = query.limit;
     let offset = query.offset;
 
-    match phrase_service.get_user_phrases(user_id, limit, offset).await {
+    match phrase_service
+        .get_user_phrases(user_id, limit, offset)
+        .await
+    {
         Ok(phrases) => {
             let total = phrases.len() as i64;
-            let response = PhraseListResponse {
-                phrases,
-                total,
-            };
+            let response = PhraseListResponse { phrases, total };
             Ok(HttpResponse::Ok().json(response))
         }
         Err(e) => {
@@ -82,7 +82,10 @@ pub async fn get_user_phrases_with_exclusions(
     let offset = query.offset;
     let search = query.search.clone();
 
-    match phrase_service.get_user_phrases_with_exclusions(user_id, limit, offset, search).await {
+    match phrase_service
+        .get_user_phrases_with_exclusions(user_id, limit, offset, search)
+        .await
+    {
         Ok(response) => Ok(HttpResponse::Ok().json(response)),
         Err(e) => {
             log::error!("Failed to get user phrases with exclusions: {}", e);
@@ -102,7 +105,10 @@ pub async fn exclude_phrase(
     let user_id = req.extensions().get::<Uuid>().cloned().unwrap();
     let phrase_id = path.into_inner();
 
-    match phrase_service.exclude_phrase_for_user(user_id, phrase_id).await {
+    match phrase_service
+        .exclude_phrase_for_user(user_id, phrase_id)
+        .await
+    {
         Ok(_) => Ok(HttpResponse::Ok().json(serde_json::json!({
             "message": "Phrase excluded successfully"
         }))),
@@ -124,7 +130,10 @@ pub async fn remove_phrase_exclusion(
     let user_id = req.extensions().get::<Uuid>().cloned().unwrap();
     let phrase_id = path.into_inner();
 
-    match phrase_service.remove_phrase_exclusion(user_id, phrase_id).await {
+    match phrase_service
+        .remove_phrase_exclusion(user_id, phrase_id)
+        .await
+    {
         Ok(_) => Ok(HttpResponse::Ok().json(serde_json::json!({
             "message": "Phrase exclusion removed successfully"
         }))),
@@ -147,12 +156,14 @@ pub async fn get_excluded_phrases(
         Ok(exclusions) => {
             let excluded_phrases: Vec<UserExcludedPhraseResponse> = exclusions
                 .into_iter()
-                .map(|(id, phrase_text, excluded_at)| UserExcludedPhraseResponse {
-                    id,
-                    phrase_id: id, // This should be the phrase_id, but we're using id for now
-                    phrase_text,
-                    excluded_at,
-                })
+                .map(
+                    |(id, phrase_text, excluded_at)| UserExcludedPhraseResponse {
+                        id,
+                        phrase_id: id, // This should be the phrase_id, but we're using id for now
+                        phrase_text,
+                        excluded_at,
+                    },
+                )
                 .collect();
 
             let total = excluded_phrases.len() as i64;
@@ -178,11 +189,14 @@ pub async fn submit_suggestion(
     request: web::Json<PhraseSuggestionRequest>,
 ) -> Result<HttpResponse> {
     let user_id = req.extensions().get::<Uuid>().cloned().unwrap();
-    match phrase_service.submit_phrase_suggestion(user_id, request.into_inner()).await {
+    match phrase_service
+        .submit_phrase_suggestion(user_id, request.into_inner())
+        .await
+    {
         Ok(suggestion) => {
             let response: PhraseSuggestionResponse = suggestion.into();
             Ok(HttpResponse::Created().json(response))
-        },
+        }
         Err(e) => {
             log::error!("Failed to submit suggestion: {}", e);
             Ok(HttpResponse::InternalServerError().json(serde_json::json!({

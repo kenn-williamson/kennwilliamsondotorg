@@ -1,33 +1,31 @@
-use mockall::mock;
-use async_trait::async_trait;
-use uuid::Uuid;
 use anyhow::Result;
+use async_trait::async_trait;
+use mockall::mock;
+use uuid::Uuid;
 
+use crate::models::api::{CreatePhraseRequest, PhraseSuggestionRequest, UpdatePhraseRequest};
+use crate::models::db::{Phrase, PhraseSearchResultWithUserExclusionView, PhraseSuggestion};
 use crate::repositories::traits::PhraseRepository;
-use crate::models::api::{
-    CreatePhraseRequest, UpdatePhraseRequest, PhraseSuggestionRequest
-};
-use crate::models::db::{Phrase, PhraseSuggestion, PhraseSearchResultWithUserExclusionView};
 
 // Generate mock for PhraseRepository trait
 mock! {
     pub PhraseRepository {}
-    
+
     #[async_trait]
     impl PhraseRepository for PhraseRepository {
         async fn get_random_phrase_by_slug(&self, user_slug: &str) -> Result<String>;
         async fn get_random_phrase(&self, user_id: Uuid) -> Result<String>;
         async fn get_user_phrases(
-            &self, 
-            user_id: Uuid, 
-            limit: Option<i64>, 
+            &self,
+            user_id: Uuid,
+            limit: Option<i64>,
             offset: Option<i64>
         ) -> Result<Vec<Phrase>>;
         async fn get_user_phrases_with_exclusions(&self, user_id: Uuid, limit: Option<i64>, offset: Option<i64>, search: Option<String>) -> Result<Vec<PhraseSearchResultWithUserExclusionView>>;
         async fn get_phrases(
-            &self, 
-            include_inactive: bool, 
-            limit: Option<i64>, 
+            &self,
+            include_inactive: bool,
+            limit: Option<i64>,
             offset: Option<i64>,
             search: Option<String>
         ) -> Result<Vec<Phrase>>;
@@ -51,9 +49,9 @@ mock! {
             admin_id: Uuid,
             admin_reason: Option<String>,
         ) -> Result<()>;
-        
+
         async fn count_all_phrases(&self) -> Result<i64>;
-        
+
         async fn count_pending_suggestions(&self) -> Result<i64>;
     }
 }
@@ -61,9 +59,9 @@ mock! {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use uuid::Uuid;
     use chrono::Utc;
     use mockall::predicate::eq;
+    use uuid::Uuid;
 
     // Helper function to create a test phrase
     fn create_test_phrase() -> Phrase {
@@ -95,14 +93,14 @@ mod tests {
     async fn test_mock_get_random_phrase() {
         let mut mock_repo = MockPhraseRepository::new();
         let user_id = Uuid::new_v4();
-        
+
         // Setup mock expectation
         mock_repo
             .expect_get_random_phrase()
             .times(1)
             .with(eq(user_id))
             .returning(|_| Ok("Test phrase".to_string()));
-        
+
         // Test the mock
         let result = mock_repo.get_random_phrase(user_id).await;
         assert!(result.is_ok());
@@ -112,14 +110,14 @@ mod tests {
     #[tokio::test]
     async fn test_mock_get_random_phrase_by_slug() {
         let mut mock_repo = MockPhraseRepository::new();
-        
+
         // Setup mock expectation
         mock_repo
             .expect_get_random_phrase_by_slug()
             .times(1)
             .with(eq("test-user"))
             .returning(|_| Ok("Test phrase for user".to_string()));
-        
+
         // Test the mock
         let result = mock_repo.get_random_phrase_by_slug("test-user").await;
         assert!(result.is_ok());
@@ -130,14 +128,14 @@ mod tests {
     async fn test_mock_get_user_phrases() {
         let mut mock_repo = MockPhraseRepository::new();
         let user_id = Uuid::new_v4();
-        
+
         // Setup mock expectation
         mock_repo
             .expect_get_user_phrases()
             .times(1)
             .with(eq(user_id), eq(Some(10)), eq(Some(0)))
             .returning(|_, _, _| Ok(vec![create_test_phrase()]));
-        
+
         // Test the mock
         let result = mock_repo.get_user_phrases(user_id, Some(10), Some(0)).await;
         assert!(result.is_ok());
@@ -153,14 +151,14 @@ mod tests {
         let request = PhraseSuggestionRequest {
             phrase_text: "New suggestion".to_string(),
         };
-        
+
         // Setup mock expectation
         mock_repo
             .expect_submit_phrase_suggestion()
             .times(1)
             .with(eq(user_id), eq(request.clone()))
             .returning(|_, _| Ok(create_test_phrase_suggestion()));
-        
+
         // Test the mock
         let result = mock_repo.submit_phrase_suggestion(user_id, request).await;
         assert!(result.is_ok());
@@ -171,16 +169,19 @@ mod tests {
     #[tokio::test]
     async fn test_mock_error_handling() {
         let mut mock_repo = MockPhraseRepository::new();
-        
+
         // Setup mock to return an error
         mock_repo
             .expect_get_random_phrase()
             .times(1)
             .returning(|_| Err(anyhow::anyhow!("Database connection failed")));
-        
+
         // Test error handling
         let result = mock_repo.get_random_phrase(Uuid::new_v4()).await;
         assert!(result.is_err());
-        assert!(result.unwrap_err().to_string().contains("Database connection failed"));
+        assert!(result
+            .unwrap_err()
+            .to_string()
+            .contains("Database connection failed"));
     }
 }

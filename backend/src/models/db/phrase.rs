@@ -13,7 +13,6 @@ pub struct Phrase {
     pub updated_at: DateTime<Utc>,
 }
 
-
 #[derive(Debug, Clone, FromRow, Serialize)]
 pub struct PhraseSuggestion {
     pub id: Uuid,
@@ -35,6 +34,5 @@ pub struct PhraseSearchResultWithUserExclusionView {
     pub created_at: DateTime<Utc>,
     pub updated_at: DateTime<Utc>,
     pub is_excluded: Option<bool>, // SQLx infers Option due to LEFT JOIN, but we handle conversion in service layer
-    pub rank: Option<f32>, // For ordering in search queries
+    pub rank: Option<f32>,         // For ordering in search queries
 }
-

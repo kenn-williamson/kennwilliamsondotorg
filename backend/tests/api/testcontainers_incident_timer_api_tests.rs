@@ -4,7 +4,7 @@ use serde_json::json;
 
 #[actix_web::test]
 async fn test_get_user_timers_success() {
-    let (srv, _pool, _test_container) = crate::test_helpers::create_test_app_with_testcontainers().await;
+    let (srv, _pool, _test_container, _email_service) = crate::test_helpers::create_test_app_with_testcontainers().await;
     
     // First register a user to get proper authentication
     let email = crate::test_helpers::unique_test_email();
@@ -49,7 +49,7 @@ async fn test_get_user_timers_success() {
 #[actix_web::test]
 #[allow(unused_mut)]
 async fn test_get_user_timers_unauthorized() {
-    let (srv, _pool, _test_container) = crate::test_helpers::create_test_app_with_testcontainers().await;
+    let (srv, _pool, _test_container, _email_service) = crate::test_helpers::create_test_app_with_testcontainers().await;
     
     let mut resp = srv.get("/backend/protected/incident-timers")
         .send()
@@ -61,7 +61,7 @@ async fn test_get_user_timers_unauthorized() {
 
 #[actix_web::test]
 async fn test_create_timer_success() {
-    let (srv, _pool, _test_container) = crate::test_helpers::create_test_app_with_testcontainers().await;
+    let (srv, _pool, _test_container, _email_service) = crate::test_helpers::create_test_app_with_testcontainers().await;
     
     // First register a user
     let email = crate::test_helpers::unique_test_email();
@@ -113,7 +113,7 @@ async fn test_create_timer_success() {
 
 #[actix_web::test]
 async fn test_create_timer_minimal() {
-    let (srv, _pool, _test_container) = crate::test_helpers::create_test_app_with_testcontainers().await;
+    let (srv, _pool, _test_container, _email_service) = crate::test_helpers::create_test_app_with_testcontainers().await;
     
     // First register a user
     let email = crate::test_helpers::unique_test_email();
@@ -162,7 +162,7 @@ async fn test_create_timer_minimal() {
 #[actix_web::test]
 #[allow(unused_mut)]
 async fn test_create_timer_unauthorized() {
-    let (srv, _pool, _test_container) = crate::test_helpers::create_test_app_with_testcontainers().await;
+    let (srv, _pool, _test_container, _email_service) = crate::test_helpers::create_test_app_with_testcontainers().await;
     
     let timer_request_body = json!({
         "reset_timestamp": "2024-01-01T12:00:00Z",
@@ -179,7 +179,7 @@ async fn test_create_timer_unauthorized() {
 
 #[actix_web::test]
 async fn test_update_timer_success() {
-    let (srv, _pool, _test_container) = crate::test_helpers::create_test_app_with_testcontainers().await;
+    let (srv, _pool, _test_container, _email_service) = crate::test_helpers::create_test_app_with_testcontainers().await;
     
     // First register a user
     let email = crate::test_helpers::unique_test_email();
@@ -246,7 +246,7 @@ async fn test_update_timer_success() {
 
 #[actix_web::test]
 async fn test_update_timer_not_found() {
-    let (srv, _pool, _test_container) = crate::test_helpers::create_test_app_with_testcontainers().await;
+    let (srv, _pool, _test_container, _email_service) = crate::test_helpers::create_test_app_with_testcontainers().await;
     
     // First register a user
     let email = crate::test_helpers::unique_test_email();
@@ -290,7 +290,7 @@ async fn test_update_timer_not_found() {
 #[actix_web::test]
 #[allow(unused_mut)]
 async fn test_update_timer_unauthorized() {
-    let (srv, _pool, _test_container) = crate::test_helpers::create_test_app_with_testcontainers().await;
+    let (srv, _pool, _test_container, _email_service) = crate::test_helpers::create_test_app_with_testcontainers().await;
     
     let fake_timer_id = "01234567-89ab-cdef-0123-456789abcdef";
     let update_request_body = json!({
@@ -307,7 +307,7 @@ async fn test_update_timer_unauthorized() {
 
 #[actix_web::test]
 async fn test_delete_timer_success() {
-    let (srv, _pool, _test_container) = crate::test_helpers::create_test_app_with_testcontainers().await;
+    let (srv, _pool, _test_container, _email_service) = crate::test_helpers::create_test_app_with_testcontainers().await;
     
     // First register a user
     let email = crate::test_helpers::unique_test_email();
@@ -377,7 +377,7 @@ async fn test_delete_timer_success() {
 
 #[actix_web::test]
 async fn test_delete_timer_not_found() {
-    let (srv, _pool, _test_container) = crate::test_helpers::create_test_app_with_testcontainers().await;
+    let (srv, _pool, _test_container, _email_service) = crate::test_helpers::create_test_app_with_testcontainers().await;
     
     // First register a user
     let email = crate::test_helpers::unique_test_email();
@@ -418,7 +418,7 @@ async fn test_delete_timer_not_found() {
 #[actix_web::test]
 #[allow(unused_mut)]
 async fn test_delete_timer_unauthorized() {
-    let (srv, _pool, _test_container) = crate::test_helpers::create_test_app_with_testcontainers().await;
+    let (srv, _pool, _test_container, _email_service) = crate::test_helpers::create_test_app_with_testcontainers().await;
     
     let fake_timer_id = "01234567-89ab-cdef-0123-456789abcdef";
     
@@ -433,7 +433,7 @@ async fn test_delete_timer_unauthorized() {
 #[actix_web::test]
 #[allow(unused_mut)]
 async fn test_get_public_timer_success() {
-    let (srv, _pool, _test_container) = crate::test_helpers::create_test_app_with_testcontainers().await;
+    let (srv, _pool, _test_container, _email_service) = crate::test_helpers::create_test_app_with_testcontainers().await;
     
     // First register a user
     let email = crate::test_helpers::unique_test_email();
@@ -498,7 +498,7 @@ async fn test_get_public_timer_success() {
 
 #[actix_web::test]
 async fn test_get_public_timer_not_found() {
-    let (srv, _pool, _test_container) = crate::test_helpers::create_test_app_with_testcontainers().await;
+    let (srv, _pool, _test_container, _email_service) = crate::test_helpers::create_test_app_with_testcontainers().await;
     
     // Try to get a timer for a non-existent user
     let fake_slug = "non-existent-user";
@@ -516,7 +516,7 @@ async fn test_get_public_timer_not_found() {
 
 #[actix_web::test]
 async fn test_get_public_timer_no_timers() {
-    let (srv, _pool, _test_container) = crate::test_helpers::create_test_app_with_testcontainers().await;
+    let (srv, _pool, _test_container, _email_service) = crate::test_helpers::create_test_app_with_testcontainers().await;
     
     // First register a user but don't create any timers
     let email = crate::test_helpers::unique_test_email();

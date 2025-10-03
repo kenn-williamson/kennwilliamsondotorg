@@ -1,13 +1,17 @@
 use anyhow::Result;
-use uuid::Uuid;
 use bcrypt::{hash, verify, DEFAULT_COST};
+use uuid::Uuid;
 
-use crate::models::api::PasswordChangeRequest;
 use super::AuthService;
+use crate::models::api::PasswordChangeRequest;
 
 impl AuthService {
     /// Change user password
-    pub async fn change_password(&self, user_id: Uuid, request: PasswordChangeRequest) -> Result<()> {
+    pub async fn change_password(
+        &self,
+        user_id: Uuid,
+        request: PasswordChangeRequest,
+    ) -> Result<()> {
         // Get current user
         let user = self.user_repository.find_by_id(user_id).await?;
         let user = match user {
@@ -15,8 +19,17 @@ impl AuthService {
             None => return Err(anyhow::anyhow!("User not found")),
         };
 
-        // Verify current password
-        if !verify(&request.current_password, &user.password_hash)? {
+        // Verify current password (OAuth-only users cannot change password)
+        let password_hash = match &user.password_hash {
+            Some(hash) => hash,
+            None => {
+                return Err(anyhow::anyhow!(
+                    "Cannot change password for OAuth-only accounts"
+                ))
+            }
+        };
+
+        if !verify(&request.current_password, password_hash)? {
             return Err(anyhow::anyhow!("Current password is incorrect"));
         }
 
@@ -24,7 +37,9 @@ impl AuthService {
         let new_password_hash = hash(&request.new_password, DEFAULT_COST)?;
 
         // Update password
-        self.user_repository.update_password(user_id, &new_password_hash).await?;
+        self.user_repository
+            .update_password(user_id, &new_password_hash)
+            .await?;
 
         Ok(())
     }
@@ -33,22 +48,24 @@ impl AuthService {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use anyhow::Result;
-    use crate::repositories::mocks::mock_user_repository::MockUserRepository;
     use crate::repositories::mocks::mock_refresh_token_repository::MockRefreshTokenRepository;
+    use crate::repositories::mocks::mock_user_repository::MockUserRepository;
+    use anyhow::Result;
+    use bcrypt::{hash, DEFAULT_COST};
+    use chrono::Utc;
     use mockall::predicate::eq;
     use uuid::Uuid;
-    use chrono::Utc;
-    use bcrypt::{hash, DEFAULT_COST};
 
     fn create_test_user() -> crate::models::db::User {
         crate::models::db::User {
             id: Uuid::new_v4(),
             email: "test@example.com".to_string(),
-            password_hash: hash("current_password", DEFAULT_COST).unwrap(),
+            password_hash: Some(hash("current_password", DEFAULT_COST).unwrap()),
             display_name: "Test User".to_string(),
             slug: "test-user".to_string(),
             active: true,
+            real_name: None,
+            google_user_id: None,
             created_at: Utc::now(),
             updated_at: Utc::now(),
         }
@@ -70,11 +87,14 @@ mod tests {
         user_repo
             .expect_update_password()
             .times(1)
-            .with(eq(user_id), mockall::predicate::function(|hash: &str| {
-                // Verify that the new password hash is different from the old one
-                let current_hash = bcrypt::hash("current_password", DEFAULT_COST).unwrap();
-                hash != &current_hash
-            }))
+            .with(
+                eq(user_id),
+                mockall::predicate::function(|hash: &str| {
+                    // Verify that the new password hash is different from the old one
+                    let current_hash = bcrypt::hash("current_password", DEFAULT_COST).unwrap();
+                    hash != &current_hash
+                }),
+            )
             .returning(|_, _| Ok(()));
 
         let request = PasswordChangeRequest {
@@ -89,7 +109,7 @@ mod tests {
         );
         let result = auth_service.change_password(user_id, request).await;
         assert!(result.is_ok());
-        
+
         Ok(())
     }
 
@@ -118,7 +138,7 @@ mod tests {
         let result = auth_service.change_password(user_id, request).await;
         assert!(result.is_err());
         assert!(result.unwrap_err().to_string().contains("User not found"));
-        
+
         Ok(())
     }
 
@@ -147,8 +167,11 @@ mod tests {
         );
         let result = auth_service.change_password(user_id, request).await;
         assert!(result.is_err());
-        assert!(result.unwrap_err().to_string().contains("Current password is incorrect"));
-        
+        assert!(result
+            .unwrap_err()
+            .to_string()
+            .contains("Current password is incorrect"));
+
         Ok(())
     }
 
@@ -177,7 +200,7 @@ mod tests {
         let result = auth_service.change_password(user_id, request).await;
         assert!(result.is_err());
         assert!(result.unwrap_err().to_string().contains("Database error"));
-        
+
         Ok(())
     }
 
@@ -212,7 +235,7 @@ mod tests {
         let result = auth_service.change_password(user_id, request).await;
         assert!(result.is_err());
         assert!(result.unwrap_err().to_string().contains("Database error"));
-        
+
         Ok(())
     }
 
@@ -248,14 +271,19 @@ mod tests {
             };
 
             let auth_service = AuthService::new(
-            Box::new(user_repo),
-            Box::new(MockRefreshTokenRepository::new()),
-            "test-secret".to_string(),
-        );
-        let result = auth_service.change_password(user_id, request).await;
-            assert!(result.is_ok(), "Failed for current_pass: '{}', new_pass: '{}'", current_pass, new_pass);
+                Box::new(user_repo),
+                Box::new(MockRefreshTokenRepository::new()),
+                "test-secret".to_string(),
+            );
+            let result = auth_service.change_password(user_id, request).await;
+            assert!(
+                result.is_ok(),
+                "Failed for current_pass: '{}', new_pass: '{}'",
+                current_pass,
+                new_pass
+            );
         }
-        
+
         Ok(())
     }
 
@@ -276,10 +304,16 @@ mod tests {
         user_repo
             .expect_update_password()
             .times(1)
-            .with(eq(user_id), mockall::predicate::function(move |hash: &str| {
-                // Verify that the new password hash is different from the old one
-                hash != &old_hash
-            }))
+            .with(
+                eq(user_id),
+                mockall::predicate::function(move |hash: &str| {
+                    // Verify that the new password hash is different from the old one
+                    match &old_hash {
+                        Some(old) => hash != old,
+                        None => true, // OAuth users have no password
+                    }
+                }),
+            )
             .returning(|_, _| Ok(()));
 
         let request = PasswordChangeRequest {
@@ -294,7 +328,7 @@ mod tests {
         );
         let result = auth_service.change_password(user_id, request).await;
         assert!(result.is_ok());
-        
+
         Ok(())
     }
 }

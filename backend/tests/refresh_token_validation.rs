@@ -6,7 +6,7 @@ mod test_helpers;
 #[actix_web::test]
 #[allow(unused_mut)]
 async fn test_refresh_token_complete_flow() {
-    let (srv, _pool, _test_container) = test_helpers::create_test_app_with_testcontainers().await;
+    let (srv, _pool, _test_container, _email_service) = test_helpers::create_test_app_with_testcontainers().await;
 
     // Step 1: Register a new user
     let test_email = test_helpers::unique_test_email();
@@ -104,7 +104,7 @@ async fn test_refresh_token_complete_flow() {
 #[actix_web::test]
 #[allow(unused_mut)]
 async fn test_refresh_token_expiration() {
-    let (srv, pool, _test_container) = test_helpers::create_test_app_with_testcontainers().await;
+    let (srv, pool, _test_container, _email_service) = test_helpers::create_test_app_with_testcontainers().await;
     
     // Create a user
     let user = test_helpers::create_test_user_in_db(
@@ -145,7 +145,7 @@ async fn test_refresh_token_expiration() {
 #[actix_web::test]
 #[allow(unused_mut)]
 async fn test_refresh_token_invalid() {
-    let (srv, _pool, _test_container) = test_helpers::create_test_app_with_testcontainers().await;
+    let (srv, _pool, _test_container, _email_service) = test_helpers::create_test_app_with_testcontainers().await;
 
     // Try to use non-existent token
     let refresh_request_body = serde_json::json!({

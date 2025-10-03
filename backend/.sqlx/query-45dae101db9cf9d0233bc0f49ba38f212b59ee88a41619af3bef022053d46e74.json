@@ -1,6 +1,6 @@
 {
   "db_name": "PostgreSQL",
-  "query": "\n                SELECT \n                    u.id, u.email, u.display_name, u.slug, u.active, u.created_at, u.updated_at,\n                    array_agg(r.name) as roles\n                FROM users u\n                INNER JOIN user_roles ur ON u.id = ur.user_id\n                INNER JOIN roles r ON ur.role_id = r.id\n                WHERE u.display_name ILIKE $1 OR u.email ILIKE $1 OR u.slug ILIKE $1\n                GROUP BY u.id, u.email, u.display_name, u.slug, u.active, u.created_at, u.updated_at\n                ORDER BY u.created_at DESC\n                LIMIT $2 OFFSET $3\n                ",
+  "query": "\n                SELECT\n                    u.id, u.email, u.display_name, u.slug, u.active, u.real_name, u.google_user_id, u.created_at, u.updated_at,\n                    array_agg(r.name) as roles\n                FROM users u\n                INNER JOIN user_roles ur ON u.id = ur.user_id\n                INNER JOIN roles r ON ur.role_id = r.id\n                GROUP BY u.id, u.email, u.display_name, u.slug, u.active, u.real_name, u.google_user_id, u.created_at, u.updated_at\n                ORDER BY u.created_at DESC\n                LIMIT $1 OFFSET $2\n                ",
   "describe": {
     "columns": [
       {
@@ -30,23 +30,32 @@
       },
       {
         "ordinal": 5,
+        "name": "real_name",
+        "type_info": "Varchar"
+      },
+      {
+        "ordinal": 6,
+        "name": "google_user_id",
+        "type_info": "Varchar"
+      },
+      {
+        "ordinal": 7,
         "name": "created_at",
         "type_info": "Timestamptz"
       },
       {
-        "ordinal": 6,
+        "ordinal": 8,
         "name": "updated_at",
         "type_info": "Timestamptz"
       },
       {
-        "ordinal": 7,
+        "ordinal": 9,
         "name": "roles",
         "type_info": "VarcharArray"
       }
     ],
     "parameters": {
       "Left": [
-        "Text",
         "Int8",
         "Int8"
       ]
@@ -57,10 +66,12 @@
       false,
       false,
       false,
+      true,
+      true,
       false,
       false,
       null
     ]
   },
-  "hash": "0743d8a95c713027dc2c1d8262d8009907608219673ff630c92e2d867554aa26"
+  "hash": "45dae101db9cf9d0233bc0f49ba38f212b59ee88a41619af3bef022053d46e74"
 }

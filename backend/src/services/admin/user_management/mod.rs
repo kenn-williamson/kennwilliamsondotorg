@@ -1,7 +1,7 @@
 use std::sync::Arc;
 use uuid::Uuid;
 
-use crate::repositories::traits::{UserRepository, RefreshTokenRepository, AdminRepository};
+use crate::repositories::traits::{AdminRepository, RefreshTokenRepository, UserRepository};
 
 /// User management service for admin operations
 pub struct UserManagementService {
@@ -30,31 +30,41 @@ impl UserManagementService {
         limit: Option<i64>,
         offset: Option<i64>,
     ) -> anyhow::Result<Vec<crate::models::api::admin::AdminUserListItem>> {
-        let users_db = self.admin_repository.get_all_users_with_roles(search, limit, offset).await?;
-        
+        let users_db = self
+            .admin_repository
+            .get_all_users_with_roles(search, limit, offset)
+            .await?;
+
         // Convert database structs to API structs using the from_db method
-        let users = users_db.into_iter()
+        let users = users_db
+            .into_iter()
             .map(crate::models::api::admin::AdminUserListItem::from_db)
             .collect();
-        
+
         Ok(users)
     }
 
     /// Deactivate a user
     pub async fn deactivate_user(&self, user_id: Uuid) -> anyhow::Result<()> {
         // Use AdminRepository to update user status
-        self.admin_repository.update_user_status(user_id, false).await?;
-        
+        self.admin_repository
+            .update_user_status(user_id, false)
+            .await?;
+
         // Revoke all refresh tokens
-        self.refresh_token_repository.revoke_all_user_tokens(user_id).await?;
-        
+        self.refresh_token_repository
+            .revoke_all_user_tokens(user_id)
+            .await?;
+
         Ok(())
     }
 
     /// Activate a user
     pub async fn activate_user(&self, user_id: Uuid) -> anyhow::Result<()> {
         // Use AdminRepository to update user status
-        self.admin_repository.update_user_status(user_id, true).await?;
+        self.admin_repository
+            .update_user_status(user_id, true)
+            .await?;
         Ok(())
     }
 
@@ -66,15 +76,19 @@ impl UserManagementService {
             .map_err(|e| anyhow::anyhow!("Password hashing failed: {}", e))?;
 
         // Use the existing update_password method in UserRepository
-        self.user_repository.update_password(user_id, &password_hash).await?;
-        
+        self.user_repository
+            .update_password(user_id, &password_hash)
+            .await?;
+
         Ok(new_password)
     }
 
     /// Promote user to admin
     pub async fn promote_to_admin(&self, user_id: Uuid) -> anyhow::Result<()> {
         // Add admin role to user using AdminRepository
-        self.admin_repository.add_user_role(user_id, "admin").await?;
+        self.admin_repository
+            .add_user_role(user_id, "admin")
+            .await?;
         Ok(())
     }
 
@@ -87,7 +101,7 @@ impl UserManagementService {
 
 /// Generate a random password for admin reset
 fn generate_random_password() -> String {
-    use rand::{Rng, distr::Alphanumeric};
+    use rand::{distr::Alphanumeric, Rng};
     rand::rng()
         .sample_iter(&Alphanumeric)
         .take(12)
@@ -102,9 +116,11 @@ fn hash(password: &str, cost: u32) -> Result<String, bcrypt::BcryptError> {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use mockall::predicate::*;
-    use crate::repositories::mocks::{MockUserRepository, MockRefreshTokenRepository, MockAdminRepository};
     use crate::models::db::UserWithRoles;
+    use crate::repositories::mocks::{
+        MockAdminRepository, MockRefreshTokenRepository, MockUserRepository,
+    };
+    use mockall::predicate::*;
     use uuid::Uuid;
 
     #[tokio::test]
@@ -122,6 +138,8 @@ mod tests {
             display_name: "Test User".to_string(),
             slug: "test-user".to_string(),
             active: true,
+            real_name: None,
+            google_user_id: None,
             roles: Some(vec!["user".to_string()]),
             created_at: chrono::Utc::now(),
             updated_at: chrono::Utc::now(),
@@ -229,7 +247,10 @@ mod tests {
         // Configure mock expectations
         mock_user_repo
             .expect_update_password()
-            .with(eq(user_id), mockall::predicate::function(|_hash: &str| true))
+            .with(
+                eq(user_id),
+                mockall::predicate::function(|_hash: &str| true),
+            )
             .times(1)
             .returning(|_, _| Ok(()));
 

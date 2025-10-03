@@ -1,6 +1,6 @@
+use anyhow::Result;
 use std::sync::Arc;
 use uuid::Uuid;
-use anyhow::Result;
 
 use crate::models::api::{PendingSuggestionResponse, PendingSuggestionsResponse};
 use crate::repositories::traits::PhraseRepository;
@@ -21,7 +21,7 @@ impl PhraseModerationService {
     pub async fn get_pending_suggestions(&self) -> Result<PendingSuggestionsResponse> {
         // Get pending suggestions from repository
         let suggestions = self.phrase_repository.get_pending_suggestions().await?;
-        
+
         // Convert to response format
         let pending_suggestions: Vec<PendingSuggestionResponse> = suggestions
             .into_iter()
@@ -29,8 +29,12 @@ impl PhraseModerationService {
                 id: suggestion.id,
                 phrase_text: suggestion.phrase_text,
                 created_at: suggestion.created_at,
-                user_display_name: suggestion.user_display_name.unwrap_or_else(|| "Unknown".to_string()),
-                user_email: suggestion.user_email.unwrap_or_else(|| "unknown@example.com".to_string()),
+                user_display_name: suggestion
+                    .user_display_name
+                    .unwrap_or_else(|| "Unknown".to_string()),
+                user_email: suggestion
+                    .user_email
+                    .unwrap_or_else(|| "unknown@example.com".to_string()),
             })
             .collect();
 
@@ -70,11 +74,11 @@ impl PhraseModerationService {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use mockall::predicate::*;
     use crate::repositories::mocks::MockPhraseRepository;
     use crate::repositories::traits::phrase_repository::PendingSuggestionWithUser;
-    use uuid::Uuid;
     use chrono::Utc;
+    use mockall::predicate::*;
+    use uuid::Uuid;
 
     #[tokio::test]
     async fn test_get_pending_suggestions_success() {
@@ -167,7 +171,11 @@ mod tests {
         // Configure mock expectations
         mock_repo
             .expect_approve_suggestion()
-            .with(eq(suggestion_id), eq(admin_id), eq(Some("Approved".to_string())))
+            .with(
+                eq(suggestion_id),
+                eq(admin_id),
+                eq(Some("Approved".to_string())),
+            )
             .times(1)
             .returning(|_, _, _| Ok(()));
 
@@ -175,7 +183,9 @@ mod tests {
         let service = PhraseModerationService::new(Box::new(mock_repo));
 
         // Test
-        let result = service.approve_suggestion(suggestion_id, admin_id, Some("Approved".to_string())).await;
+        let result = service
+            .approve_suggestion(suggestion_id, admin_id, Some("Approved".to_string()))
+            .await;
 
         // Assert
         assert!(result.is_ok());
@@ -191,7 +201,11 @@ mod tests {
         // Configure mock expectations
         mock_repo
             .expect_reject_suggestion()
-            .with(eq(suggestion_id), eq(admin_id), eq(Some("Rejected".to_string())))
+            .with(
+                eq(suggestion_id),
+                eq(admin_id),
+                eq(Some("Rejected".to_string())),
+            )
             .times(1)
             .returning(|_, _, _| Ok(()));
 
@@ -199,7 +213,9 @@ mod tests {
         let service = PhraseModerationService::new(Box::new(mock_repo));
 
         // Test
-        let result = service.reject_suggestion(suggestion_id, admin_id, Some("Rejected".to_string())).await;
+        let result = service
+            .reject_suggestion(suggestion_id, admin_id, Some("Rejected".to_string()))
+            .await;
 
         // Assert
         assert!(result.is_ok());

@@ -1,11 +1,14 @@
 use anyhow::Result;
-use uuid::Uuid;
 use rand::Rng;
+use uuid::Uuid;
 
-use crate::models::api::{UserResponse, SlugPreviewRequest, SlugPreviewResponse, SlugValidationRequest, SlugValidationResponse, ProfileUpdateRequest};
-use crate::repositories::traits::user_repository::UserUpdates;
 use super::slug::{generate_slug, is_valid_slug};
 use super::AuthService;
+use crate::models::api::{
+    ProfileUpdateRequest, SlugPreviewRequest, SlugPreviewResponse, SlugValidationRequest,
+    SlugValidationResponse, UserResponse,
+};
+use crate::repositories::traits::user_repository::UserUpdates;
 
 impl AuthService {
     /// Get current user information
@@ -15,7 +18,7 @@ impl AuthService {
             Some(user) => {
                 let roles = self.user_repository.get_user_roles(user.id).await?;
                 Ok(Some(UserResponse::from_user_with_roles(user, roles)))
-            },
+            }
             None => Ok(None),
         }
     }
@@ -24,25 +27,28 @@ impl AuthService {
     pub async fn preview_slug(&self, request: SlugPreviewRequest) -> Result<SlugPreviewResponse> {
         let slug = generate_slug(&request.display_name, &*self.user_repository).await?;
         let available = !self.user_repository.slug_exists(&slug).await?;
-        
+
         Ok(SlugPreviewResponse {
             slug: slug.clone(),
             available,
-            final_slug: if available { 
-                slug 
-            } else { 
-                format!("{}-{}", slug, rand::rng().random_range(1..=999)) 
+            final_slug: if available {
+                slug
+            } else {
+                format!("{}-{}", slug, rand::rng().random_range(1..=999))
             },
         })
     }
 
     /// Validate slug format and availability (for profile updates)
-    pub async fn validate_slug(&self, request: SlugValidationRequest) -> Result<SlugValidationResponse> {
+    pub async fn validate_slug(
+        &self,
+        request: SlugValidationRequest,
+    ) -> Result<SlugValidationResponse> {
         let slug = request.slug;
-        
+
         // Check if slug format is valid
         let valid = is_valid_slug(&slug);
-        
+
         if !valid {
             return Ok(SlugValidationResponse {
                 slug: slug.clone(),
@@ -50,10 +56,10 @@ impl AuthService {
                 available: false,
             });
         }
-        
+
         // Check availability
         let available = !self.user_repository.slug_exists(&slug).await?;
-        
+
         Ok(SlugValidationResponse {
             slug: slug.clone(),
             valid: true,
@@ -62,14 +68,22 @@ impl AuthService {
     }
 
     /// Update user profile
-    pub async fn update_profile(&self, user_id: Uuid, request: ProfileUpdateRequest) -> Result<UserResponse> {
+    pub async fn update_profile(
+        &self,
+        user_id: Uuid,
+        request: ProfileUpdateRequest,
+    ) -> Result<UserResponse> {
         // Validate slug format - only check for excluded characters
         if !is_valid_slug(&request.slug) {
             return Err(anyhow::anyhow!("Invalid slug format"));
         }
 
         // Check if slug is available (excluding current user)
-        if self.user_repository.slug_exists_excluding_user(&request.slug, user_id).await? {
+        if self
+            .user_repository
+            .slug_exists_excluding_user(&request.slug, user_id)
+            .await?
+        {
             return Err(anyhow::anyhow!("Slug already taken"));
         }
 
@@ -78,7 +92,7 @@ impl AuthService {
             display_name: request.display_name,
             slug: request.slug,
         };
-        
+
         let user = self.user_repository.update_user(user_id, &updates).await?;
         let roles = self.user_repository.get_user_roles(user.id).await?;
 
@@ -89,21 +103,23 @@ impl AuthService {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use anyhow::Result;
-    use crate::repositories::mocks::mock_user_repository::MockUserRepository;
     use crate::repositories::mocks::mock_refresh_token_repository::MockRefreshTokenRepository;
+    use crate::repositories::mocks::mock_user_repository::MockUserRepository;
+    use anyhow::Result;
+    use chrono::Utc;
     use mockall::predicate::eq;
     use uuid::Uuid;
-    use chrono::Utc;
 
     fn create_test_user() -> crate::models::db::User {
         crate::models::db::User {
             id: Uuid::new_v4(),
             email: "test@example.com".to_string(),
-            password_hash: "hashed".to_string(),
+            password_hash: Some("hashed".to_string()),
             display_name: "Test User".to_string(),
             slug: "test-user".to_string(),
             active: true,
+            real_name: None,
+            google_user_id: None,
             created_at: Utc::now(),
             updated_at: Utc::now(),
         }
@@ -134,13 +150,13 @@ mod tests {
             "test-secret".to_string(),
         );
         let result = auth_service.get_current_user(user_id).await?;
-        
+
         assert!(result.is_some());
         let user_response = result.unwrap();
         assert_eq!(user_response.email, "test@example.com");
         assert_eq!(user_response.display_name, "Test User");
         assert_eq!(user_response.roles, vec!["user"]);
-        
+
         Ok(())
     }
 
@@ -163,7 +179,7 @@ mod tests {
         );
         let result = auth_service.get_current_user(user_id).await?;
         assert!(result.is_none());
-        
+
         Ok(())
     }
 
@@ -187,7 +203,7 @@ mod tests {
         let result = auth_service.get_current_user(user_id).await;
         assert!(result.is_err());
         assert!(result.unwrap_err().to_string().contains("Database error"));
-        
+
         Ok(())
     }
 
@@ -219,11 +235,11 @@ mod tests {
             "test-secret".to_string(),
         );
         let result = auth_service.preview_slug(request).await?;
-        
+
         assert_eq!(result.slug, "john-doe");
         assert!(result.available);
         assert_eq!(result.final_slug, "john-doe");
-        
+
         Ok(())
     }
 
@@ -261,11 +277,11 @@ mod tests {
             "test-secret".to_string(),
         );
         let result = auth_service.preview_slug(request).await?;
-        
+
         assert_eq!(result.slug, "john-doe-1");
         assert!(result.available);
         assert_eq!(result.final_slug, "john-doe-1");
-        
+
         Ok(())
     }
 
@@ -291,7 +307,7 @@ mod tests {
         let result = auth_service.preview_slug(request).await;
         assert!(result.is_err());
         assert!(result.unwrap_err().to_string().contains("Database error"));
-        
+
         Ok(())
     }
 
@@ -311,10 +327,13 @@ mod tests {
         user_repo
             .expect_update_user()
             .times(1)
-            .with(eq(user_id), mockall::predicate::function(|updates: &UserUpdates| {
-                updates.display_name == "New Name".to_string() &&
-                updates.slug == "new-slug".to_string()
-            }))
+            .with(
+                eq(user_id),
+                mockall::predicate::function(|updates: &UserUpdates| {
+                    updates.display_name == "New Name".to_string()
+                        && updates.slug == "new-slug".to_string()
+                }),
+            )
             .returning(move |_, _| Ok(updated_user.clone()));
 
         user_repo
@@ -333,11 +352,11 @@ mod tests {
             "test-secret".to_string(),
         );
         let result = auth_service.update_profile(user_id, request).await?;
-        
+
         assert_eq!(result.display_name, "Test User"); // From updated_user
         assert_eq!(result.slug, "test-user"); // From updated_user
         assert_eq!(result.roles, vec!["user"]);
-        
+
         Ok(())
     }
 
@@ -359,8 +378,11 @@ mod tests {
         );
         let result = auth_service.update_profile(user_id, request).await;
         assert!(result.is_err());
-        assert!(result.unwrap_err().to_string().contains("Invalid slug format"));
-        
+        assert!(result
+            .unwrap_err()
+            .to_string()
+            .contains("Invalid slug format"));
+
         Ok(())
     }
 
@@ -382,8 +404,11 @@ mod tests {
         );
         let result = auth_service.update_profile(user_id, request).await;
         assert!(result.is_err());
-        assert!(result.unwrap_err().to_string().contains("Invalid slug format"));
-        
+        assert!(result
+            .unwrap_err()
+            .to_string()
+            .contains("Invalid slug format"));
+
         Ok(())
     }
 
@@ -405,8 +430,11 @@ mod tests {
         );
         let result = auth_service.update_profile(user_id, request).await;
         assert!(result.is_err());
-        assert!(result.unwrap_err().to_string().contains("Invalid slug format"));
-        
+        assert!(result
+            .unwrap_err()
+            .to_string()
+            .contains("Invalid slug format"));
+
         Ok(())
     }
 
@@ -428,8 +456,11 @@ mod tests {
         );
         let result = auth_service.update_profile(user_id, request).await;
         assert!(result.is_err());
-        assert!(result.unwrap_err().to_string().contains("Invalid slug format"));
-        
+        assert!(result
+            .unwrap_err()
+            .to_string()
+            .contains("Invalid slug format"));
+
         Ok(())
     }
 
@@ -451,8 +482,11 @@ mod tests {
         );
         let result = auth_service.update_profile(user_id, request).await;
         assert!(result.is_err());
-        assert!(result.unwrap_err().to_string().contains("Invalid slug format"));
-        
+        assert!(result
+            .unwrap_err()
+            .to_string()
+            .contains("Invalid slug format"));
+
         Ok(())
     }
 
@@ -480,8 +514,11 @@ mod tests {
         );
         let result = auth_service.update_profile(user_id, request).await;
         assert!(result.is_err());
-        assert!(result.unwrap_err().to_string().contains("Slug already taken"));
-        
+        assert!(result
+            .unwrap_err()
+            .to_string()
+            .contains("Slug already taken"));
+
         Ok(())
     }
 
@@ -509,7 +546,7 @@ mod tests {
         let result = auth_service.update_profile(user_id, request).await;
         assert!(result.is_err());
         assert!(result.unwrap_err().to_string().contains("Database error"));
-        
+
         Ok(())
     }
 
@@ -543,8 +580,7 @@ mod tests {
         let result = auth_service.update_profile(user_id, request).await;
         assert!(result.is_err());
         assert!(result.unwrap_err().to_string().contains("Database error"));
-        
+
         Ok(())
     }
 }
-

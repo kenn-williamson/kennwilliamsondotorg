@@ -1,13 +1,18 @@
 use anyhow::Result;
 use uuid::Uuid;
 
+use super::IncidentTimerService;
 use crate::models::api::UpdateIncidentTimer;
 use crate::models::db::IncidentTimer;
-use super::IncidentTimerService;
 
 impl IncidentTimerService {
     /// Update an existing incident timer
-    pub async fn update(&self, id: Uuid, user_id: Uuid, data: UpdateIncidentTimer) -> Result<Option<IncidentTimer>> {
+    pub async fn update(
+        &self,
+        id: Uuid,
+        user_id: Uuid,
+        data: UpdateIncidentTimer,
+    ) -> Result<Option<IncidentTimer>> {
         // Validate that reset_timestamp is not in the future
         if let Some(reset_timestamp) = &data.reset_timestamp {
             validate_timestamp(reset_timestamp)?;
@@ -39,8 +44,15 @@ fn validate_timestamp(timestamp: &chrono::DateTime<chrono::Utc>) -> Result<()> {
 }
 
 /// Validate that timer belongs to user
-async fn validate_ownership(service: &IncidentTimerService, timer_id: Uuid, user_id: Uuid) -> Result<bool> {
-    service.repository.timer_belongs_to_user(timer_id, user_id).await
+async fn validate_ownership(
+    service: &IncidentTimerService,
+    timer_id: Uuid,
+    user_id: Uuid,
+) -> Result<bool> {
+    service
+        .repository
+        .timer_belongs_to_user(timer_id, user_id)
+        .await
 }
 
 #[cfg(test)]
@@ -81,10 +93,13 @@ mod tests {
 
         mock_repo
             .expect_update_timer()
-            .with(eq(timer_id), eq(TimerUpdates {
-                reset_timestamp: Some(now),
-                notes: Some("Updated notes".to_string()),
-            }))
+            .with(
+                eq(timer_id),
+                eq(TimerUpdates {
+                    reset_timestamp: Some(now),
+                    notes: Some("Updated notes".to_string()),
+                }),
+            )
             .times(1)
             .returning(move |_, _| Ok(expected_timer.clone()));
 
@@ -146,7 +161,10 @@ mod tests {
 
         // Verify
         assert!(result.is_err());
-        assert!(result.unwrap_err().to_string().contains("Reset timestamp cannot be in the future"));
+        assert!(result
+            .unwrap_err()
+            .to_string()
+            .contains("Reset timestamp cannot be in the future"));
     }
 
     #[tokio::test]
@@ -196,10 +214,13 @@ mod tests {
 
         mock_repo
             .expect_update_timer()
-            .with(eq(timer_id), eq(TimerUpdates {
-                reset_timestamp: Some(now),
-                notes: None,
-            }))
+            .with(
+                eq(timer_id),
+                eq(TimerUpdates {
+                    reset_timestamp: Some(now),
+                    notes: None,
+                }),
+            )
             .times(1)
             .returning(|_, _| Err(anyhow::anyhow!("Database error")));
 

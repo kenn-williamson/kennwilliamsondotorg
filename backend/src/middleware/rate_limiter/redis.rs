@@ -1,5 +1,5 @@
-use redis::{Client, Commands};
 use async_trait::async_trait;
+use redis::{Client, Commands};
 
 use super::config::RateLimitConfig;
 use super::trait_def::RateLimitServiceTrait;
@@ -21,7 +21,6 @@ impl RedisRateLimitService {
 
 #[async_trait]
 impl RateLimitServiceTrait for RedisRateLimitService {
-
     /// Check if request should be rate limited
     async fn check_rate_limit(
         &self,
@@ -36,8 +35,12 @@ impl RateLimitServiceTrait for RedisRateLimitService {
         let hourly_count: u32 = conn.get(&hourly_key).unwrap_or(0);
 
         if hourly_count >= config.requests_per_hour {
-            log::warn!("Rate limit exceeded for {} on {}: {} requests/hour",
-                      identifier, endpoint, hourly_count);
+            log::warn!(
+                "Rate limit exceeded for {} on {}: {} requests/hour",
+                identifier,
+                endpoint,
+                hourly_count
+            );
             return Ok(true);
         }
 
@@ -46,8 +49,13 @@ impl RateLimitServiceTrait for RedisRateLimitService {
         let burst_count: u32 = conn.get(&burst_key).unwrap_or(0);
 
         if burst_count >= config.burst_limit {
-            log::warn!("Burst limit exceeded for {} on {}: {} requests/{}s",
-                      identifier, endpoint, burst_count, config.burst_window);
+            log::warn!(
+                "Burst limit exceeded for {} on {}: {} requests/{}s",
+                identifier,
+                endpoint,
+                burst_count,
+                config.burst_window
+            );
             return Ok(true);
         }
 

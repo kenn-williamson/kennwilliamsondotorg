@@ -1,11 +1,11 @@
-use std::sync::Arc;
 use crate::repositories::traits::IncidentTimerRepository;
+use std::sync::Arc;
 
 // Module declarations
 pub mod create;
+pub mod delete;
 pub mod read;
 pub mod update;
-pub mod delete;
 
 #[derive(Clone)]
 pub struct IncidentTimerService {
@@ -14,8 +14,8 @@ pub struct IncidentTimerService {
 
 impl IncidentTimerService {
     pub fn new(repository: Box<dyn IncidentTimerRepository>) -> Self {
-        Self { 
-            repository: Arc::from(repository)
+        Self {
+            repository: Arc::from(repository),
         }
     }
 

@@ -1,5 +1,6 @@
 // Removed unused imports
 use sqlx::PgPool;
+use std::sync::Arc;
 use testcontainers::{
     core::{IntoContainerPort, WaitFor},
     runners::AsyncRunner,
@@ -99,23 +100,240 @@ pub async fn create_testcontainers_database() -> (PgPool, String) {
 }
 
 // ============================================================================
+// TEST CONTEXT WITH BUILDER PATTERN
+// ============================================================================
+
+/// Test context that holds all test dependencies
+/// Provides a clean interface for integration tests with builder pattern
+pub struct TestContext {
+    pub server: actix_test::TestServer,
+    pub pool: PgPool,
+    pub email_service: Arc<backend::services::email::MockEmailService>,
+    _container: TestContainer,
+}
+
+/// Builder for TestContext
+pub struct TestContextBuilder {
+    redis_url: Option<String>,
+}
+
+impl TestContextBuilder {
+    pub fn new() -> Self {
+        Self { redis_url: None }
+    }
+
+    /// Configure with Redis URL for rate limiting tests
+    pub fn with_redis(mut self, url: String) -> Self {
+        self.redis_url = Some(url);
+        self
+    }
+
+    /// Build the test context with all dependencies
+    pub async fn build(self) -> TestContext {
+        use backend::services::container::ServiceContainer;
+        use backend::routes;
+        use backend::middleware::rate_limiter::{MockRateLimitService, RedisRateLimitService};
+        use actix_web::{web, App};
+        use actix_test;
+        use std::sync::Arc;
+        use backend::repositories::postgres::postgres_user_repository::PostgresUserRepository;
+
+        // Set FRONTEND_URL for tests (needed for email verification)
+        std::env::set_var("FRONTEND_URL", "https://localhost");
+        use backend::repositories::postgres::postgres_refresh_token_repository::PostgresRefreshTokenRepository;
+        use backend::repositories::postgres::postgres_verification_token_repository::PostgresVerificationTokenRepository;
+        use backend::repositories::postgres::postgres_incident_timer_repository::PostgresIncidentTimerRepository;
+        use backend::repositories::postgres::postgres_phrase_repository::PostgresPhraseRepository;
+        use backend::repositories::postgres::postgres_admin_repository::PostgresAdminRepository;
+        use backend::services::auth::AuthService;
+        use backend::services::email::MockEmailService;
+        use backend::services::incident_timer::IncidentTimerService;
+        use backend::services::phrase::PhraseService;
+        use backend::services::admin::{UserManagementService, PhraseModerationService, StatsService};
+
+        let test_container = TestContainer::new().await.expect("Failed to create test container");
+        let jwt_secret = "test-jwt-secret-for-api-tests".to_string();
+
+        // Create mock email service for testing
+        let email_service = Arc::new(MockEmailService::new());
+
+        let auth_service = Arc::new(AuthService::builder()
+            .user_repository(Box::new(PostgresUserRepository::new(test_container.pool.clone())))
+            .refresh_token_repository(Box::new(PostgresRefreshTokenRepository::new(test_container.pool.clone())))
+            .verification_token_repository(Box::new(PostgresVerificationTokenRepository::new(test_container.pool.clone())))
+            .email_service(Box::new(email_service.as_ref().clone()))
+            .jwt_secret(jwt_secret.clone())
+            .build());
+
+        let incident_timer_service = Arc::new(IncidentTimerService::new(
+            Box::new(PostgresIncidentTimerRepository::new(test_container.pool.clone()))
+        ));
+
+        let phrase_service = Arc::new(PhraseService::new(
+            Box::new(PostgresPhraseRepository::new(test_container.pool.clone()))
+        ));
+
+        let admin_service = Arc::new(UserManagementService::new(
+            Box::new(PostgresUserRepository::new(test_container.pool.clone())),
+            Box::new(PostgresRefreshTokenRepository::new(test_container.pool.clone())),
+            Box::new(PostgresAdminRepository::new(test_container.pool.clone())),
+        ));
+
+        let phrase_moderation_service = Arc::new(PhraseModerationService::new(
+            Box::new(PostgresPhraseRepository::new(test_container.pool.clone()))
+        ));
+
+        let stats_service = Arc::new(StatsService::new(
+            Box::new(PostgresPhraseRepository::new(test_container.pool.clone())),
+            Box::new(PostgresAdminRepository::new(test_container.pool.clone())),
+        ));
+
+        // Use Redis or mock rate limiter depending on configuration
+        let rate_limit_service: Arc<dyn backend::middleware::rate_limiter::RateLimitServiceTrait> = if let Some(redis_url) = self.redis_url {
+            Arc::new(RedisRateLimitService::new(&redis_url).expect("Failed to create Redis rate limiter"))
+        } else {
+            Arc::new(MockRateLimitService::new())
+        };
+
+        // Create cleanup service
+        let cleanup_service = Arc::new(backend::services::cleanup::CleanupService::new(
+            Box::new(PostgresRefreshTokenRepository::new(test_container.pool.clone())),
+            Box::new(PostgresVerificationTokenRepository::new(test_container.pool.clone())),
+        ));
+
+        let container = ServiceContainer {
+            auth_service,
+            incident_timer_service,
+            phrase_service,
+            admin_service,
+            phrase_moderation_service,
+            stats_service,
+            rate_limit_service,
+            cleanup_service,
+        };
+
+        // Create test server
+        let pool_clone = test_container.pool.clone();
+        let srv = actix_test::start(move || {
+            App::new()
+                .app_data(web::Data::new(pool_clone.clone()))
+                .app_data(web::Data::from(container.auth_service.clone()))
+                .app_data(web::Data::from(container.incident_timer_service.clone()))
+                .app_data(web::Data::from(container.phrase_service.clone()))
+                .app_data(web::Data::from(container.admin_service.clone()))
+                .app_data(web::Data::from(container.phrase_moderation_service.clone()))
+                .app_data(web::Data::from(container.stats_service.clone()))
+                .app_data(web::Data::from(container.rate_limit_service.clone()))
+                .configure(routes::configure_app_routes)
+        });
+
+        TestContext {
+            server: srv,
+            pool: test_container.pool.clone(),
+            email_service,
+            _container: test_container,
+        }
+    }
+}
+
+impl TestContext {
+    pub fn builder() -> TestContextBuilder {
+        TestContextBuilder::new()
+    }
+}
+
+// ============================================================================
 // TEST APP CREATION
 // ============================================================================
 
 /// Create a test app with testcontainers database
 /// Used in: testcontainers_admin_api_tests.rs - e.g. line 13 in test_admin_endpoints_require_authentication()
+/// Note: Uses MockRateLimitService for non-rate-limiting tests. For rate limiting tests, use create_test_app_with_redis()
+/// Returns: (TestServer, PgPool, TestContainer, Arc<MockEmailService>) - email service for test assertions
 #[allow(dead_code)]
-pub async fn create_test_app_with_testcontainers() -> (actix_test::TestServer, PgPool, TestContainer) {
+pub async fn create_test_app_with_testcontainers() -> (actix_test::TestServer, PgPool, TestContainer, Arc<backend::services::email::MockEmailService>) {
     use backend::services::container::ServiceContainer;
     use backend::routes;
+    use backend::middleware::rate_limiter::MockRateLimitService;
     use actix_web::{web, App};
     use actix_test;
-    
+    use std::sync::Arc;
+
+    // Set FRONTEND_URL for tests (needed for email verification)
+    std::env::set_var("FRONTEND_URL", "https://localhost");
+
     let test_container = TestContainer::new().await.expect("Failed to create test container");
-    
-    // Create service container
+
+    // Create service container with mock rate limiter (no rate limiting for non-rate-limiting tests)
+    // Uses new_for_testing() which creates MockRateLimitService - no Redis container needed
     let jwt_secret = "test-jwt-secret-for-api-tests".to_string();
-    let container = ServiceContainer::new_development(test_container.pool.clone(), jwt_secret, "redis://localhost:6379".to_string());
+
+    // We need PostgreSQL repos but mock rate limiter, so we manually build the container
+    use backend::repositories::postgres::postgres_user_repository::PostgresUserRepository;
+    use backend::repositories::postgres::postgres_refresh_token_repository::PostgresRefreshTokenRepository;
+    use backend::repositories::postgres::postgres_verification_token_repository::PostgresVerificationTokenRepository;
+    use backend::repositories::postgres::postgres_incident_timer_repository::PostgresIncidentTimerRepository;
+    use backend::repositories::postgres::postgres_phrase_repository::PostgresPhraseRepository;
+    use backend::repositories::postgres::postgres_admin_repository::PostgresAdminRepository;
+    use backend::services::auth::AuthService;
+    use backend::services::email::MockEmailService;
+    use backend::services::incident_timer::IncidentTimerService;
+    use backend::services::phrase::PhraseService;
+    use backend::services::admin::{UserManagementService, PhraseModerationService, StatsService};
+
+    // Create mock email service for testing
+    let email_service = Arc::new(MockEmailService::new());
+
+    let auth_service = Arc::new(AuthService::builder()
+        .user_repository(Box::new(PostgresUserRepository::new(test_container.pool.clone())))
+        .refresh_token_repository(Box::new(PostgresRefreshTokenRepository::new(test_container.pool.clone())))
+        .verification_token_repository(Box::new(PostgresVerificationTokenRepository::new(test_container.pool.clone())))
+        .email_service(Box::new(email_service.as_ref().clone()))
+        .jwt_secret(jwt_secret.clone())
+        .build());
+
+    let incident_timer_service = Arc::new(IncidentTimerService::new(
+        Box::new(PostgresIncidentTimerRepository::new(test_container.pool.clone()))
+    ));
+
+    let phrase_service = Arc::new(PhraseService::new(
+        Box::new(PostgresPhraseRepository::new(test_container.pool.clone()))
+    ));
+
+    let admin_service = Arc::new(UserManagementService::new(
+        Box::new(PostgresUserRepository::new(test_container.pool.clone())),
+        Box::new(PostgresRefreshTokenRepository::new(test_container.pool.clone())),
+        Box::new(PostgresAdminRepository::new(test_container.pool.clone())),
+    ));
+
+    let phrase_moderation_service = Arc::new(PhraseModerationService::new(
+        Box::new(PostgresPhraseRepository::new(test_container.pool.clone()))
+    ));
+
+    let stats_service = Arc::new(StatsService::new(
+        Box::new(PostgresPhraseRepository::new(test_container.pool.clone())),
+        Box::new(PostgresAdminRepository::new(test_container.pool.clone())),
+    ));
+
+    // Use mock rate limiter - no Redis needed!
+    let rate_limit_service = Arc::new(MockRateLimitService::new());
+
+    // Create cleanup service
+    let cleanup_service = Arc::new(backend::services::cleanup::CleanupService::new(
+        Box::new(PostgresRefreshTokenRepository::new(test_container.pool.clone())),
+        Box::new(PostgresVerificationTokenRepository::new(test_container.pool.clone())),
+    ));
+
+    let container = ServiceContainer {
+        auth_service,
+        incident_timer_service,
+        phrase_service,
+        admin_service,
+        phrase_moderation_service,
+        stats_service,
+        rate_limit_service,
+        cleanup_service,
+    };
     
     // Create test server
     let pool_clone = test_container.pool.clone();
@@ -131,7 +349,40 @@ pub async fn create_test_app_with_testcontainers() -> (actix_test::TestServer, P
             .app_data(web::Data::from(container.rate_limit_service.clone()))
             .configure(routes::configure_app_routes)
     });
-    
+
+    (srv, test_container.pool.clone(), test_container, email_service)
+}
+
+/// Create a test app with testcontainers database and custom Redis URL
+/// Used in: rate_limiting_integration_tests.rs for testing with real Redis backend
+#[allow(dead_code)]
+pub async fn create_test_app_with_redis(redis_url: &str) -> (actix_test::TestServer, PgPool, TestContainer) {
+    use backend::services::container::ServiceContainer;
+    use backend::routes;
+    use actix_web::{web, App};
+    use actix_test;
+
+    let test_container = TestContainer::new().await.expect("Failed to create test container");
+
+    // Create service container with custom Redis URL
+    let jwt_secret = "test-jwt-secret-for-api-tests".to_string();
+    let container = ServiceContainer::new_development(test_container.pool.clone(), jwt_secret, redis_url.to_string());
+
+    // Create test server
+    let pool_clone = test_container.pool.clone();
+    let srv = actix_test::start(move || {
+        App::new()
+            .app_data(web::Data::new(pool_clone.clone()))
+            .app_data(web::Data::from(container.auth_service.clone()))
+            .app_data(web::Data::from(container.incident_timer_service.clone()))
+            .app_data(web::Data::from(container.phrase_service.clone()))
+            .app_data(web::Data::from(container.admin_service.clone()))
+            .app_data(web::Data::from(container.phrase_moderation_service.clone()))
+            .app_data(web::Data::from(container.stats_service.clone()))
+            .app_data(web::Data::from(container.rate_limit_service.clone()))
+            .configure(routes::configure_app_routes)
+    });
+
     (srv, test_container.pool.clone(), test_container)
 }
 
@@ -144,7 +395,7 @@ pub async fn create_test_app_with_user(
     display_name: &str,
     slug: &str,
 ) -> Result<(actix_test::TestServer, PgPool, backend::models::db::user::User, TestContainer)> {
-    let (srv, pool, test_container) = create_test_app_with_testcontainers().await;
+    let (srv, pool, test_container, _email_service) = create_test_app_with_testcontainers().await;
 
     // Create test user directly in database
     let user = create_test_user_in_db(
@@ -167,7 +418,7 @@ pub async fn create_test_app_with_admin_user(
     display_name: &str,
     slug: &str,
 ) -> Result<(actix_test::TestServer, PgPool, backend::models::db::user::User, TestContainer)> {
-    let (srv, pool, test_container) = create_test_app_with_testcontainers().await;
+    let (srv, pool, test_container, _email_service) = create_test_app_with_testcontainers().await;
 
     // Create test user
     let user = create_test_user_in_db(
@@ -230,13 +481,9 @@ pub async fn create_test_user_in_db(
     // Fetch the created user
     let user = sqlx::query_as::<_, User>(
         r#"
-        SELECT u.id, u.email, u.password_hash, u.display_name, u.slug, u.active, u.created_at, u.updated_at,
-               COALESCE(ARRAY_AGG(r.name) FILTER (WHERE r.name IS NOT NULL), ARRAY[]::text[]) as roles
+        SELECT u.id, u.email, u.password_hash, u.display_name, u.slug, u.active, u.real_name, u.google_user_id, u.created_at, u.updated_at
         FROM users u
-        LEFT JOIN user_roles ur ON u.id = ur.user_id
-        LEFT JOIN roles r ON ur.role_id = r.id
         WHERE u.id = $1
-        GROUP BY u.id, u.email, u.password_hash, u.display_name, u.slug, u.active, u.created_at, u.updated_at
         "#,
     )
     .bind(user_id)
@@ -548,7 +795,7 @@ impl TestContainer {
 /// Used in: Currently unused but available for future integration test scenarios
 #[allow(dead_code)]
 pub async fn create_integration_test_app() -> Result<(actix_test::TestServer, sqlx::PgPool, TestContainer)> {
-    let (srv, pool, test_container) = create_test_app_with_testcontainers().await;
+    let (srv, pool, test_container, _email_service) = create_test_app_with_testcontainers().await;
     Ok((srv, pool, test_container))
 }
 

@@ -4,7 +4,7 @@ use serde_json::json;
 
 #[actix_web::test]
 async fn test_register_success() {
-    let (srv, _pool, _test_container) = crate::test_helpers::create_test_app_with_testcontainers().await;
+    let (srv, _pool, _test_container, _email_service) = crate::test_helpers::create_test_app_with_testcontainers().await;
     
     let request_body = json!({
         "email": crate::test_helpers::unique_test_email(),
@@ -37,7 +37,7 @@ async fn test_register_success() {
 #[actix_web::test]
 #[allow(unused_mut)]
 async fn test_register_duplicate_email() {
-    let (srv, _pool, _test_container) = crate::test_helpers::create_test_app_with_testcontainers().await;
+    let (srv, _pool, _test_container, _email_service) = crate::test_helpers::create_test_app_with_testcontainers().await;
     
     let email = crate::test_helpers::unique_test_email();
     let request_body = json!({
@@ -68,7 +68,7 @@ async fn test_register_duplicate_email() {
 #[actix_web::test]
 #[allow(unused_mut)]
 async fn test_login_success() {
-    let (srv, _pool, _test_container) = crate::test_helpers::create_test_app_with_testcontainers().await;
+    let (srv, _pool, _test_container, _email_service) = crate::test_helpers::create_test_app_with_testcontainers().await;
     
     // First register a user to get proper password hashing
     let email = crate::test_helpers::unique_test_email();
@@ -118,7 +118,7 @@ async fn test_login_success() {
 
 #[actix_web::test]
 async fn test_login_invalid_credentials() {
-    let (srv, _pool, _test_container) = crate::test_helpers::create_test_app_with_testcontainers().await;
+    let (srv, _pool, _test_container, _email_service) = crate::test_helpers::create_test_app_with_testcontainers().await;
     
     let request_body = json!({
         "email": "nonexistent@example.com",
@@ -138,7 +138,7 @@ async fn test_login_invalid_credentials() {
 
 #[actix_web::test]
 async fn test_get_current_user_success() {
-    let (srv, _pool, _test_container) = crate::test_helpers::create_test_app_with_testcontainers().await;
+    let (srv, _pool, _test_container, _email_service) = crate::test_helpers::create_test_app_with_testcontainers().await;
     
     // First register a user to get proper password hashing
     let email = crate::test_helpers::unique_test_email();
@@ -182,7 +182,7 @@ async fn test_get_current_user_success() {
 
 #[actix_web::test]
 async fn test_get_current_user_unauthorized() {
-    let (srv, _pool, _test_container) = crate::test_helpers::create_test_app_with_testcontainers().await;
+    let (srv, _pool, _test_container, _email_service) = crate::test_helpers::create_test_app_with_testcontainers().await;
     
     let mut resp = srv.get("/backend/protected/auth/me")
         .send()
@@ -199,7 +199,7 @@ async fn test_get_current_user_unauthorized() {
 #[actix_web::test]
 #[allow(unused_mut)]
 async fn test_get_current_user_invalid_token() {
-    let (srv, _pool, _test_container) = crate::test_helpers::create_test_app_with_testcontainers().await;
+    let (srv, _pool, _test_container, _email_service) = crate::test_helpers::create_test_app_with_testcontainers().await;
     
     let mut resp = srv.get("/backend/protected/auth/me")
         .insert_header(("Authorization", "Bearer invalid_token"))
@@ -211,7 +211,7 @@ async fn test_get_current_user_invalid_token() {
 
 #[actix_web::test]
 async fn test_update_profile_success() {
-    let (srv, _pool, _test_container) = crate::test_helpers::create_test_app_with_testcontainers().await;
+    let (srv, _pool, _test_container, _email_service) = crate::test_helpers::create_test_app_with_testcontainers().await;
     
     // First register a user to get proper password hashing
     let email = crate::test_helpers::unique_test_email();
@@ -260,7 +260,7 @@ async fn test_update_profile_success() {
 
 #[actix_web::test]
 async fn test_change_password_success() {
-    let (srv, _pool, _test_container) = crate::test_helpers::create_test_app_with_testcontainers().await;
+    let (srv, _pool, _test_container, _email_service) = crate::test_helpers::create_test_app_with_testcontainers().await;
     
     // First register a user to get proper password hashing
     let email = crate::test_helpers::unique_test_email();
@@ -308,7 +308,7 @@ async fn test_change_password_success() {
 
 #[actix_web::test]
 async fn test_change_password_wrong_current() {
-    let (srv, _pool, _test_container) = crate::test_helpers::create_test_app_with_testcontainers().await;
+    let (srv, _pool, _test_container, _email_service) = crate::test_helpers::create_test_app_with_testcontainers().await;
     
     // First register a user to get proper password hashing
     let email = crate::test_helpers::unique_test_email();
@@ -352,4 +352,135 @@ async fn test_change_password_wrong_current() {
     
     let body: serde_json::Value = resp.json().await.unwrap();
     assert_eq!(body.get("error").unwrap(), "Current password is incorrect");
+}
+
+// ============================================================================
+// EMAIL VERIFICATION TESTS
+// ============================================================================
+
+#[actix_web::test]
+async fn test_verify_email_success() {
+    let ctx = crate::test_helpers::TestContext::builder().build().await;
+
+    // Register a user (this triggers verification email)
+    let email = crate::test_helpers::unique_test_email();
+    let password = "TestPassword123!";
+    let display_name = "Test User";
+
+    let register_request_body = json!({
+        "email": email,
+        "password": password,
+        "display_name": display_name
+    });
+
+    let register_resp = ctx.server.post("/backend/public/auth/register")
+        .send_json(&register_request_body)
+        .await
+        .unwrap();
+
+    assert!(register_resp.status().is_success());
+
+    // Extract the verification token from the MockEmailService
+    assert_eq!(ctx.email_service.count(), 1, "Verification email should be sent");
+    let sent_emails = ctx.email_service.get_sent_emails();
+    let verification_token = &sent_emails[0].verification_token;
+
+    // Verify email with the token
+    let mut resp = ctx.server.get(&format!("/backend/public/auth/verify-email?token={}", verification_token))
+        .send()
+        .await
+        .unwrap();
+
+    println!("Verify email response status: {}", resp.status());
+    if !resp.status().is_success() {
+        let body: serde_json::Value = resp.json().await.unwrap();
+        println!("Verify email error response: {:?}", body);
+    }
+    assert!(resp.status().is_success());
+
+    let body: serde_json::Value = resp.json().await.unwrap();
+    assert_eq!(body.get("email_verified").unwrap(), true);
+    assert!(body.get("message").unwrap().as_str().unwrap().contains("verified successfully"));
+}
+
+#[actix_web::test]
+async fn test_verify_email_invalid_token() {
+    let ctx = crate::test_helpers::TestContext::builder().build().await;
+
+    // Try to verify with invalid token
+    let mut resp = ctx.server.get("/backend/public/auth/verify-email?token=invalid_token_123")
+        .send()
+        .await
+        .unwrap();
+
+    println!("Invalid token response status: {}", resp.status());
+    assert_eq!(resp.status(), 400); // Bad Request
+
+    let body: serde_json::Value = resp.json().await.unwrap();
+    assert!(body.get("error").is_some());
+    assert!(body.get("error").unwrap().as_str().unwrap().contains("Invalid or expired"));
+}
+
+#[actix_web::test]
+async fn test_send_verification_email_success() {
+    let ctx = crate::test_helpers::TestContext::builder().build().await;
+
+    // Register a user to get JWT token
+    let email = crate::test_helpers::unique_test_email();
+    let password = "TestPassword123!";
+    let display_name = "Test User";
+
+    let register_request_body = json!({
+        "email": email,
+        "password": password,
+        "display_name": display_name
+    });
+
+    let mut register_resp = ctx.server.post("/backend/public/auth/register")
+        .send_json(&register_request_body)
+        .await
+        .unwrap();
+
+    assert!(register_resp.status().is_success());
+
+    let register_body: serde_json::Value = register_resp.json().await.unwrap();
+    let token = register_body.get("token").unwrap().as_str().unwrap();
+
+    // Clear the email service to test resend
+    ctx.email_service.clear();
+    assert_eq!(ctx.email_service.count(), 0);
+
+    // Resend verification email
+    let mut resp = ctx.server.post("/backend/protected/auth/send-verification")
+        .insert_header(("Authorization", format!("Bearer {}", token)))
+        .send()
+        .await
+        .unwrap();
+
+    println!("Send verification email response status: {}", resp.status());
+    if !resp.status().is_success() {
+        let body: serde_json::Value = resp.json().await.unwrap();
+        println!("Send verification email error response: {:?}", body);
+    }
+    assert!(resp.status().is_success());
+
+    let body: serde_json::Value = resp.json().await.unwrap();
+    assert!(body.get("message").unwrap().as_str().unwrap().contains("Verification email sent"));
+
+    // Verify email was sent
+    assert_eq!(ctx.email_service.count(), 1, "Verification email should be sent");
+}
+
+#[actix_web::test]
+async fn test_send_verification_email_unauthorized() {
+    let ctx = crate::test_helpers::TestContext::builder().build().await;
+
+    // Try to send verification email without authentication
+    let resp = ctx.server.post("/backend/protected/auth/send-verification")
+        .send()
+        .await
+        .unwrap();
+
+    println!("Unauthorized send verification response status: {}", resp.status());
+    assert_eq!(resp.status(), 401); // Unauthorized
 }

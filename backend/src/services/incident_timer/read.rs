@@ -1,14 +1,19 @@
 use anyhow::Result;
 use uuid::Uuid;
 
-use crate::models::db::IncidentTimer;
 use super::IncidentTimerService;
+use crate::models::db::IncidentTimer;
 
 impl IncidentTimerService {
     /// Get the latest timer for a user by their slug (public access)
-    pub async fn get_latest_by_user_slug(&self, user_slug: &str) -> Result<Option<(IncidentTimer, String)>> {
+    pub async fn get_latest_by_user_slug(
+        &self,
+        user_slug: &str,
+    ) -> Result<Option<(IncidentTimer, String)>> {
         // Use the new repository method that returns both timer and display name
-        self.repository.find_latest_by_user_slug_with_display_name(user_slug).await
+        self.repository
+            .find_latest_by_user_slug_with_display_name(user_slug)
+            .await
     }
 
     /// Get all timers for a specific user

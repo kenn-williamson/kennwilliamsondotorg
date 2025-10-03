@@ -1,9 +1,11 @@
+use anyhow::Result;
 use std::sync::Arc;
 use uuid::Uuid;
-use anyhow::Result;
 
+use crate::models::api::{
+    PhraseResponse, PhraseWithExclusion as ApiPhraseWithExclusion, UserPhrasesResponse,
+};
 use crate::repositories::traits::PhraseRepository;
-use crate::models::api::{PhraseResponse, UserPhrasesResponse, PhraseWithExclusion as ApiPhraseWithExclusion};
 
 /// Get a random active phrase, excluding phrases the user has excluded (for authenticated users)
 pub async fn get_random_phrase(
@@ -17,7 +19,7 @@ pub async fn get_random_phrase(
 
     // Get phrase from repository
     let phrase_text = repository.get_random_phrase(user_id).await?;
-    
+
     // Handle empty result case
     if phrase_text.trim().is_empty() {
         return Err(anyhow::anyhow!("No phrases available for user"));
@@ -41,7 +43,7 @@ pub async fn get_user_phrases(
     // Validate pagination parameters
     let limit = limit.unwrap_or(100); // Reasonable limit to prevent performance issues
     let offset = offset.unwrap_or(0);
-    
+
     if limit < 0 {
         return Err(anyhow::anyhow!("Limit cannot be negative"));
     }
@@ -50,13 +52,13 @@ pub async fn get_user_phrases(
     }
 
     // Get phrases from repository
-    let phrases = repository.get_user_phrases(user_id, Some(limit), Some(offset)).await?;
-    
+    let phrases = repository
+        .get_user_phrases(user_id, Some(limit), Some(offset))
+        .await?;
+
     // Transform to API response format
-    let phrase_responses: Vec<PhraseResponse> = phrases
-        .into_iter()
-        .map(PhraseResponse::from)
-        .collect();
+    let phrase_responses: Vec<PhraseResponse> =
+        phrases.into_iter().map(PhraseResponse::from).collect();
 
     Ok(phrase_responses)
 }
@@ -77,7 +79,7 @@ pub async fn get_user_phrases_with_exclusions(
     // Validate pagination parameters
     let limit = limit.unwrap_or(100); // Reasonable limit to prevent performance issues
     let offset = offset.unwrap_or(0);
-    
+
     if limit < 0 {
         return Err(anyhow::anyhow!("Limit cannot be negative"));
     }
@@ -86,8 +88,10 @@ pub async fn get_user_phrases_with_exclusions(
     }
 
     // Get phrases with exclusion status from repository
-    let phrases_with_exclusions = repository.get_user_phrases_with_exclusions(user_id, Some(limit), Some(offset), search).await?;
-    
+    let phrases_with_exclusions = repository
+        .get_user_phrases_with_exclusions(user_id, Some(limit), Some(offset), search)
+        .await?;
+
     // Transform to API response format
     let phrases: Vec<ApiPhraseWithExclusion> = phrases_with_exclusions
         .into_iter()
@@ -104,21 +108,18 @@ pub async fn get_user_phrases_with_exclusions(
 
     let total = phrases.len() as i64;
 
-    Ok(UserPhrasesResponse {
-        phrases,
-        total,
-    })
+    Ok(UserPhrasesResponse { phrases, total })
 }
 
 #[cfg(test)]
 mod tests {
     use super::*;
-    use std::sync::Arc;
-    use mockall::mock;
-    use crate::repositories::traits::PhraseRepository;
     use crate::models::db::{Phrase, PhraseSearchResultWithUserExclusionView};
-    use chrono::Utc;
+    use crate::repositories::traits::PhraseRepository;
     use async_trait::async_trait;
+    use chrono::Utc;
+    use mockall::mock;
+    use std::sync::Arc;
 
     mock! {
         PhraseRepository {}
@@ -168,7 +169,7 @@ mod tests {
 
         let repo = Arc::new(mock_repo) as Arc<dyn PhraseRepository>;
         let result = get_random_phrase(&repo, user_id).await;
-        
+
         assert!(result.is_ok());
         assert_eq!(result.unwrap(), "Test phrase");
     }
@@ -178,9 +179,12 @@ mod tests {
         let mock_repo = MockPhraseRepository::new();
         let repo = Arc::new(mock_repo) as Arc<dyn PhraseRepository>;
         let result = get_random_phrase(&repo, Uuid::nil()).await;
-        
+
         assert!(result.is_err());
-        assert!(result.unwrap_err().to_string().contains("User ID cannot be nil"));
+        assert!(result
+            .unwrap_err()
+            .to_string()
+            .contains("User ID cannot be nil"));
     }
 
     #[tokio::test]
@@ -188,16 +192,20 @@ mod tests {
         let mut mock_repo = MockPhraseRepository::new();
         let user_id = Uuid::new_v4();
         let test_phrase = create_test_phrase();
-        
+
         mock_repo
             .expect_get_user_phrases()
-            .with(mockall::predicate::eq(user_id), mockall::predicate::eq(Some(50)), mockall::predicate::eq(Some(0)))
+            .with(
+                mockall::predicate::eq(user_id),
+                mockall::predicate::eq(Some(50)),
+                mockall::predicate::eq(Some(0)),
+            )
             .times(1)
             .returning(move |_, _, _| Ok(vec![test_phrase.clone()]));
 
         let repo = Arc::new(mock_repo) as Arc<dyn PhraseRepository>;
         let result = get_user_phrases(&repo, user_id, Some(50), Some(0)).await;
-        
+
         assert!(result.is_ok());
         let phrases = result.unwrap();
         assert_eq!(phrases.len(), 1);
@@ -209,9 +217,12 @@ mod tests {
         let mock_repo = MockPhraseRepository::new();
         let repo = Arc::new(mock_repo) as Arc<dyn PhraseRepository>;
         let result = get_user_phrases(&repo, Uuid::new_v4(), Some(-1), Some(0)).await;
-        
+
         assert!(result.is_err());
-        assert!(result.unwrap_err().to_string().contains("Limit cannot be negative"));
+        assert!(result
+            .unwrap_err()
+            .to_string()
+            .contains("Limit cannot be negative"));
     }
 
     #[tokio::test]
@@ -219,7 +230,7 @@ mod tests {
         let mut mock_repo = MockPhraseRepository::new();
         let user_id = Uuid::new_v4();
         let test_phrase = create_test_phrase();
-        
+
         let phrase_with_exclusion = PhraseSearchResultWithUserExclusionView {
             id: test_phrase.id,
             phrase_text: test_phrase.phrase_text,
@@ -230,16 +241,21 @@ mod tests {
             is_excluded: Some(false),
             rank: Some(0.0),
         };
-        
+
         mock_repo
             .expect_get_user_phrases_with_exclusions()
-            .with(mockall::predicate::eq(user_id), mockall::predicate::eq(Some(100)), mockall::predicate::eq(Some(0)), mockall::predicate::eq(None))
+            .with(
+                mockall::predicate::eq(user_id),
+                mockall::predicate::eq(Some(100)),
+                mockall::predicate::eq(Some(0)),
+                mockall::predicate::eq(None),
+            )
             .times(1)
             .returning(move |_, _, _, _| Ok(vec![phrase_with_exclusion.clone()]));
 
         let repo = Arc::new(mock_repo) as Arc<dyn PhraseRepository>;
         let result = get_user_phrases_with_exclusions(&repo, user_id, None, None, None).await;
-        
+
         assert!(result.is_ok());
         let response = result.unwrap();
         assert_eq!(response.phrases.len(), 1);
@@ -252,8 +268,11 @@ mod tests {
         let mock_repo = MockPhraseRepository::new();
         let repo = Arc::new(mock_repo) as Arc<dyn PhraseRepository>;
         let result = get_user_phrases_with_exclusions(&repo, Uuid::nil(), None, None, None).await;
-        
+
         assert!(result.is_err());
-        assert!(result.unwrap_err().to_string().contains("User ID cannot be nil"));
+        assert!(result
+            .unwrap_err()
+            .to_string()
+            .contains("User ID cannot be nil"));
     }
 }

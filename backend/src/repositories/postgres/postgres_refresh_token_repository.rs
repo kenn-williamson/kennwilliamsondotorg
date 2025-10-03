@@ -1,9 +1,9 @@
+use anyhow::Result;
 use async_trait::async_trait;
 use sqlx::PgPool;
 use uuid::Uuid;
-use anyhow::Result;
 
-use crate::models::db::refresh_token::{RefreshToken, CreateRefreshToken};
+use crate::models::db::refresh_token::{CreateRefreshToken, RefreshToken};
 use crate::repositories::traits::refresh_token_repository::RefreshTokenRepository;
 
 /// PostgreSQL implementation of RefreshTokenRepository
@@ -58,36 +58,27 @@ impl RefreshTokenRepository for PostgresRefreshTokenRepository {
 
     async fn revoke_token(&self, token: &str) -> Result<()> {
         // Match exact query from RefreshTokenService::delete_refresh_token_by_hash
-        sqlx::query!(
-            "DELETE FROM refresh_tokens WHERE token_hash = $1",
-            token
-        )
-        .execute(&self.pool)
-        .await?;
+        sqlx::query!("DELETE FROM refresh_tokens WHERE token_hash = $1", token)
+            .execute(&self.pool)
+            .await?;
 
         Ok(())
     }
 
     async fn revoke_all_user_tokens(&self, user_id: Uuid) -> Result<()> {
         // Match exact query from RefreshTokenService::revoke_all_user_tokens
-        sqlx::query!(
-            "DELETE FROM refresh_tokens WHERE user_id = $1",
-            user_id
-        )
-        .execute(&self.pool)
-        .await?;
+        sqlx::query!("DELETE FROM refresh_tokens WHERE user_id = $1", user_id)
+            .execute(&self.pool)
+            .await?;
 
         Ok(())
     }
 
     async fn cleanup_expired_tokens(&self) -> Result<u64> {
-        let result = sqlx::query(
-            "DELETE FROM refresh_tokens WHERE expires_at < NOW()"
-        )
-        .execute(&self.pool)
-        .await?;
+        let result = sqlx::query("DELETE FROM refresh_tokens WHERE expires_at < NOW()")
+            .execute(&self.pool)
+            .await?;
 
         Ok(result.rows_affected())
     }
-
 }

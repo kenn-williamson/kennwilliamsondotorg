@@ -2,12 +2,11 @@ use actix_web::{web, HttpMessage, HttpRequest, HttpResponse, Result};
 use uuid::Uuid;
 
 use crate::models::api::{
-    CreatePhraseRequest, UpdatePhraseRequest,
-    PhraseListResponse,
-    PasswordResetResponse, UserSearchQuery, AdminActionRequest
+    AdminActionRequest, CreatePhraseRequest, PasswordResetResponse, PhraseListResponse,
+    UpdatePhraseRequest, UserSearchQuery,
 };
+use crate::services::admin::{PhraseModerationService, StatsService, UserManagementService};
 use crate::services::phrase::PhraseService;
-use crate::services::admin::{UserManagementService, PhraseModerationService, StatsService};
 
 /// Get phrases (admin only)
 pub async fn get_phrases(
@@ -20,13 +19,13 @@ pub async fn get_phrases(
     let offset = query.offset;
     let search = query.search.clone();
 
-    match phrase_service.get_phrases(include_inactive, limit, offset, search).await {
+    match phrase_service
+        .get_phrases(include_inactive, limit, offset, search)
+        .await
+    {
         Ok(phrases) => {
             let total = phrases.len() as i64;
-            let response = PhraseListResponse {
-                phrases,
-                total,
-            };
+            let response = PhraseListResponse { phrases, total };
             Ok(HttpResponse::Ok().json(response))
         }
         Err(e) => {
@@ -45,7 +44,10 @@ pub async fn create_phrase(
     request: web::Json<CreatePhraseRequest>,
 ) -> Result<HttpResponse> {
     let user_id = req.extensions().get::<Uuid>().cloned().unwrap();
-    match phrase_service.create_phrase(request.into_inner(), user_id).await {
+    match phrase_service
+        .create_phrase(request.into_inner(), user_id)
+        .await
+    {
         Ok(phrase) => Ok(HttpResponse::Created().json(phrase)),
         Err(e) => {
             log::error!("Failed to create phrase: {}", e);
@@ -65,7 +67,10 @@ pub async fn update_phrase(
 ) -> Result<HttpResponse> {
     let phrase_id = path.into_inner();
 
-    match phrase_service.update_phrase(phrase_id, request.into_inner()).await {
+    match phrase_service
+        .update_phrase(phrase_id, request.into_inner())
+        .await
+    {
         Ok(phrase) => Ok(HttpResponse::Ok().json(phrase)),
         Err(e) => {
             log::error!("Failed to update phrase: {}", e);
@@ -102,7 +107,6 @@ pub async fn deactivate_phrase(
     }
 }
 
-
 // Query parameters for admin endpoints
 #[derive(serde::Deserialize)]
 pub struct AdminPhraseQuery {
@@ -136,14 +140,11 @@ pub async fn get_users(
     _req: HttpRequest,
     query: web::Query<UserSearchQuery>,
 ) -> Result<HttpResponse> {
-    match admin_service.get_users(
-        query.search.clone(),
-        query.limit,
-        query.offset,
-    ).await {
-        Ok(users) => {
-            Ok(HttpResponse::Ok().json(users))
-        }
+    match admin_service
+        .get_users(query.search.clone(), query.limit, query.offset)
+        .await
+    {
+        Ok(users) => Ok(HttpResponse::Ok().json(users)),
         Err(e) => {
             log::error!("Failed to get users: {}", e);
             Ok(HttpResponse::InternalServerError().json(serde_json::json!({
@@ -265,7 +266,10 @@ pub async fn approve_suggestion(
     let suggestion_id = path.into_inner();
     let admin_reason = request.and_then(|r| r.admin_reason.clone());
 
-    match phrase_moderation_service.approve_suggestion(suggestion_id, admin_id, admin_reason).await {
+    match phrase_moderation_service
+        .approve_suggestion(suggestion_id, admin_id, admin_reason)
+        .await
+    {
         Ok(_) => Ok(HttpResponse::Ok().json(serde_json::json!({
             "message": "Suggestion approved successfully"
         }))),
@@ -289,7 +293,10 @@ pub async fn reject_suggestion(
     let suggestion_id = path.into_inner();
     let admin_reason = request.and_then(|r| r.admin_reason.clone());
 
-    match phrase_moderation_service.reject_suggestion(suggestion_id, admin_id, admin_reason).await {
+    match phrase_moderation_service
+        .reject_suggestion(suggestion_id, admin_id, admin_reason)
+        .await
+    {
         Ok(_) => Ok(HttpResponse::Ok().json(serde_json::json!({
             "message": "Suggestion rejected successfully"
         }))),
