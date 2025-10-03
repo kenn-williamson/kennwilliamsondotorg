@@ -61,28 +61,40 @@ async fn test_get_user_timers_unauthorized() {
 
 #[actix_web::test]
 async fn test_create_timer_success() {
-    let (srv, _pool, _test_container, _email_service) = crate::test_helpers::create_test_app_with_testcontainers().await;
-    
+    let (srv, pool, _test_container, _email_service) = crate::test_helpers::create_test_app_with_testcontainers().await;
+
     // First register a user
     let email = crate::test_helpers::unique_test_email();
     let password = "TestPassword123!";
     let display_name = "Test User";
-    
+
     let register_request_body = json!({
         "email": email,
         "password": password,
         "display_name": display_name
     });
-    
+
     let mut register_resp = srv.post("/backend/public/auth/register")
         .send_json(&register_request_body)
         .await
         .unwrap();
-    
+
     assert!(register_resp.status().is_success());
-    
+
     let register_body: serde_json::Value = register_resp.json().await.unwrap();
-    let token = register_body.get("token").unwrap().as_str().unwrap();
+    let user_id = register_body["user"]["id"].as_str().unwrap();
+
+    // Assign email-verified role (simulates email verification)
+    crate::test_helpers::assign_email_verified_role(&pool, user_id).await;
+
+    // Login to get token with updated roles
+    let mut login_resp = srv.post("/backend/public/auth/login")
+        .send_json(&json!({"email": email, "password": password}))
+        .await
+        .unwrap();
+    assert!(login_resp.status().is_success());
+    let login_body: serde_json::Value = login_resp.json().await.unwrap();
+    let token = login_body.get("token").unwrap().as_str().unwrap();
     
     // Create a timer
     let timer_request_body = json!({
@@ -113,28 +125,40 @@ async fn test_create_timer_success() {
 
 #[actix_web::test]
 async fn test_create_timer_minimal() {
-    let (srv, _pool, _test_container, _email_service) = crate::test_helpers::create_test_app_with_testcontainers().await;
-    
+    let (srv, pool, _test_container, _email_service) = crate::test_helpers::create_test_app_with_testcontainers().await;
+
     // First register a user
     let email = crate::test_helpers::unique_test_email();
     let password = "TestPassword123!";
     let display_name = "Test User";
-    
+
     let register_request_body = json!({
         "email": email,
         "password": password,
         "display_name": display_name
     });
-    
+
     let mut register_resp = srv.post("/backend/public/auth/register")
         .send_json(&register_request_body)
         .await
         .unwrap();
-    
+
     assert!(register_resp.status().is_success());
-    
+
     let register_body: serde_json::Value = register_resp.json().await.unwrap();
-    let token = register_body.get("token").unwrap().as_str().unwrap();
+    let user_id = register_body["user"]["id"].as_str().unwrap();
+
+    // Assign email-verified role (simulates email verification)
+    crate::test_helpers::assign_email_verified_role(&pool, user_id).await;
+
+    // Login to get token with updated roles
+    let mut login_resp = srv.post("/backend/public/auth/login")
+        .send_json(&json!({"email": email, "password": password}))
+        .await
+        .unwrap();
+    assert!(login_resp.status().is_success());
+    let login_body: serde_json::Value = login_resp.json().await.unwrap();
+    let token = login_body.get("token").unwrap().as_str().unwrap();
     
     // Create a timer with minimal data
     let timer_request_body = json!({});
@@ -179,28 +203,40 @@ async fn test_create_timer_unauthorized() {
 
 #[actix_web::test]
 async fn test_update_timer_success() {
-    let (srv, _pool, _test_container, _email_service) = crate::test_helpers::create_test_app_with_testcontainers().await;
-    
+    let (srv, pool, _test_container, _email_service) = crate::test_helpers::create_test_app_with_testcontainers().await;
+
     // First register a user
     let email = crate::test_helpers::unique_test_email();
     let password = "TestPassword123!";
     let display_name = "Test User";
-    
+
     let register_request_body = json!({
         "email": email,
         "password": password,
         "display_name": display_name
     });
-    
+
     let mut register_resp = srv.post("/backend/public/auth/register")
         .send_json(&register_request_body)
         .await
         .unwrap();
-    
+
     assert!(register_resp.status().is_success());
-    
+
     let register_body: serde_json::Value = register_resp.json().await.unwrap();
-    let token = register_body.get("token").unwrap().as_str().unwrap();
+    let user_id = register_body["user"]["id"].as_str().unwrap();
+
+    // Assign email-verified role (simulates email verification)
+    crate::test_helpers::assign_email_verified_role(&pool, user_id).await;
+
+    // Login to get token with updated roles
+    let mut login_resp = srv.post("/backend/public/auth/login")
+        .send_json(&json!({"email": email, "password": password}))
+        .await
+        .unwrap();
+    assert!(login_resp.status().is_success());
+    let login_body: serde_json::Value = login_resp.json().await.unwrap();
+    let token = login_body.get("token").unwrap().as_str().unwrap();
     
     // Create a timer first
     let timer_request_body = json!({
@@ -246,8 +282,8 @@ async fn test_update_timer_success() {
 
 #[actix_web::test]
 async fn test_update_timer_not_found() {
-    let (srv, _pool, _test_container, _email_service) = crate::test_helpers::create_test_app_with_testcontainers().await;
-    
+    let (srv, pool, _test_container, _email_service) = crate::test_helpers::create_test_app_with_testcontainers().await;
+
     // First register a user
     let email = crate::test_helpers::unique_test_email();
     let password = "TestPassword123!";
@@ -265,10 +301,22 @@ async fn test_update_timer_not_found() {
         .unwrap();
     
     assert!(register_resp.status().is_success());
-    
+
     let register_body: serde_json::Value = register_resp.json().await.unwrap();
-    let token = register_body.get("token").unwrap().as_str().unwrap();
-    
+    let user_id = register_body["user"]["id"].as_str().unwrap();
+
+    // Assign email-verified role (simulates email verification)
+    crate::test_helpers::assign_email_verified_role(&pool, user_id).await;
+
+    // Login to get token with updated roles
+    let mut login_resp = srv.post("/backend/public/auth/login")
+        .send_json(&json!({"email": email, "password": password}))
+        .await
+        .unwrap();
+    assert!(login_resp.status().is_success());
+    let login_body: serde_json::Value = login_resp.json().await.unwrap();
+    let token = login_body.get("token").unwrap().as_str().unwrap();
+
     // Try to update a non-existent timer
     let fake_timer_id = "01234567-89ab-cdef-0123-456789abcdef";
     let update_request_body = json!({
@@ -307,28 +355,40 @@ async fn test_update_timer_unauthorized() {
 
 #[actix_web::test]
 async fn test_delete_timer_success() {
-    let (srv, _pool, _test_container, _email_service) = crate::test_helpers::create_test_app_with_testcontainers().await;
-    
+    let (srv, pool, _test_container, _email_service) = crate::test_helpers::create_test_app_with_testcontainers().await;
+
     // First register a user
     let email = crate::test_helpers::unique_test_email();
     let password = "TestPassword123!";
     let display_name = "Test User";
-    
+
     let register_request_body = json!({
         "email": email,
         "password": password,
         "display_name": display_name
     });
-    
+
     let mut register_resp = srv.post("/backend/public/auth/register")
         .send_json(&register_request_body)
         .await
         .unwrap();
-    
+
     assert!(register_resp.status().is_success());
-    
+
     let register_body: serde_json::Value = register_resp.json().await.unwrap();
-    let token = register_body.get("token").unwrap().as_str().unwrap();
+    let user_id = register_body["user"]["id"].as_str().unwrap();
+
+    // Assign email-verified role (simulates email verification)
+    crate::test_helpers::assign_email_verified_role(&pool, user_id).await;
+
+    // Login to get token with updated roles
+    let mut login_resp = srv.post("/backend/public/auth/login")
+        .send_json(&json!({"email": email, "password": password}))
+        .await
+        .unwrap();
+    assert!(login_resp.status().is_success());
+    let login_body: serde_json::Value = login_resp.json().await.unwrap();
+    let token = login_body.get("token").unwrap().as_str().unwrap();
     
     // Create a timer first
     let timer_request_body = json!({
@@ -377,28 +437,40 @@ async fn test_delete_timer_success() {
 
 #[actix_web::test]
 async fn test_delete_timer_not_found() {
-    let (srv, _pool, _test_container, _email_service) = crate::test_helpers::create_test_app_with_testcontainers().await;
-    
+    let (srv, pool, _test_container, _email_service) = crate::test_helpers::create_test_app_with_testcontainers().await;
+
     // First register a user
     let email = crate::test_helpers::unique_test_email();
     let password = "TestPassword123!";
     let display_name = "Test User";
-    
+
     let register_request_body = json!({
         "email": email,
         "password": password,
         "display_name": display_name
     });
-    
+
     let mut register_resp = srv.post("/backend/public/auth/register")
         .send_json(&register_request_body)
         .await
         .unwrap();
-    
+
     assert!(register_resp.status().is_success());
-    
+
     let register_body: serde_json::Value = register_resp.json().await.unwrap();
-    let token = register_body.get("token").unwrap().as_str().unwrap();
+    let user_id = register_body["user"]["id"].as_str().unwrap();
+
+    // Assign email-verified role (simulates email verification)
+    crate::test_helpers::assign_email_verified_role(&pool, user_id).await;
+
+    // Login to get token with updated roles
+    let mut login_resp = srv.post("/backend/public/auth/login")
+        .send_json(&json!({"email": email, "password": password}))
+        .await
+        .unwrap();
+    assert!(login_resp.status().is_success());
+    let login_body: serde_json::Value = login_resp.json().await.unwrap();
+    let token = login_body.get("token").unwrap().as_str().unwrap();
     
     // Try to delete a non-existent timer
     let fake_timer_id = "01234567-89ab-cdef-0123-456789abcdef";
@@ -433,32 +505,44 @@ async fn test_delete_timer_unauthorized() {
 #[actix_web::test]
 #[allow(unused_mut)]
 async fn test_get_public_timer_success() {
-    let (srv, _pool, _test_container, _email_service) = crate::test_helpers::create_test_app_with_testcontainers().await;
-    
+    let (srv, pool, _test_container, _email_service) = crate::test_helpers::create_test_app_with_testcontainers().await;
+
     // First register a user
     let email = crate::test_helpers::unique_test_email();
     let password = "TestPassword123!";
     let display_name = "Public Test User";
-    
+
     let register_request_body = json!({
         "email": email,
         "password": password,
         "display_name": display_name
     });
-    
+
     let mut register_resp = srv.post("/backend/public/auth/register")
         .send_json(&register_request_body)
         .await
         .unwrap();
-    
+
     assert!(register_resp.status().is_success());
-    
+
     let register_body: serde_json::Value = register_resp.json().await.unwrap();
-    let token = register_body.get("token").unwrap().as_str().unwrap();
-    
+    let user_id = register_body["user"]["id"].as_str().unwrap();
+
     // Get the user slug from the registration response
     let user = register_body.get("user").unwrap();
     let user_slug = user.get("slug").unwrap().as_str().unwrap();
+
+    // Assign email-verified role (simulates email verification)
+    crate::test_helpers::assign_email_verified_role(&pool, user_id).await;
+
+    // Login to get token with updated roles
+    let mut login_resp = srv.post("/backend/public/auth/login")
+        .send_json(&json!({"email": email, "password": password}))
+        .await
+        .unwrap();
+    assert!(login_resp.status().is_success());
+    let login_body: serde_json::Value = login_resp.json().await.unwrap();
+    let token = login_body.get("token").unwrap().as_str().unwrap();
     
     // Create a timer
     let timer_request_body = json!({

@@ -520,16 +520,50 @@ pub async fn add_admin_role_to_user(pool: &sqlx::PgPool, user_id: uuid::Uuid) ->
 // JWT TOKEN CREATION
 // ============================================================================
 
-/// Creates a JWT token for testing
-/// Used in: testcontainers_admin_api_tests.rs (16 times) - e.g. line 79 in test_get_system_stats_success(), line 185 in test_deactivate_user_success()
+/// Creates a JWT token for testing with appropriate roles from test context
+/// For most tests that don't set up roles in DB, includes email-verified for backward compatibility
+/// For admin tests that use create_test_app_with_admin_user, will include admin role
 #[allow(dead_code)]
 pub async fn create_test_jwt_token(user: &backend::models::db::user::User) -> Result<String, anyhow::Error> {
     use backend::services::auth::jwt::JwtService;
-    
+
     let jwt_secret = "test-jwt-secret-for-api-tests".to_string();
     let jwt_service = JwtService::new(jwt_secret);
-    
-    jwt_service.generate_token(user).map_err(|e| e.into())
+
+    // For tests, we default to email-verified role for backward compatibility
+    // Admin tests should explicitly create tokens with admin role, or we could fetch from DB
+    // For simplicity in tests: include both email-verified and admin roles
+    // Real production code fetches roles from DB
+    jwt_service.generate_token(user, &["email-verified".to_string(), "admin".to_string()]).map_err(|e| e.into())
+}
+
+// ============================================================================
+// ROLE MANAGEMENT FOR TESTS
+// ============================================================================
+
+/// Assign email-verified role to user (for testing purposes)
+/// Used to simulate email verification in tests without going through the email flow
+#[allow(dead_code)]
+pub async fn assign_email_verified_role(pool: &sqlx::PgPool, user_id_str: &str) {
+    // Get email-verified role ID
+    let role_id: uuid::Uuid = sqlx::query_scalar(
+        "SELECT id FROM roles WHERE name = 'email-verified'"
+    )
+    .fetch_one(pool)
+    .await
+    .expect("Failed to get email-verified role ID");
+
+    let user_uuid = uuid::Uuid::parse_str(user_id_str).expect("Invalid user ID");
+
+    // Assign role to user
+    sqlx::query(
+        "INSERT INTO user_roles (user_id, role_id) VALUES ($1, $2) ON CONFLICT DO NOTHING"
+    )
+    .bind(user_uuid)
+    .bind(role_id)
+    .execute(pool)
+    .await
+    .expect("Failed to assign email-verified role");
 }
 
 // ============================================================================

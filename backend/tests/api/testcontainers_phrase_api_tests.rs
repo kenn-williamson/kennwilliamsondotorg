@@ -291,28 +291,40 @@ async fn test_remove_phrase_exclusion_unauthorized() {
 
 #[actix_web::test]
 async fn test_submit_suggestion_success() {
-    let (srv, _pool, _test_container, _email_service) = crate::test_helpers::create_test_app_with_testcontainers().await;
-    
+    let (srv, pool, _test_container, _email_service) = crate::test_helpers::create_test_app_with_testcontainers().await;
+
     // First register a user to get proper authentication
     let email = crate::test_helpers::unique_test_email();
     let password = "TestPassword123!";
     let display_name = "Test User";
-    
+
     let register_request_body = json!({
         "email": email,
         "password": password,
         "display_name": display_name
     });
-    
+
     let mut register_resp = srv.post("/backend/public/auth/register")
         .send_json(&register_request_body)
         .await
         .unwrap();
-    
+
     assert!(register_resp.status().is_success());
-    
+
     let register_body: serde_json::Value = register_resp.json().await.unwrap();
-    let token = register_body.get("token").unwrap().as_str().unwrap();
+    let user_id = register_body["user"]["id"].as_str().unwrap();
+
+    // Assign email-verified role (simulates email verification)
+    crate::test_helpers::assign_email_verified_role(&pool, user_id).await;
+
+    // Login to get token with updated roles
+    let mut login_resp = srv.post("/backend/public/auth/login")
+        .send_json(&json!({"email": email, "password": password}))
+        .await
+        .unwrap();
+    assert!(login_resp.status().is_success());
+    let login_body: serde_json::Value = login_resp.json().await.unwrap();
+    let token = login_body.get("token").unwrap().as_str().unwrap();
     
     // Now test submitting a suggestion
     let suggestion_request = json!({
