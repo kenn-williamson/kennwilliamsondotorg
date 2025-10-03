@@ -3,9 +3,8 @@ use actix_web::{
     middleware::Next,
     Error, HttpMessage, Result,
 };
-use uuid::Uuid;
 
-use crate::services::admin::UserManagementService;
+use super::auth::AuthContext;
 
 pub async fn admin_auth_middleware(
     req: ServiceRequest,
@@ -17,38 +16,29 @@ pub async fn admin_auth_middleware(
         req.path()
     );
 
-    // First, run JWT auth middleware to get user_id
-    let user_id = match req.extensions().get::<Uuid>() {
-        Some(id) => *id,
+    // Get auth context from JWT middleware
+    let auth_ctx = match req.extensions().get::<AuthContext>() {
+        Some(ctx) => ctx.clone(),
         None => {
-            log::debug!("No user_id found in request extensions - JWT middleware must run first");
+            log::debug!(
+                "No auth context found in request extensions - JWT middleware must run first"
+            );
             return Err(actix_web::error::ErrorUnauthorized(
                 "Authentication required",
             ));
         }
     };
 
-    // Get admin service from app data
-    let admin_service = req
-        .app_data::<actix_web::web::Data<UserManagementService>>()
-        .ok_or_else(|| actix_web::error::ErrorInternalServerError("Admin service not found"))?;
-
-    // Check if user is admin
-    match admin_service.is_user_admin(user_id).await {
-        Ok(true) => {
-            log::debug!("User {} is admin, allowing access", user_id);
-            let res = next.call(req).await?;
-            Ok(res)
-        }
-        Ok(false) => {
-            log::debug!("User {} is not admin, denying access", user_id);
-            Err(actix_web::error::ErrorForbidden("Admin access required"))
-        }
-        Err(e) => {
-            log::error!("Failed to check admin status for user {}: {}", user_id, e);
-            Err(actix_web::error::ErrorInternalServerError(
-                "Failed to verify admin status",
-            ))
-        }
+    // Check if user has admin role
+    if !auth_ctx.has_role("admin") {
+        log::debug!(
+            "User {} does not have admin role, denying access",
+            auth_ctx.user_id
+        );
+        return Err(actix_web::error::ErrorForbidden("Admin access required"));
     }
+
+    log::debug!("User {} is admin, allowing access", auth_ctx.user_id);
+    let res = next.call(req).await?;
+    Ok(res)
 }

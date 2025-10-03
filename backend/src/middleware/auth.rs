@@ -7,6 +7,37 @@ use uuid::Uuid;
 
 use crate::services::auth::AuthService;
 
+/// Authentication context containing user ID and roles from JWT
+#[derive(Debug, Clone)]
+pub struct AuthContext {
+    pub user_id: Uuid,
+    pub roles: Vec<String>,
+}
+
+impl AuthContext {
+    pub fn has_role(&self, role: &str) -> bool {
+        self.roles.iter().any(|r| r == role)
+    }
+
+    /// Require a specific role, returning 403 Forbidden if not present
+    pub fn require_role(&self, role: &str) -> Result<(), actix_web::Error> {
+        if self.has_role(role) {
+            Ok(())
+        } else {
+            match role {
+                "email-verified" => Err(actix_web::error::ErrorForbidden(
+                    "Email not verified. Please check your inbox to verify your email address.",
+                )),
+                "admin" => Err(actix_web::error::ErrorForbidden("Admin access required")),
+                _ => Err(actix_web::error::ErrorForbidden(format!(
+                    "Required role '{}' not found",
+                    role
+                ))),
+            }
+        }
+    }
+}
+
 pub async fn jwt_auth_middleware(
     req: ServiceRequest,
     next: Next<impl actix_web::body::MessageBody>,
@@ -51,10 +82,20 @@ pub async fn jwt_auth_middleware(
                 .parse::<Uuid>()
                 .map_err(|_| actix_web::error::ErrorUnauthorized("Invalid user ID in token"))?;
 
-            log::debug!("Token verified successfully for user: {}", user_id);
+            log::debug!(
+                "Token verified successfully for user: {} with roles: {:?}",
+                user_id,
+                claims.roles
+            );
 
-            // Store only user ID in request extensions
-            // Route handlers can fetch full user details when needed
+            // Store AuthContext with user ID and roles in request extensions
+            let auth_context = AuthContext {
+                user_id,
+                roles: claims.roles,
+            };
+            req.extensions_mut().insert(auth_context.clone());
+
+            // Also insert Uuid for backward compatibility with existing route handlers
             req.extensions_mut().insert(user_id);
 
             // Continue to the handler
@@ -76,6 +117,10 @@ pub async fn jwt_auth_middleware(
     }
 }
 
-// Note: Route handlers should fetch full user details when needed:
-// let user_id = req.extensions().get::<Uuid>().cloned().unwrap();
-// let user_details = auth_service.get_current_user(user_id).await?;
+// Note: Route handlers can access authentication context:
+// let auth_ctx = req.extensions().get::<AuthContext>().cloned().unwrap();
+// let user_id = auth_ctx.user_id;
+// if auth_ctx.has_role("admin") { ... }
+//
+// For backward compatibility, user_id can still be accessed directly:
+// let user_id = req.extensions().get::<AuthContext>().map(|ctx| ctx.user_id).unwrap();

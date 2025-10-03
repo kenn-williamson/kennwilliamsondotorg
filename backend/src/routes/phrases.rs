@@ -1,6 +1,7 @@
 use actix_web::{web, HttpMessage, HttpRequest, HttpResponse, Result};
 use uuid::Uuid;
 
+use crate::middleware::auth::AuthContext;
 use crate::models::api::{
     ExcludedPhrasesResponse, PhraseListResponse, PhraseSuggestionRequest, PhraseSuggestionResponse,
     SuggestionListResponse, UserExcludedPhraseResponse,
@@ -188,9 +189,13 @@ pub async fn submit_suggestion(
     req: HttpRequest,
     request: web::Json<PhraseSuggestionRequest>,
 ) -> Result<HttpResponse> {
-    let user_id = req.extensions().get::<Uuid>().cloned().unwrap();
+    let auth_ctx = req.extensions().get::<AuthContext>().cloned().unwrap();
+
+    // Require email verification to submit phrase suggestions
+    auth_ctx.require_role("email-verified")?;
+
     match phrase_service
-        .submit_phrase_suggestion(user_id, request.into_inner())
+        .submit_phrase_suggestion(auth_ctx.user_id, request.into_inner())
         .await
     {
         Ok(suggestion) => {

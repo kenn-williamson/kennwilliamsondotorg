@@ -47,8 +47,11 @@ impl AuthService {
             None => return Ok(None), // User no longer exists
         };
 
-        // Generate new JWT and refresh token
-        let new_jwt = self.jwt_service.generate_token(&user)?;
+        // Get user roles (fetch fresh roles on token refresh)
+        let roles = self.user_repository.get_user_roles(user.id).await?;
+
+        // Generate new JWT with roles and refresh token
+        let new_jwt = self.jwt_service.generate_token(&user, &roles)?;
         let new_refresh_token = generate_refresh_token_string();
         let new_token_hash = hash_token(&new_refresh_token);
 
@@ -187,6 +190,11 @@ mod tests {
             .times(1)
             .with(eq(user_id))
             .returning(move |_| Ok(Some(user.clone())));
+
+        user_repo
+            .expect_get_user_roles()
+            .times(1)
+            .returning(|_| Ok(vec!["user".to_string()]));
 
         refresh_repo
             .expect_revoke_token()

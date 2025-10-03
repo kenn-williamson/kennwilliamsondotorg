@@ -33,8 +33,8 @@ impl AuthService {
         // Get user roles
         let roles = self.user_repository.get_user_roles(user.id).await?;
 
-        // Generate JWT token and refresh token
-        let token = self.jwt_service.generate_token(&user)?;
+        // Generate JWT token with roles and refresh token
+        let token = self.jwt_service.generate_token(&user, &roles)?;
         let refresh_token =
             create_refresh_token(user.id, device_info, &*self.refresh_token_repository).await?;
 

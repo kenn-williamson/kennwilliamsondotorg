@@ -357,7 +357,7 @@ FRONTEND_URL=https://kennwilliamson.org
 
 ## Implementation Status
 
-### ✅ Completed (TDD Approach)
+### ✅ Phase 0: Email Verification Foundation (COMPLETE - Commit ca7b07c)
 
 **Architecture Decision: Builder Pattern for AuthService**
 - Implemented `AuthServiceBuilder` for flexible dependency injection
@@ -367,7 +367,7 @@ FRONTEND_URL=https://kennwilliamson.org
 
 **Database Layer:**
 - ✅ Migration `20251001224112_add_oauth_email_verification.up.sql` created
-- ✅ Added `real_name` and `google_user_id` to users table
+- ✅ Added `real_name` and `google_user_id` to users table (OAuth prep)
 - ✅ Made `password_hash` nullable for OAuth-only users
 - ✅ Created `verification_tokens` table with indexes
 - ✅ Added `email-verified` role
@@ -406,14 +406,13 @@ FRONTEND_URL=https://kennwilliamson.org
 - ✅ Route handler updated to pass `FRONTEND_URL` from environment
 - ✅ Added `FRONTEND_URL=https://localhost` to `.env.development`
 - ✅ 5 unit tests passing (TDD approach)
-- ✅ All 58 auth tests passing (no breaking changes)
+- ✅ All tests passing (no breaking changes)
 
 **API Routes - Email Verification:**
 - ✅ `POST /backend/protected/auth/send-verification` - Resend verification email (protected)
 - ✅ `GET /backend/public/auth/verify-email?token=XXX` - Verify email with token (public)
 - ✅ Route handlers implemented with error handling
 - ✅ Routes registered in mod.rs
-- ✅ All tests passing (58 auth tests)
 
 **Token Cleanup Service:**
 - ✅ `CleanupService` implemented with TDD approach
@@ -421,45 +420,193 @@ FRONTEND_URL=https://kennwilliamson.org
 - ✅ Background task runs on app startup, then every 24 hours (configurable)
 - ✅ Configuration: `CLEANUP_INTERVAL_HOURS` environment variable (default: 24)
 - ✅ Integrated into ServiceContainer with dependency injection
-- ✅ 5 unit tests with mock repositories (test service creation, repository calls, error handling)
-- ✅ 5 integration tests with testcontainers (test expired refresh tokens, verification tokens, both types, no expired tokens, empty database)
+- ✅ 5 unit tests with mock repositories
+- ✅ 5 integration tests with testcontainers
 - ✅ All 170 tests passing (165 unit + 5 integration)
-
-### 🚧 In Progress
-(None)
-
-### 📋 Remaining Tasks
-
-**Service Layer - Google OAuth:**
-- Implement `get_google_oauth_url()`
-- Implement `google_oauth_callback()`
-- Account linking logic
-- OAuth unit tests (TDD)
-
-**Middleware:**
-- Create `email_verification_middleware`
-- Apply to protected endpoints (timers, phrase suggestions)
-- Unit tests for middleware
-
-**API Routes - Google OAuth:**
-- `GET /backend/public/auth/google/url`
-- `POST /backend/public/auth/google/callback`
-
-**Integration Tests:**
-- Email verification flow (testcontainers)
-- OAuth flow (testcontainers)
-- Feature gating scenarios
-
-**Infrastructure:**
-- Run database migrations
-- Update SQLx query cache
-- Configure AWS SES environment variables
-- Configure Google OAuth credentials
-
-**Frontend Changes:**
-- Not yet started (see original design doc)
 
 ---
 
-**Status**: Partial Implementation - Email Verification Complete, OAuth Pending
-**Next Steps**: Complete register() update, then implement OAuth with TDD
+### ✅ Phase 1: JWT Enhancement + Feature Gating (COMPLETE)
+
+**Goal**: Add roles to JWT claims and implement email verification middleware for feature gating.
+
+**Rationale**:
+- Short-lived JWTs (15 min) make stale role data acceptable
+- Eliminates DB hits on every protected request
+- Standard RBAC practice for JWTs
+- Tightly coupled with middleware implementation
+
+**Tasks**:
+
+1. **JWT Service Updates** (`services/auth/jwt.rs`):
+   - Add `roles: Vec<String>` to `Claims` struct
+   - Update `create_access_token()` to include user roles
+   - Update `validate_token()` to extract roles from claims
+   - Add helper: `fn has_role(claims: &Claims, role: &str) -> bool`
+   - Unit tests for JWT with roles
+
+2. **Auth Middleware Enhancement** (`middleware/auth.rs`):
+   - Update `JwtMiddleware` to attach roles to request extensions
+   - Make roles available to downstream middleware/handlers
+   - Unit tests for role extraction
+
+3. **Email Verification Middleware** (`middleware/email_verification.rs`):
+   - New middleware: `EmailVerificationMiddleware`
+   - Check for `email-verified` role in JWT claims
+   - Return 403 with clear error message if not verified
+   - Unit tests for verified/unverified scenarios
+
+4. **Apply Middleware to Protected Endpoints**:
+   - `POST /backend/protected/incident_timers` - Create timer
+   - `PUT /backend/protected/incident_timers/{id}` - Update timer
+   - `DELETE /backend/protected/incident_timers/{id}` - Delete timer
+   - `POST /backend/protected/phrases/suggest` - Suggest phrase
+   - Future user-generated content endpoints
+
+5. **Update Login Flow** (`services/auth/auth_service/login.rs`):
+   - Fetch user roles during login
+   - Pass roles to `create_access_token()`
+   - Ensure roles are included in JWT response
+
+6. **Integration Tests**:
+   - Test verified user can access protected endpoints
+   - Test unverified user gets 403 on protected endpoints
+   - Test unverified user can still access public endpoints
+   - Test role changes reflect after token refresh (within 15 min window)
+
+**Implementation Approach**: Handler-Level Role Checks (Standard Actix Pattern)
+- Research showed Actix community uses handler-level checks over middleware complexity
+- `AuthContext.require_role()` helper method for clean, flexible role validation
+- No middleware spaghetti in routing configuration
+
+**What We Built**:
+
+1. ✅ **JWT Service** (`services/auth/jwt.rs`):
+   - Added `roles: Vec<String>` to Claims struct
+   - Updated `generate_token()` to accept roles parameter
+   - 5 new unit tests for JWT with roles
+
+2. ✅ **AuthContext** (`middleware/auth.rs`):
+   - New `AuthContext` struct with `user_id` and `roles`
+   - Backward-compatible: Inserts both `AuthContext` and `Uuid` into request extensions
+   - `has_role()` and `require_role()` helper methods
+   - Custom error messages per role type
+
+3. ✅ **Updated Auth Flows**:
+   - `login.rs`: Passes roles to JWT generation
+   - `register.rs`: Includes roles in registration response
+   - `refresh_token.rs`: Fetches fresh roles on token refresh
+
+4. ✅ **Simplified Admin Middleware**:
+   - Now checks `admin` role from JWT (no DB hit!)
+   - Reduced from 54 lines to 44 lines
+   - Removed UserManagementService dependency
+
+5. ✅ **Handler-Level Role Checks** (4 handlers updated):
+   - `incident_timers::create_timer`
+   - `incident_timers::update_timer`
+   - `incident_timers::delete_timer`
+   - `phrases::submit_suggestion`
+   - Each calls `auth_ctx.require_role("email-verified")?`
+
+6. ✅ **Clean Routing**: No middleware complexity, standard pattern
+
+7. ✅ **All Tests Passing**: 170 unit tests
+
+**Trade-offs**:
+- **Stale Data Window**: If admin revokes `email-verified` role, user keeps access for up to 1 hour (until JWT expires). Acceptable for this use case.
+- **JWT Size**: Roles add ~20-50 bytes per token (negligible).
+
+---
+
+### 📋 Phase 2: Google OAuth Service Layer (FUTURE)
+
+**Goal**: Implement Google OAuth authentication with account linking logic.
+
+**Dependencies**:
+- Google OAuth Client ID/Secret (external setup required)
+- All logic can be implemented with mocks for testing
+
+**Tasks**:
+
+1. **OAuth Configuration** (`services/auth/oauth/config.rs`):
+   - Google OAuth client setup
+   - Environment variable management
+   - Redirect URI configuration
+
+2. **OAuth Service** (`services/auth/oauth/google.rs`):
+   - `get_google_oauth_url()` - Generate OAuth authorization URL with state parameter
+   - `google_oauth_callback()` - Exchange code for tokens, fetch user profile
+   - `link_google_account()` - Link OAuth to existing user
+   - Account linking strategy implementation (see design doc section 4)
+   - Mock Google API client for tests
+   - Unit tests for all OAuth flows (TDD)
+
+3. **Account Linking Logic**:
+   - Check if `google_user_id` exists → Login existing user
+   - Check if email exists AND `email-verified` role → Link to existing account
+   - Otherwise → Create new user with `email-verified` role
+   - Security: Only link to verified email accounts
+
+4. **User Repository Updates**:
+   - `find_by_google_user_id()` method
+   - `update_google_user_id()` method
+   - `update_real_name()` method
+
+**Estimated Scope**: ~5-6 new files, ~20-25 tests
+
+**Blocked Until**: Google OAuth app configured (Client ID/Secret)
+
+---
+
+### 📋 Phase 3: OAuth API Routes + Integration Tests (FUTURE)
+
+**Goal**: Wire up OAuth endpoints and comprehensive integration testing.
+
+**Dependencies**: Phase 2 complete
+
+**Tasks**:
+
+1. **API Routes** (`routes/auth.rs`):
+   - `GET /backend/public/auth/google/url` - Get OAuth authorization URL
+   - `POST /backend/public/auth/google/callback` - Handle OAuth callback
+   - Error handling for OAuth failures
+
+2. **Integration Tests**:
+   - Full email verification flow (register → verify → access granted)
+   - Full OAuth flow (redirect → callback → login/register)
+   - Account linking scenarios (new user, existing verified, existing unverified)
+   - Feature gating with middleware (verified vs unverified users)
+   - Error cases (expired tokens, invalid OAuth codes, etc.)
+
+**Estimated Scope**: ~3-4 files, ~15-20 integration tests
+
+---
+
+### 📋 Phase 4: Infrastructure & Frontend (FUTURE)
+
+**Infrastructure** (Blocked until external services configured):
+- ⬜ Run database migrations in production
+- ⬜ Configure AWS SES (domain verification, production access, SPF/DKIM)
+- ⬜ Configure Google OAuth (redirect URIs, consent screen)
+- ⬜ Update production environment variables
+
+**Frontend** (Full implementation - see original design doc):
+- ⬜ `GoogleOAuthButton.vue` component
+- ⬜ `EmailVerificationBanner.vue` component
+- ⬜ `VerifyEmailPage.vue` page
+- ⬜ Update `LoginPage.vue` and `RegisterPage.vue`
+- ⬜ Update `ProfilePage.vue` for verification status
+- ⬜ `useEmailVerification()` and `useGoogleOAuth()` composables
+- ⬜ Error handling for 403 verification errors
+- ⬜ End-to-end testing with real services
+
+---
+
+**Current Status**: Phase 0-1 Complete
+- Phase 0: Email verification foundation (Commit ca7b07c)
+- Phase 1: JWT + RBAC feature gating (Ready to commit)
+
+**Next Step**: Write integration tests for Phase 1, then commit
+**Remaining for Production**: Phases 2-4 (OAuth, Infrastructure, Frontend)
+**Blocked**: Phases 2-4 need external services (Google OAuth, AWS SES) for manual testing

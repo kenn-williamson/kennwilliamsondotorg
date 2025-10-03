@@ -1,6 +1,7 @@
 use actix_web::{web, HttpMessage, HttpRequest, HttpResponse, Result as ActixResult};
 use uuid::Uuid;
 
+use crate::middleware::auth::AuthContext;
 use crate::models::api::{
     CreateIncidentTimer, IncidentTimerResponse, PublicIncidentTimerResponse, UpdateIncidentTimer,
 };
@@ -76,14 +77,18 @@ pub async fn create_timer(
     data: web::Json<CreateIncidentTimer>,
     service: web::Data<IncidentTimerService>,
 ) -> ActixResult<HttpResponse> {
-    let user_id = req.extensions().get::<Uuid>().cloned().unwrap();
-    match service.create(user_id, data.into_inner()).await {
+    let auth_ctx = req.extensions().get::<AuthContext>().cloned().unwrap();
+
+    // Require email verification to create timers
+    auth_ctx.require_role("email-verified")?;
+
+    match service.create(auth_ctx.user_id, data.into_inner()).await {
         Ok(timer) => {
             let response: IncidentTimerResponse = timer.into();
             Ok(HttpResponse::Created().json(response))
         }
         Err(err) => {
-            log::error!("Failed to create timer for user {}: {}", user_id, err);
+            log::error!("Failed to create timer for user {}: {}", auth_ctx.user_id, err);
             Ok(HttpResponse::InternalServerError().json(serde_json::json!({
                 "error": "Internal server error"
             })))
@@ -98,8 +103,15 @@ pub async fn update_timer(
     data: web::Json<UpdateIncidentTimer>,
     service: web::Data<IncidentTimerService>,
 ) -> ActixResult<HttpResponse> {
-    let user_id = req.extensions().get::<Uuid>().cloned().unwrap();
-    match service.update(path.id, user_id, data.into_inner()).await {
+    let auth_ctx = req.extensions().get::<AuthContext>().cloned().unwrap();
+
+    // Require email verification to update timers
+    auth_ctx.require_role("email-verified")?;
+
+    match service
+        .update(path.id, auth_ctx.user_id, data.into_inner())
+        .await
+    {
         Ok(Some(timer)) => {
             let response: IncidentTimerResponse = timer.into();
             Ok(HttpResponse::Ok().json(response))
@@ -111,7 +123,7 @@ pub async fn update_timer(
             log::error!(
                 "Failed to update timer {} for user {}: {}",
                 path.id,
-                user_id,
+                auth_ctx.user_id,
                 err
             );
             Ok(HttpResponse::InternalServerError().json(serde_json::json!({
@@ -127,8 +139,12 @@ pub async fn delete_timer(
     req: HttpRequest,
     service: web::Data<IncidentTimerService>,
 ) -> ActixResult<HttpResponse> {
-    let user_id = req.extensions().get::<Uuid>().cloned().unwrap();
-    match service.delete(path.id, user_id).await {
+    let auth_ctx = req.extensions().get::<AuthContext>().cloned().unwrap();
+
+    // Require email verification to delete timers
+    auth_ctx.require_role("email-verified")?;
+
+    match service.delete(path.id, auth_ctx.user_id).await {
         Ok(true) => Ok(HttpResponse::NoContent().finish()),
         Ok(false) => Ok(HttpResponse::NotFound().json(serde_json::json!({
             "error": "Timer not found"
@@ -137,7 +153,7 @@ pub async fn delete_timer(
             log::error!(
                 "Failed to delete timer {} for user {}: {}",
                 path.id,
-                user_id,
+                auth_ctx.user_id,
                 err
             );
             Ok(HttpResponse::InternalServerError().json(serde_json::json!({
