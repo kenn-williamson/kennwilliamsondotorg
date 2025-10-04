@@ -136,4 +136,5 @@ pub struct GoogleOAuthUrlResponse {
 #[derive(Debug, Deserialize)]
 pub struct GoogleOAuthCallbackRequest {
     pub code: String,
+    pub state: Option<String>,
 }

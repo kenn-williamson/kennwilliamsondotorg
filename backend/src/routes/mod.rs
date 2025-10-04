@@ -3,6 +3,7 @@ pub mod auth;
 pub mod health;
 pub mod incident_timers;
 pub mod phrases;
+pub mod webhooks;
 
 use crate::middleware;
 use crate::middleware::rate_limiter::{admin_rate_limit_middleware, rate_limit_middleware};
@@ -13,6 +14,8 @@ pub fn configure_app_routes(cfg: &mut web::ServiceConfig) {
         // Backend API routes with base public/protected grouping
         .service(
             web::scope("/backend")
+                // Webhook routes (no auth, no rate limiting - AWS SNS uses signature verification)
+                .configure(webhooks::configure_webhook_routes)
                 // Public routes (with rate limiting only)
                 .service(
                     web::scope("/public")
@@ -27,6 +30,8 @@ pub fn configure_app_routes(cfg: &mut web::ServiceConfig) {
                             "/auth/verify-email",
                             web::get().to(auth::verify_email_handler),
                         )
+                        .route("/auth/google/url", web::get().to(auth::google_oauth_url))
+                        .route("/auth/google/callback", web::post().to(auth::google_oauth_callback))
                         .route(
                             "/{user_slug}/incident-timer",
                             web::get().to(incident_timers::get_latest_by_user_slug),

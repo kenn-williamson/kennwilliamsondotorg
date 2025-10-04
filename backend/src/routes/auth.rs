@@ -298,3 +298,63 @@ pub async fn verify_email_handler(
         }
     }
 }
+
+// ============================================================================
+// GOOGLE OAUTH ROUTES  
+// ============================================================================
+
+/// GET /backend/public/auth/google/url
+/// Get Google OAuth authorization URL with PKCE challenge
+/// PKCE verifier is stored in Redis and retrieved during callback
+pub async fn google_oauth_url(
+    auth_service: web::Data<AuthService>,
+) -> Result<HttpResponse, actix_web::Error> {
+    match auth_service.google_oauth_url().await {
+        Ok((url, _csrf_token)) => {
+            // PKCE verifier is now stored in Redis by the auth service
+            // The URL contains the state parameter (csrf_token) for callback validation
+            let response = crate::models::api::user::GoogleOAuthUrlResponse { url };
+            Ok(HttpResponse::Ok().json(response))
+        }
+        Err(e) => {
+            log::error!("Failed to generate OAuth URL: {}", e);
+            Ok(HttpResponse::ServiceUnavailable().json(serde_json::json!({
+                "error": "Google OAuth is not configured"
+            })))
+        }
+    }
+}
+
+/// POST /backend/public/auth/google/callback
+/// Handle Google OAuth callback with authorization code and state
+/// Retrieves PKCE verifier from Redis using state parameter
+pub async fn google_oauth_callback(
+    auth_service: web::Data<AuthService>,
+    payload: web::Json<crate::models::api::user::GoogleOAuthCallbackRequest>,
+) -> Result<HttpResponse, actix_web::Error> {
+    // Extract state parameter - required for PKCE verifier retrieval
+    let state = payload.state.clone().ok_or_else(|| {
+        actix_web::error::ErrorBadRequest("Missing state parameter")
+    })?;
+
+    match auth_service
+        .google_oauth_callback(payload.code.clone(), state)
+        .await
+    {
+        Ok(auth_response) => Ok(HttpResponse::Ok().json(auth_response)),
+        Err(e) => {
+            let error_msg = e.to_string();
+            if error_msg.contains("Invalid or expired OAuth state") {
+                log::warn!("OAuth callback failed - invalid/expired state: {}", e);
+                Ok(HttpResponse::BadRequest().json(serde_json::json!({
+                    "error": "OAuth state expired or invalid. Please try again."
+                })))
+            } else {
+                log::error!("OAuth callback failed: {}", e);
+                Ok(HttpResponse::BadRequest().json(serde_json::json!({
+                    "error": "OAuth authentication failed"
+                })))
+            }
+        }
+    }
+}

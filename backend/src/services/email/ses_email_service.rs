@@ -1,22 +1,47 @@
-use anyhow::Result;
+use anyhow::{Context, Result, anyhow};
 use async_trait::async_trait;
+use aws_sdk_sesv2::{types::{Body, Content, Destination, EmailContent, Message}, Client};
 
 use super::EmailService;
+use crate::models::db::EmailType;
+use crate::repositories::traits::email_suppression_repository::EmailSuppressionRepository;
 
 /// AWS SES email service implementation
 pub struct SesEmailService {
     from_email: String,
     reply_to_email: Option<String>,
-    // AWS SES client will be added when we add aws-sdk-sesv2 dependency
-    // ses_client: aws_sdk_sesv2::Client,
+    suppression_repo: Option<Box<dyn EmailSuppressionRepository>>,
 }
 
 impl SesEmailService {
+    /// Create a new SES email service without suppression checking
+    /// AWS credentials are loaded from environment (AWS_ACCESS_KEY_ID, AWS_SECRET_ACCESS_KEY)
+    /// or from EC2 instance role when deployed
     pub fn new(from_email: String, reply_to_email: Option<String>) -> Self {
         Self {
             from_email,
             reply_to_email,
+            suppression_repo: None,
         }
+    }
+
+    /// Create a new SES email service with suppression checking
+    pub fn with_suppression(
+        from_email: String,
+        reply_to_email: Option<String>,
+        suppression_repo: Box<dyn EmailSuppressionRepository>,
+    ) -> Self {
+        Self {
+            from_email,
+            reply_to_email,
+            suppression_repo: Some(suppression_repo),
+        }
+    }
+
+    /// Create AWS SES client from environment
+    async fn create_ses_client() -> Client {
+        let config = aws_config::load_from_env().await;
+        Client::new(&config)
     }
 
     /// Create email body content for verification email
@@ -58,6 +83,24 @@ impl EmailService for SesEmailService {
         verification_token: &str,
         frontend_url: &str,
     ) -> Result<()> {
+        // Check suppression list before sending (if repository is available)
+        if let Some(ref suppression_repo) = self.suppression_repo {
+            let is_suppressed = suppression_repo
+                .is_email_suppressed(to_email, EmailType::Transactional)
+                .await
+                .context("Failed to check email suppression status")?;
+
+            if is_suppressed {
+                log::warn!(
+                    "Email blocked by suppression list: {} (transactional)",
+                    to_email
+                );
+                return Err(anyhow!(
+                    "Email address is suppressed and cannot receive emails"
+                ));
+            }
+        }
+
         let verification_url =
             format!("{}/verify-email?token={}", frontend_url, verification_token);
         let email_body = Self::create_verification_email_body(to_name, &verification_url);
@@ -67,40 +110,43 @@ impl EmailService for SesEmailService {
             to_email
         );
 
-        // TODO: Implement actual AWS SES sending when aws-sdk-sesv2 is added
-        // For now, log the email content for development
-        log::debug!("Email body:\n{}", email_body);
-        log::warn!("AWS SES not yet implemented - email logged but not sent");
+        // Create SES client (credentials loaded from environment or EC2 instance role)
+        let ses_client = Self::create_ses_client().await;
 
-        // Temporary: Return Ok for development
-        // This will be replaced with actual SES API call:
-        /*
+        // Build SES email message
         let destination = Destination::builder()
             .to_addresses(to_email)
             .build();
 
-        let subject = Content::builder()
+        let subject_content = Content::builder()
             .data("Verify your email address")
             .charset("UTF-8")
-            .build()?;
+            .build()
+            .context("Failed to build email subject")?;
 
         let body_content = Content::builder()
             .data(email_body)
             .charset("UTF-8")
-            .build()?;
+            .build()
+            .context("Failed to build email body")?;
 
         let body = Body::builder().text(body_content).build();
 
         let message = Message::builder()
-            .subject(subject)
+            .subject(subject_content)
             .body(body)
             .build();
 
-        let mut email_request = self.ses_client
+        let email_content = EmailContent::builder()
+            .simple(message)
+            .build();
+
+        // Build and send email request
+        let mut email_request = ses_client
             .send_email()
-            .source(&self.from_email)
+            .from_email_address(&self.from_email)
             .destination(destination)
-            .message(message);
+            .content(email_content);
 
         if let Some(reply_to) = &self.reply_to_email {
             email_request = email_request.reply_to_addresses(reply_to);
@@ -108,7 +154,8 @@ impl EmailService for SesEmailService {
 
         email_request.send().await
             .context("Failed to send email via AWS SES")?;
-        */
+
+        log::info!("Verification email sent successfully to {}", to_email);
 
         Ok(())
     }

@@ -157,11 +157,16 @@ impl TestContextBuilder {
         // Create mock email service for testing
         let email_service = Arc::new(MockEmailService::new());
 
+        // Create mock OAuth service for testing
+        use backend::services::auth::oauth::MockGoogleOAuthService;
+        let mock_oauth = MockGoogleOAuthService::new();
+
         let auth_service = Arc::new(AuthService::builder()
             .user_repository(Box::new(PostgresUserRepository::new(test_container.pool.clone())))
             .refresh_token_repository(Box::new(PostgresRefreshTokenRepository::new(test_container.pool.clone())))
             .verification_token_repository(Box::new(PostgresVerificationTokenRepository::new(test_container.pool.clone())))
             .email_service(Box::new(email_service.as_ref().clone()))
+            .google_oauth_service(Box::new(mock_oauth))
             .jwt_secret(jwt_secret.clone())
             .build());
 
@@ -240,6 +245,84 @@ impl TestContext {
     pub fn builder() -> TestContextBuilder {
         TestContextBuilder::new()
     }
+
+    /// Create a verified user (with email-verified role)
+    pub async fn create_verified_user(&self, email: &str, slug: &str) -> backend::models::db::User {
+        use backend::repositories::postgres::postgres_user_repository::PostgresUserRepository;
+        use backend::repositories::traits::user_repository::{UserRepository, CreateUserData};
+
+        let user_repo = PostgresUserRepository::new(self.pool.clone());
+        let user_data = CreateUserData {
+            email: email.to_string(),
+            password_hash: "hash".to_string(),
+            display_name: slug.to_string(),
+            slug: slug.to_string(),
+        };
+
+        let user = user_repo.create_user(&user_data).await.unwrap();
+
+        // Assign email-verified role (using dynamic query for test helpers)
+        sqlx::query("INSERT INTO user_roles (user_id, role_id) SELECT $1, id FROM roles WHERE name = 'email-verified'")
+            .bind(user.id)
+            .execute(&self.pool)
+            .await
+            .unwrap();
+
+        user
+    }
+
+    /// Create an unverified user (without email-verified role)
+    pub async fn create_unverified_user(&self, email: &str, slug: &str) -> backend::models::db::User {
+        use backend::repositories::postgres::postgres_user_repository::PostgresUserRepository;
+        use backend::repositories::traits::user_repository::{UserRepository, CreateUserData};
+
+        let user_repo = PostgresUserRepository::new(self.pool.clone());
+        let user_data = CreateUserData {
+            email: email.to_string(),
+            password_hash: "hash".to_string(),
+            display_name: slug.to_string(),
+            slug: slug.to_string(),
+        };
+
+        user_repo.create_user(&user_data).await.unwrap()
+    }
+
+    /// Create an OAuth user (with Google ID and email-verified role)
+    pub async fn create_oauth_user(&self, email: &str, slug: &str, google_user_id: &str) -> backend::models::db::User {
+        use backend::repositories::postgres::postgres_user_repository::PostgresUserRepository;
+        use backend::repositories::traits::user_repository::{UserRepository, CreateOAuthUserData};
+
+        let user_repo = PostgresUserRepository::new(self.pool.clone());
+        let user_data = CreateOAuthUserData {
+            email: email.to_string(),
+            display_name: slug.to_string(),
+            slug: slug.to_string(),
+            real_name: Some("OAuth User".to_string()),
+            google_user_id: Some(google_user_id.to_string()),
+        };
+
+        user_repo.create_oauth_user(&user_data).await.unwrap()
+    }
+
+    /// Get user by ID
+    pub async fn get_user_by_id(&self, user_id: uuid::Uuid) -> backend::models::db::User {
+        use backend::repositories::postgres::postgres_user_repository::PostgresUserRepository;
+        use backend::repositories::traits::user_repository::UserRepository;
+
+        let user_repo = PostgresUserRepository::new(self.pool.clone());
+        user_repo.find_by_id(user_id).await.unwrap().unwrap()
+    }
+
+    /// Get all users with a specific email
+    pub async fn get_users_by_email(&self, email: &str) -> Vec<backend::models::db::User> {
+        sqlx::query_as::<_, backend::models::db::User>(
+            "SELECT * FROM users WHERE email = $1"
+        )
+        .bind(email)
+        .fetch_all(&self.pool)
+        .await
+        .unwrap()
+    }
 }
 
 // ============================================================================
@@ -247,6 +330,11 @@ impl TestContext {
 // ============================================================================
 
 /// Create a test app with testcontainers database
+///
+/// TODO: Refactor existing tests to use `TestContext::builder().build().await` instead.
+/// The builder pattern provides cleaner API and better extensibility.
+/// Do NOT use this in new tests - use TestContext::builder() instead.
+///
 /// Used in: testcontainers_admin_api_tests.rs - e.g. line 13 in test_admin_endpoints_require_authentication()
 /// Note: Uses MockRateLimitService for non-rate-limiting tests. For rate limiting tests, use create_test_app_with_redis()
 /// Returns: (TestServer, PgPool, TestContainer, Arc<MockEmailService>) - email service for test assertions

@@ -2,17 +2,19 @@ use sqlx::PgPool;
 use std::sync::Arc;
 
 use crate::repositories::mocks::{
-    MockAdminRepository, MockIncidentTimerRepository, MockPhraseRepository,
+    MockAdminRepository, MockIncidentTimerRepository, MockPhraseRepository, MockPkceStorage,
     MockRefreshTokenRepository, MockUserRepository, MockVerificationTokenRepository,
 };
 use crate::repositories::postgres::{
     postgres_admin_repository::PostgresAdminRepository,
+    postgres_email_suppression_repository::PostgresEmailSuppressionRepository,
     postgres_incident_timer_repository::PostgresIncidentTimerRepository,
     postgres_phrase_repository::PostgresPhraseRepository,
     postgres_refresh_token_repository::PostgresRefreshTokenRepository,
     postgres_user_repository::PostgresUserRepository,
     postgres_verification_token_repository::PostgresVerificationTokenRepository,
 };
+use crate::repositories::redis::RedisPkceStorage;
 
 use super::admin::{PhraseModerationService, StatsService, UserManagementService};
 use super::auth::AuthService;
@@ -45,20 +47,40 @@ impl ServiceContainer {
             .unwrap_or_else(|_| "noreply@kennwilliamson.org".to_string());
         let reply_to_email = std::env::var("SES_REPLY_TO_EMAIL").ok();
 
-        // Create services with repository dependencies using builder pattern
-        let auth_service = Arc::new(
-            AuthService::builder()
-                .user_repository(Box::new(PostgresUserRepository::new(pool.clone())))
-                .refresh_token_repository(Box::new(PostgresRefreshTokenRepository::new(
-                    pool.clone(),
-                )))
-                .verification_token_repository(Box::new(
-                    PostgresVerificationTokenRepository::new(pool.clone()),
-                ))
-                .email_service(Box::new(SesEmailService::new(from_email, reply_to_email)))
-                .jwt_secret(jwt_secret.clone())
-                .build(),
+        // Create email service with suppression checking
+        let suppression_repo = Box::new(PostgresEmailSuppressionRepository::new(pool.clone()));
+        let email_service = SesEmailService::with_suppression(
+            from_email,
+            reply_to_email,
+            suppression_repo,
         );
+
+        // Create Google OAuth service (optional - only if env vars present)
+        let google_oauth_service = super::auth::oauth::GoogleOAuthService::from_env().ok();
+
+        // Create PKCE storage for OAuth flows
+        let pkce_storage = RedisPkceStorage::new(&redis_url)
+            .expect("Failed to create PKCE storage");
+
+        // Create services with repository dependencies using builder pattern
+        let mut auth_builder = AuthService::builder()
+            .user_repository(Box::new(PostgresUserRepository::new(pool.clone())))
+            .refresh_token_repository(Box::new(PostgresRefreshTokenRepository::new(
+                pool.clone(),
+            )))
+            .verification_token_repository(Box::new(
+                PostgresVerificationTokenRepository::new(pool.clone()),
+            ))
+            .email_service(Box::new(email_service))
+            .pkce_storage(Box::new(pkce_storage))
+            .jwt_secret(jwt_secret.clone());
+
+        // Add OAuth service if configured
+        if let Some(oauth_svc) = google_oauth_service {
+            auth_builder = auth_builder.google_oauth_service(Box::new(oauth_svc));
+        }
+
+        let auth_service = Arc::new(auth_builder.build());
 
         let incident_timer_service = Arc::new(IncidentTimerService::new(Box::new(
             PostgresIncidentTimerRepository::new(pool.clone()),
@@ -115,6 +137,7 @@ impl ServiceContainer {
                 .refresh_token_repository(Box::new(MockRefreshTokenRepository::new()))
                 .verification_token_repository(Box::new(MockVerificationTokenRepository::new()))
                 .email_service(Box::new(MockEmailService::new()))
+                .pkce_storage(Box::new(MockPkceStorage::new()))
                 .jwt_secret(jwt_secret.clone())
                 .build(),
         );

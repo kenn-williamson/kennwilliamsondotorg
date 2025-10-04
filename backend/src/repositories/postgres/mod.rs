@@ -1,4 +1,5 @@
 pub mod postgres_admin_repository;
+pub mod postgres_email_suppression_repository;
 pub mod postgres_incident_timer_repository;
 pub mod postgres_phrase_repository;
 pub mod postgres_refresh_token_repository;

@@ -11,6 +11,9 @@ export interface AuthenticatedUser {
   slug: string
   roles: string[]
   created_at: string
+  email_verified?: boolean
+  real_name?: string
+  google_user_id?: string
 }
 
 export interface User {
@@ -118,4 +121,26 @@ export interface TokenRevokeAllResponse {
 export interface JwtToken {
   token: string
   expiresAt: string
+}
+
+// Google OAuth types
+export interface GoogleOAuthUrlResponse {
+  url: string
+}
+
+export interface GoogleOAuthCallbackRequest {
+  code: string
+}
+
+// Email verification types
+export interface SendVerificationEmailResponse {
+  message: string
+}
+
+export interface VerifyEmailRequest {
+  token: string
+}
+
+export interface VerifyEmailResponse {
+  message: string
 }

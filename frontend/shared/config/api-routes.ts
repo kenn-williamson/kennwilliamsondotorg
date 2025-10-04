@@ -20,6 +20,9 @@ export const API_ROUTES = {
       REGISTER: '/public/auth/register',
       REFRESH: '/public/auth/refresh',
       PREVIEW_SLUG: '/public/auth/preview-slug',
+      GOOGLE_URL: '/public/auth/google/url',
+      GOOGLE_CALLBACK: '/public/auth/google/callback',
+      VERIFY_EMAIL: '/public/auth/verify-email',
     },
     HEALTH: {
       BASIC: '/public/health',
@@ -45,6 +48,7 @@ export const API_ROUTES = {
       PROFILE: '/protected/auth/profile',
       CHANGE_PASSWORD: '/protected/auth/change-password',
       VALIDATE_SLUG: '/protected/auth/validate-slug',
+      SEND_VERIFICATION: '/protected/auth/send-verification',
     },
     TIMERS: {
       LIST: '/protected/incident-timers',
@@ -92,6 +96,9 @@ export const API_ROUTES = {
       LOGOUT: '/api/auth/logout',
       ME: '/api/auth/me',
       PROFILE: '/api/auth/profile',
+      GOOGLE_URL: '/api/auth/google/url',
+      GOOGLE_CALLBACK: '/api/auth/google/callback',
+      SEND_VERIFICATION: '/api/auth/send-verification',
     },
   },
 } as const

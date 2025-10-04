@@ -9,6 +9,19 @@
 
       <!-- Registration Form -->
       <div class="bg-white/80 backdrop-blur-sm rounded-lg shadow-lg border border-sky-200 p-8">
+        <!-- Google OAuth Button -->
+        <GoogleOAuthButton variant="signup" />
+
+        <!-- Divider -->
+        <div class="relative my-6">
+          <div class="absolute inset-0 flex items-center">
+            <div class="w-full border-t border-gray-300"></div>
+          </div>
+          <div class="relative flex justify-center text-sm">
+            <span class="px-2 bg-white text-gray-500">Or continue with email</span>
+          </div>
+        </div>
+
         <form @submit.prevent="onSubmit" class="space-y-6">
           <!-- Email Field -->
           <div>
@@ -222,14 +235,17 @@ const onSubmit = handleSubmit(async (values) => {
     })
 
     if (result.success) {
+      // Show success message about email verification
+      serverError.value = ''
+
       // Get redirect parameter from URL or default to homepage
       const route = useRoute()
       const redirectTo = String(route.query.redirect || '/')
-      
+
       // Validate redirect to prevent open redirects
       const isValidRedirect = redirectTo.startsWith('/') && !redirectTo.startsWith('//')
       const targetPath = isValidRedirect ? redirectTo : '/'
-      
+
       console.log('Registration successful, redirecting to:', targetPath)
       await router.push(targetPath)
     }

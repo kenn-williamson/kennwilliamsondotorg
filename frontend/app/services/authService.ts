@@ -4,7 +4,16 @@
  */
 
 import { API_ROUTES } from '#shared/config/api-routes'
-import type { LoginRequest, RegisterRequest, SlugPreviewResponse, SlugValidationResponse, Fetcher, AuthenticatedUser } from '#shared/types'
+import type {
+  LoginRequest,
+  RegisterRequest,
+  SlugPreviewResponse,
+  SlugValidationResponse,
+  Fetcher,
+  AuthenticatedUser,
+  GoogleOAuthUrlResponse,
+  SendVerificationEmailResponse
+} from '#shared/types'
 
 export const authService = (fetcher: Fetcher) => ({
   login: async (credentials: LoginRequest): Promise<{ success: boolean }> => {
@@ -49,5 +58,20 @@ export const authService = (fetcher: Fetcher) => ({
 
   getCurrentUser: async (): Promise<AuthenticatedUser> => {
     return fetcher<AuthenticatedUser>(API_ROUTES.API.AUTH.ME)
+  },
+
+  // Google OAuth methods
+  getGoogleOAuthUrl: async (): Promise<GoogleOAuthUrlResponse> => {
+    return fetcher<GoogleOAuthUrlResponse>(API_ROUTES.API.AUTH.GOOGLE_URL, {
+      method: 'GET'
+    })
+  },
+  // Note: OAuth callback is handled server-side at /api/auth/google/callback for security
+
+  // Email verification methods
+  sendVerificationEmail: async (): Promise<SendVerificationEmailResponse> => {
+    return fetcher<SendVerificationEmailResponse>(API_ROUTES.API.AUTH.SEND_VERIFICATION, {
+      method: 'POST'
+    })
   }
 })
