@@ -1,6 +1,6 @@
-/// Integration tests for OAuth API routes (Phase 3)
-/// Tests the public OAuth endpoints for Google authentication
 use serde_json::json;
+use backend::services::auth::oauth::MockGoogleOAuthService;
+use backend::models::oauth::GoogleUserInfo;
 
 use crate::test_helpers::TestContext;
 
@@ -8,7 +8,14 @@ use crate::test_helpers::TestContext;
 
 #[actix_web::test]
 async fn test_oauth_url_endpoint_returns_valid_url() {
-    let ctx = TestContext::builder().build().await;
+    // Configure mock OAuth service to return a valid URL
+    let mock_oauth = MockGoogleOAuthService::new()
+        .with_access_token("mock_access_token".to_string());
+    
+    let ctx = TestContext::builder()
+        .with_oauth(mock_oauth)
+        .build()
+        .await;
 
     let mut resp = ctx.server.get("/backend/public/auth/google/url")
         .send()
@@ -35,7 +42,14 @@ async fn test_oauth_url_endpoint_returns_valid_url() {
 
 #[actix_web::test]
 async fn test_oauth_url_endpoint_includes_pkce_challenge() {
-    let ctx = TestContext::builder().build().await;
+    // Configure mock OAuth service
+    let mock_oauth = MockGoogleOAuthService::new()
+        .with_access_token("mock_access_token".to_string());
+    
+    let ctx = TestContext::builder()
+        .with_oauth(mock_oauth)
+        .build()
+        .await;
 
     let mut resp = ctx.server.get("/backend/public/auth/google/url")
         .send()
@@ -69,11 +83,44 @@ async fn test_oauth_url_endpoint_when_oauth_not_configured() {
 
 #[actix_web::test]
 async fn test_oauth_callback_with_valid_code_creates_new_user() {
-    let ctx = TestContext::builder().build().await;
+    // Configure mock OAuth service with user info
+    let user_info = GoogleUserInfo {
+        given_name: None,
+        family_name: None,
+        picture: None,
+        locale: None,
+        sub: "test_google_user_123".to_string(),
+        email: "test@example.com".to_string(),
+        name: Some("Test User".to_string()),
+        email_verified: Some(true),
+    };
+    
+    let mock_oauth = MockGoogleOAuthService::new()
+        .with_user_info(user_info)
+        .with_access_token("mock_access_token".to_string());
+    
+    let ctx = TestContext::builder()
+        .with_oauth(mock_oauth)
+        .build()
+        .await;
 
-    // Simulate OAuth callback with authorization code
+    // First, get the OAuth URL to generate a valid state parameter
+    let mut url_resp = ctx.server.get("/backend/public/auth/google/url")
+        .send()
+        .await
+        .unwrap();
+    assert_eq!(url_resp.status(), 200);
+    
+    let url_body: serde_json::Value = url_resp.json().await.unwrap();
+    let url = url_body["url"].as_str().unwrap();
+    
+    // Extract state parameter from URL
+    let state = url.split("state=").nth(1).unwrap().split("&").next().unwrap();
+
+    // Simulate OAuth callback with authorization code and state
     let payload = json!({
         "code": "test_auth_code_123",
+        "state": state
     });
 
     let mut resp = ctx.server.post("/backend/public/auth/google/callback")
@@ -92,24 +139,40 @@ async fn test_oauth_callback_with_valid_code_creates_new_user() {
 
 #[actix_web::test]
 async fn test_oauth_callback_with_invalid_code_returns_error() {
-    // Note: MockGoogleOAuthService doesn't validate codes - always succeeds
-    // This would need real OAuth service to properly test invalid code handling
-    let ctx = TestContext::builder().build().await;
+    // Configure mock OAuth service to fail on token exchange
+    let mock_oauth = MockGoogleOAuthService::new()
+        .with_exchange_failure();
+    
+    let ctx = TestContext::builder()
+        .with_oauth(mock_oauth)
+        .build()
+        .await;
+
+    // First, get the OAuth URL to generate a valid state parameter
+    let mut url_resp = ctx.server.get("/backend/public/auth/google/url")
+        .send()
+        .await
+        .unwrap();
+    assert_eq!(url_resp.status(), 200);
+    
+    let url_body: serde_json::Value = url_resp.json().await.unwrap();
+    let url = url_body["url"].as_str().unwrap();
+    
+    // Extract state parameter from URL
+    let state = url.split("state=").nth(1).unwrap().split("&").next().unwrap();
 
     let payload = json!({
         "code": "invalid_code",
+        "state": state
     });
 
-    let mut resp = ctx.server.post("/backend/public/auth/google/callback")
+    let resp = ctx.server.post("/backend/public/auth/google/callback")
         .send_json(&payload)
         .await
         .unwrap();
 
-    // Mock always succeeds, creates new user with mock@example.com
-    assert_eq!(resp.status(), 200);
-
-    let body: serde_json::Value = resp.json().await.unwrap();
-    assert!(body.get("token").is_some());
+    // Should fail due to mock exchange failure
+    assert_eq!(resp.status(), 400); // OAuth callback returns 400 for all errors
 }
 
 #[actix_web::test]
@@ -130,16 +193,49 @@ async fn test_oauth_callback_missing_code_returns_bad_request() {
 
 #[actix_web::test]
 async fn test_oauth_callback_links_to_existing_verified_user() {
-    let ctx = TestContext::builder().build().await;
+    // Configure mock OAuth service with specific user info
+    let user_info = GoogleUserInfo {
+        given_name: None,
+        family_name: None,
+        picture: None,
+        locale: None,
+        sub: "mock_google_user_id".to_string(),
+        email: "mock@example.com".to_string(),
+        name: Some("Mock User".to_string()),
+        email_verified: Some(true),
+    };
+    
+    let mock_oauth = MockGoogleOAuthService::new()
+        .with_user_info(user_info)
+        .with_access_token("mock_access_token".to_string());
+    
+    let ctx = TestContext::builder()
+        .with_oauth(mock_oauth)
+        .build()
+        .await;
 
     // Create existing user with verified email (must match mock OAuth email)
     let user = ctx
         .create_verified_user("mock@example.com", "existing_user")
         .await;
 
+    // First, get the OAuth URL to generate a valid state parameter
+    let mut url_resp = ctx.server.get("/backend/public/auth/google/url")
+        .send()
+        .await
+        .unwrap();
+    assert_eq!(url_resp.status(), 200);
+    
+    let url_body: serde_json::Value = url_resp.json().await.unwrap();
+    let url = url_body["url"].as_str().unwrap();
+    
+    // Extract state parameter from URL
+    let state = url.split("state=").nth(1).unwrap().split("&").next().unwrap();
+
     // Simulate OAuth callback - mock returns mock@example.com
     let payload = json!({
         "code": "linking_code_verified_user",
+        "state": state
     });
 
     let resp = ctx.server.post("/backend/public/auth/google/callback")
@@ -157,17 +253,50 @@ async fn test_oauth_callback_links_to_existing_verified_user() {
 
 #[actix_web::test]
 async fn test_oauth_callback_links_and_verifies_unverified_user() {
-    let ctx = TestContext::builder().build().await;
+    // Configure mock OAuth service with specific user info
+    let user_info = GoogleUserInfo {
+        given_name: None,
+        family_name: None,
+        picture: None,
+        locale: None,
+        sub: "mock_google_user_id".to_string(),
+        email: "mock@example.com".to_string(),
+        name: Some("Mock User".to_string()),
+        email_verified: Some(true),
+    };
+    
+    let mock_oauth = MockGoogleOAuthService::new()
+        .with_user_info(user_info)
+        .with_access_token("mock_access_token".to_string());
+    
+    let ctx = TestContext::builder()
+        .with_oauth(mock_oauth)
+        .build()
+        .await;
 
     // Create existing user WITHOUT verified email (using mock email)
     let existing_user = ctx
         .create_unverified_user("mock@example.com", "unverified_user")
         .await;
 
+    // First, get the OAuth URL to generate a valid state parameter
+    let mut url_resp = ctx.server.get("/backend/public/auth/google/url")
+        .send()
+        .await
+        .unwrap();
+    assert_eq!(url_resp.status(), 200);
+    
+    let url_body: serde_json::Value = url_resp.json().await.unwrap();
+    let url = url_body["url"].as_str().unwrap();
+    
+    // Extract state parameter from URL
+    let state = url.split("state=").nth(1).unwrap().split("&").next().unwrap();
+
     // Simulate OAuth callback - mock returns mock@example.com
     // Google has verified this email, so we should link and verify the account
     let payload = json!({
         "code": "verify_and_link_code",
+        "state": state
     });
 
     let mut resp = ctx.server.post("/backend/public/auth/google/callback")
@@ -193,16 +322,49 @@ async fn test_oauth_callback_links_and_verifies_unverified_user() {
 
 #[actix_web::test]
 async fn test_oauth_callback_existing_google_user_logs_in() {
-    let ctx = TestContext::builder().build().await;
+    // Configure mock OAuth service with specific user info
+    let user_info = GoogleUserInfo {
+        given_name: None,
+        family_name: None,
+        picture: None,
+        locale: None,
+        sub: "mock_google_user_id".to_string(),
+        email: "mock@example.com".to_string(),
+        name: Some("Mock User".to_string()),
+        email_verified: Some(true),
+    };
+    
+    let mock_oauth = MockGoogleOAuthService::new()
+        .with_user_info(user_info)
+        .with_access_token("mock_access_token".to_string());
+    
+    let ctx = TestContext::builder()
+        .with_oauth(mock_oauth)
+        .build()
+        .await;
 
     // Create user with Google OAuth already linked (using mock Google ID)
     let _user = ctx
         .create_oauth_user("mock@example.com", "google_user", "mock_google_user_id")
         .await;
 
+    // First, get the OAuth URL to generate a valid state parameter
+    let mut url_resp = ctx.server.get("/backend/public/auth/google/url")
+        .send()
+        .await
+        .unwrap();
+    assert_eq!(url_resp.status(), 200);
+    
+    let url_body: serde_json::Value = url_resp.json().await.unwrap();
+    let url = url_body["url"].as_str().unwrap();
+    
+    // Extract state parameter from URL
+    let state = url.split("state=").nth(1).unwrap().split("&").next().unwrap();
+
     // Simulate OAuth callback - mock returns mock_google_user_id
     let payload = json!({
         "code": "existing_google_user_code",
+        "state": state
     });
 
     let mut resp = ctx.server.post("/backend/public/auth/google/callback")
@@ -238,16 +400,49 @@ async fn test_oauth_callback_validates_csrf_token() {
         .await
         .unwrap();
 
-    // Should handle OAuth flow (CSRF checked by Google)
-    assert!(resp.status().is_success() || resp.status().is_client_error());
+    // Should fail due to missing state parameter
+    assert_eq!(resp.status(), 400);
 }
 
 #[actix_web::test]
 async fn test_oauth_assigns_email_verified_role_to_new_users() {
-    let ctx = TestContext::builder().build().await;
+    // Configure mock OAuth service with specific user info
+    let user_info = GoogleUserInfo {
+        given_name: None,
+        family_name: None,
+        picture: None,
+        locale: None,
+        sub: "new_oauth_user_123".to_string(),
+        email: "newuser@example.com".to_string(),
+        name: Some("New OAuth User".to_string()),
+        email_verified: Some(true),
+    };
+    
+    let mock_oauth = MockGoogleOAuthService::new()
+        .with_user_info(user_info)
+        .with_access_token("mock_access_token".to_string());
+    
+    let ctx = TestContext::builder()
+        .with_oauth(mock_oauth)
+        .build()
+        .await;
+
+    // First, get the OAuth URL to generate a valid state parameter
+    let mut url_resp = ctx.server.get("/backend/public/auth/google/url")
+        .send()
+        .await
+        .unwrap();
+    assert_eq!(url_resp.status(), 200);
+    
+    let url_body: serde_json::Value = url_resp.json().await.unwrap();
+    let url = url_body["url"].as_str().unwrap();
+    
+    // Extract state parameter from URL
+    let state = url.split("state=").nth(1).unwrap().split("&").next().unwrap();
 
     let payload = json!({
         "code": "new_oauth_user_code",
+        "state": state
     });
 
     let mut resp = ctx.server.post("/backend/public/auth/google/callback")

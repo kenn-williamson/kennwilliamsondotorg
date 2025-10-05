@@ -1,22 +1,22 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest'
 
 // Mock all dependencies before importing the composable
-vi.mock('~/composables/useBaseService', () => ({
+vi.mock('./useBaseService', () => ({
   useBaseService: vi.fn()
 }))
 
-vi.mock('~/composables/useSmartFetch', () => ({
+vi.mock('./useSmartFetch', () => ({
   useSmartFetch: vi.fn()
 }))
 
-vi.mock('~/services/authProfileService', () => ({
+vi.mock('../services/authProfileService', () => ({
   authProfileService: vi.fn()
 }))
 
 // Mock useUserSession globally
 global.useUserSession = vi.fn()
 
-import { useAuthProfileActions } from '~/composables/useAuthProfileActions'
+import { useAuthProfileActions } from './useAuthProfileActions'
 
 describe('useAuthProfileActions', () => {
   let mockUserSession: any
@@ -37,7 +37,7 @@ describe('useAuthProfileActions', () => {
     }
     
     // Configure mocked modules
-    const { useBaseService } = await import('~/composables/useBaseService')
+    const { useBaseService } = await import('./useBaseService')
     vi.mocked(useBaseService).mockReturnValue({
       executeRequest: vi.fn().mockImplementation(async (fn) => await fn()),
       executeRequestWithSuccess: vi.fn().mockImplementation(async (fn) => await fn()),
@@ -46,10 +46,10 @@ describe('useAuthProfileActions', () => {
       hasError: { value: false }
     })
     
-    const { useSmartFetch } = await import('~/composables/useSmartFetch')
+    const { useSmartFetch } = await import('./useSmartFetch')
     vi.mocked(useSmartFetch).mockReturnValue(vi.fn())
     
-    const { authProfileService } = await import('~/services/authProfileService')
+    const { authProfileService } = await import('../services/authProfileService')
     vi.mocked(authProfileService).mockReturnValue(mockAuthProfileService)
     
     // Configure the useUserSession mock
@@ -132,7 +132,7 @@ describe('useAuthProfileActions', () => {
       useAuthProfileActions()
 
       // Test orchestration: service created with fetcher
-      const { authProfileService } = await import('~/services/authProfileService')
+      const { authProfileService } = await import('../services/authProfileService')
       expect(authProfileService).toHaveBeenCalledWith(expect.any(Function))
     })
   })

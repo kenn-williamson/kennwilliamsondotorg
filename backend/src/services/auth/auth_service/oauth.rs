@@ -769,6 +769,22 @@ mod tests {
             .expect_link_google_account()
             .returning(|_, _, _| Ok(()));
         user_repo
+            .expect_find_by_id()
+            .returning(|_| {
+                Ok(Some(User {
+                    id: Uuid::new_v4(),
+                    email: "verified@example.com".to_string(),
+                    display_name: "Email User".to_string(),
+                    slug: "email-user".to_string(),
+                    password_hash: Some("hash".to_string()),
+                    active: true,
+                    created_at: chrono::Utc::now(),
+                    updated_at: chrono::Utc::now(),
+                    real_name: Some("Link User".to_string()),
+                    google_user_id: Some("linking_google_id".to_string()),
+                }))
+            });
+        user_repo
             .expect_get_user_roles()
             .returning(|_| Ok(vec!["user".to_string(), "email-verified".to_string()]));
 
@@ -831,6 +847,22 @@ mod tests {
         user_repo
             .expect_add_role_to_user()
             .returning(|_, _| Ok(())); // Should add email-verified role
+        user_repo
+            .expect_find_by_id()
+            .returning(|_| {
+                Ok(Some(User {
+                    id: Uuid::new_v4(),
+                    email: "unverified@example.com".to_string(),
+                    display_name: "Unverified User".to_string(),
+                    slug: "unverified-user".to_string(),
+                    password_hash: Some("hash".to_string()),
+                    active: true,
+                    created_at: chrono::Utc::now(),
+                    updated_at: chrono::Utc::now(),
+                    real_name: Some("Link Test".to_string()),
+                    google_user_id: Some("link_unverified_id".to_string()),
+                }))
+            });
         user_repo
             .expect_get_user_roles()
             .returning(|_| Ok(vec!["user".to_string(), "email-verified".to_string()]));

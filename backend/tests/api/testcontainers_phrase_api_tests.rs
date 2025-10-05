@@ -1,10 +1,11 @@
 use serde_json::json;
+use crate::test_helpers::TestContext;
 
 // Use consolidated test helpers from test_helpers module
 
 #[actix_web::test]
 async fn test_get_random_phrase_success() {
-    let (srv, _pool, _test_container, _email_service) = crate::test_helpers::create_test_app_with_testcontainers().await;
+    let ctx = TestContext::builder().build().await;
     
     // First register a user to get proper authentication
     let email = crate::test_helpers::unique_test_email();
@@ -17,7 +18,7 @@ async fn test_get_random_phrase_success() {
         "display_name": display_name
     });
     
-    let mut register_resp = srv.post("/backend/public/auth/register")
+    let mut register_resp = ctx.server.post("/backend/public/auth/register")
         .send_json(&register_request_body)
         .await
         .unwrap();
@@ -28,7 +29,7 @@ async fn test_get_random_phrase_success() {
     let token = register_body.get("token").unwrap().as_str().unwrap();
     
     // Now test getting a random phrase
-    let mut resp = srv.get("/backend/protected/phrases/random")
+    let mut resp = ctx.server.get("/backend/protected/phrases/random")
         .insert_header(("Authorization", format!("Bearer {}", token)))
         .send()
         .await
@@ -48,9 +49,9 @@ async fn test_get_random_phrase_success() {
 
 #[actix_web::test]
 async fn test_get_random_phrase_unauthorized() {
-    let (srv, _pool, _test_container, _email_service) = crate::test_helpers::create_test_app_with_testcontainers().await;
+    let ctx = TestContext::builder().build().await;
     
-    let mut resp = srv.get("/backend/protected/phrases/random")
+    let mut resp = ctx.server.get("/backend/protected/phrases/random")
         .send()
         .await
         .unwrap();
@@ -65,7 +66,7 @@ async fn test_get_random_phrase_unauthorized() {
 
 #[actix_web::test]
 async fn test_get_user_phrases_success() {
-    let (srv, _pool, _test_container, _email_service) = crate::test_helpers::create_test_app_with_testcontainers().await;
+    let ctx = TestContext::builder().build().await;
     
     // First register a user to get proper authentication
     let email = crate::test_helpers::unique_test_email();
@@ -78,7 +79,7 @@ async fn test_get_user_phrases_success() {
         "display_name": display_name
     });
     
-    let mut register_resp = srv.post("/backend/public/auth/register")
+    let mut register_resp = ctx.server.post("/backend/public/auth/register")
         .send_json(&register_request_body)
         .await
         .unwrap();
@@ -89,7 +90,7 @@ async fn test_get_user_phrases_success() {
     let token = register_body.get("token").unwrap().as_str().unwrap();
     
     // Now test getting user phrases
-    let mut resp = srv.get("/backend/protected/phrases/user")
+    let mut resp = ctx.server.get("/backend/protected/phrases/user")
         .insert_header(("Authorization", format!("Bearer {}", token)))
         .send()
         .await
@@ -119,9 +120,9 @@ async fn test_get_user_phrases_success() {
 
 #[actix_web::test]
 async fn test_get_user_phrases_unauthorized() {
-    let (srv, _pool, _test_container, _email_service) = crate::test_helpers::create_test_app_with_testcontainers().await;
+    let ctx = TestContext::builder().build().await;
     
-    let mut resp = srv.get("/backend/protected/phrases/user")
+    let mut resp = ctx.server.get("/backend/protected/phrases/user")
         .send()
         .await
         .unwrap();
@@ -136,7 +137,7 @@ async fn test_get_user_phrases_unauthorized() {
 
 #[actix_web::test]
 async fn test_exclude_phrase_success() {
-    let (srv, pool, _test_container, _email_service) = crate::test_helpers::create_test_app_with_testcontainers().await;
+    let ctx = TestContext::builder().build().await;
     
     // First register a user to get proper authentication
     let email = crate::test_helpers::unique_test_email();
@@ -149,7 +150,7 @@ async fn test_exclude_phrase_success() {
         "display_name": display_name
     });
     
-    let mut register_resp = srv.post("/backend/public/auth/register")
+    let mut register_resp = ctx.server.post("/backend/public/auth/register")
         .send_json(&register_request_body)
         .await
         .unwrap();
@@ -161,12 +162,12 @@ async fn test_exclude_phrase_success() {
     
     // Get a phrase ID from the database
     let phrase_id: uuid::Uuid = sqlx::query_scalar("SELECT id FROM phrases LIMIT 1")
-        .fetch_one(&pool)
+        .fetch_one(&ctx.pool)
         .await
         .unwrap();
     
     // Now test excluding a phrase
-    let mut resp = srv.post(&format!("/backend/protected/phrases/exclude/{}", phrase_id))
+    let mut resp = ctx.server.post(&format!("/backend/protected/phrases/exclude/{}", phrase_id))
         .insert_header(("Authorization", format!("Bearer {}", token)))
         .send()
         .await
@@ -185,15 +186,15 @@ async fn test_exclude_phrase_success() {
 
 #[actix_web::test]
 async fn test_exclude_phrase_unauthorized() {
-    let (srv, pool, _test_container, _email_service) = crate::test_helpers::create_test_app_with_testcontainers().await;
+    let ctx = TestContext::builder().build().await;
     
     // Get a phrase ID from the database
     let phrase_id: uuid::Uuid = sqlx::query_scalar("SELECT id FROM phrases LIMIT 1")
-        .fetch_one(&pool)
+        .fetch_one(&ctx.pool)
         .await
         .unwrap();
     
-    let mut resp = srv.post(&format!("/backend/protected/phrases/exclude/{}", phrase_id))
+    let mut resp = ctx.server.post(&format!("/backend/protected/phrases/exclude/{}", phrase_id))
         .send()
         .await
         .unwrap();
@@ -209,7 +210,7 @@ async fn test_exclude_phrase_unauthorized() {
 #[actix_web::test]
 #[allow(unused_mut)]
 async fn test_remove_phrase_exclusion_success() {
-    let (srv, pool, _test_container, _email_service) = crate::test_helpers::create_test_app_with_testcontainers().await;
+    let ctx = TestContext::builder().build().await;
     
     // First register a user to get proper authentication
     let email = crate::test_helpers::unique_test_email();
@@ -222,7 +223,7 @@ async fn test_remove_phrase_exclusion_success() {
         "display_name": display_name
     });
     
-    let mut register_resp = srv.post("/backend/public/auth/register")
+    let mut register_resp = ctx.server.post("/backend/public/auth/register")
         .send_json(&register_request_body)
         .await
         .unwrap();
@@ -235,12 +236,12 @@ async fn test_remove_phrase_exclusion_success() {
     
     // Get a phrase ID from the database
     let phrase_id: uuid::Uuid = sqlx::query_scalar("SELECT id FROM phrases LIMIT 1")
-        .fetch_one(&pool)
+        .fetch_one(&ctx.pool)
         .await
         .unwrap();
     
     // First exclude the phrase
-    let mut exclude_resp = srv.post(&format!("/backend/protected/phrases/exclude/{}", phrase_id))
+    let mut exclude_resp = ctx.server.post(&format!("/backend/protected/phrases/exclude/{}", phrase_id))
         .insert_header(("Authorization", format!("Bearer {}", token)))
         .send()
         .await
@@ -249,7 +250,7 @@ async fn test_remove_phrase_exclusion_success() {
     assert!(exclude_resp.status().is_success());
     
     // Now test removing the exclusion
-    let mut resp = srv.delete(&format!("/backend/protected/phrases/exclude/{}", phrase_id))
+    let mut resp = ctx.server.delete(&format!("/backend/protected/phrases/exclude/{}", phrase_id))
         .insert_header(("Authorization", format!("Bearer {}", token)))
         .send()
         .await
@@ -268,15 +269,15 @@ async fn test_remove_phrase_exclusion_success() {
 
 #[actix_web::test]
 async fn test_remove_phrase_exclusion_unauthorized() {
-    let (srv, pool, _test_container, _email_service) = crate::test_helpers::create_test_app_with_testcontainers().await;
+    let ctx = TestContext::builder().build().await;
     
     // Get a phrase ID from the database
     let phrase_id: uuid::Uuid = sqlx::query_scalar("SELECT id FROM phrases LIMIT 1")
-        .fetch_one(&pool)
+        .fetch_one(&ctx.pool)
         .await
         .unwrap();
     
-    let mut resp = srv.delete(&format!("/backend/protected/phrases/exclude/{}", phrase_id))
+    let mut resp = ctx.server.delete(&format!("/backend/protected/phrases/exclude/{}", phrase_id))
         .send()
         .await
         .unwrap();
@@ -291,7 +292,7 @@ async fn test_remove_phrase_exclusion_unauthorized() {
 
 #[actix_web::test]
 async fn test_submit_suggestion_success() {
-    let (srv, pool, _test_container, _email_service) = crate::test_helpers::create_test_app_with_testcontainers().await;
+    let ctx = TestContext::builder().build().await;
 
     // First register a user to get proper authentication
     let email = crate::test_helpers::unique_test_email();
@@ -304,7 +305,7 @@ async fn test_submit_suggestion_success() {
         "display_name": display_name
     });
 
-    let mut register_resp = srv.post("/backend/public/auth/register")
+    let mut register_resp = ctx.server.post("/backend/public/auth/register")
         .send_json(&register_request_body)
         .await
         .unwrap();
@@ -315,10 +316,10 @@ async fn test_submit_suggestion_success() {
     let user_id = register_body["user"]["id"].as_str().unwrap();
 
     // Assign email-verified role (simulates email verification)
-    crate::test_helpers::assign_email_verified_role(&pool, user_id).await;
+    crate::test_helpers::assign_email_verified_role(&ctx.pool, user_id).await;
 
     // Login to get token with updated roles
-    let mut login_resp = srv.post("/backend/public/auth/login")
+    let mut login_resp = ctx.server.post("/backend/public/auth/login")
         .send_json(&json!({"email": email, "password": password}))
         .await
         .unwrap();
@@ -331,7 +332,7 @@ async fn test_submit_suggestion_success() {
         "phrase_text": "This is a test phrase suggestion"
     });
     
-    let mut resp = srv.post("/backend/protected/phrases/suggestions")
+    let mut resp = ctx.server.post("/backend/protected/phrases/suggestions")
         .insert_header(("Authorization", format!("Bearer {}", token)))
         .send_json(&suggestion_request)
         .await
@@ -352,13 +353,13 @@ async fn test_submit_suggestion_success() {
 
 #[actix_web::test]
 async fn test_submit_suggestion_unauthorized() {
-    let (srv, _pool, _test_container, _email_service) = crate::test_helpers::create_test_app_with_testcontainers().await;
+    let ctx = TestContext::builder().build().await;
     
     let suggestion_request = json!({
         "phrase_text": "This is a test phrase suggestion"
     });
     
-    let mut resp = srv.post("/backend/protected/phrases/suggestions")
+    let mut resp = ctx.server.post("/backend/protected/phrases/suggestions")
         .send_json(&suggestion_request)
         .await
         .unwrap();
@@ -374,7 +375,7 @@ async fn test_submit_suggestion_unauthorized() {
 #[actix_web::test]
 #[allow(unused_mut)]
 async fn test_get_public_phrase_success() {
-    let (srv, _pool, _test_container, _email_service) = crate::test_helpers::create_test_app_with_testcontainers().await;
+    let ctx = TestContext::builder().build().await;
     
     // First register a user to get a slug
     let email = crate::test_helpers::unique_test_email();
@@ -389,7 +390,7 @@ async fn test_get_public_phrase_success() {
         "slug": slug
     });
     
-    let mut register_resp = srv.post("/backend/public/auth/register")
+    let mut register_resp = ctx.server.post("/backend/public/auth/register")
         .send_json(&register_request_body)
         .await
         .unwrap();
@@ -397,7 +398,7 @@ async fn test_get_public_phrase_success() {
     assert!(register_resp.status().is_success());
     
     // Now test getting a public phrase by slug
-    let mut resp = srv.get(&format!("/backend/public/{}/phrase", slug))
+    let mut resp = ctx.server.get(&format!("/backend/public/{}/phrase", slug))
         .send()
         .await
         .unwrap();
@@ -416,10 +417,10 @@ async fn test_get_public_phrase_success() {
 
 #[actix_web::test]
 async fn test_get_public_phrase_nonexistent_user() {
-    let (srv, _pool, _test_container, _email_service) = crate::test_helpers::create_test_app_with_testcontainers().await;
+    let ctx = TestContext::builder().build().await;
     
     // Test getting a phrase for a non-existent user
-    let mut resp = srv.get("/backend/public/nonexistent-user/phrase")
+    let mut resp = ctx.server.get("/backend/public/nonexistent-user/phrase")
         .send()
         .await
         .unwrap();

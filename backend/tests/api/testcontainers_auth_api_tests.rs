@@ -1,10 +1,11 @@
 use serde_json::json;
+use crate::test_helpers::TestContext;
 
 // Use consolidated test helpers from test_helpers module
 
 #[actix_web::test]
 async fn test_register_success() {
-    let (srv, _pool, _test_container, _email_service) = crate::test_helpers::create_test_app_with_testcontainers().await;
+    let ctx = TestContext::builder().build().await;
     
     let request_body = json!({
         "email": crate::test_helpers::unique_test_email(),
@@ -12,7 +13,7 @@ async fn test_register_success() {
         "display_name": "Test User"
     });
     
-    let mut resp = srv.post("/backend/public/auth/register")
+    let mut resp = ctx.server.post("/backend/public/auth/register")
         .send_json(&request_body)
         .await
         .unwrap();
@@ -37,7 +38,7 @@ async fn test_register_success() {
 #[actix_web::test]
 #[allow(unused_mut)]
 async fn test_register_duplicate_email() {
-    let (srv, _pool, _test_container, _email_service) = crate::test_helpers::create_test_app_with_testcontainers().await;
+    let ctx = TestContext::builder().build().await;
     
     let email = crate::test_helpers::unique_test_email();
     let request_body = json!({
@@ -47,14 +48,14 @@ async fn test_register_duplicate_email() {
     });
     
     // First registration should succeed
-    let mut resp = srv.post("/backend/public/auth/register")
+    let mut resp = ctx.server.post("/backend/public/auth/register")
         .send_json(&request_body)
         .await
         .unwrap();
     assert!(resp.status().is_success());
     
     // Second registration with same email should fail
-    let mut resp = srv.post("/backend/public/auth/register")
+    let mut resp = ctx.server.post("/backend/public/auth/register")
         .send_json(&request_body)
         .await
         .unwrap();
@@ -68,7 +69,7 @@ async fn test_register_duplicate_email() {
 #[actix_web::test]
 #[allow(unused_mut)]
 async fn test_login_success() {
-    let (srv, _pool, _test_container, _email_service) = crate::test_helpers::create_test_app_with_testcontainers().await;
+    let ctx = TestContext::builder().build().await;
     
     // First register a user to get proper password hashing
     let email = crate::test_helpers::unique_test_email();
@@ -81,7 +82,7 @@ async fn test_login_success() {
         "display_name": display_name
     });
     
-    let mut register_resp = srv.post("/backend/public/auth/register")
+    let mut register_resp = ctx.server.post("/backend/public/auth/register")
         .send_json(&register_request_body)
         .await
         .unwrap();
@@ -94,7 +95,7 @@ async fn test_login_success() {
         "password": password
     });
     
-    let mut resp = srv.post("/backend/public/auth/login")
+    let mut resp = ctx.server.post("/backend/public/auth/login")
         .send_json(&login_request_body)
         .await
         .unwrap();
@@ -118,14 +119,14 @@ async fn test_login_success() {
 
 #[actix_web::test]
 async fn test_login_invalid_credentials() {
-    let (srv, _pool, _test_container, _email_service) = crate::test_helpers::create_test_app_with_testcontainers().await;
+    let ctx = TestContext::builder().build().await;
     
     let request_body = json!({
         "email": "nonexistent@example.com",
         "password": "WrongPassword123!"
     });
     
-    let mut resp = srv.post("/backend/public/auth/login")
+    let mut resp = ctx.server.post("/backend/public/auth/login")
         .send_json(&request_body)
         .await
         .unwrap();
@@ -138,7 +139,7 @@ async fn test_login_invalid_credentials() {
 
 #[actix_web::test]
 async fn test_get_current_user_success() {
-    let (srv, _pool, _test_container, _email_service) = crate::test_helpers::create_test_app_with_testcontainers().await;
+    let ctx = TestContext::builder().build().await;
     
     // First register a user to get proper password hashing
     let email = crate::test_helpers::unique_test_email();
@@ -151,7 +152,7 @@ async fn test_get_current_user_success() {
         "display_name": display_name
     });
     
-    let mut register_resp = srv.post("/backend/public/auth/register")
+    let mut register_resp = ctx.server.post("/backend/public/auth/register")
         .send_json(&register_request_body)
         .await
         .unwrap();
@@ -162,7 +163,7 @@ async fn test_get_current_user_success() {
     let token = register_body.get("token").unwrap().as_str().unwrap();
     
     // Now test getting current user with the JWT token
-    let mut resp = srv.get("/backend/protected/auth/me")
+    let mut resp = ctx.server.get("/backend/protected/auth/me")
         .insert_header(("Authorization", format!("Bearer {}", token)))
         .send()
         .await
@@ -182,9 +183,9 @@ async fn test_get_current_user_success() {
 
 #[actix_web::test]
 async fn test_get_current_user_unauthorized() {
-    let (srv, _pool, _test_container, _email_service) = crate::test_helpers::create_test_app_with_testcontainers().await;
+    let ctx = TestContext::builder().build().await;
     
-    let mut resp = srv.get("/backend/protected/auth/me")
+    let mut resp = ctx.server.get("/backend/protected/auth/me")
         .send()
         .await
         .unwrap();
@@ -199,9 +200,9 @@ async fn test_get_current_user_unauthorized() {
 #[actix_web::test]
 #[allow(unused_mut)]
 async fn test_get_current_user_invalid_token() {
-    let (srv, _pool, _test_container, _email_service) = crate::test_helpers::create_test_app_with_testcontainers().await;
+    let ctx = TestContext::builder().build().await;
     
-    let mut resp = srv.get("/backend/protected/auth/me")
+    let mut resp = ctx.server.get("/backend/protected/auth/me")
         .insert_header(("Authorization", "Bearer invalid_token"))
         .send()
         .await
@@ -211,7 +212,7 @@ async fn test_get_current_user_invalid_token() {
 
 #[actix_web::test]
 async fn test_update_profile_success() {
-    let (srv, _pool, _test_container, _email_service) = crate::test_helpers::create_test_app_with_testcontainers().await;
+    let ctx = TestContext::builder().build().await;
     
     // First register a user to get proper password hashing
     let email = crate::test_helpers::unique_test_email();
@@ -224,7 +225,7 @@ async fn test_update_profile_success() {
         "display_name": display_name
     });
     
-    let mut register_resp = srv.post("/backend/public/auth/register")
+    let mut register_resp = ctx.server.post("/backend/public/auth/register")
         .send_json(&register_request_body)
         .await
         .unwrap();
@@ -240,7 +241,7 @@ async fn test_update_profile_success() {
         "slug": "updated-slug"
     });
     
-    let mut resp = srv.put("/backend/protected/auth/profile")
+    let mut resp = ctx.server.put("/backend/protected/auth/profile")
         .insert_header(("Authorization", format!("Bearer {}", token)))
         .send_json(&request_body)
         .await
@@ -260,7 +261,7 @@ async fn test_update_profile_success() {
 
 #[actix_web::test]
 async fn test_change_password_success() {
-    let (srv, _pool, _test_container, _email_service) = crate::test_helpers::create_test_app_with_testcontainers().await;
+    let ctx = TestContext::builder().build().await;
     
     // First register a user to get proper password hashing
     let email = crate::test_helpers::unique_test_email();
@@ -273,7 +274,7 @@ async fn test_change_password_success() {
         "display_name": display_name
     });
     
-    let mut register_resp = srv.post("/backend/public/auth/register")
+    let mut register_resp = ctx.server.post("/backend/public/auth/register")
         .send_json(&register_request_body)
         .await
         .unwrap();
@@ -289,7 +290,7 @@ async fn test_change_password_success() {
         "new_password": "NewPassword456!"
     });
     
-    let mut resp = srv.put("/backend/protected/auth/change-password")
+    let mut resp = ctx.server.put("/backend/protected/auth/change-password")
         .insert_header(("Authorization", format!("Bearer {}", token)))
         .send_json(&request_body)
         .await
@@ -308,7 +309,7 @@ async fn test_change_password_success() {
 
 #[actix_web::test]
 async fn test_change_password_wrong_current() {
-    let (srv, _pool, _test_container, _email_service) = crate::test_helpers::create_test_app_with_testcontainers().await;
+    let ctx = TestContext::builder().build().await;
     
     // First register a user to get proper password hashing
     let email = crate::test_helpers::unique_test_email();
@@ -321,7 +322,7 @@ async fn test_change_password_wrong_current() {
         "display_name": display_name
     });
     
-    let mut register_resp = srv.post("/backend/public/auth/register")
+    let mut register_resp = ctx.server.post("/backend/public/auth/register")
         .send_json(&register_request_body)
         .await
         .unwrap();
@@ -337,7 +338,7 @@ async fn test_change_password_wrong_current() {
         "new_password": "NewPassword456!"
     });
     
-    let mut resp = srv.put("/backend/protected/auth/change-password")
+    let mut resp = ctx.server.put("/backend/protected/auth/change-password")
         .insert_header(("Authorization", format!("Bearer {}", token)))
         .send_json(&request_body)
         .await

@@ -1,11 +1,11 @@
 /// Phase 3 Integration Tests: SNS Webhook API Endpoints
 /// Tests the actual HTTP endpoints that AWS SNS will call
+use crate::test_helpers::TestContext;
 
 #[actix_web::test]
 async fn test_sns_subscription_confirmation_endpoint() {
     // Given: Test server with webhook endpoint
-    let (srv, _pool, _container, _email_service) =
-        crate::test_helpers::create_test_app_with_testcontainers().await;
+    let ctx = TestContext::builder().build().await;
 
     // SNS subscription confirmation payload
     let subscription_payload = serde_json::json!({
@@ -22,7 +22,7 @@ async fn test_sns_subscription_confirmation_endpoint() {
     });
 
     // When: Posting subscription confirmation to webhook
-    let mut resp = srv
+    let mut resp = ctx.server
         .post("/backend/webhooks/ses")
         .send_json(&subscription_payload)
         .await
@@ -32,7 +32,7 @@ async fn test_sns_subscription_confirmation_endpoint() {
     // In production, this would call the real AWS SNS subscribe URL
     // In tests, we expect 500 because the URL is fake
     let status = resp.status();
-    let body = resp.body().await.unwrap();
+    let _body = resp.body().await.unwrap();
 
     // Test should verify the endpoint processes the request (not necessarily succeeds with fake URL)
     assert!(
@@ -45,8 +45,7 @@ async fn test_sns_subscription_confirmation_endpoint() {
 #[actix_web::test]
 async fn test_hard_bounce_notification_creates_suppression() {
     // Given: Test server with webhook endpoint
-    let (srv, pool, _container, _email_service) =
-        crate::test_helpers::create_test_app_with_testcontainers().await;
+    let ctx = TestContext::builder().build().await;
 
     // Hard bounce notification payload
     let bounce_payload = serde_json::json!({
@@ -79,7 +78,7 @@ async fn test_hard_bounce_notification_creates_suppression() {
     });
 
     // When: Posting bounce notification to webhook
-    let resp = srv
+    let resp = ctx.server
         .post("/backend/webhooks/ses")
         .send_json(&bounce_payload)
         .await
@@ -93,7 +92,7 @@ async fn test_hard_bounce_notification_creates_suppression() {
         "SELECT * FROM email_suppressions WHERE email = $1"
     )
     .bind("hardbounce@example.com")
-    .fetch_optional(&pool)
+    .fetch_optional(&ctx.pool)
     .await
     .unwrap();
 
@@ -107,8 +106,7 @@ async fn test_hard_bounce_notification_creates_suppression() {
 #[actix_web::test]
 async fn test_complaint_notification_creates_suppression() {
     // Given: Test server with webhook endpoint
-    let (srv, pool, _container, _email_service) =
-        crate::test_helpers::create_test_app_with_testcontainers().await;
+    let ctx = TestContext::builder().build().await;
 
     // Complaint notification payload
     let complaint_payload = serde_json::json!({
@@ -137,7 +135,7 @@ async fn test_complaint_notification_creates_suppression() {
     });
 
     // When: Posting complaint notification to webhook
-    let resp = srv
+    let resp = ctx.server
         .post("/backend/webhooks/ses")
         .send_json(&complaint_payload)
         .await
@@ -151,7 +149,7 @@ async fn test_complaint_notification_creates_suppression() {
         "SELECT * FROM email_suppressions WHERE email = $1"
     )
     .bind("spam@example.com")
-    .fetch_optional(&pool)
+    .fetch_optional(&ctx.pool)
     .await
     .unwrap();
 
@@ -165,8 +163,7 @@ async fn test_complaint_notification_creates_suppression() {
 #[actix_web::test]
 async fn test_soft_bounce_notification_tracks_count() {
     // Given: Test server with webhook endpoint
-    let (srv, pool, _container, _email_service) =
-        crate::test_helpers::create_test_app_with_testcontainers().await;
+    let ctx = TestContext::builder().build().await;
 
     // Soft bounce notification payload
     let soft_bounce_payload = serde_json::json!({
@@ -195,7 +192,7 @@ async fn test_soft_bounce_notification_tracks_count() {
     });
 
     // When: Posting soft bounce notification to webhook
-    let resp = srv
+    let resp = ctx.server
         .post("/backend/webhooks/ses")
         .send_json(&soft_bounce_payload)
         .await
@@ -209,7 +206,7 @@ async fn test_soft_bounce_notification_tracks_count() {
         "SELECT * FROM email_suppressions WHERE email = $1"
     )
     .bind("softbounce@example.com")
-    .fetch_optional(&pool)
+    .fetch_optional(&ctx.pool)
     .await
     .unwrap();
 
@@ -223,8 +220,7 @@ async fn test_soft_bounce_notification_tracks_count() {
 #[actix_web::test]
 async fn test_malformed_sns_message_returns_400() {
     // Given: Test server with webhook endpoint
-    let (srv, _pool, _container, _email_service) =
-        crate::test_helpers::create_test_app_with_testcontainers().await;
+    let ctx = TestContext::builder().build().await;
 
     // Malformed payload (missing required fields)
     let malformed_payload = serde_json::json!({
@@ -234,7 +230,7 @@ async fn test_malformed_sns_message_returns_400() {
     });
 
     // When: Posting malformed message to webhook
-    let resp = srv
+    let resp = ctx.server
         .post("/backend/webhooks/ses")
         .send_json(&malformed_payload)
         .await
@@ -247,8 +243,7 @@ async fn test_malformed_sns_message_returns_400() {
 #[actix_web::test]
 async fn test_webhook_endpoint_requires_no_authentication() {
     // Given: Test server with webhook endpoint (no auth token)
-    let (srv, _pool, _container, _email_service) =
-        crate::test_helpers::create_test_app_with_testcontainers().await;
+    let ctx = TestContext::builder().build().await;
 
     // Valid SNS subscription confirmation (no auth header)
     let subscription_payload = serde_json::json!({
@@ -265,7 +260,7 @@ async fn test_webhook_endpoint_requires_no_authentication() {
     });
 
     // When: Posting without Authorization header (AWS SNS doesn't send auth)
-    let resp = srv
+    let resp = ctx.server
         .post("/backend/webhooks/ses")
         .send_json(&subscription_payload)
         .await
@@ -285,8 +280,7 @@ async fn test_webhook_endpoint_requires_no_authentication() {
 #[actix_web::test]
 async fn test_webhook_idempotent_duplicate_notifications() {
     // Given: Test server with webhook endpoint
-    let (srv, pool, _container, _email_service) =
-        crate::test_helpers::create_test_app_with_testcontainers().await;
+    let ctx = TestContext::builder().build().await;
 
     // Same bounce notification
     let bounce_payload = serde_json::json!({
@@ -309,13 +303,13 @@ async fn test_webhook_idempotent_duplicate_notifications() {
     });
 
     // When: Posting same notification twice
-    let resp1 = srv
+    let resp1 = ctx.server
         .post("/backend/webhooks/ses")
         .send_json(&bounce_payload)
         .await
         .unwrap();
 
-    let resp2 = srv
+    let resp2 = ctx.server
         .post("/backend/webhooks/ses")
         .send_json(&bounce_payload)
         .await
@@ -330,7 +324,7 @@ async fn test_webhook_idempotent_duplicate_notifications() {
         "SELECT COUNT(*) FROM email_suppressions WHERE email = $1"
     )
     .bind("duplicate@example.com")
-    .fetch_one(&pool)
+    .fetch_one(&ctx.pool)
     .await
     .unwrap();
 

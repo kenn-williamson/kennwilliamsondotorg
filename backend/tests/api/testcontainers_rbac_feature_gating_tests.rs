@@ -1,11 +1,11 @@
 use serde_json::json;
 use sqlx::PgPool;
+use crate::test_helpers::TestContext;
 
 /// Test: Login includes roles in JWT claims
 #[actix_web::test]
 async fn test_login_includes_roles_in_jwt() {
-    let (srv, pool, _test_container, _email_service) =
-        crate::test_helpers::create_test_app_with_testcontainers().await;
+    let ctx = TestContext::builder().build().await;
 
     // Register a user
     let email = crate::test_helpers::unique_test_email();
@@ -16,7 +16,7 @@ async fn test_login_includes_roles_in_jwt() {
         "display_name": "Test User"
     });
 
-    let mut register_resp = srv
+    let mut register_resp = ctx.server
         .post("/backend/public/auth/register")
         .send_json(&register_body)
         .await
@@ -27,7 +27,7 @@ async fn test_login_includes_roles_in_jwt() {
     let user_id = register_result["user"]["id"].as_str().unwrap();
 
     // Manually assign email-verified role (simulates email verification)
-    assign_email_verified_role(&pool, user_id).await;
+    assign_email_verified_role(&ctx.pool, user_id).await;
 
     // Login
     let login_body = json!({
@@ -35,7 +35,7 @@ async fn test_login_includes_roles_in_jwt() {
         "password": password
     });
 
-    let mut login_resp = srv
+    let mut login_resp = ctx.server
         .post("/backend/public/auth/login")
         .send_json(&login_body)
         .await
@@ -63,8 +63,7 @@ async fn test_login_includes_roles_in_jwt() {
 /// Test: Token refresh includes updated roles
 #[actix_web::test]
 async fn test_token_refresh_includes_updated_roles() {
-    let (srv, pool, _test_container, _email_service) =
-        crate::test_helpers::create_test_app_with_testcontainers().await;
+    let ctx = TestContext::builder().build().await;
 
     // Register and login
     let email = crate::test_helpers::unique_test_email();
@@ -75,7 +74,7 @@ async fn test_token_refresh_includes_updated_roles() {
         "display_name": "Test User"
     });
 
-    let mut register_resp = srv
+    let mut register_resp = ctx.server
         .post("/backend/public/auth/register")
         .send_json(&register_body)
         .await
@@ -98,14 +97,14 @@ async fn test_token_refresh_includes_updated_roles() {
     );
 
     // Admin assigns email-verified role
-    assign_email_verified_role(&pool, user_id).await;
+    assign_email_verified_role(&ctx.pool, user_id).await;
 
     // Refresh token
     let refresh_body = json!({
         "refresh_token": refresh_token
     });
 
-    let mut refresh_resp = srv
+    let mut refresh_resp = ctx.server
         .post("/backend/public/auth/refresh")
         .send_json(&refresh_body)
         .await
@@ -129,8 +128,7 @@ async fn test_token_refresh_includes_updated_roles() {
 /// Test: Unverified user blocked from creating timer
 #[actix_web::test]
 async fn test_unverified_user_blocked_from_creating_timer() {
-    let (srv, _pool, _test_container, _email_service) =
-        crate::test_helpers::create_test_app_with_testcontainers().await;
+    let ctx = TestContext::builder().build().await;
 
     // Register user (no email-verified role)
     let email = crate::test_helpers::unique_test_email();
@@ -141,7 +139,7 @@ async fn test_unverified_user_blocked_from_creating_timer() {
         "display_name": "Test User"
     });
 
-    let mut register_resp = srv
+    let mut register_resp = ctx.server
         .post("/backend/public/auth/register")
         .send_json(&register_body)
         .await
@@ -157,7 +155,7 @@ async fn test_unverified_user_blocked_from_creating_timer() {
         "notes": "Test timer"
     });
 
-    let mut timer_resp = srv
+    let mut timer_resp = ctx.server
         .post("/backend/protected/incident-timers")
         .insert_header(("Authorization", format!("Bearer {}", token)))
         .send_json(&timer_body)
@@ -171,8 +169,7 @@ async fn test_unverified_user_blocked_from_creating_timer() {
 /// Test: Verified user can create timer
 #[actix_web::test]
 async fn test_verified_user_can_create_timer() {
-    let (srv, pool, _test_container, _email_service) =
-        crate::test_helpers::create_test_app_with_testcontainers().await;
+    let ctx = TestContext::builder().build().await;
 
     // Register user
     let email = crate::test_helpers::unique_test_email();
@@ -183,7 +180,7 @@ async fn test_verified_user_can_create_timer() {
         "display_name": "Test User"
     });
 
-    let mut register_resp = srv
+    let mut register_resp = ctx.server
         .post("/backend/public/auth/register")
         .send_json(&register_body)
         .await
@@ -194,7 +191,7 @@ async fn test_verified_user_can_create_timer() {
     let user_id = register_result["user"]["id"].as_str().unwrap();
 
     // Manually assign email-verified role
-    assign_email_verified_role(&pool, user_id).await;
+    assign_email_verified_role(&ctx.pool, user_id).await;
 
     // Login to get token with updated roles
     let login_body = json!({
@@ -202,7 +199,7 @@ async fn test_verified_user_can_create_timer() {
         "password": password
     });
 
-    let mut login_resp = srv
+    let mut login_resp = ctx.server
         .post("/backend/public/auth/login")
         .send_json(&login_body)
         .await
@@ -218,7 +215,7 @@ async fn test_verified_user_can_create_timer() {
         "notes": "Test timer"
     });
 
-    let mut timer_resp = srv
+    let mut timer_resp = ctx.server
         .post("/backend/protected/incident-timers")
         .insert_header(("Authorization", format!("Bearer {}", token)))
         .send_json(&timer_body)
@@ -236,8 +233,7 @@ async fn test_verified_user_can_create_timer() {
 /// Test: Unverified user blocked from submitting phrase suggestion
 #[actix_web::test]
 async fn test_unverified_user_blocked_from_phrase_suggestion() {
-    let (srv, _pool, _test_container, _email_service) =
-        crate::test_helpers::create_test_app_with_testcontainers().await;
+    let ctx = TestContext::builder().build().await;
 
     // Register user (no email-verified role)
     let email = crate::test_helpers::unique_test_email();
@@ -248,7 +244,7 @@ async fn test_unverified_user_blocked_from_phrase_suggestion() {
         "display_name": "Test User"
     });
 
-    let mut register_resp = srv
+    let mut register_resp = ctx.server
         .post("/backend/public/auth/register")
         .send_json(&register_body)
         .await
@@ -263,7 +259,7 @@ async fn test_unverified_user_blocked_from_phrase_suggestion() {
         "phrase_text": "Test phrase suggestion"
     });
 
-    let mut suggestion_resp = srv
+    let mut suggestion_resp = ctx.server
         .post("/backend/protected/phrases/suggestions")
         .insert_header(("Authorization", format!("Bearer {}", token)))
         .send_json(&suggestion_body)
@@ -277,8 +273,7 @@ async fn test_unverified_user_blocked_from_phrase_suggestion() {
 /// Test: Verified user can submit phrase suggestion
 #[actix_web::test]
 async fn test_verified_user_can_submit_phrase_suggestion() {
-    let (srv, pool, _test_container, _email_service) =
-        crate::test_helpers::create_test_app_with_testcontainers().await;
+    let ctx = TestContext::builder().build().await;
 
     // Register user
     let email = crate::test_helpers::unique_test_email();
@@ -289,7 +284,7 @@ async fn test_verified_user_can_submit_phrase_suggestion() {
         "display_name": "Test User"
     });
 
-    let mut register_resp = srv
+    let mut register_resp = ctx.server
         .post("/backend/public/auth/register")
         .send_json(&register_body)
         .await
@@ -300,7 +295,7 @@ async fn test_verified_user_can_submit_phrase_suggestion() {
     let user_id = register_result["user"]["id"].as_str().unwrap();
 
     // Manually assign email-verified role
-    assign_email_verified_role(&pool, user_id).await;
+    assign_email_verified_role(&ctx.pool, user_id).await;
 
     // Login to get token with updated roles
     let login_body = json!({
@@ -308,7 +303,7 @@ async fn test_verified_user_can_submit_phrase_suggestion() {
         "password": password
     });
 
-    let mut login_resp = srv
+    let mut login_resp = ctx.server
         .post("/backend/public/auth/login")
         .send_json(&login_body)
         .await
@@ -323,7 +318,7 @@ async fn test_verified_user_can_submit_phrase_suggestion() {
         "phrase_text": "Test phrase suggestion"
     });
 
-    let mut suggestion_resp = srv
+    let mut suggestion_resp = ctx.server
         .post("/backend/protected/phrases/suggestions")
         .insert_header(("Authorization", format!("Bearer {}", token)))
         .send_json(&suggestion_body)

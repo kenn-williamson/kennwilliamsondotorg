@@ -1,4 +1,5 @@
 use chrono::{Duration, Utc};
+use crate::test_helpers::TestContext;
 
 mod test_helpers;
 
@@ -6,7 +7,7 @@ mod test_helpers;
 #[actix_web::test]
 #[allow(unused_mut)]
 async fn test_refresh_token_complete_flow() {
-    let (srv, _pool, _test_container, _email_service) = test_helpers::create_test_app_with_testcontainers().await;
+    let ctx = TestContext::builder().build().await;
 
     // Step 1: Register a new user
     let test_email = test_helpers::unique_test_email();
@@ -16,7 +17,7 @@ async fn test_refresh_token_complete_flow() {
         "display_name": "Refresh Test User"
     });
 
-    let mut register_resp = srv.post("/backend/public/auth/register")
+    let mut register_resp = ctx.server.post("/backend/public/auth/register")
         .send_json(&register_request_body)
         .await
         .unwrap();
@@ -40,7 +41,7 @@ async fn test_refresh_token_complete_flow() {
         "refresh_token": refresh_token
     });
 
-    let mut refresh_resp = srv.post("/backend/public/auth/refresh")
+    let mut refresh_resp = ctx.server.post("/backend/public/auth/refresh")
         .send_json(&refresh_request_body)
         .await
         .unwrap();
@@ -58,7 +59,7 @@ async fn test_refresh_token_complete_flow() {
     assert_ne!(new_refresh_token, refresh_token); // Should be different refresh token
 
     // Step 3: Verify new JWT works for authenticated request
-    let mut me_resp = srv.get("/backend/protected/auth/me")
+    let mut me_resp = ctx.server.get("/backend/protected/auth/me")
         .insert_header(("Authorization", format!("Bearer {}", new_jwt_token)))
         .send()
         .await
@@ -75,7 +76,7 @@ async fn test_refresh_token_complete_flow() {
         "refresh_token": refresh_token
     });
 
-    let mut old_refresh_resp = srv.post("/backend/public/auth/refresh")
+    let mut old_refresh_resp = ctx.server.post("/backend/public/auth/refresh")
         .send_json(&old_refresh_request_body)
         .await
         .unwrap();
@@ -88,7 +89,7 @@ async fn test_refresh_token_complete_flow() {
         "password": "password123"
     });
 
-    let mut login_resp = srv.post("/backend/public/auth/login")
+    let mut login_resp = ctx.server.post("/backend/public/auth/login")
         .send_json(&login_request_body)
         .await
         .unwrap();
@@ -104,11 +105,11 @@ async fn test_refresh_token_complete_flow() {
 #[actix_web::test]
 #[allow(unused_mut)]
 async fn test_refresh_token_expiration() {
-    let (srv, pool, _test_container, _email_service) = test_helpers::create_test_app_with_testcontainers().await;
+    let ctx = TestContext::builder().build().await;
     
     // Create a user
     let user = test_helpers::create_test_user_in_db(
-        &pool,
+        &ctx.pool,
         &test_helpers::unique_test_email(),
         "$2b$04$test_hash",
         "Expiry Test User",
@@ -121,7 +122,7 @@ async fn test_refresh_token_expiration() {
     let token_hash = "expired_token_hash";
     
     test_helpers::create_test_refresh_token_in_db(
-        &pool,
+        &ctx.pool,
         user.id,
         token_hash,
         expired_time,
@@ -133,7 +134,7 @@ async fn test_refresh_token_expiration() {
         "refresh_token": "expired_token_hash"
     });
 
-    let mut refresh_resp = srv.post("/backend/public/auth/refresh")
+    let mut refresh_resp = ctx.server.post("/backend/public/auth/refresh")
         .send_json(&refresh_request_body)
         .await
         .unwrap();
@@ -145,14 +146,14 @@ async fn test_refresh_token_expiration() {
 #[actix_web::test]
 #[allow(unused_mut)]
 async fn test_refresh_token_invalid() {
-    let (srv, _pool, _test_container, _email_service) = test_helpers::create_test_app_with_testcontainers().await;
+    let ctx = TestContext::builder().build().await;
 
     // Try to use non-existent token
     let refresh_request_body = serde_json::json!({
         "refresh_token": "nonexistent_token"
     });
 
-    let mut refresh_resp = srv.post("/backend/public/auth/refresh")
+    let mut refresh_resp = ctx.server.post("/backend/public/auth/refresh")
         .send_json(&refresh_request_body)
         .await
         .unwrap();

@@ -1,4 +1,5 @@
 // Use consolidated test helpers from test_helpers module
+use crate::test_helpers::TestContext;
 
 // ============================================================================
 // HEALTH ENDPOINT TESTS
@@ -6,9 +7,9 @@
 
 #[actix_web::test]
 async fn test_health_endpoint_success() {
-    let (srv, _pool, _test_container, _email_service) = crate::test_helpers::create_test_app_with_testcontainers().await;
+    let ctx = TestContext::builder().build().await;
     
-    let mut resp = srv.get("/backend/public/health")
+    let mut resp = ctx.server.get("/backend/public/health")
         .send()
         .await
         .unwrap();
@@ -28,9 +29,9 @@ async fn test_health_endpoint_success() {
 
 #[actix_web::test]
 async fn test_health_db_endpoint_success() {
-    let (srv, _pool, _test_container, _email_service) = crate::test_helpers::create_test_app_with_testcontainers().await;
+    let ctx = TestContext::builder().build().await;
     
-    let mut resp = srv.get("/backend/public/health/db")
+    let mut resp = ctx.server.get("/backend/public/health/db")
         .send()
         .await
         .unwrap();
@@ -52,17 +53,17 @@ async fn test_health_db_endpoint_success() {
 #[actix_web::test]
 #[allow(unused_mut)]
 async fn test_health_endpoints_are_public() {
-    let (srv, _pool, _test_container, _email_service) = crate::test_helpers::create_test_app_with_testcontainers().await;
+    let ctx = TestContext::builder().build().await;
     
     // Test basic health endpoint without authentication
-    let mut resp = srv.get("/backend/public/health")
+    let mut resp = ctx.server.get("/backend/public/health")
         .send()
         .await
         .unwrap();
     assert!(resp.status().is_success());
     
     // Test database health endpoint without authentication
-    let mut resp = srv.get("/backend/public/health/db")
+    let mut resp = ctx.server.get("/backend/public/health/db")
         .send()
         .await
         .unwrap();
@@ -71,10 +72,10 @@ async fn test_health_endpoints_are_public() {
 
 #[actix_web::test]
 async fn test_health_endpoints_response_format() {
-    let (srv, _pool, _test_container, _email_service) = crate::test_helpers::create_test_app_with_testcontainers().await;
+    let ctx = TestContext::builder().build().await;
     
     // Test basic health endpoint response format
-    let mut resp = srv.get("/backend/public/health")
+    let mut resp = ctx.server.get("/backend/public/health")
         .send()
         .await
         .unwrap();
@@ -97,10 +98,10 @@ async fn test_health_endpoints_response_format() {
 
 #[actix_web::test]
 async fn test_health_db_endpoint_response_format() {
-    let (srv, _pool, _test_container, _email_service) = crate::test_helpers::create_test_app_with_testcontainers().await;
+    let ctx = TestContext::builder().build().await;
     
     // Test database health endpoint response format
-    let mut resp = srv.get("/backend/public/health/db")
+    let mut resp = ctx.server.get("/backend/public/health/db")
         .send()
         .await
         .unwrap();

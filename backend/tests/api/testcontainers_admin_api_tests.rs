@@ -1,5 +1,6 @@
 use serde_json::json;
 use uuid::Uuid;
+use crate::test_helpers::TestContext;
 
 // Use consolidated test helpers from test_helpers module
 
@@ -10,17 +11,17 @@ use uuid::Uuid;
 #[actix_web::test]
 #[allow(unused_mut)]
 async fn test_admin_endpoints_require_authentication() {
-    let (srv, _pool, _test_container, _email_service) = crate::test_helpers::create_test_app_with_testcontainers().await;
+    let ctx = TestContext::builder().build().await;
     
     // Test stats endpoint without auth
-    let mut resp = srv.get("/backend/protected/admin/stats")
+    let mut resp = ctx.server.get("/backend/protected/admin/stats")
         .send()
         .await
         .unwrap();
     assert_eq!(resp.status(), 401); // Unauthorized
     
     // Test users endpoint without auth
-    let mut resp = srv.get("/backend/protected/admin/users")
+    let mut resp = ctx.server.get("/backend/protected/admin/users")
         .send()
         .await
         .unwrap();
@@ -30,7 +31,7 @@ async fn test_admin_endpoints_require_authentication() {
 #[actix_web::test]
 #[allow(unused_mut)]
 async fn test_admin_endpoints_require_admin_role() {
-    let (srv, _pool, _test_container, _email_service) = crate::test_helpers::create_test_app_with_testcontainers().await;
+    let ctx = TestContext::builder().build().await;
     
     // Create a regular user (not admin)
     let email = crate::test_helpers::unique_test_email();
@@ -43,7 +44,7 @@ async fn test_admin_endpoints_require_admin_role() {
         "display_name": display_name
     });
     
-    let mut register_resp = srv.post("/backend/public/auth/register")
+    let mut register_resp = ctx.server.post("/backend/public/auth/register")
         .send_json(&register_request_body)
         .await
         .unwrap();
@@ -54,7 +55,7 @@ async fn test_admin_endpoints_require_admin_role() {
     let token = register_body.get("token").unwrap().as_str().unwrap();
     
     // Try to access admin endpoint with regular user token
-    let mut resp = srv.get("/backend/protected/admin/stats")
+    let mut resp = ctx.server.get("/backend/protected/admin/stats")
         .insert_header(("Authorization", format!("Bearer {}", token)))
         .send()
         .await
@@ -69,16 +70,20 @@ async fn test_admin_endpoints_require_admin_role() {
 
 #[actix_web::test]
 async fn test_get_system_stats_success() {
-    let (srv, _pool, admin_user, _test_container) = crate::test_helpers::create_test_app_with_admin_user(
+    let ctx = TestContext::builder().build().await;
+    
+    // Create admin user
+    let admin_user = ctx.create_verified_user(
         &crate::test_helpers::unique_test_email(),
-        &crate::test_helpers::test_password_hash(),
-        "Admin User",
         &crate::test_helpers::unique_test_slug(),
-    ).await.unwrap();
+    ).await;
+    
+    // Assign admin role
+    crate::test_helpers::assign_admin_role(&ctx.pool, admin_user.id).await;
     
     let token = crate::test_helpers::create_test_jwt_token(&admin_user).await.unwrap();
     
-    let mut resp = srv.get("/backend/protected/admin/stats")
+    let mut resp = ctx.server.get("/backend/protected/admin/stats")
         .insert_header(("Authorization", format!("Bearer {}", token)))
         .send()
         .await
@@ -104,16 +109,20 @@ async fn test_get_system_stats_success() {
 
 #[actix_web::test]
 async fn test_get_users_success() {
-    let (srv, _pool, admin_user, _test_container) = crate::test_helpers::create_test_app_with_admin_user(
+    let ctx = TestContext::builder().build().await;
+    
+    // Create admin user
+    let admin_user = ctx.create_verified_user(
         &crate::test_helpers::unique_test_email(),
-        &crate::test_helpers::test_password_hash(),
-        "Admin User",
         &crate::test_helpers::unique_test_slug(),
-    ).await.unwrap();
+    ).await;
+    
+    // Assign admin role
+    crate::test_helpers::assign_admin_role(&ctx.pool, admin_user.id).await;
     
     let token = crate::test_helpers::create_test_jwt_token(&admin_user).await.unwrap();
     
-    let mut resp = srv.get("/backend/protected/admin/users")
+    let mut resp = ctx.server.get("/backend/protected/admin/users")
         .insert_header(("Authorization", format!("Bearer {}", token)))
         .send()
         .await
@@ -135,17 +144,21 @@ async fn test_get_users_success() {
 
 #[actix_web::test]
 async fn test_get_users_with_search() {
-    let (srv, _pool, admin_user, _test_container) = crate::test_helpers::create_test_app_with_admin_user(
+    let ctx = TestContext::builder().build().await;
+    
+    // Create admin user
+    let admin_user = ctx.create_verified_user(
         &crate::test_helpers::unique_test_email(),
-        &crate::test_helpers::test_password_hash(),
-        "Admin User",
         &crate::test_helpers::unique_test_slug(),
-    ).await.unwrap();
+    ).await;
+    
+    // Assign admin role
+    crate::test_helpers::assign_admin_role(&ctx.pool, admin_user.id).await;
     
     let token = crate::test_helpers::create_test_jwt_token(&admin_user).await.unwrap();
     
     // Test with search parameter
-    let mut resp = srv.get("/backend/protected/admin/users?search=Admin")
+    let mut resp = ctx.server.get("/backend/protected/admin/users?search=Admin")
         .insert_header(("Authorization", format!("Bearer {}", token)))
         .send()
         .await
@@ -159,19 +172,23 @@ async fn test_get_users_with_search() {
 
 #[actix_web::test]
 async fn test_deactivate_user_success() {
-    let (srv, pool, admin_user, _test_container) = crate::test_helpers::create_test_app_with_admin_user(
+    let ctx = TestContext::builder().build().await;
+    
+    // Create admin user
+    let admin_user = ctx.create_verified_user(
         &crate::test_helpers::unique_test_email(),
-        &crate::test_helpers::test_password_hash(),
-        "Admin User",
         &crate::test_helpers::unique_test_slug(),
-    ).await.unwrap();
+    ).await;
+    
+    // Assign admin role
+    crate::test_helpers::assign_admin_role(&ctx.pool, admin_user.id).await;
     
     #[allow(unused_variables)] // Used in line 185: format!("Bearer {}", token)
     let token = crate::test_helpers::create_test_jwt_token(&admin_user).await.unwrap();
     
     // Create a regular user to deactivate
     let regular_user = crate::test_helpers::create_test_user_in_db(
-        &pool,
+        &ctx.pool,
         &crate::test_helpers::unique_test_email(),
         &crate::test_helpers::test_password_hash(),
         "Regular User",
@@ -180,7 +197,7 @@ async fn test_deactivate_user_success() {
     
     let token = crate::test_helpers::create_test_jwt_token(&admin_user).await.unwrap();
     
-    let mut resp = srv.post(&format!("/backend/protected/admin/users/{}/deactivate", regular_user.id))
+    let mut resp = ctx.server.post(&format!("/backend/protected/admin/users/{}/deactivate", regular_user.id))
         .insert_header(("Authorization", format!("Bearer {}", token)))
         .send()
         .await
@@ -199,19 +216,23 @@ async fn test_deactivate_user_success() {
 
 #[actix_web::test]
 async fn test_activate_user_success() {
-    let (srv, pool, admin_user, _test_container) = crate::test_helpers::create_test_app_with_admin_user(
+    let ctx = TestContext::builder().build().await;
+    
+    // Create admin user
+    let admin_user = ctx.create_verified_user(
         &crate::test_helpers::unique_test_email(),
-        &crate::test_helpers::test_password_hash(),
-        "Admin User",
         &crate::test_helpers::unique_test_slug(),
-    ).await.unwrap();
+    ).await;
+    
+    // Assign admin role
+    crate::test_helpers::assign_admin_role(&ctx.pool, admin_user.id).await;
     
     #[allow(unused_variables)] // Used in line 225: format!("Bearer {}", token)
     let token = crate::test_helpers::create_test_jwt_token(&admin_user).await.unwrap();
     
     // Create a regular user to activate
     let regular_user = crate::test_helpers::create_test_user_in_db(
-        &pool,
+        &ctx.pool,
         &crate::test_helpers::unique_test_email(),
         &crate::test_helpers::test_password_hash(),
         "Regular User",
@@ -220,7 +241,7 @@ async fn test_activate_user_success() {
     
     let token = crate::test_helpers::create_test_jwt_token(&admin_user).await.unwrap();
     
-    let mut resp = srv.post(&format!("/backend/protected/admin/users/{}/activate", regular_user.id))
+    let mut resp = ctx.server.post(&format!("/backend/protected/admin/users/{}/activate", regular_user.id))
         .insert_header(("Authorization", format!("Bearer {}", token)))
         .send()
         .await
@@ -239,19 +260,23 @@ async fn test_activate_user_success() {
 
 #[actix_web::test]
 async fn test_reset_user_password_success() {
-    let (srv, pool, admin_user, _test_container) = crate::test_helpers::create_test_app_with_admin_user(
+    let ctx = TestContext::builder().build().await;
+    
+    // Create admin user
+    let admin_user = ctx.create_verified_user(
         &crate::test_helpers::unique_test_email(),
-        &crate::test_helpers::test_password_hash(),
-        "Admin User",
         &crate::test_helpers::unique_test_slug(),
-    ).await.unwrap();
+    ).await;
+    
+    // Assign admin role
+    crate::test_helpers::assign_admin_role(&ctx.pool, admin_user.id).await;
     
     #[allow(unused_variables)] // Used in line 265: format!("Bearer {}", token)
     let token = crate::test_helpers::create_test_jwt_token(&admin_user).await.unwrap();
     
     // Create a regular user to reset password
     let regular_user = crate::test_helpers::create_test_user_in_db(
-        &pool,
+        &ctx.pool,
         &crate::test_helpers::unique_test_email(),
         &crate::test_helpers::test_password_hash(),
         "Regular User",
@@ -260,7 +285,7 @@ async fn test_reset_user_password_success() {
     
     let token = crate::test_helpers::create_test_jwt_token(&admin_user).await.unwrap();
     
-    let mut resp = srv.post(&format!("/backend/protected/admin/users/{}/reset-password", regular_user.id))
+    let mut resp = ctx.server.post(&format!("/backend/protected/admin/users/{}/reset-password", regular_user.id))
         .insert_header(("Authorization", format!("Bearer {}", token)))
         .send()
         .await
@@ -279,19 +304,23 @@ async fn test_reset_user_password_success() {
 
 #[actix_web::test]
 async fn test_promote_user_to_admin_success() {
-    let (srv, pool, admin_user, _test_container) = crate::test_helpers::create_test_app_with_admin_user(
+    let ctx = TestContext::builder().build().await;
+    
+    // Create admin user
+    let admin_user = ctx.create_verified_user(
         &crate::test_helpers::unique_test_email(),
-        &crate::test_helpers::test_password_hash(),
-        "Admin User",
         &crate::test_helpers::unique_test_slug(),
-    ).await.unwrap();
+    ).await;
+    
+    // Assign admin role
+    crate::test_helpers::assign_admin_role(&ctx.pool, admin_user.id).await;
     
     #[allow(unused_variables)] // Used in line 305: format!("Bearer {}", token)
     let token = crate::test_helpers::create_test_jwt_token(&admin_user).await.unwrap();
     
     // Create a regular user to promote
     let regular_user = crate::test_helpers::create_test_user_in_db(
-        &pool,
+        &ctx.pool,
         &crate::test_helpers::unique_test_email(),
         &crate::test_helpers::test_password_hash(),
         "Regular User",
@@ -300,7 +329,7 @@ async fn test_promote_user_to_admin_success() {
     
     let token = crate::test_helpers::create_test_jwt_token(&admin_user).await.unwrap();
     
-    let mut resp = srv.post(&format!("/backend/protected/admin/users/{}/promote", regular_user.id))
+    let mut resp = ctx.server.post(&format!("/backend/protected/admin/users/{}/promote", regular_user.id))
         .insert_header(("Authorization", format!("Bearer {}", token)))
         .send()
         .await
@@ -323,16 +352,20 @@ async fn test_promote_user_to_admin_success() {
 
 #[actix_web::test]
 async fn test_get_all_phrases_success() {
-    let (srv, _pool, admin_user, _test_container) = crate::test_helpers::create_test_app_with_admin_user(
+    let ctx = TestContext::builder().build().await;
+    
+    // Create admin user
+    let admin_user = ctx.create_verified_user(
         &crate::test_helpers::unique_test_email(),
-        &crate::test_helpers::test_password_hash(),
-        "Admin User",
         &crate::test_helpers::unique_test_slug(),
-    ).await.unwrap();
+    ).await;
+    
+    // Assign admin role
+    crate::test_helpers::assign_admin_role(&ctx.pool, admin_user.id).await;
     
     let token = crate::test_helpers::create_test_jwt_token(&admin_user).await.unwrap();
     
-    let mut resp = srv.get("/backend/protected/admin/phrases")
+    let mut resp = ctx.server.get("/backend/protected/admin/phrases")
         .insert_header(("Authorization", format!("Bearer {}", token)))
         .send()
         .await
@@ -352,12 +385,16 @@ async fn test_get_all_phrases_success() {
 
 #[actix_web::test]
 async fn test_create_phrase_success() {
-    let (srv, _pool, admin_user, _test_container) = crate::test_helpers::create_test_app_with_admin_user(
+    let ctx = TestContext::builder().build().await;
+    
+    // Create admin user
+    let admin_user = ctx.create_verified_user(
         &crate::test_helpers::unique_test_email(),
-        &crate::test_helpers::test_password_hash(),
-        "Admin User",
         &crate::test_helpers::unique_test_slug(),
-    ).await.unwrap();
+    ).await;
+    
+    // Assign admin role
+    crate::test_helpers::assign_admin_role(&ctx.pool, admin_user.id).await;
     
     let token = crate::test_helpers::create_test_jwt_token(&admin_user).await.unwrap();
     
@@ -365,7 +402,7 @@ async fn test_create_phrase_success() {
         "phrase_text": crate::test_helpers::unique_test_phrase()
     });
     
-    let mut resp = srv.post("/backend/protected/admin/phrases")
+    let mut resp = ctx.server.post("/backend/protected/admin/phrases")
         .insert_header(("Authorization", format!("Bearer {}", token)))
         .send_json(&request_body)
         .await
@@ -386,16 +423,20 @@ async fn test_create_phrase_success() {
 
 #[actix_web::test]
 async fn test_get_pending_suggestions_success() {
-    let (srv, _pool, admin_user, _test_container) = crate::test_helpers::create_test_app_with_admin_user(
+    let ctx = TestContext::builder().build().await;
+    
+    // Create admin user
+    let admin_user = ctx.create_verified_user(
         &crate::test_helpers::unique_test_email(),
-        &crate::test_helpers::test_password_hash(),
-        "Admin User",
         &crate::test_helpers::unique_test_slug(),
-    ).await.unwrap();
+    ).await;
+    
+    // Assign admin role
+    crate::test_helpers::assign_admin_role(&ctx.pool, admin_user.id).await;
     
     let token = crate::test_helpers::create_test_jwt_token(&admin_user).await.unwrap();
     
-    let mut resp = srv.get("/backend/protected/admin/suggestions")
+    let mut resp = ctx.server.get("/backend/protected/admin/suggestions")
         .insert_header(("Authorization", format!("Bearer {}", token)))
         .send()
         .await
@@ -419,18 +460,22 @@ async fn test_get_pending_suggestions_success() {
 
 #[actix_web::test]
 async fn test_deactivate_nonexistent_user() {
-    let (srv, _pool, admin_user, _test_container) = crate::test_helpers::create_test_app_with_admin_user(
+    let ctx = TestContext::builder().build().await;
+    
+    // Create admin user
+    let admin_user = ctx.create_verified_user(
         &crate::test_helpers::unique_test_email(),
-        &crate::test_helpers::test_password_hash(),
-        "Admin User",
         &crate::test_helpers::unique_test_slug(),
-    ).await.unwrap();
+    ).await;
+    
+    // Assign admin role
+    crate::test_helpers::assign_admin_role(&ctx.pool, admin_user.id).await;
     
     let token = crate::test_helpers::create_test_jwt_token(&admin_user).await.unwrap();
     
     // Try to deactivate a nonexistent user
     let nonexistent_id = Uuid::new_v4();
-    let mut resp = srv.post(&format!("/backend/protected/admin/users/{}/deactivate", nonexistent_id))
+    let mut resp = ctx.server.post(&format!("/backend/protected/admin/users/{}/deactivate", nonexistent_id))
         .insert_header(("Authorization", format!("Bearer {}", token)))
         .send()
         .await
@@ -446,17 +491,21 @@ async fn test_deactivate_nonexistent_user() {
 
 #[actix_web::test]
 async fn test_invalid_user_id_format() {
-    let (srv, _pool, admin_user, _test_container) = crate::test_helpers::create_test_app_with_admin_user(
+    let ctx = TestContext::builder().build().await;
+    
+    // Create admin user
+    let admin_user = ctx.create_verified_user(
         &crate::test_helpers::unique_test_email(),
-        &crate::test_helpers::test_password_hash(),
-        "Admin User",
         &crate::test_helpers::unique_test_slug(),
-    ).await.unwrap();
+    ).await;
+    
+    // Assign admin role
+    crate::test_helpers::assign_admin_role(&ctx.pool, admin_user.id).await;
     
     let token = crate::test_helpers::create_test_jwt_token(&admin_user).await.unwrap();
     
     // Try to deactivate with invalid UUID format
-    let mut resp = srv.post("/backend/protected/admin/users/invalid-uuid/deactivate")
+    let mut resp = ctx.server.post("/backend/protected/admin/users/invalid-uuid/deactivate")
         .insert_header(("Authorization", format!("Bearer {}", token)))
         .send()
         .await

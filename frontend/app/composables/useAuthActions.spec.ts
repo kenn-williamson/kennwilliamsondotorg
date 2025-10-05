@@ -1,22 +1,22 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest'
 
 // Mock all dependencies before importing the composable
-vi.mock('~/composables/useBaseService', () => ({
+vi.mock('./useBaseService', () => ({
   useBaseService: vi.fn()
 }))
 
-vi.mock('~/composables/useSmartFetch', () => ({
+vi.mock('./useSmartFetch', () => ({
   useSmartFetch: vi.fn()
 }))
 
-vi.mock('~/services/authService', () => ({
+vi.mock('../services/authService', () => ({
   authService: vi.fn()
 }))
 
 // Mock useUserSession globally
 global.useUserSession = vi.fn()
 
-import { useAuthActions } from '~/composables/useAuthActions'
+import { useAuthActions } from './useAuthActions'
 
 describe('useAuthActions', () => {
   let mockUserSession: any
@@ -40,7 +40,7 @@ describe('useAuthActions', () => {
     }
     
     // Configure mocked modules
-    const { useBaseService } = await import('~/composables/useBaseService')
+    const { useBaseService } = await import('./useBaseService')
     vi.mocked(useBaseService).mockReturnValue({
       executeRequest: vi.fn().mockImplementation(async (fn) => await fn()),
       executeRequestWithSuccess: vi.fn().mockImplementation(async (fn) => await fn()),
@@ -49,10 +49,10 @@ describe('useAuthActions', () => {
       hasError: { value: false }
     })
     
-    const { useSmartFetch } = await import('~/composables/useSmartFetch')
+    const { useSmartFetch } = await import('./useSmartFetch')
     vi.mocked(useSmartFetch).mockReturnValue(vi.fn())
     
-    const { authService } = await import('~/services/authService')
+    const { authService } = await import('../services/authService')
     vi.mocked(authService).mockReturnValue(mockAuthService)
     
     // Configure the useUserSession mock
@@ -171,7 +171,7 @@ describe('useAuthActions', () => {
       useAuthActions()
 
       // Test orchestration: service created with fetcher
-      const { authService } = await import('~/services/authService')
+      const { authService } = await import('../services/authService')
       expect(authService).toHaveBeenCalledWith(expect.any(Function))
     })
   })

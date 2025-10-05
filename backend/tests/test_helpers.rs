@@ -115,16 +115,26 @@ pub struct TestContext {
 /// Builder for TestContext
 pub struct TestContextBuilder {
     redis_url: Option<String>,
+    oauth_service: Option<backend::services::auth::oauth::MockGoogleOAuthService>,
 }
 
 impl TestContextBuilder {
     pub fn new() -> Self {
-        Self { redis_url: None }
+        Self { 
+            redis_url: None,
+            oauth_service: None,
+        }
     }
 
     /// Configure with Redis URL for rate limiting tests
     pub fn with_redis(mut self, url: String) -> Self {
         self.redis_url = Some(url);
+        self
+    }
+
+    /// Configure with OAuth service for OAuth tests
+    pub fn with_oauth(mut self, oauth_service: backend::services::auth::oauth::MockGoogleOAuthService) -> Self {
+        self.oauth_service = Some(oauth_service);
         self
     }
 
@@ -159,7 +169,7 @@ impl TestContextBuilder {
 
         // Create mock OAuth service for testing
         use backend::services::auth::oauth::MockGoogleOAuthService;
-        let mock_oauth = MockGoogleOAuthService::new();
+        let mock_oauth = self.oauth_service.unwrap_or_else(|| MockGoogleOAuthService::new());
 
         let auth_service = Arc::new(AuthService::builder()
             .user_repository(Box::new(PostgresUserRepository::new(test_container.pool.clone())))
@@ -167,6 +177,7 @@ impl TestContextBuilder {
             .verification_token_repository(Box::new(PostgresVerificationTokenRepository::new(test_container.pool.clone())))
             .email_service(Box::new(email_service.as_ref().clone()))
             .google_oauth_service(Box::new(mock_oauth))
+            .pkce_storage(Box::new(backend::repositories::mocks::MockPkceStorage::new()))
             .jwt_secret(jwt_secret.clone())
             .build());
 
@@ -604,6 +615,11 @@ pub async fn add_admin_role_to_user(pool: &sqlx::PgPool, user_id: uuid::Uuid) ->
     Ok(())
 }
 
+/// Assign admin role to a user (wrapper for add_admin_role_to_user)
+pub async fn assign_admin_role(pool: &sqlx::PgPool, user_id: uuid::Uuid) {
+    add_admin_role_to_user(pool, user_id).await.expect("Failed to assign admin role");
+}
+
 // ============================================================================
 // JWT TOKEN CREATION
 // ============================================================================
@@ -662,14 +678,26 @@ pub async fn assign_email_verified_role(pool: &sqlx::PgPool, user_id_str: &str) 
 /// Used in: testcontainers_admin_api_tests.rs - e.g. line 36 in test_register_duplicate_email()
 #[allow(dead_code)]
 pub fn unique_test_email() -> String {
-    format!("test_{}@test.com", std::time::SystemTime::now().duration_since(std::time::UNIX_EPOCH).unwrap().as_secs())
+    use std::sync::atomic::{AtomicU64, Ordering};
+    static COUNTER: AtomicU64 = AtomicU64::new(0);
+    let counter = COUNTER.fetch_add(1, Ordering::SeqCst);
+    format!("test_{}_{}@test.com", 
+        std::time::SystemTime::now().duration_since(std::time::UNIX_EPOCH).unwrap().as_secs(),
+        counter
+    )
 }
 
 /// Generates a unique test slug
 /// Used in: testcontainers_admin_api_tests.rs - e.g. line 76 in test_get_system_stats_success()
 #[allow(dead_code)]
 pub fn unique_test_slug() -> String {
-    format!("test-user-{}", std::time::SystemTime::now().duration_since(std::time::UNIX_EPOCH).unwrap().as_secs())
+    use std::sync::atomic::{AtomicU64, Ordering};
+    static COUNTER: AtomicU64 = AtomicU64::new(0);
+    let counter = COUNTER.fetch_add(1, Ordering::SeqCst);
+    format!("test-user-{}-{}", 
+        std::time::SystemTime::now().duration_since(std::time::UNIX_EPOCH).unwrap().as_secs(),
+        counter
+    )
 }
 
 /// Test password hash for testing

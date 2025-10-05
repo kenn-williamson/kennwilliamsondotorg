@@ -1,6 +1,6 @@
 import { describe, it, expect, vi } from 'vitest'
-import { createMockUser } from '../utils/test-helpers'
-import { authProfileService } from '~/services/authProfileService'
+import { createMockUser } from '../../test/utils/test-helpers'
+import { authProfileService } from './authProfileService'
 
 describe('authProfileService', () => {
   let mockFetcher: any

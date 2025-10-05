@@ -1,7 +1,7 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest'
 
 // Mock all dependencies before importing the composable
-vi.mock('~/composables/useJwtManager', () => ({
+vi.mock('./useJwtManager', () => ({
   useJwtManager: vi.fn()
 }))
 
@@ -17,7 +17,7 @@ global.useRuntimeConfig = vi.fn()
 // Mock import.meta.server globally - this needs to be set before module import
 vi.stubGlobal('import', { meta: { server: false } })
 
-import { useSmartFetch } from '~/composables/useSmartFetch'
+import { useSmartFetch } from './useSmartFetch'
 
 describe('useSmartFetch', () => {
   let mockJwtManager: any
@@ -39,7 +39,7 @@ describe('useSmartFetch', () => {
     }
 
     // Configure mocked modules
-    const { useJwtManager } = await import('~/composables/useJwtManager')
+    const { useJwtManager } = await import('./useJwtManager')
     vi.mocked(useJwtManager).mockReturnValue(mockJwtManager)
 
     // Configure global mocks

@@ -1,10 +1,11 @@
 use serde_json::json;
+use crate::test_helpers::TestContext;
 
 // Use consolidated test helpers from test_helpers module
 
 #[actix_web::test]
 async fn test_get_user_timers_success() {
-    let (srv, _pool, _test_container, _email_service) = crate::test_helpers::create_test_app_with_testcontainers().await;
+    let ctx = TestContext::builder().build().await;
     
     // First register a user to get proper authentication
     let email = crate::test_helpers::unique_test_email();
@@ -17,7 +18,7 @@ async fn test_get_user_timers_success() {
         "display_name": display_name
     });
     
-    let mut register_resp = srv.post("/backend/public/auth/register")
+    let mut register_resp = ctx.server.post("/backend/public/auth/register")
         .send_json(&register_request_body)
         .await
         .unwrap();
@@ -28,7 +29,7 @@ async fn test_get_user_timers_success() {
     let token = register_body.get("token").unwrap().as_str().unwrap();
     
     // Test getting user timers (should be empty initially)
-    let mut resp = srv.get("/backend/protected/incident-timers")
+    let mut resp = ctx.server.get("/backend/protected/incident-timers")
         .insert_header(("Authorization", format!("Bearer {}", token)))
         .send()
         .await
@@ -49,9 +50,9 @@ async fn test_get_user_timers_success() {
 #[actix_web::test]
 #[allow(unused_mut)]
 async fn test_get_user_timers_unauthorized() {
-    let (srv, _pool, _test_container, _email_service) = crate::test_helpers::create_test_app_with_testcontainers().await;
+    let ctx = TestContext::builder().build().await;
     
-    let mut resp = srv.get("/backend/protected/incident-timers")
+    let mut resp = ctx.server.get("/backend/protected/incident-timers")
         .send()
         .await
         .unwrap();
@@ -61,7 +62,7 @@ async fn test_get_user_timers_unauthorized() {
 
 #[actix_web::test]
 async fn test_create_timer_success() {
-    let (srv, pool, _test_container, _email_service) = crate::test_helpers::create_test_app_with_testcontainers().await;
+    let ctx = TestContext::builder().build().await;
 
     // First register a user
     let email = crate::test_helpers::unique_test_email();
@@ -74,7 +75,7 @@ async fn test_create_timer_success() {
         "display_name": display_name
     });
 
-    let mut register_resp = srv.post("/backend/public/auth/register")
+    let mut register_resp = ctx.server.post("/backend/public/auth/register")
         .send_json(&register_request_body)
         .await
         .unwrap();
@@ -85,10 +86,10 @@ async fn test_create_timer_success() {
     let user_id = register_body["user"]["id"].as_str().unwrap();
 
     // Assign email-verified role (simulates email verification)
-    crate::test_helpers::assign_email_verified_role(&pool, user_id).await;
+    crate::test_helpers::assign_email_verified_role(&ctx.pool, user_id).await;
 
     // Login to get token with updated roles
-    let mut login_resp = srv.post("/backend/public/auth/login")
+    let mut login_resp = ctx.server.post("/backend/public/auth/login")
         .send_json(&json!({"email": email, "password": password}))
         .await
         .unwrap();
@@ -102,7 +103,7 @@ async fn test_create_timer_success() {
         "notes": "Test timer notes"
     });
     
-    let mut resp = srv.post("/backend/protected/incident-timers")
+    let mut resp = ctx.server.post("/backend/protected/incident-timers")
         .insert_header(("Authorization", format!("Bearer {}", token)))
         .send_json(&timer_request_body)
         .await
@@ -125,7 +126,7 @@ async fn test_create_timer_success() {
 
 #[actix_web::test]
 async fn test_create_timer_minimal() {
-    let (srv, pool, _test_container, _email_service) = crate::test_helpers::create_test_app_with_testcontainers().await;
+    let ctx = TestContext::builder().build().await;
 
     // First register a user
     let email = crate::test_helpers::unique_test_email();
@@ -138,7 +139,7 @@ async fn test_create_timer_minimal() {
         "display_name": display_name
     });
 
-    let mut register_resp = srv.post("/backend/public/auth/register")
+    let mut register_resp = ctx.server.post("/backend/public/auth/register")
         .send_json(&register_request_body)
         .await
         .unwrap();
@@ -149,10 +150,10 @@ async fn test_create_timer_minimal() {
     let user_id = register_body["user"]["id"].as_str().unwrap();
 
     // Assign email-verified role (simulates email verification)
-    crate::test_helpers::assign_email_verified_role(&pool, user_id).await;
+    crate::test_helpers::assign_email_verified_role(&ctx.pool, user_id).await;
 
     // Login to get token with updated roles
-    let mut login_resp = srv.post("/backend/public/auth/login")
+    let mut login_resp = ctx.server.post("/backend/public/auth/login")
         .send_json(&json!({"email": email, "password": password}))
         .await
         .unwrap();
@@ -163,7 +164,7 @@ async fn test_create_timer_minimal() {
     // Create a timer with minimal data
     let timer_request_body = json!({});
     
-    let mut resp = srv.post("/backend/protected/incident-timers")
+    let mut resp = ctx.server.post("/backend/protected/incident-timers")
         .insert_header(("Authorization", format!("Bearer {}", token)))
         .send_json(&timer_request_body)
         .await
@@ -186,14 +187,14 @@ async fn test_create_timer_minimal() {
 #[actix_web::test]
 #[allow(unused_mut)]
 async fn test_create_timer_unauthorized() {
-    let (srv, _pool, _test_container, _email_service) = crate::test_helpers::create_test_app_with_testcontainers().await;
+    let ctx = TestContext::builder().build().await;
     
     let timer_request_body = json!({
         "reset_timestamp": "2024-01-01T12:00:00Z",
         "notes": "Test timer notes"
     });
     
-    let mut resp = srv.post("/backend/protected/incident-timers")
+    let mut resp = ctx.server.post("/backend/protected/incident-timers")
         .send_json(&timer_request_body)
         .await
         .unwrap();
@@ -203,7 +204,7 @@ async fn test_create_timer_unauthorized() {
 
 #[actix_web::test]
 async fn test_update_timer_success() {
-    let (srv, pool, _test_container, _email_service) = crate::test_helpers::create_test_app_with_testcontainers().await;
+    let ctx = TestContext::builder().build().await;
 
     // First register a user
     let email = crate::test_helpers::unique_test_email();
@@ -216,7 +217,7 @@ async fn test_update_timer_success() {
         "display_name": display_name
     });
 
-    let mut register_resp = srv.post("/backend/public/auth/register")
+    let mut register_resp = ctx.server.post("/backend/public/auth/register")
         .send_json(&register_request_body)
         .await
         .unwrap();
@@ -227,10 +228,10 @@ async fn test_update_timer_success() {
     let user_id = register_body["user"]["id"].as_str().unwrap();
 
     // Assign email-verified role (simulates email verification)
-    crate::test_helpers::assign_email_verified_role(&pool, user_id).await;
+    crate::test_helpers::assign_email_verified_role(&ctx.pool, user_id).await;
 
     // Login to get token with updated roles
-    let mut login_resp = srv.post("/backend/public/auth/login")
+    let mut login_resp = ctx.server.post("/backend/public/auth/login")
         .send_json(&json!({"email": email, "password": password}))
         .await
         .unwrap();
@@ -244,7 +245,7 @@ async fn test_update_timer_success() {
         "notes": "Original notes"
     });
     
-    let mut create_resp = srv.post("/backend/protected/incident-timers")
+    let mut create_resp = ctx.server.post("/backend/protected/incident-timers")
         .insert_header(("Authorization", format!("Bearer {}", token)))
         .send_json(&timer_request_body)
         .await
@@ -261,7 +262,7 @@ async fn test_update_timer_success() {
         "notes": "Updated notes"
     });
     
-    let mut resp = srv.put(&format!("/backend/protected/incident-timers/{}", timer_id))
+    let mut resp = ctx.server.put(&format!("/backend/protected/incident-timers/{}", timer_id))
         .insert_header(("Authorization", format!("Bearer {}", token)))
         .send_json(&update_request_body)
         .await
@@ -282,7 +283,7 @@ async fn test_update_timer_success() {
 
 #[actix_web::test]
 async fn test_update_timer_not_found() {
-    let (srv, pool, _test_container, _email_service) = crate::test_helpers::create_test_app_with_testcontainers().await;
+    let ctx = TestContext::builder().build().await;
 
     // First register a user
     let email = crate::test_helpers::unique_test_email();
@@ -295,7 +296,7 @@ async fn test_update_timer_not_found() {
         "display_name": display_name
     });
     
-    let mut register_resp = srv.post("/backend/public/auth/register")
+    let mut register_resp = ctx.server.post("/backend/public/auth/register")
         .send_json(&register_request_body)
         .await
         .unwrap();
@@ -306,10 +307,10 @@ async fn test_update_timer_not_found() {
     let user_id = register_body["user"]["id"].as_str().unwrap();
 
     // Assign email-verified role (simulates email verification)
-    crate::test_helpers::assign_email_verified_role(&pool, user_id).await;
+    crate::test_helpers::assign_email_verified_role(&ctx.pool, user_id).await;
 
     // Login to get token with updated roles
-    let mut login_resp = srv.post("/backend/public/auth/login")
+    let mut login_resp = ctx.server.post("/backend/public/auth/login")
         .send_json(&json!({"email": email, "password": password}))
         .await
         .unwrap();
@@ -323,7 +324,7 @@ async fn test_update_timer_not_found() {
         "notes": "Updated notes"
     });
     
-    let mut resp = srv.put(&format!("/backend/protected/incident-timers/{}", fake_timer_id))
+    let mut resp = ctx.server.put(&format!("/backend/protected/incident-timers/{}", fake_timer_id))
         .insert_header(("Authorization", format!("Bearer {}", token)))
         .send_json(&update_request_body)
         .await
@@ -338,14 +339,14 @@ async fn test_update_timer_not_found() {
 #[actix_web::test]
 #[allow(unused_mut)]
 async fn test_update_timer_unauthorized() {
-    let (srv, _pool, _test_container, _email_service) = crate::test_helpers::create_test_app_with_testcontainers().await;
+    let ctx = TestContext::builder().build().await;
     
     let fake_timer_id = "01234567-89ab-cdef-0123-456789abcdef";
     let update_request_body = json!({
         "notes": "Updated notes"
     });
     
-    let mut resp = srv.put(&format!("/backend/protected/incident-timers/{}", fake_timer_id))
+    let mut resp = ctx.server.put(&format!("/backend/protected/incident-timers/{}", fake_timer_id))
         .send_json(&update_request_body)
         .await
         .unwrap();
@@ -355,7 +356,7 @@ async fn test_update_timer_unauthorized() {
 
 #[actix_web::test]
 async fn test_delete_timer_success() {
-    let (srv, pool, _test_container, _email_service) = crate::test_helpers::create_test_app_with_testcontainers().await;
+    let ctx = TestContext::builder().build().await;
 
     // First register a user
     let email = crate::test_helpers::unique_test_email();
@@ -368,7 +369,7 @@ async fn test_delete_timer_success() {
         "display_name": display_name
     });
 
-    let mut register_resp = srv.post("/backend/public/auth/register")
+    let mut register_resp = ctx.server.post("/backend/public/auth/register")
         .send_json(&register_request_body)
         .await
         .unwrap();
@@ -379,10 +380,10 @@ async fn test_delete_timer_success() {
     let user_id = register_body["user"]["id"].as_str().unwrap();
 
     // Assign email-verified role (simulates email verification)
-    crate::test_helpers::assign_email_verified_role(&pool, user_id).await;
+    crate::test_helpers::assign_email_verified_role(&ctx.pool, user_id).await;
 
     // Login to get token with updated roles
-    let mut login_resp = srv.post("/backend/public/auth/login")
+    let mut login_resp = ctx.server.post("/backend/public/auth/login")
         .send_json(&json!({"email": email, "password": password}))
         .await
         .unwrap();
@@ -396,7 +397,7 @@ async fn test_delete_timer_success() {
         "notes": "Timer to be deleted"
     });
     
-    let mut create_resp = srv.post("/backend/protected/incident-timers")
+    let mut create_resp = ctx.server.post("/backend/protected/incident-timers")
         .insert_header(("Authorization", format!("Bearer {}", token)))
         .send_json(&timer_request_body)
         .await
@@ -408,7 +409,7 @@ async fn test_delete_timer_success() {
     let timer_id = create_body.get("id").unwrap().as_str().unwrap();
     
     // Delete the timer
-    let mut resp = srv.delete(&format!("/backend/protected/incident-timers/{}", timer_id))
+    let mut resp = ctx.server.delete(&format!("/backend/protected/incident-timers/{}", timer_id))
         .insert_header(("Authorization", format!("Bearer {}", token)))
         .send()
         .await
@@ -422,7 +423,7 @@ async fn test_delete_timer_success() {
     assert_eq!(resp.status(), 204); // No Content
     
     // Verify timer is deleted by trying to get user timers
-    let mut get_resp = srv.get("/backend/protected/incident-timers")
+    let mut get_resp = ctx.server.get("/backend/protected/incident-timers")
         .insert_header(("Authorization", format!("Bearer {}", token)))
         .send()
         .await
@@ -437,7 +438,7 @@ async fn test_delete_timer_success() {
 
 #[actix_web::test]
 async fn test_delete_timer_not_found() {
-    let (srv, pool, _test_container, _email_service) = crate::test_helpers::create_test_app_with_testcontainers().await;
+    let ctx = TestContext::builder().build().await;
 
     // First register a user
     let email = crate::test_helpers::unique_test_email();
@@ -450,7 +451,7 @@ async fn test_delete_timer_not_found() {
         "display_name": display_name
     });
 
-    let mut register_resp = srv.post("/backend/public/auth/register")
+    let mut register_resp = ctx.server.post("/backend/public/auth/register")
         .send_json(&register_request_body)
         .await
         .unwrap();
@@ -461,10 +462,10 @@ async fn test_delete_timer_not_found() {
     let user_id = register_body["user"]["id"].as_str().unwrap();
 
     // Assign email-verified role (simulates email verification)
-    crate::test_helpers::assign_email_verified_role(&pool, user_id).await;
+    crate::test_helpers::assign_email_verified_role(&ctx.pool, user_id).await;
 
     // Login to get token with updated roles
-    let mut login_resp = srv.post("/backend/public/auth/login")
+    let mut login_resp = ctx.server.post("/backend/public/auth/login")
         .send_json(&json!({"email": email, "password": password}))
         .await
         .unwrap();
@@ -475,7 +476,7 @@ async fn test_delete_timer_not_found() {
     // Try to delete a non-existent timer
     let fake_timer_id = "01234567-89ab-cdef-0123-456789abcdef";
     
-    let mut resp = srv.delete(&format!("/backend/protected/incident-timers/{}", fake_timer_id))
+    let mut resp = ctx.server.delete(&format!("/backend/protected/incident-timers/{}", fake_timer_id))
         .insert_header(("Authorization", format!("Bearer {}", token)))
         .send()
         .await
@@ -490,11 +491,11 @@ async fn test_delete_timer_not_found() {
 #[actix_web::test]
 #[allow(unused_mut)]
 async fn test_delete_timer_unauthorized() {
-    let (srv, _pool, _test_container, _email_service) = crate::test_helpers::create_test_app_with_testcontainers().await;
+    let ctx = TestContext::builder().build().await;
     
     let fake_timer_id = "01234567-89ab-cdef-0123-456789abcdef";
     
-    let mut resp = srv.delete(&format!("/backend/protected/incident-timers/{}", fake_timer_id))
+    let mut resp = ctx.server.delete(&format!("/backend/protected/incident-timers/{}", fake_timer_id))
         .send()
         .await
         .unwrap();
@@ -505,7 +506,7 @@ async fn test_delete_timer_unauthorized() {
 #[actix_web::test]
 #[allow(unused_mut)]
 async fn test_get_public_timer_success() {
-    let (srv, pool, _test_container, _email_service) = crate::test_helpers::create_test_app_with_testcontainers().await;
+    let ctx = TestContext::builder().build().await;
 
     // First register a user
     let email = crate::test_helpers::unique_test_email();
@@ -518,7 +519,7 @@ async fn test_get_public_timer_success() {
         "display_name": display_name
     });
 
-    let mut register_resp = srv.post("/backend/public/auth/register")
+    let mut register_resp = ctx.server.post("/backend/public/auth/register")
         .send_json(&register_request_body)
         .await
         .unwrap();
@@ -533,10 +534,10 @@ async fn test_get_public_timer_success() {
     let user_slug = user.get("slug").unwrap().as_str().unwrap();
 
     // Assign email-verified role (simulates email verification)
-    crate::test_helpers::assign_email_verified_role(&pool, user_id).await;
+    crate::test_helpers::assign_email_verified_role(&ctx.pool, user_id).await;
 
     // Login to get token with updated roles
-    let mut login_resp = srv.post("/backend/public/auth/login")
+    let mut login_resp = ctx.server.post("/backend/public/auth/login")
         .send_json(&json!({"email": email, "password": password}))
         .await
         .unwrap();
@@ -550,7 +551,7 @@ async fn test_get_public_timer_success() {
         "notes": "Public timer notes"
     });
     
-    let mut create_resp = srv.post("/backend/protected/incident-timers")
+    let mut create_resp = ctx.server.post("/backend/protected/incident-timers")
         .insert_header(("Authorization", format!("Bearer {}", token)))
         .send_json(&timer_request_body)
         .await
@@ -559,7 +560,7 @@ async fn test_get_public_timer_success() {
     assert_eq!(create_resp.status(), 201);
     
     // Get the public timer
-    let mut resp = srv.get(&format!("/backend/public/{}/incident-timer", user_slug))
+    let mut resp = ctx.server.get(&format!("/backend/public/{}/incident-timer", user_slug))
         .send()
         .await
         .unwrap();
@@ -582,12 +583,12 @@ async fn test_get_public_timer_success() {
 
 #[actix_web::test]
 async fn test_get_public_timer_not_found() {
-    let (srv, _pool, _test_container, _email_service) = crate::test_helpers::create_test_app_with_testcontainers().await;
+    let ctx = TestContext::builder().build().await;
     
     // Try to get a timer for a non-existent user
     let fake_slug = "non-existent-user";
     
-    let mut resp = srv.get(&format!("/backend/public/{}/incident-timer", fake_slug))
+    let mut resp = ctx.server.get(&format!("/backend/public/{}/incident-timer", fake_slug))
         .send()
         .await
         .unwrap();
@@ -600,7 +601,7 @@ async fn test_get_public_timer_not_found() {
 
 #[actix_web::test]
 async fn test_get_public_timer_no_timers() {
-    let (srv, _pool, _test_container, _email_service) = crate::test_helpers::create_test_app_with_testcontainers().await;
+    let ctx = TestContext::builder().build().await;
     
     // First register a user but don't create any timers
     let email = crate::test_helpers::unique_test_email();
@@ -613,7 +614,7 @@ async fn test_get_public_timer_no_timers() {
         "display_name": display_name
     });
     
-    let mut register_resp = srv.post("/backend/public/auth/register")
+    let mut register_resp = ctx.server.post("/backend/public/auth/register")
         .send_json(&register_request_body)
         .await
         .unwrap();
@@ -625,7 +626,7 @@ async fn test_get_public_timer_no_timers() {
     let user_slug = user.get("slug").unwrap().as_str().unwrap();
     
     // Try to get the public timer (should be 404 since no timers exist)
-    let mut resp = srv.get(&format!("/backend/public/{}/incident-timer", user_slug))
+    let mut resp = ctx.server.get(&format!("/backend/public/{}/incident-timer", user_slug))
         .send()
         .await
         .unwrap();

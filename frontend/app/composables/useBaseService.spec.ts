@@ -12,7 +12,7 @@ vi.mock('vue', async () => {
 })
 
 
-import { useBaseService } from '~/composables/useBaseService'
+import { useBaseService } from './useBaseService'
 
 describe('useBaseService', () => {
   beforeEach(() => {

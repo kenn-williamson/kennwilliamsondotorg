@@ -3,7 +3,7 @@ import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest'
 // Mock $fetch globally
 global.$fetch = vi.fn()
 
-import { useJwtManager } from '~/composables/useJwtManager'
+import { useJwtManager } from './useJwtManager'
 
 describe('useJwtManager', () => {
   beforeEach(() => {
