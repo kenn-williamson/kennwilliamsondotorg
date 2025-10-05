@@ -38,6 +38,7 @@ impl MockPkceStorage {
     }
 
     /// Clean up expired entries (manual cleanup for testing)
+    #[allow(dead_code)] // Part of testing infrastructure API
     pub fn cleanup_expired(&self) {
         let now = Self::current_timestamp();
         let mut storage = self.storage.lock().unwrap();

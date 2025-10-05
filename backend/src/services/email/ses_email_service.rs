@@ -14,16 +14,6 @@ pub struct SesEmailService {
 }
 
 impl SesEmailService {
-    /// Create a new SES email service without suppression checking
-    /// AWS credentials are loaded from environment (AWS_ACCESS_KEY_ID, AWS_SECRET_ACCESS_KEY)
-    /// or from EC2 instance role when deployed
-    pub fn new(from_email: String, reply_to_email: Option<String>) -> Self {
-        Self {
-            from_email,
-            reply_to_email,
-            suppression_repo: None,
-        }
-    }
 
     /// Create a new SES email service with suppression checking
     pub fn with_suppression(

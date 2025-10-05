@@ -29,14 +29,7 @@ pub struct EmailSuppression {
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub enum EmailType {
     Transactional, // Verification, password reset, security alerts
+    #[allow(dead_code)] // Planned for future marketing features
     Marketing,     // Newsletters, announcements, promotional
 }
 
-impl EmailType {
-    pub fn as_str(&self) -> &'static str {
-        match self {
-            EmailType::Transactional => "transactional",
-            EmailType::Marketing => "marketing",
-        }
-    }
-}

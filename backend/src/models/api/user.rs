@@ -67,6 +67,7 @@ pub struct RefreshTokenRequest {
 }
 
 #[derive(Debug, Serialize)]
+#[allow(dead_code)]
 pub struct RefreshTokenResponse {
     pub token: String,
     pub refresh_token: String,
@@ -107,11 +108,6 @@ impl UserResponse {
     }
 }
 
-// Email verification request/response types
-#[derive(Debug, Serialize, Deserialize)]
-pub struct SendVerificationEmailRequest {
-    // No fields - uses authenticated user from JWT
-}
 
 #[derive(Debug, Serialize)]
 pub struct SendVerificationEmailResponse {

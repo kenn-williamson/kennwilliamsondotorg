@@ -2,6 +2,7 @@ use std::collections::HashMap;
 
 /// Rate limiting configuration for different endpoints
 #[derive(Debug, Clone)]
+#[allow(dead_code)]
 pub struct RateLimitConfig {
     pub requests_per_hour: u32,
     pub burst_limit: u32,
@@ -9,6 +10,7 @@ pub struct RateLimitConfig {
 }
 
 /// Rate limit configurations for different endpoints
+#[allow(dead_code)]
 pub fn get_rate_limit_configs() -> HashMap<String, RateLimitConfig> {
     let mut configs = HashMap::new();
 

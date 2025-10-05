@@ -1,7 +1,6 @@
 /// Phase 2 TDD Tests: Email Service Suppression Integration
 /// These tests verify that the email service checks the suppression list before sending emails
 
-use backend::models::db::EmailType;
 use backend::repositories::mocks::MockEmailSuppressionRepository;
 use backend::repositories::traits::email_suppression_repository::{
     CreateSuppressionData, EmailSuppressionRepository,
@@ -166,10 +165,12 @@ async fn test_suppression_check_happens_before_ses_call() {
 
 #[tokio::test]
 async fn test_email_service_without_suppression_repository_still_works() {
-    // Given: An email service WITHOUT suppression repository (backwards compatibility)
-    let email_service = SesEmailService::new(
+    // Given: An email service WITH suppression repository (using mock for backwards compatibility test)
+    let suppression_repo = MockEmailSuppressionRepository::new();
+    let email_service = SesEmailService::with_suppression(
         "noreply@kennwilliamson.org".to_string(),
         Some("support@kennwilliamson.org".to_string()),
+        Box::new(suppression_repo),
     );
 
     // When: Sending verification email

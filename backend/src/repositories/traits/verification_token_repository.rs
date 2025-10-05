@@ -26,6 +26,7 @@ pub trait VerificationTokenRepository: Send + Sync {
     async fn find_by_token_hash(&self, token_hash: &str) -> Result<Option<VerificationToken>>;
 
     /// Delete token by ID
+    #[allow(dead_code)]
     async fn delete_token(&self, id: Uuid) -> Result<bool>;
 
     /// Delete all tokens for a user (used when email is verified)

@@ -105,6 +105,7 @@ pub async fn create_testcontainers_database() -> (PgPool, String) {
 
 /// Test context that holds all test dependencies
 /// Provides a clean interface for integration tests with builder pattern
+#[allow(dead_code)]
 pub struct TestContext {
     pub server: actix_test::TestServer,
     pub pool: PgPool,
@@ -113,11 +114,13 @@ pub struct TestContext {
 }
 
 /// Builder for TestContext
+#[allow(dead_code)]
 pub struct TestContextBuilder {
     redis_url: Option<String>,
     oauth_service: Option<backend::services::auth::oauth::MockGoogleOAuthService>,
 }
 
+#[allow(dead_code)]
 impl TestContextBuilder {
     pub fn new() -> Self {
         Self { 
@@ -149,7 +152,9 @@ impl TestContextBuilder {
         use backend::repositories::postgres::postgres_user_repository::PostgresUserRepository;
 
         // Set FRONTEND_URL for tests (needed for email verification)
-        std::env::set_var("FRONTEND_URL", "https://localhost");
+        unsafe {
+            std::env::set_var("FRONTEND_URL", "https://localhost");
+        }
         use backend::repositories::postgres::postgres_refresh_token_repository::PostgresRefreshTokenRepository;
         use backend::repositories::postgres::postgres_verification_token_repository::PostgresVerificationTokenRepository;
         use backend::repositories::postgres::postgres_incident_timer_repository::PostgresIncidentTimerRepository;
@@ -252,6 +257,7 @@ impl TestContextBuilder {
     }
 }
 
+#[allow(dead_code)]
 impl TestContext {
     pub fn builder() -> TestContextBuilder {
         TestContextBuilder::new()
@@ -340,199 +346,9 @@ impl TestContext {
 // TEST APP CREATION
 // ============================================================================
 
-/// Create a test app with testcontainers database
-///
-/// TODO: Refactor existing tests to use `TestContext::builder().build().await` instead.
-/// The builder pattern provides cleaner API and better extensibility.
-/// Do NOT use this in new tests - use TestContext::builder() instead.
-///
-/// Used in: testcontainers_admin_api_tests.rs - e.g. line 13 in test_admin_endpoints_require_authentication()
-/// Note: Uses MockRateLimitService for non-rate-limiting tests. For rate limiting tests, use create_test_app_with_redis()
-/// Returns: (TestServer, PgPool, TestContainer, Arc<MockEmailService>) - email service for test assertions
-#[allow(dead_code)]
-pub async fn create_test_app_with_testcontainers() -> (actix_test::TestServer, PgPool, TestContainer, Arc<backend::services::email::MockEmailService>) {
-    use backend::services::container::ServiceContainer;
-    use backend::routes;
-    use backend::middleware::rate_limiter::MockRateLimitService;
-    use actix_web::{web, App};
-    use actix_test;
-    use std::sync::Arc;
 
-    // Set FRONTEND_URL for tests (needed for email verification)
-    std::env::set_var("FRONTEND_URL", "https://localhost");
 
-    let test_container = TestContainer::new().await.expect("Failed to create test container");
 
-    // Create service container with mock rate limiter (no rate limiting for non-rate-limiting tests)
-    // Uses new_for_testing() which creates MockRateLimitService - no Redis container needed
-    let jwt_secret = "test-jwt-secret-for-api-tests".to_string();
-
-    // We need PostgreSQL repos but mock rate limiter, so we manually build the container
-    use backend::repositories::postgres::postgres_user_repository::PostgresUserRepository;
-    use backend::repositories::postgres::postgres_refresh_token_repository::PostgresRefreshTokenRepository;
-    use backend::repositories::postgres::postgres_verification_token_repository::PostgresVerificationTokenRepository;
-    use backend::repositories::postgres::postgres_incident_timer_repository::PostgresIncidentTimerRepository;
-    use backend::repositories::postgres::postgres_phrase_repository::PostgresPhraseRepository;
-    use backend::repositories::postgres::postgres_admin_repository::PostgresAdminRepository;
-    use backend::services::auth::AuthService;
-    use backend::services::email::MockEmailService;
-    use backend::services::incident_timer::IncidentTimerService;
-    use backend::services::phrase::PhraseService;
-    use backend::services::admin::{UserManagementService, PhraseModerationService, StatsService};
-
-    // Create mock email service for testing
-    let email_service = Arc::new(MockEmailService::new());
-
-    let auth_service = Arc::new(AuthService::builder()
-        .user_repository(Box::new(PostgresUserRepository::new(test_container.pool.clone())))
-        .refresh_token_repository(Box::new(PostgresRefreshTokenRepository::new(test_container.pool.clone())))
-        .verification_token_repository(Box::new(PostgresVerificationTokenRepository::new(test_container.pool.clone())))
-        .email_service(Box::new(email_service.as_ref().clone()))
-        .jwt_secret(jwt_secret.clone())
-        .build());
-
-    let incident_timer_service = Arc::new(IncidentTimerService::new(
-        Box::new(PostgresIncidentTimerRepository::new(test_container.pool.clone()))
-    ));
-
-    let phrase_service = Arc::new(PhraseService::new(
-        Box::new(PostgresPhraseRepository::new(test_container.pool.clone()))
-    ));
-
-    let admin_service = Arc::new(UserManagementService::new(
-        Box::new(PostgresUserRepository::new(test_container.pool.clone())),
-        Box::new(PostgresRefreshTokenRepository::new(test_container.pool.clone())),
-        Box::new(PostgresAdminRepository::new(test_container.pool.clone())),
-    ));
-
-    let phrase_moderation_service = Arc::new(PhraseModerationService::new(
-        Box::new(PostgresPhraseRepository::new(test_container.pool.clone()))
-    ));
-
-    let stats_service = Arc::new(StatsService::new(
-        Box::new(PostgresPhraseRepository::new(test_container.pool.clone())),
-        Box::new(PostgresAdminRepository::new(test_container.pool.clone())),
-    ));
-
-    // Use mock rate limiter - no Redis needed!
-    let rate_limit_service = Arc::new(MockRateLimitService::new());
-
-    // Create cleanup service
-    let cleanup_service = Arc::new(backend::services::cleanup::CleanupService::new(
-        Box::new(PostgresRefreshTokenRepository::new(test_container.pool.clone())),
-        Box::new(PostgresVerificationTokenRepository::new(test_container.pool.clone())),
-    ));
-
-    let container = ServiceContainer {
-        auth_service,
-        incident_timer_service,
-        phrase_service,
-        admin_service,
-        phrase_moderation_service,
-        stats_service,
-        rate_limit_service,
-        cleanup_service,
-    };
-    
-    // Create test server
-    let pool_clone = test_container.pool.clone();
-    let srv = actix_test::start(move || {
-        App::new()
-            .app_data(web::Data::new(pool_clone.clone()))
-            .app_data(web::Data::from(container.auth_service.clone()))
-            .app_data(web::Data::from(container.incident_timer_service.clone()))
-            .app_data(web::Data::from(container.phrase_service.clone()))
-            .app_data(web::Data::from(container.admin_service.clone()))
-            .app_data(web::Data::from(container.phrase_moderation_service.clone()))
-            .app_data(web::Data::from(container.stats_service.clone()))
-            .app_data(web::Data::from(container.rate_limit_service.clone()))
-            .configure(routes::configure_app_routes)
-    });
-
-    (srv, test_container.pool.clone(), test_container, email_service)
-}
-
-/// Create a test app with testcontainers database and custom Redis URL
-/// Used in: rate_limiting_integration_tests.rs for testing with real Redis backend
-#[allow(dead_code)]
-pub async fn create_test_app_with_redis(redis_url: &str) -> (actix_test::TestServer, PgPool, TestContainer) {
-    use backend::services::container::ServiceContainer;
-    use backend::routes;
-    use actix_web::{web, App};
-    use actix_test;
-
-    let test_container = TestContainer::new().await.expect("Failed to create test container");
-
-    // Create service container with custom Redis URL
-    let jwt_secret = "test-jwt-secret-for-api-tests".to_string();
-    let container = ServiceContainer::new_development(test_container.pool.clone(), jwt_secret, redis_url.to_string());
-
-    // Create test server
-    let pool_clone = test_container.pool.clone();
-    let srv = actix_test::start(move || {
-        App::new()
-            .app_data(web::Data::new(pool_clone.clone()))
-            .app_data(web::Data::from(container.auth_service.clone()))
-            .app_data(web::Data::from(container.incident_timer_service.clone()))
-            .app_data(web::Data::from(container.phrase_service.clone()))
-            .app_data(web::Data::from(container.admin_service.clone()))
-            .app_data(web::Data::from(container.phrase_moderation_service.clone()))
-            .app_data(web::Data::from(container.stats_service.clone()))
-            .app_data(web::Data::from(container.rate_limit_service.clone()))
-            .configure(routes::configure_app_routes)
-    });
-
-    (srv, test_container.pool.clone(), test_container)
-}
-
-/// Create a test app with a specific user pre-created
-/// Used in: Currently unused but available for future test scenarios
-#[allow(dead_code)]
-pub async fn create_test_app_with_user(
-    email: &str,
-    password_hash: &str,
-    display_name: &str,
-    slug: &str,
-) -> Result<(actix_test::TestServer, PgPool, backend::models::db::user::User, TestContainer)> {
-    let (srv, pool, test_container, _email_service) = create_test_app_with_testcontainers().await;
-
-    // Create test user directly in database
-    let user = create_test_user_in_db(
-        &pool,
-        email,
-        password_hash,
-        display_name,
-        slug,
-    ).await?;
-
-    Ok((srv, pool, user, test_container))
-}
-
-/// Create a test app with admin user pre-created
-/// Used in: testcontainers_admin_api_tests.rs (12 times) - e.g. test_get_system_stats_success(), test_deactivate_user_success()
-#[allow(dead_code)]
-pub async fn create_test_app_with_admin_user(
-    email: &str,
-    password_hash: &str,
-    display_name: &str,
-    slug: &str,
-) -> Result<(actix_test::TestServer, PgPool, backend::models::db::user::User, TestContainer)> {
-    let (srv, pool, test_container, _email_service) = create_test_app_with_testcontainers().await;
-
-    // Create test user
-    let user = create_test_user_in_db(
-        &pool,
-        email,
-        password_hash,
-        display_name,
-        slug,
-    ).await?;
-
-    // Add admin role
-    add_admin_role_to_user(&pool, user.id).await?;
-
-    Ok((srv, pool, user, test_container))
-}
 
 // ============================================================================
 // USER CREATION AND MANAGEMENT
@@ -616,6 +432,7 @@ pub async fn add_admin_role_to_user(pool: &sqlx::PgPool, user_id: uuid::Uuid) ->
 }
 
 /// Assign admin role to a user (wrapper for add_admin_role_to_user)
+#[allow(dead_code)]
 pub async fn assign_admin_role(pool: &sqlx::PgPool, user_id: uuid::Uuid) {
     add_admin_role_to_user(pool, user_id).await.expect("Failed to assign admin role");
 }
@@ -940,37 +757,3 @@ impl TestContainer {
 // ============================================================================
 // INTEGRATION TEST HELPERS (Testcontainers approach)
 // ============================================================================
-
-/// Create a test app for integration tests using testcontainers
-/// Used in: Currently unused but available for future integration test scenarios
-#[allow(dead_code)]
-pub async fn create_integration_test_app() -> Result<(actix_test::TestServer, sqlx::PgPool, TestContainer)> {
-    let (srv, pool, test_container, _email_service) = create_test_app_with_testcontainers().await;
-    Ok((srv, pool, test_container))
-}
-
-/// Create a test app with user for integration tests
-/// Used in: Currently unused but available for future integration test scenarios
-#[allow(dead_code)]
-pub async fn create_integration_test_app_with_user(
-    email: &str,
-    password_hash: &str,
-    display_name: &str,
-    slug: &str,
-) -> Result<(actix_test::TestServer, sqlx::PgPool, backend::models::db::user::User, TestContainer)> {
-    let (srv, pool, user, test_container) = create_test_app_with_user(email, password_hash, display_name, slug).await?;
-    Ok((srv, pool, user, test_container))
-}
-
-/// Create a test app with admin user for integration tests
-/// Used in: Currently unused but available for future integration test scenarios
-#[allow(dead_code)]
-pub async fn create_integration_test_app_with_admin_user(
-    email: &str,
-    password_hash: &str,
-    display_name: &str,
-    slug: &str,
-) -> Result<(actix_test::TestServer, sqlx::PgPool, backend::models::db::user::User, TestContainer)> {
-    let (srv, pool, user, test_container) = create_test_app_with_admin_user(email, password_hash, display_name, slug).await?;
-    Ok((srv, pool, user, test_container))
-}

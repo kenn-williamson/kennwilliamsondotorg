@@ -3,7 +3,8 @@ use testcontainers::{
     runners::AsyncRunner,
     GenericImage,
 };
-use backend::middleware::rate_limiter::{RedisRateLimitService, RateLimitConfig, RateLimitServiceTrait};
+use backend::middleware::rate_limiter::{RedisRateLimitService, RateLimitServiceTrait};
+use backend::middleware::rate_limiter::config::RateLimitConfig;
 
 #[actix_web::test]
 async fn test_redis_rate_limiting_integration() {

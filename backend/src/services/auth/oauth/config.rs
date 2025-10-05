@@ -14,6 +14,7 @@ pub type ConfiguredBasicClient = oauth2::basic::BasicClient<
 
 /// Google OAuth configuration
 #[derive(Clone)]
+#[allow(dead_code)]
 pub struct GoogleOAuthConfig {
     pub client_id: String,
     pub client_secret: String,
@@ -65,9 +66,11 @@ mod tests {
     #[test]
     fn test_config_from_env_requires_all_variables() {
         // Clear environment
-        std::env::remove_var("GOOGLE_CLIENT_ID");
-        std::env::remove_var("GOOGLE_CLIENT_SECRET");
-        std::env::remove_var("GOOGLE_REDIRECT_URI");
+        unsafe {
+            std::env::remove_var("GOOGLE_CLIENT_ID");
+            std::env::remove_var("GOOGLE_CLIENT_SECRET");
+            std::env::remove_var("GOOGLE_REDIRECT_URI");
+        }
 
         let result = GoogleOAuthConfig::from_env();
         assert!(result.is_err());
@@ -75,9 +78,11 @@ mod tests {
 
     #[test]
     fn test_config_from_env_success() {
-        std::env::set_var("GOOGLE_CLIENT_ID", "test_client_id");
-        std::env::set_var("GOOGLE_CLIENT_SECRET", "test_client_secret");
-        std::env::set_var("GOOGLE_REDIRECT_URI", "https://localhost/callback");
+        unsafe {
+            std::env::set_var("GOOGLE_CLIENT_ID", "test_client_id");
+            std::env::set_var("GOOGLE_CLIENT_SECRET", "test_client_secret");
+            std::env::set_var("GOOGLE_REDIRECT_URI", "https://localhost/callback");
+        }
 
         let result = GoogleOAuthConfig::from_env();
         assert!(result.is_ok());

@@ -15,6 +15,7 @@ pub struct CreateSuppressionData {
 
 /// Repository trait for managing email suppressions
 #[async_trait]
+#[allow(dead_code)]
 pub trait EmailSuppressionRepository: Send + Sync {
     /// Create a new email suppression
     async fn create_suppression(

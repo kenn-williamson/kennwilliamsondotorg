@@ -37,6 +37,7 @@ impl AuthService {
 
     /// Legacy constructor for existing tests (will be phased out)
     /// Prefer using AuthService::builder() for new code
+    #[allow(dead_code)] // Legacy API for existing tests
     pub fn new(
         user_repository: Box<dyn UserRepository>,
         refresh_token_repository: Box<dyn RefreshTokenRepository>,

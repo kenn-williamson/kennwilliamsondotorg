@@ -1,7 +1,7 @@
 /// Phase 3 Unit Tests: SNS Webhook Message Handling
 /// Tests the logic for parsing and processing SNS notifications (bounces, complaints)
 
-use backend::services::webhooks::sns_handler::{SnsHandler, SnsMessage, BounceType};
+use backend::services::webhooks::sns_handler::{SnsHandler, SnsMessage};
 use backend::repositories::mocks::MockEmailSuppressionRepository;
 use backend::repositories::traits::email_suppression_repository::EmailSuppressionRepository;
 use chrono::Utc;
@@ -22,8 +22,8 @@ async fn test_parse_sns_subscription_confirmation() {
     };
 
     // When: Parsing message type
-    let handler = SnsHandler::new(Box::new(MockEmailSuppressionRepository::new()));
-    let message_type = handler.get_message_type(&sns_message);
+    let _handler = SnsHandler::new(Box::new(MockEmailSuppressionRepository::new()));
+    let message_type = &sns_message.message_type;
 
     // Then: Should identify as subscription confirmation
     assert_eq!(message_type, "SubscriptionConfirmation");

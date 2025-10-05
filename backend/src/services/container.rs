@@ -1,6 +1,7 @@
 use sqlx::PgPool;
 use std::sync::Arc;
 
+#[cfg(feature = "mocks")]
 use crate::repositories::mocks::{
     MockAdminRepository, MockIncidentTimerRepository, MockPhraseRepository, MockPkceStorage,
     MockRefreshTokenRepository, MockUserRepository, MockVerificationTokenRepository,
@@ -19,12 +20,14 @@ use crate::repositories::redis::RedisPkceStorage;
 use super::admin::{PhraseModerationService, StatsService, UserManagementService};
 use super::auth::AuthService;
 use super::cleanup::CleanupService;
-use super::email::{MockEmailService, SesEmailService};
+#[cfg(feature = "mocks")]
+use super::email::MockEmailService;
+use super::email::SesEmailService;
 use super::incident_timer::IncidentTimerService;
 use super::phrase::PhraseService;
-use crate::middleware::rate_limiter::{
-    MockRateLimitService, RateLimitServiceTrait, RedisRateLimitService,
-};
+#[cfg(feature = "mocks")]
+use crate::middleware::rate_limiter::MockRateLimitService;
+use crate::middleware::rate_limiter::{RateLimitServiceTrait, RedisRateLimitService};
 
 /// Centralized service container for dependency injection
 pub struct ServiceContainer {
@@ -129,6 +132,7 @@ impl ServiceContainer {
     }
 
     /// Factory method for testing with mocks
+    #[cfg(feature = "mocks")]
     pub fn new_for_testing(jwt_secret: String) -> Self {
         // Create services with mock repositories for testing using builder pattern
         let auth_service = Arc::new(
@@ -191,6 +195,7 @@ impl ServiceContainer {
     }
 
     /// Testing environment - use mocks
+    #[cfg(feature = "mocks")]
     pub fn new_testing(jwt_secret: String) -> Self {
         Self::new_for_testing(jwt_secret)
     }

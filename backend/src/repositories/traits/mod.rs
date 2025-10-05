@@ -8,7 +8,6 @@ pub mod user_repository;
 pub mod verification_token_repository;
 
 pub use admin_repository::AdminRepository;
-pub use email_suppression_repository::EmailSuppressionRepository;
 pub use incident_timer_repository::IncidentTimerRepository;
 pub use phrase_repository::PhraseRepository;
 pub use pkce_storage::PkceStorage;

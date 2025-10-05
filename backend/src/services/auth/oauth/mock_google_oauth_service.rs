@@ -8,11 +8,13 @@ use crate::models::oauth::GoogleUserInfo;
 
 /// Mock Google OAuth service for testing
 #[derive(Clone)]
+#[allow(dead_code)] // Testing infrastructure - used in test files
 pub struct MockGoogleOAuthService {
     state: Arc<Mutex<MockState>>,
 }
 
 #[derive(Default)]
+#[allow(dead_code)] // Testing infrastructure - internal state for MockGoogleOAuthService
 struct MockState {
     /// Whether get_authorization_url should fail
     pub url_should_fail: bool,
@@ -27,6 +29,7 @@ struct MockState {
 }
 
 impl MockGoogleOAuthService {
+    #[allow(dead_code)] // Testing infrastructure API
     pub fn new() -> Self {
         Self {
             state: Arc::new(Mutex::new(MockState::default())),
@@ -34,30 +37,35 @@ impl MockGoogleOAuthService {
     }
 
     /// Configure mock to fail on get_authorization_url
+    #[allow(dead_code)] // Testing infrastructure API
     pub fn with_url_failure(self) -> Self {
         self.state.lock().unwrap().url_should_fail = true;
         self
     }
 
     /// Configure mock to fail on exchange_code_for_token
+    #[allow(dead_code)] // Testing infrastructure API
     pub fn with_exchange_failure(self) -> Self {
         self.state.lock().unwrap().exchange_should_fail = true;
         self
     }
 
     /// Configure mock to fail on get_user_info
+    #[allow(dead_code)] // Testing infrastructure API
     pub fn with_user_info_failure(self) -> Self {
         self.state.lock().unwrap().user_info_should_fail = true;
         self
     }
 
     /// Configure mock to return specific user info
+    #[allow(dead_code)] // Testing infrastructure API
     pub fn with_user_info(self, user_info: GoogleUserInfo) -> Self {
         self.state.lock().unwrap().mock_user_info = Some(user_info);
         self
     }
 
     /// Configure mock to return specific access token
+    #[allow(dead_code)] // Testing infrastructure API
     pub fn with_access_token(self, token: String) -> Self {
         self.state.lock().unwrap().mock_access_token = Some(token);
         self

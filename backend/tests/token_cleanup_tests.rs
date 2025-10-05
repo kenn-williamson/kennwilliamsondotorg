@@ -7,7 +7,6 @@ mod test_helpers;
 async fn test_cleanup_expired_refresh_tokens() {
     use backend::repositories::postgres::postgres_refresh_token_repository::PostgresRefreshTokenRepository;
     use backend::repositories::postgres::postgres_verification_token_repository::PostgresVerificationTokenRepository;
-    use backend::repositories::traits::{RefreshTokenRepository, VerificationTokenRepository};
     use backend::services::cleanup::CleanupService;
 
     let test_container = test_helpers::TestContainer::new()
@@ -67,7 +66,6 @@ async fn test_cleanup_expired_refresh_tokens() {
 async fn test_cleanup_expired_verification_tokens() {
     use backend::repositories::postgres::postgres_refresh_token_repository::PostgresRefreshTokenRepository;
     use backend::repositories::postgres::postgres_verification_token_repository::PostgresVerificationTokenRepository;
-    use backend::repositories::traits::{RefreshTokenRepository, VerificationTokenRepository};
     use backend::services::cleanup::CleanupService;
 
     let test_container = test_helpers::TestContainer::new()
@@ -140,7 +138,6 @@ async fn test_cleanup_expired_verification_tokens() {
 async fn test_cleanup_both_token_types() {
     use backend::repositories::postgres::postgres_refresh_token_repository::PostgresRefreshTokenRepository;
     use backend::repositories::postgres::postgres_verification_token_repository::PostgresVerificationTokenRepository;
-    use backend::repositories::traits::{RefreshTokenRepository, VerificationTokenRepository};
     use backend::services::cleanup::CleanupService;
 
     let test_container = test_helpers::TestContainer::new()
@@ -247,7 +244,6 @@ async fn test_cleanup_both_token_types() {
 async fn test_cleanup_no_expired_tokens() {
     use backend::repositories::postgres::postgres_refresh_token_repository::PostgresRefreshTokenRepository;
     use backend::repositories::postgres::postgres_verification_token_repository::PostgresVerificationTokenRepository;
-    use backend::repositories::traits::{RefreshTokenRepository, VerificationTokenRepository};
     use backend::services::cleanup::CleanupService;
 
     let test_container = test_helpers::TestContainer::new()
@@ -302,7 +298,6 @@ async fn test_cleanup_no_expired_tokens() {
 async fn test_cleanup_empty_database() {
     use backend::repositories::postgres::postgres_refresh_token_repository::PostgresRefreshTokenRepository;
     use backend::repositories::postgres::postgres_verification_token_repository::PostgresVerificationTokenRepository;
-    use backend::repositories::traits::{RefreshTokenRepository, VerificationTokenRepository};
     use backend::services::cleanup::CleanupService;
 
     let test_container = test_helpers::TestContainer::new()

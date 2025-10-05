@@ -110,9 +110,6 @@ impl SnsHandler {
     }
 
     /// Get the message type from SNS message
-    pub fn get_message_type<'a>(&self, message: &'a SnsMessage) -> &'a str {
-        &message.message_type
-    }
 
     /// Handle SNS notification (bounce or complaint)
     pub async fn handle_notification(&self, sns_message: &SnsMessage) -> Result<()> {

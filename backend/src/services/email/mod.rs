@@ -1,9 +1,11 @@
 use anyhow::Result;
 use async_trait::async_trait;
 
+#[cfg(feature = "mocks")]
 pub mod mock_email_service;
 pub mod ses_email_service;
 
+#[cfg(feature = "mocks")]
 pub use mock_email_service::MockEmailService;
 pub use ses_email_service::SesEmailService;
 

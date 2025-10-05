@@ -13,9 +13,13 @@ pub struct MockEmailService {
 
 #[derive(Debug, Clone)]
 pub struct SentEmail {
+    #[allow(dead_code)] // Used for test assertions
     pub to_email: String,
+    #[allow(dead_code)] // Used for test assertions
     pub to_name: Option<String>,
+    #[allow(dead_code)] // Used for test assertions
     pub verification_token: String,
+    #[allow(dead_code)] // Used for test assertions
     pub frontend_url: String,
 }
 
@@ -27,16 +31,19 @@ impl MockEmailService {
     }
 
     /// Get all sent emails (for testing assertions)
+    #[allow(dead_code)] // Testing infrastructure API
     pub fn get_sent_emails(&self) -> Vec<SentEmail> {
         self.sent_emails.lock().unwrap().clone()
     }
 
     /// Clear all sent emails (for test cleanup)
+    #[allow(dead_code)] // Testing infrastructure API
     pub fn clear(&self) {
         self.sent_emails.lock().unwrap().clear();
     }
 
     /// Get count of sent emails
+    #[allow(dead_code)] // Testing infrastructure API
     pub fn count(&self) -> usize {
         self.sent_emails.lock().unwrap().len()
     }

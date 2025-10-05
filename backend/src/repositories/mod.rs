@@ -1,3 +1,4 @@
+#[cfg(feature = "mocks")]
 pub mod mocks;
 pub mod postgres;
 pub mod redis;

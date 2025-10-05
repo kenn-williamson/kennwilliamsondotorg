@@ -12,6 +12,7 @@ use crate::repositories::traits::email_suppression_repository::{
 
 /// Mock implementation of EmailSuppressionRepository for testing
 #[derive(Clone)]
+#[allow(dead_code)]
 pub struct MockEmailSuppressionRepository {
     suppressions: Arc<Mutex<HashMap<String, EmailSuppression>>>,
 }

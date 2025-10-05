@@ -23,10 +23,12 @@ impl MockRateLimitService {
         }
     }
 
+    #[allow(dead_code)]
     pub fn set_should_limit(&mut self, should_limit: bool) {
         self.should_limit = should_limit;
     }
 
+    #[allow(dead_code)]
     pub fn reset(&mut self) {
         self.should_limit = false;
         self.increment_called = false;

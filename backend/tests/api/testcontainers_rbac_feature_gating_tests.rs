@@ -155,7 +155,7 @@ async fn test_unverified_user_blocked_from_creating_timer() {
         "notes": "Test timer"
     });
 
-    let mut timer_resp = ctx.server
+    let timer_resp = ctx.server
         .post("/backend/protected/incident-timers")
         .insert_header(("Authorization", format!("Bearer {}", token)))
         .send_json(&timer_body)
@@ -259,7 +259,7 @@ async fn test_unverified_user_blocked_from_phrase_suggestion() {
         "phrase_text": "Test phrase suggestion"
     });
 
-    let mut suggestion_resp = ctx.server
+    let suggestion_resp = ctx.server
         .post("/backend/protected/phrases/suggestions")
         .insert_header(("Authorization", format!("Bearer {}", token)))
         .send_json(&suggestion_body)

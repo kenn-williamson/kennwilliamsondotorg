@@ -42,6 +42,7 @@ async fn main() -> std::io::Result<()> {
         .unwrap_or_else(|_| "development".to_string())
         .as_str()
     {
+        #[cfg(feature = "mocks")]
         "testing" => services::container::ServiceContainer::new_testing(jwt_secret),
         "production" => services::container::ServiceContainer::new_production(
             pool.clone(),

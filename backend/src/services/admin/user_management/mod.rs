@@ -93,6 +93,7 @@ impl UserManagementService {
     }
 
     /// Check if user is admin
+    #[allow(dead_code)] // Part of admin service API for future features
     pub async fn is_user_admin(&self, user_id: Uuid) -> anyhow::Result<bool> {
         let roles = self.user_repository.get_user_roles(user_id).await?;
         Ok(roles.contains(&"admin".to_string()))

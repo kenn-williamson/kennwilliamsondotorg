@@ -907,6 +907,7 @@ dependencies = [
  "async-trait",
  "aws-config",
  "aws-sdk-sesv2",
+ "backend",
  "bcrypt",
  "chrono",
  "dotenv",
