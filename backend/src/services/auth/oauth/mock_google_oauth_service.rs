@@ -122,7 +122,11 @@ impl GoogleOAuthServiceTrait for MockGoogleOAuthService {
             sub: "mock_google_user_id".to_string(),
             email: "mock@example.com".to_string(),
             name: Some("Mock User".to_string()),
-            verified_email: true,
+            email_verified: Some(true),
+            picture: Some("https://example.com/mock_user.jpg".to_string()),
+            given_name: Some("Mock".to_string()),
+            family_name: Some("User".to_string()),
+            locale: Some("en".to_string()),
         }))
     }
 }
@@ -171,7 +175,11 @@ mod tests {
             sub: "custom_id".to_string(),
             email: "custom@example.com".to_string(),
             name: Some("Custom Name".to_string()),
-            verified_email: false,
+            given_name: None,
+            family_name: None,
+            picture: None,
+            email_verified: Some(false),
+            locale: None,
         };
 
         let mock = MockGoogleOAuthService::new().with_user_info(custom_user_info.clone());
@@ -179,6 +187,6 @@ mod tests {
         let result = mock.get_user_info("token").await.unwrap();
         assert_eq!(result.sub, "custom_id");
         assert_eq!(result.email, "custom@example.com");
-        assert_eq!(result.verified_email, false);
+        assert_eq!(result.email_verified, Some(false));
     }
 }

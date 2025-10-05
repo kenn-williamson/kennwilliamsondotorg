@@ -1,10 +1,11 @@
 <template>
-  <div id="app" class="min-h-screen bg-gradient-to-br from-slate-50 to-sky-50">
+  <div id="app" class="min-h-screen bg-gradient-to-br from-slate-50 to-sky-50 flex flex-col">
     <NuxtRouteAnnouncer />
     <AppHeader />
-    <main class="min-h-screen">
+    <main class="flex-grow">
       <NuxtPage />
     </main>
+    <AppFooter />
   </div>
 </template>
 

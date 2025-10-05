@@ -103,7 +103,7 @@ describe('useEmailVerification', () => {
 
       // Assert
       expect(mockSmartFetch).toHaveBeenCalledWith(
-        API_ROUTES.PUBLIC.VERIFY_EMAIL,
+        API_ROUTES.PUBLIC.AUTH.VERIFY_EMAIL,
         {
           method: 'GET',
           query: { token: mockToken },

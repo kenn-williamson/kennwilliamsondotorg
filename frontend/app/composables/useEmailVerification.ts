@@ -11,7 +11,7 @@ import type { SendVerificationEmailResponse, VerifyEmailResponse } from '#shared
 export const useEmailVerification = () => {
   // Create dependencies
   const smartFetch = useSmartFetch()
-  const { fetch: refreshSession } = useUserSession()
+  const { clearToken } = useJwtManager()
 
   // Use base service for request execution
   const { executeRequest, isLoading, error, hasError } = useBaseService()
@@ -38,14 +38,23 @@ export const useEmailVerification = () => {
       async () => {
         // Verify the email with the backend (direct route - useSmartFetch adds /backend prefix)
         const result = await smartFetch<VerifyEmailResponse>(
-          API_ROUTES.PUBLIC.VERIFY_EMAIL,
+          API_ROUTES.PUBLIC.AUTH.VERIFY_EMAIL,
           {
             method: 'GET',
             query: { token },
           }
         )
 
-        // Refresh session to get updated user data with email_verified flag
+        // Fetch fresh user data with updated roles and update session
+        // /api/auth/me forces a token refresh and returns updated user data
+        const freshUserData = await $fetch(API_ROUTES.API.AUTH.ME)
+        console.log('✅ [Email Verification] Got fresh user data with roles:', freshUserData.roles)
+
+        // Clear JWT cache to force regeneration with updated roles on next request
+        clearToken()
+
+        // Refresh the client-side session to get the updated user data
+        const { fetch: refreshSession } = useUserSession()
         await refreshSession()
 
         return result

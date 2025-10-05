@@ -39,7 +39,10 @@ definePageMeta({
 const route = useRoute()
 const router = useRouter()
 
-const { handleOAuthCallback, isLoading, error, hasError } = useGoogleOAuth()
+const { handleOAuthCallback, isLoading, error: oauthError, hasError } = useGoogleOAuth()
+
+// Local error state for this component
+const error = ref<string | null>(null)
 
 // Handle OAuth callback on mount
 onMounted(async () => {
@@ -63,10 +66,15 @@ onMounted(async () => {
     // Complete OAuth flow
     await handleOAuthCallback(code, state)
 
+    // Refresh the session to pick up the new user data
+    const { fetch: refreshSession } = useUserSession()
+    await refreshSession()
+
     // Success - redirect to home page
     await router.push('/')
   } catch (err) {
-    // Error is already set by the composable
+    // Use the error from the composable or fallback to a generic message
+    error.value = oauthError.value || 'Authentication failed'
     console.error('OAuth callback error:', err)
   }
 })

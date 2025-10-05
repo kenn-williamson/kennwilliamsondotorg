@@ -1,60 +1,38 @@
 import { defineEventHandler, createError } from 'h3'
-import { useRuntimeConfig } from '#imports'
-import { getClientInfo } from '../../utils/client-ip'
-import { API_ROUTES } from '#shared/config/api-routes'
-import { requireValidJwtToken } from '../../utils/jwt-handler'
+import { performRefresh } from '../../utils/jwt-handler'
 
 export default defineEventHandler(async (event) => {
   try {
-    // Get valid JWT token (with automatic refresh if needed)
-    const jwtToken = await requireValidJwtToken(event)
-
-    console.log('🔍 [Me API] Fetching current user')
-
-    const config = useRuntimeConfig()
-    
-    // Extract client information for proper IP forwarding
-    const clientInfo = getClientInfo(event)
-    
-    console.log(`🔍 [Me API] Client IP: ${clientInfo.ip}, User-Agent: ${clientInfo.userAgent}`)
-    
-    const response = await $fetch<{
-      id: string
-      email: string
-      display_name: string
-      slug: string
-      roles: string[]
-      created_at: string
-    }>(`${config.apiBase}${API_ROUTES.PROTECTED.AUTH.ME}`, {
-      method: 'GET',
-      headers: {
-        'Authorization': `Bearer ${jwtToken}`,
-        // Forward the original client IP headers
-        'X-Real-IP': clientInfo.ip,
-        'X-Forwarded-For': clientInfo.ip,
-        'X-Forwarded-Proto': clientInfo.protocol,
-        'User-Agent': clientInfo.userAgent
-      }
-    })
-
-    console.log('✅ [Me API] Got fresh user data from backend')
-
+    // Force refresh to get new JWT with latest user data and roles from database
     const session = await getUserSession(event)
-    await setUserSession(event, {
-      ...session,
-      user: {
-        id: response.id,
-        email: response.email,
-        display_name: response.display_name,
-        slug: response.slug,
-        roles: response.roles,
-        created_at: response.created_at
-      }
-    })
+    const refreshToken = session?.secure?.refreshToken
 
-    console.log('✅ [Me API] Updated session with fresh user data')
+    if (!refreshToken) {
+      throw createError({
+        statusCode: 401,
+        statusMessage: 'Authentication required'
+      })
+    }
 
-    return response
+    console.log('🔄 [Me API] Forcing token refresh to get latest user data and roles')
+
+    // performRefresh calls the refresh endpoint which returns full AuthResponse
+    // and automatically updates the session with fresh user data and tokens
+    await performRefresh(event, session, refreshToken)
+
+    // Get the updated session with fresh user data
+    const updatedSession = await getUserSession(event)
+
+    if (!updatedSession?.user) {
+      throw createError({
+        statusCode: 401,
+        statusMessage: 'Failed to refresh session'
+      })
+    }
+
+    console.log('✅ [Me API] Session refreshed with latest user data and roles:', updatedSession.user.roles)
+
+    return updatedSession.user
   } catch (error: any) {
     console.error('❌ [Me API] Failed to fetch user data:', error.message)
     throw createError({

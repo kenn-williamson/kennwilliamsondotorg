@@ -86,31 +86,48 @@ export async function getValidJwtToken(event: any): Promise<string | null> {
 
 /**
  * Perform the actual refresh operation
+ * @param event - Nuxt event object
+ * @param session - Current user session
+ * @param refreshToken - Refresh token to use
+ * @returns New JWT token or null if refresh failed
  */
-async function performRefresh(event: any, session: any, refreshToken: string): Promise<string | null> {
+export async function performRefresh(event: any, session: any, refreshToken: string): Promise<string | null> {
   try {
     const config = useRuntimeConfig()
     const refreshResponse = await $fetch<{
       token: string
       refresh_token: string
+      user: {
+        id: string
+        email: string
+        display_name: string
+        slug: string
+        roles: string[]
+        real_name?: string
+        google_user_id?: string
+        email_verified: boolean
+        created_at: string
+      }
     }>(`${config.apiBase}${API_ROUTES.PUBLIC.AUTH.REFRESH}`, {
       method: 'POST',
       body: { refresh_token: refreshToken }
     })
-    
-    console.log('✅ [JWT Handler] Refresh successful, got new tokens')
+
+    console.log('✅ [JWT Handler] Refresh successful, got new tokens and user data')
     console.log('🔄 [JWT Handler] New JWT:', refreshResponse.token.substring(0, 20) + '...')
     console.log('🔄 [JWT Handler] New refresh token:', refreshResponse.refresh_token.substring(0, 20) + '...')
+    console.log('🔄 [JWT Handler] User roles:', refreshResponse.user.roles)
     
     if (refreshResponse.token) {
-      console.log('🔄 [JWT Handler] Updating session with new tokens...')
+      console.log('🔄 [JWT Handler] Updating session with new tokens and user data...')
       await setUserSession(event, {
+        user: refreshResponse.user,
         secure: {
           jwtToken: refreshResponse.token,
           refreshToken: refreshResponse.refresh_token
         }
       })
-      console.log('✅ [JWT Handler] Session updated successfully')
+      console.log('✅ [JWT Handler] Session updated with fresh tokens and user data')
       
       // Re-read the session to ensure we have the latest data
       const updatedSession = await getUserSession(event)

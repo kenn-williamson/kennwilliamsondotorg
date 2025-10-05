@@ -119,7 +119,11 @@ impl AuthService {
                     .await?;
             }
 
-            existing_user
+            // Refetch user to get updated google_user_id and real_name
+            self.user_repository
+                .find_by_id(existing_user.id)
+                .await?
+                .ok_or_else(|| anyhow!("User not found after linking"))?
         } else {
             // Case 3: New user - create OAuth account
             self.create_new_oauth_user(google_user_info).await?
@@ -221,6 +225,7 @@ impl AuthService {
                 slug: user.slug,
                 roles,
                 real_name: user.real_name,
+                google_user_id: user.google_user_id,
                 email_verified,
                 created_at: user.created_at,
             },
@@ -547,10 +552,14 @@ mod tests {
     #[tokio::test]
     async fn test_successful_user_info_fetch() {
         let user_info = GoogleUserInfo {
+            given_name: None,
+            family_name: None,
+            picture: None,
+            locale: None,
             sub: "google_123".to_string(),
             email: "test@example.com".to_string(),
             name: Some("Test User".to_string()),
-            verified_email: true,
+            email_verified: Some(true),
         };
 
         let mock_oauth = MockGoogleOAuthService::new().with_user_info(user_info);
@@ -568,10 +577,14 @@ mod tests {
     #[tokio::test]
     async fn test_user_info_contains_required_fields() {
         let user_info = GoogleUserInfo {
+            given_name: None,
+            family_name: None,
+            picture: None,
+            locale: None,
             sub: "google_456".to_string(),
             email: "user@example.com".to_string(),
             name: Some("User Name".to_string()),
-            verified_email: true,
+            email_verified: Some(true),
         };
 
         let mock_oauth = MockGoogleOAuthService::new().with_user_info(user_info);
@@ -606,10 +619,14 @@ mod tests {
         // Google OAuth users should still get email-verified role even if verified_email=false
         // because Google is a trusted provider
         let user_info = GoogleUserInfo {
+            given_name: None,
+            family_name: None,
+            picture: None,
+            locale: None,
             sub: "google_789".to_string(),
             email: "unverified@example.com".to_string(),
             name: Some("Unverified User".to_string()),
-            verified_email: false, // Even if Google says unverified
+            email_verified: Some(false), // Even if Google says unverified
         };
 
         let mock_oauth = MockGoogleOAuthService::new().with_user_info(user_info);
@@ -630,10 +647,14 @@ mod tests {
     #[tokio::test]
     async fn test_new_user_creates_oauth_user_with_email_verified_role() {
         let user_info = GoogleUserInfo {
+            given_name: None,
+            family_name: None,
+            picture: None,
+            locale: None,
             sub: "new_google_user".to_string(),
             email: "newuser@example.com".to_string(),
             name: Some("New User".to_string()),
-            verified_email: true,
+            email_verified: Some(true),
         };
 
         let mock_oauth = MockGoogleOAuthService::new().with_user_info(user_info);
@@ -655,10 +676,14 @@ mod tests {
         use uuid::Uuid;
 
         let user_info = GoogleUserInfo {
+            given_name: None,
+            family_name: None,
+            picture: None,
+            locale: None,
             sub: "existing_google_id".to_string(),
             email: "existing@example.com".to_string(),
             name: Some("Existing User".to_string()),
-            verified_email: true,
+            email_verified: Some(true),
         };
 
         let mock_oauth = MockGoogleOAuthService::new().with_user_info(user_info);
@@ -704,10 +729,14 @@ mod tests {
         use uuid::Uuid;
 
         let user_info = GoogleUserInfo {
+            given_name: None,
+            family_name: None,
+            picture: None,
+            locale: None,
             sub: "linking_google_id".to_string(),
             email: "verified@example.com".to_string(),
             name: Some("Link User".to_string()),
-            verified_email: true,
+            email_verified: Some(true),
         };
 
         let mock_oauth = MockGoogleOAuthService::new().with_user_info(user_info);
@@ -760,10 +789,14 @@ mod tests {
         use uuid::Uuid;
 
         let user_info = GoogleUserInfo {
+            given_name: None,
+            family_name: None,
+            picture: None,
+            locale: None,
             sub: "link_unverified_id".to_string(),
             email: "unverified@example.com".to_string(),
             name: Some("Link Test".to_string()),
-            verified_email: true,
+            email_verified: Some(true),
         };
 
         let mock_oauth = MockGoogleOAuthService::new().with_user_info(user_info);
@@ -816,10 +849,14 @@ mod tests {
     #[tokio::test]
     async fn test_jwt_tokens_include_correct_user_id_and_roles() {
         let user_info = GoogleUserInfo {
+            given_name: None,
+            family_name: None,
+            picture: None,
+            locale: None,
             sub: "jwt_test_id".to_string(),
             email: "jwt@example.com".to_string(),
             name: Some("JWT User".to_string()),
-            verified_email: true,
+            email_verified: Some(true),
         };
 
         let mock_oauth = MockGoogleOAuthService::new().with_user_info(user_info);
@@ -838,10 +875,14 @@ mod tests {
     #[tokio::test]
     async fn test_real_name_populated_from_google_profile() {
         let user_info = GoogleUserInfo {
+            given_name: None,
+            family_name: None,
+            picture: None,
+            locale: None,
             sub: "name_test_id".to_string(),
             email: "name@example.com".to_string(),
             name: Some("Real Name From Google".to_string()),
-            verified_email: true,
+            email_verified: Some(true),
         };
 
         let mock_oauth = MockGoogleOAuthService::new().with_user_info(user_info);
@@ -862,10 +903,14 @@ mod tests {
         use uuid::Uuid;
 
         let user_info = GoogleUserInfo {
+            given_name: None,
+            family_name: None,
+            picture: None,
+            locale: None,
             sub: "update_name_id".to_string(),
             email: "update@example.com".to_string(),
             name: Some("Updated Name".to_string()),
-            verified_email: true,
+            email_verified: Some(true),
         };
 
         let mock_oauth = MockGoogleOAuthService::new().with_user_info(user_info);

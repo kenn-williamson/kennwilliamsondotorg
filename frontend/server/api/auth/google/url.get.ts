@@ -10,7 +10,7 @@ export default defineEventHandler(async (event) => {
 
     const response = await $fetch<{
       url: string
-    }>(`${config.apiBase}${API_ROUTES.PUBLIC.GOOGLE_URL}`, {
+    }>(`${config.apiBase}${API_ROUTES.PUBLIC.AUTH.GOOGLE_URL}`, {
       method: 'GET',
     })
 

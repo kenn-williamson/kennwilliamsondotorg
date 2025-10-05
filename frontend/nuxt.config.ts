@@ -4,8 +4,10 @@ export default defineNuxtConfig({
   future: {
     compatibilityVersion: 4
   },
-  devtools: { enabled: true },
-  
+  debug: true,
+  devtools: { 
+    enabled: true,
+  },
   // TypeScript configuration
   typescript: {
     strict: true,

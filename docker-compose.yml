@@ -36,6 +36,16 @@ services:
       PORT: 8080
       RUST_LOG: ${RUST_LOG:-backend=info,actix_web=info}
       CORS_ORIGIN: ${CORS_ORIGIN:-http://localhost:3000}
+      GOOGLE_CLIENT_ID: ${GOOGLE_CLIENT_ID}
+      GOOGLE_CLIENT_SECRET: ${GOOGLE_CLIENT_SECRET}
+      GOOGLE_REDIRECT_URI: ${GOOGLE_REDIRECT_URI}
+      AWS_REGION: ${AWS_REGION}
+      SES_FROM_EMAIL: ${SES_FROM_EMAIL}
+      SES_REPLY_TO_EMAIL: ${SES_REPLY_TO_EMAIL}
+      FRONTEND_URL: ${FRONTEND_URL}
+      CLEANUP_INTERVAL_HOURS: ${CLEANUP_INTERVAL_HOURS:-24}
+    extra_hosts:
+      - "host.docker.internal:host-gateway"  # Allow access to EC2 instance metadata service for IAM role credentials
     ports:
       - "8080:8080"  # Remove in production
     depends_on:

@@ -25,6 +25,7 @@ pub struct UserResponse {
     pub slug: String,
     pub roles: Vec<String>,
     pub real_name: Option<String>,
+    pub google_user_id: Option<String>,
     pub email_verified: bool,
     pub created_at: DateTime<Utc>,
 }
@@ -99,6 +100,7 @@ impl UserResponse {
             slug: user.slug,
             roles,
             real_name: user.real_name,
+            google_user_id: user.google_user_id,
             email_verified,
             created_at: user.created_at,
         }

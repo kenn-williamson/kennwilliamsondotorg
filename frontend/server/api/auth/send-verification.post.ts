@@ -20,7 +20,7 @@ export default defineEventHandler(async (event) => {
 
     const response = await $fetch<{
       message: string
-    }>(`${config.apiBase}${API_ROUTES.PROTECTED.SEND_VERIFICATION}`, {
+    }>(`${config.apiBase}${API_ROUTES.PROTECTED.AUTH.SEND_VERIFICATION}`, {
       method: 'POST',
       headers: {
         'Authorization': `Bearer ${jwtToken}`,

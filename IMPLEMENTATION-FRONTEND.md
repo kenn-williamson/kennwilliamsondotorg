@@ -26,7 +26,8 @@ frontend/
 │   │       └── scroll.png
 │   ├── components/        # Vue components (feature-based organization)
 │   │   ├── Layout/        # Layout and navigation components
-│   │   │   └── AppHeader.vue # Responsive header with auth states
+│   │   │   ├── AppHeader.vue # Responsive header with auth states
+│   │   │   └── AppFooter.vue # Site footer with legal links and copyright
 │   │   ├── Timer/         # Timer feature components
 │   │   │   ├── TimerStats.vue     # Current timer display with SteamClock
 │   │   │   ├── TimerListItem.vue  # Individual timer row component
@@ -62,10 +63,16 @@ frontend/
 │   │   ├── about.vue      # About page (placeholder)
 │   │   ├── login.vue      # Authentication login page
 │   │   ├── register.vue   # User registration with dynamic URL preview
+│   │   ├── verify-email.vue # Email verification page
 │   │   ├── profile.vue    # User profile management page
+│   │   ├── privacy.vue    # Privacy Policy page
+│   │   ├── terms.vue      # Terms of Service page
 │   │   ├── incidents.vue  # Protected CRUD management
 │   │   ├── admin/         # Admin panel pages
 │   │   │   └── index.vue  # Admin panel main page
+│   │   ├── auth/          # OAuth callback pages
+│   │   │   └── google/
+│   │   │       └── callback.vue # Google OAuth callback handler
 │   │   └── [user_slug]/
 │   │       └── incident-timer.vue # Public timer display
 │   ├── stores/            # Pinia stores with embedded actions for SSR hydration
@@ -197,7 +204,9 @@ Page-specific aesthetics following [UX-LAYOUT.md](UX-LAYOUT.md):
 
 **Refactored Architecture**: All components have been migrated to the new store-based actions pattern, eliminating event emission antipatterns and improving maintainability. The data layer has been completely refactored for SSR hydration with stores containing embedded actions and curried services.
 
-**Layout**: AppHeader.vue (responsive header with auth states and mobile menu) ✅ **Refactored**
+**Layout Components** (2 components):
+- AppHeader.vue (responsive header with auth states and mobile menu) ✅ **Refactored**
+- AppFooter.vue (site footer with copyright and legal page links)
 
 **Timer Components** (10 components) ✅ **All Refactored**:
 - TimerStats.vue, TimerListItem.vue, TimerEditModal.vue, TimerResetModal.vue
@@ -218,9 +227,18 @@ Page-specific aesthetics following [UX-LAYOUT.md](UX-LAYOUT.md):
 - UserSearchBox.vue (user search functionality)
 - **Pattern**: All use `useAdminStore()` with embedded actions for SSR hydration
 
-**Auth Components** (3 components) ✅ **All Refactored**:
-- login.vue, register.vue, AppHeader.vue
+**Auth Components** (6 components) ✅ **All Refactored**:
+- login.vue (email/password login with OAuth option)
+- register.vue (user registration with email verification)
+- verify-email.vue (email verification page)
+- auth/google/callback.vue (Google OAuth callback handler)
+- AppHeader.vue (header with auth states)
 - **Pattern**: All use `useAuthActions()` composable + `useAuthStore()` for session management
+
+**Legal Pages** (2 components):
+- privacy.vue (Privacy Policy with GDPR/CCPA compliance)
+- terms.vue (Terms of Service with user rights)
+- **Styling**: Steampunk aesthetic matching site design (gold, silver, prussian blue, mahogany)
 
 **Steampunk Design** (6 components):
 - SteamClock.vue, FlippingDigit.vue, SlidingTimeGroup.vue, SteampunkBackground.vue, SteampunkBanner.vue, VintageNoteCard.vue

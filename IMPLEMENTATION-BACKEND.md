@@ -20,6 +20,11 @@ backend/
 │   ├── lib.rs            # Library exports
 │   ├── models/           # Database models
 │   │   ├── mod.rs        # Module exports
+│   │   ├── api/          # API models
+│   │   │   └── user.rs   # User API models
+│   │   ├── oauth/        # OAuth models
+│   │   │   ├── mod.rs
+│   │   │   └── google_user_info.rs # Google OAuth user info
 │   │   ├── user.rs       # User model + auth requests
 │   │   ├── incident_timer.rs # Incident timer model
 │   │   └── phrase.rs     # Phrase and suggestion models
@@ -62,6 +67,10 @@ backend/
 │   │   ├── auth/         # Authentication services (modularized)
 │   │   │   ├── mod.rs    # Auth service exports
 │   │   │   ├── jwt.rs    # JWT token management
+│   │   │   ├── oauth/    # OAuth service abstraction
+│   │   │   │   ├── mod.rs
+│   │   │   │   ├── google_oauth_service.rs # Google OAuth implementation
+│   │   │   │   └── mock_google_oauth_service.rs # Mock for testing
 │   │   │   └── auth_service/ # Auth service modules
 │   │   │       ├── mod.rs
 │   │   │       ├── register.rs # User registration
@@ -70,7 +79,8 @@ backend/
 │   │   │       ├── profile.rs  # Profile management
 │   │   │       ├── password.rs # Password operations
 │   │   │       ├── slug.rs     # Username slug generation
-│   │   │       └── email_verification.rs # Email verification logic
+│   │   │       ├── email_verification.rs # Email verification logic
+│   │   │       └── oauth.rs    # Google OAuth PKCE flow
 │   │   ├── email/         # Email service abstraction
 │   │   │   ├── mod.rs     # EmailService trait
 │   │   │   ├── mock_email_service.rs # Mock for testing

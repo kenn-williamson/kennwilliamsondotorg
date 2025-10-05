@@ -26,6 +26,15 @@ services:
       - DATABASE_URL=postgresql://${DB_USER:-postgres}:${DB_PASSWORD:-password}@postgres:5432/kennwilliamson
       - JWT_SECRET=${JWT_SECRET}
       - CORS_ORIGIN=https://localhost  # Update for nginx proxy
+      - GOOGLE_CLIENT_ID=${GOOGLE_CLIENT_ID}
+      - GOOGLE_CLIENT_SECRET=${GOOGLE_CLIENT_SECRET}
+      - GOOGLE_REDIRECT_URI=${GOOGLE_REDIRECT_URI}
+      - AWS_REGION=${AWS_REGION}
+      - AWS_ACCESS_KEY_ID=${AWS_ACCESS_KEY_ID}
+      - AWS_SECRET_ACCESS_KEY=${AWS_SECRET_ACCESS_KEY}
+      - SES_FROM_EMAIL=${SES_FROM_EMAIL}
+      - SES_REPLY_TO_EMAIL=${SES_REPLY_TO_EMAIL}
+      - FRONTEND_URL=${FRONTEND_URL}
     volumes:
       - ./backend/src:/app/src:ro           # Mount source code (read-only)
       - ./backend/Cargo.toml:/app/Cargo.toml:ro

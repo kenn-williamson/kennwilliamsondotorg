@@ -5,15 +5,16 @@ use sha2::{Digest, Sha256};
 use uuid::Uuid;
 
 use super::AuthService;
-use crate::models::api::{RefreshTokenRequest, RefreshTokenResponse};
+use crate::models::api::{AuthResponse, RefreshTokenRequest, UserResponse};
 use crate::models::db::refresh_token::CreateRefreshToken;
 
 impl AuthService {
     /// Refresh a JWT token using a refresh token
+    /// Returns full AuthResponse with updated user data and roles
     pub async fn refresh_token(
         &self,
         request: RefreshTokenRequest,
-    ) -> Result<Option<RefreshTokenResponse>> {
+    ) -> Result<Option<AuthResponse>> {
         // Hash the provided token to lookup in database
         let token_hash = hash_token(&request.refresh_token);
 
@@ -72,9 +73,24 @@ impl AuthService {
             .create_token(&token_data)
             .await?;
 
-        Ok(Some(RefreshTokenResponse {
+        // Check if email is verified
+        let email_verified = roles.contains(&"email-verified".to_string());
+
+        // Return full AuthResponse with user data
+        Ok(Some(AuthResponse {
             token: new_jwt,
             refresh_token: new_refresh_token,
+            user: UserResponse {
+                id: user.id,
+                email: user.email,
+                display_name: user.display_name,
+                slug: user.slug,
+                roles,
+                real_name: user.real_name,
+                google_user_id: user.google_user_id,
+                email_verified,
+                created_at: user.created_at,
+            },
         }))
     }
 
@@ -222,6 +238,9 @@ mod tests {
         let response = result.unwrap();
         assert!(!response.token.is_empty());
         assert!(!response.refresh_token.is_empty());
+        assert_eq!(response.user.email, "test@example.com");
+        assert_eq!(response.user.roles, vec!["user"]);
+        assert_eq!(response.user.email_verified, false);
 
         Ok(())
     }

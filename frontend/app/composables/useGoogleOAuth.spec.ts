@@ -18,7 +18,7 @@ vi.mock('#app/composables/router', () => ({
 }))
 
 // Also mock for direct imports
-global.useRouter = mockUseRouter as any
+;(globalThis as any).useRouter = mockUseRouter as any
 
 // Mock useUserSession
 const mockRefreshSession = vi.fn()

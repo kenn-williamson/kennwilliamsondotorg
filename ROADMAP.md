@@ -5,6 +5,28 @@
 
 ## Immediate Priorities
 
+### Legal Compliance Implementation
+**Priority**: CRITICAL (Required for Production)
+**Goal**: Implement features promised in Privacy Policy and Terms of Service to achieve GDPR/CCPA compliance
+
+**Background**: Privacy Policy and Terms of Service make explicit promises about features that create legal liability. See [LEGAL-COMPLIANCE-GAPS.md](LEGAL-COMPLIANCE-GAPS.md) for comprehensive analysis.
+
+**Critical Features** (Must fix before production):
+- Account deletion functionality with 30-day grace period
+- Data export/portability in JSON format
+- Password reset flow (forgot password)
+
+**Important Features** (Should fix before production):
+- Security notification emails (password changes, profile updates)
+- Account termination notifications with reasons
+- Account deletion confirmation emails
+
+**Status**: OAuth and email verification complete. Legal documents complete. Compliance features implementation in progress.
+
+**Estimated Effort**: 3-4 weeks for critical + important features
+
+**Reference**: See [LEGAL-COMPLIANCE-GAPS.md](LEGAL-COMPLIANCE-GAPS.md) for detailed implementation roadmap and risk assessment.
+
 ### Content Development
 **Priority**: High
 **Goal**: Replace construction pages with actual content
@@ -15,7 +37,7 @@
 - Professional presentation for portfolio project
 
 ### Public Timer List Feature
-**Priority**: High  
+**Priority**: High
 **Goal**: Make public incidents page functional and interesting
 
 **Tasks**:

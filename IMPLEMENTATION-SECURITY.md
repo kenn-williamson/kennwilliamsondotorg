@@ -24,6 +24,34 @@ Comprehensive security implementation covering authentication, authorization, da
 - **Storage**: Only hashed passwords in database
 - **Requirements**: Enforced via VeeValidate + Yup schemas
 
+### OAuth Authentication
+- **Provider**: Google OAuth 2.0 with PKCE flow
+- **Flow Type**: Authorization Code with Proof Key for Code Exchange (PKCE)
+- **State Storage**: Redis-backed state validation with expiration
+- **Security**: PKCE prevents authorization code interception attacks
+- **User Integration**: Automatic user creation or linking on successful OAuth
+- **Implementation**: `backend/src/services/auth/auth_service/oauth.rs`
+- **Frontend**: `frontend/app/pages/auth/google/callback.vue`
+
+**PKCE Flow**:
+1. Frontend generates code verifier and challenge
+2. Backend creates OAuth URL with state stored in Redis (10-minute expiration)
+3. User authenticates with Google
+4. Google redirects to callback with authorization code
+5. Backend validates state from Redis
+6. Backend exchanges code for tokens using code verifier
+7. Backend fetches user info and creates/links account
+8. User receives JWT and refresh token
+
+### Email Verification
+- **Service**: AWS SES for email delivery
+- **Token Generation**: Secure random tokens stored in database
+- **Expiration**: Verification tokens expire after 24 hours
+- **Flow**: Registration → Email sent → User clicks link → Token validated → Account verified
+- **Implementation**: `backend/src/services/auth/auth_service/email_verification.rs`
+- **Frontend**: `frontend/app/composables/useEmailVerification.ts`
+- **Database**: `verification_tokens` table with user_id and expiration
+
 ## Authorization System
 
 ### Role-Based Access Control

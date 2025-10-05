@@ -6,6 +6,9 @@ declare module '#auth-utils' {
     slug: string
     roles: string[]
     created_at: string
+    email_verified?: boolean
+    real_name?: string
+    google_user_id?: string
   }
 
   interface UserSession {

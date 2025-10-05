@@ -46,7 +46,7 @@ export default defineEventHandler(async (event: any) => {
         real_name?: string
         google_user_id?: string
       }
-    }>(`${config.apiBase}${API_ROUTES.PUBLIC.GOOGLE_CALLBACK}`, {
+    }>(`${config.apiBase}${API_ROUTES.PUBLIC.AUTH.GOOGLE_CALLBACK}`, {
       method: 'POST',
       body: { code, state },
       headers: {
