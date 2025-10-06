@@ -1,4 +1,6 @@
 use super::AuthService;
+use crate::repositories::traits::incident_timer_repository::IncidentTimerRepository;
+use crate::repositories::traits::phrase_repository::PhraseRepository;
 use crate::repositories::traits::pkce_storage::PkceStorage;
 use crate::repositories::traits::refresh_token_repository::RefreshTokenRepository;
 use crate::repositories::traits::user_repository::UserRepository;
@@ -15,6 +17,8 @@ pub struct AuthServiceBuilder {
     email_service: Option<Box<dyn EmailService>>,
     google_oauth_service: Option<Box<dyn GoogleOAuthServiceTrait>>,
     pkce_storage: Option<Box<dyn PkceStorage>>,
+    incident_timer_repository: Option<Box<dyn IncidentTimerRepository>>,
+    phrase_repository: Option<Box<dyn PhraseRepository>>,
     jwt_secret: Option<String>,
 }
 
@@ -27,6 +31,8 @@ impl AuthServiceBuilder {
             email_service: None,
             google_oauth_service: None,
             pkce_storage: None,
+            incident_timer_repository: None,
+            phrase_repository: None,
             jwt_secret: None,
         }
     }
@@ -69,6 +75,16 @@ impl AuthServiceBuilder {
         self
     }
 
+    pub fn incident_timer_repository(mut self, repo: Box<dyn IncidentTimerRepository>) -> Self {
+        self.incident_timer_repository = Some(repo);
+        self
+    }
+
+    pub fn phrase_repository(mut self, repo: Box<dyn PhraseRepository>) -> Self {
+        self.phrase_repository = Some(repo);
+        self
+    }
+
     pub fn build(self) -> AuthService {
         let jwt_secret = self.jwt_secret.expect("jwt_secret is required");
         let user_repository = self.user_repository.expect("user_repository is required");
@@ -84,6 +100,8 @@ impl AuthServiceBuilder {
             email_service: self.email_service,
             google_oauth_service: self.google_oauth_service,
             pkce_storage: self.pkce_storage,
+            incident_timer_repository: self.incident_timer_repository,
+            phrase_repository: self.phrase_repository,
         }
     }
 }

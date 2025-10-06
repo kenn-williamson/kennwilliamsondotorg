@@ -74,6 +74,23 @@ impl RefreshTokenRepository for PostgresRefreshTokenRepository {
         Ok(())
     }
 
+    async fn find_by_user_id(&self, user_id: Uuid) -> Result<Vec<RefreshToken>> {
+        let tokens = sqlx::query_as!(
+            RefreshToken,
+            r#"
+            SELECT id, user_id, token_hash, device_info, expires_at, created_at, updated_at, last_used_at
+            FROM refresh_tokens
+            WHERE user_id = $1
+            ORDER BY created_at DESC
+            "#,
+            user_id
+        )
+        .fetch_all(&self.pool)
+        .await?;
+
+        Ok(tokens)
+    }
+
     async fn cleanup_expired_tokens(&self) -> Result<u64> {
         let result = sqlx::query("DELETE FROM refresh_tokens WHERE expires_at < NOW()")
             .execute(&self.pool)

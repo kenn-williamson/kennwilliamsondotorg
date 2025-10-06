@@ -16,6 +16,7 @@ mock! {
         async fn find_by_token(&self, token: &str) -> Result<Option<RefreshToken>>;
         async fn revoke_token(&self, token: &str) -> Result<()>;
         async fn revoke_all_user_tokens(&self, user_id: Uuid) -> Result<()>;
+        async fn find_by_user_id(&self, user_id: Uuid) -> Result<Vec<RefreshToken>>;
         async fn cleanup_expired_tokens(&self) -> Result<u64>;
     }
 }

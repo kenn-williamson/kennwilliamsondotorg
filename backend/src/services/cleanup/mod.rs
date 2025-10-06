@@ -71,6 +71,10 @@ mod tests {
             unimplemented!()
         }
 
+        async fn find_by_user_id(&self, _user_id: Uuid) -> Result<Vec<RefreshToken>> {
+            unimplemented!()
+        }
+
         async fn cleanup_expired_tokens(&self) -> Result<u64> {
             if self.should_fail {
                 anyhow::bail!("Mock refresh token cleanup failed");
@@ -103,6 +107,10 @@ mod tests {
         }
 
         async fn delete_all_user_tokens(&self, _user_id: Uuid) -> Result<u64> {
+            unimplemented!()
+        }
+
+        async fn find_by_user_id(&self, _user_id: Uuid) -> Result<Vec<VerificationToken>> {
             unimplemented!()
         }
 

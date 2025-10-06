@@ -180,6 +180,8 @@ impl TestContextBuilder {
             .user_repository(Box::new(PostgresUserRepository::new(test_container.pool.clone())))
             .refresh_token_repository(Box::new(PostgresRefreshTokenRepository::new(test_container.pool.clone())))
             .verification_token_repository(Box::new(PostgresVerificationTokenRepository::new(test_container.pool.clone())))
+            .incident_timer_repository(Box::new(PostgresIncidentTimerRepository::new(test_container.pool.clone())))
+            .phrase_repository(Box::new(PostgresPhraseRepository::new(test_container.pool.clone())))
             .email_service(Box::new(email_service.as_ref().clone()))
             .google_oauth_service(Box::new(mock_oauth))
             .pkce_storage(Box::new(backend::repositories::mocks::MockPkceStorage::new()))

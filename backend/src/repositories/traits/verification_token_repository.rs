@@ -32,6 +32,9 @@ pub trait VerificationTokenRepository: Send + Sync {
     /// Delete all tokens for a user (used when email is verified)
     async fn delete_all_user_tokens(&self, user_id: Uuid) -> Result<u64>;
 
+    /// Find all verification tokens for a user (for data export)
+    async fn find_by_user_id(&self, user_id: Uuid) -> Result<Vec<VerificationToken>>;
+
     /// Delete expired tokens (cleanup task)
     async fn delete_expired_tokens(&self) -> Result<u64>;
 }

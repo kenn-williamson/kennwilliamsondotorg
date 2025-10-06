@@ -18,6 +18,7 @@ mock! {
         async fn find_by_token_hash(&self, token_hash: &str) -> Result<Option<VerificationToken>>;
         async fn delete_token(&self, id: Uuid) -> Result<bool>;
         async fn delete_all_user_tokens(&self, user_id: Uuid) -> Result<u64>;
+        async fn find_by_user_id(&self, user_id: Uuid) -> Result<Vec<VerificationToken>>;
         async fn delete_expired_tokens(&self) -> Result<u64>;
     }
 }

@@ -74,6 +74,10 @@ impl ServiceContainer {
             .verification_token_repository(Box::new(
                 PostgresVerificationTokenRepository::new(pool.clone()),
             ))
+            .incident_timer_repository(Box::new(PostgresIncidentTimerRepository::new(
+                pool.clone(),
+            )))
+            .phrase_repository(Box::new(PostgresPhraseRepository::new(pool.clone())))
             .email_service(Box::new(email_service))
             .pkce_storage(Box::new(pkce_storage))
             .jwt_secret(jwt_secret.clone());
@@ -140,6 +144,8 @@ impl ServiceContainer {
                 .user_repository(Box::new(MockUserRepository::new()))
                 .refresh_token_repository(Box::new(MockRefreshTokenRepository::new()))
                 .verification_token_repository(Box::new(MockVerificationTokenRepository::new()))
+                .incident_timer_repository(Box::new(MockIncidentTimerRepository::new()))
+                .phrase_repository(Box::new(MockPhraseRepository::new()))
                 .email_service(Box::new(MockEmailService::new()))
                 .pkce_storage(Box::new(MockPkceStorage::new()))
                 .jwt_secret(jwt_secret.clone())

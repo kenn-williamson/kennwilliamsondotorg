@@ -1,4 +1,6 @@
 use super::jwt::JwtService;
+use crate::repositories::traits::incident_timer_repository::IncidentTimerRepository;
+use crate::repositories::traits::phrase_repository::PhraseRepository;
 use crate::repositories::traits::pkce_storage::PkceStorage;
 use crate::repositories::traits::refresh_token_repository::RefreshTokenRepository;
 use crate::repositories::traits::user_repository::UserRepository;
@@ -9,6 +11,7 @@ use anyhow::Result;
 
 pub mod builder;
 pub mod account_deletion;
+pub mod data_export;
 pub mod email_verification;
 pub mod login;
 pub mod oauth;
@@ -28,6 +31,8 @@ pub struct AuthService {
     email_service: Option<Box<dyn EmailService>>,
     google_oauth_service: Option<Box<dyn GoogleOAuthServiceTrait>>,
     pkce_storage: Option<Box<dyn PkceStorage>>,
+    incident_timer_repository: Option<Box<dyn IncidentTimerRepository>>,
+    phrase_repository: Option<Box<dyn PhraseRepository>>,
 }
 
 impl AuthService {

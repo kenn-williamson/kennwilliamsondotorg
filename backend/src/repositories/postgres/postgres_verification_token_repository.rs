@@ -86,6 +86,23 @@ impl VerificationTokenRepository for PostgresVerificationTokenRepository {
         Ok(result.rows_affected())
     }
 
+    async fn find_by_user_id(&self, user_id: Uuid) -> Result<Vec<VerificationToken>> {
+        let tokens = sqlx::query_as!(
+            VerificationToken,
+            r#"
+            SELECT id, user_id, token_hash, expires_at, created_at
+            FROM verification_tokens
+            WHERE user_id = $1
+            ORDER BY created_at DESC
+            "#,
+            user_id
+        )
+        .fetch_all(&self.pool)
+        .await?;
+
+        Ok(tokens)
+    }
+
     async fn delete_expired_tokens(&self) -> Result<u64> {
         let result = sqlx::query!(
             r#"
