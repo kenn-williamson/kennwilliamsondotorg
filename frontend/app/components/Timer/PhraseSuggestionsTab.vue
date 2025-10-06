@@ -13,22 +13,21 @@
             <label for="phrase-text" class="form-label">
               Phrase Text
             </label>
-            <textarea
+            <Field
               id="phrase-text"
-              v-model="formData.phraseText"
+              name="phraseText"
+              as="textarea"
               class="form-textarea"
+              :class="{ 'border-red-500': errors.phraseText }"
               rows="3"
               placeholder="Enter your motivational phrase here..."
               :maxlength="maxPhraseLength"
-              @input="validatePhrase"
-            ></textarea>
+            />
             <div class="form-footer">
               <div class="character-count">
-                {{ formData.phraseText.length }}/{{ maxPhraseLength }} characters
+                {{ (phraseText as string)?.length || 0 }}/{{ maxPhraseLength }} characters
               </div>
-              <div v-if="validationErrors.phraseText" class="error-message">
-                {{ validationErrors.phraseText }}
-              </div>
+              <ErrorMessage name="phraseText" class="error-message" />
             </div>
           </div>
 
@@ -36,7 +35,7 @@
             <button
               type="submit"
               class="submit-button"
-              :disabled="!isFormValid || isSubmitting"
+              :disabled="isSubmitting"
             >
               <span v-if="isSubmitting">Submitting...</span>
               <span v-else>Submit Suggestion</span>
@@ -84,7 +83,9 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed } from 'vue'
+import { ref } from 'vue'
+import { useForm, useField, Field, ErrorMessage } from 'vee-validate'
+import { phraseSuggestionSchema } from '#shared/schemas'
 import { usePhrasesStore } from '~/stores/phrases'
 import type { PhraseSuggestion } from '#shared/types/phrases'
 
@@ -92,21 +93,17 @@ const phrasesStore = usePhrasesStore()
 
 const maxPhraseLength = 200
 
-const formData = ref({
-  phraseText: ''
+// VeeValidate form setup
+const { handleSubmit, resetForm, errors } = useForm({
+  validationSchema: phraseSuggestionSchema,
+  initialValues: {
+    phraseText: ''
+  }
 })
 
-const validationErrors = ref({
-  phraseText: ''
-})
+const { value: phraseText } = useField('phraseText')
 
 const isSubmitting = ref(false)
-
-const isFormValid = computed(() => {
-  return formData.value.phraseText.trim().length > 0 && 
-         formData.value.phraseText.length <= maxPhraseLength &&
-         !validationErrors.value.phraseText
-})
 
 const loadRecentSuggestions = async () => {
   try {
@@ -119,58 +116,28 @@ const loadRecentSuggestions = async () => {
 // ✅ CORRECT: Use callOnce to prevent double execution during SSR/hydration
 await callOnce('user-phrase-suggestions', () => loadRecentSuggestions())
 
-const validatePhrase = () => {
-  const text = formData.value.phraseText.trim()
-  
-  if (text.length === 0) {
-    validationErrors.value.phraseText = ''
-    return
-  }
-  
-  if (text.length < 5) {
-    validationErrors.value.phraseText = 'Phrase must be at least 5 characters long'
-    return
-  }
-  
-  if (text.length > maxPhraseLength) {
-    validationErrors.value.phraseText = `Phrase must be ${maxPhraseLength} characters or less`
-    return
-  }
-  
-  // Check for basic content validation
-  if (text.split(' ').length < 2) {
-    validationErrors.value.phraseText = 'Phrase should contain at least 2 words'
-    return
-  }
-  
-  validationErrors.value.phraseText = ''
-}
-
-const submitSuggestion = async () => {
-  if (!isFormValid.value) return
-  
+const submitSuggestion = handleSubmit(async (values) => {
   isSubmitting.value = true
-  
+
   try {
-    await phrasesStore.submitSuggestion(formData.value.phraseText.trim())
-    
+    await phrasesStore.submitSuggestion(values.phraseText.trim())
+
     // Clear form - store will automatically update with new suggestion
     clearForm()
-    
+
     // Show success message (could be a toast in the future)
     alert('Suggestion submitted successfully!')
-    
+
   } catch (error) {
     console.error('Error submitting suggestion:', error)
     alert('Error submitting suggestion. Please try again.')
   } finally {
     isSubmitting.value = false
   }
-}
+})
 
 const clearForm = () => {
-  formData.value.phraseText = ''
-  validationErrors.value.phraseText = ''
+  resetForm()
 }
 
 const formatDate = (dateString: string) => {

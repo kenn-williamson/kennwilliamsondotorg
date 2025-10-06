@@ -56,6 +56,7 @@ pub fn configure_app_routes(cfg: &mut web::ServiceConfig) {
                                 .route("/profile", web::put().to(auth::update_profile))
                                 .route("/change-password", web::put().to(auth::change_password))
                                 .route("/validate-slug", web::get().to(auth::validate_slug))
+                                .route("/delete-account", web::delete().to(auth::delete_account))
                                 .route(
                                     "/send-verification",
                                     web::post().to(auth::send_verification_email_handler),

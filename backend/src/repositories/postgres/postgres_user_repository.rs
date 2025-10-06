@@ -284,4 +284,42 @@ impl UserRepository for PostgresUserRepository {
 
         Ok(count > 0)
     }
+
+    async fn delete_user(&self, user_id: Uuid) -> Result<()> {
+        // Reassign user's phrases to system user
+        let system_user_id = sqlx::query_scalar::<_, Uuid>(
+            "SELECT id FROM users WHERE email = 'system@kennwilliamson.org'"
+        )
+        .fetch_one(&self.pool)
+        .await?;
+
+        // Reassign phrases created by this user to system user
+        let reassigned_result = sqlx::query(
+            "UPDATE phrases SET created_by = $1 WHERE created_by = $2"
+        )
+        .bind(system_user_id)
+        .bind(user_id)
+        .execute(&self.pool)
+        .await?;
+
+        let reassigned_count = reassigned_result.rows_affected();
+
+        if reassigned_count > 0 {
+            log::info!("Reassigned {} phrases from user {} to system user", reassigned_count, user_id);
+        }
+
+        // Delete the user - this will cascade delete all other data due to foreign key constraints:
+        // - incident_timers (CASCADE DELETE)
+        // - user_excluded_phrases (CASCADE DELETE) 
+        // - refresh_tokens (CASCADE DELETE)
+        // - user_roles (CASCADE DELETE)
+        // - phrase_suggestions (CASCADE DELETE)
+        sqlx::query("DELETE FROM users WHERE id = $1")
+            .bind(user_id)
+            .execute(&self.pool)
+            .await?;
+
+        log::info!("Successfully deleted user {} and all associated data", user_id);
+        Ok(())
+    }
 }

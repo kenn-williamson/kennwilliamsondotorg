@@ -79,4 +79,8 @@ pub trait UserRepository: Send + Sync {
 
     /// Check if user has specific role
     async fn has_role(&self, user_id: Uuid, role_name: &str) -> Result<bool>;
+
+    /// Delete a user and all associated data
+    /// This performs a hard delete with proper cleanup of related data
+    async fn delete_user(&self, user_id: Uuid) -> Result<()>;
 }

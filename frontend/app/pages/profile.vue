@@ -110,7 +110,7 @@
       </div>
 
       <!-- Security Form -->
-      <div class="bg-white shadow rounded-lg">
+      <div class="bg-white shadow rounded-lg mb-8">
         <div class="px-6 py-4 border-b border-gray-200">
           <h2 class="text-lg font-medium text-gray-900">Security</h2>
           <p class="mt-1 text-sm text-gray-500">Change your password to keep your account secure.</p>
@@ -119,6 +119,9 @@
           <SecurityForm />
         </div>
       </div>
+
+      <!-- Delete Account Section -->
+      <DeleteAccountSection v-if="user" :user="user" />
     </div>
   </div>
 </template>

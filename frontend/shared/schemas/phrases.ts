@@ -7,12 +7,16 @@ import * as yup from 'yup'
 
 // Phrase suggestion validation
 export const phraseSuggestionSchema = yup.object({
-  phrase_text: yup
+  phraseText: yup
     .string()
     .required('Phrase text is required')
     .min(5, 'Phrase must be at least 5 characters')
     .max(200, 'Phrase must be no more than 200 characters')
-    .trim(),
+    .trim()
+    .test('word-count', 'Phrase should contain at least 2 words', (value) => {
+      if (!value) return true
+      return value.trim().split(/\s+/).length >= 2
+    }),
 })
 
 // Admin phrase creation validation

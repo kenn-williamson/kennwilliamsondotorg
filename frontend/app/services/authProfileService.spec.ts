@@ -1,5 +1,4 @@
-import { describe, it, expect, vi } from 'vitest'
-import { createMockUser } from '../../test/utils/test-helpers'
+import { describe, it, expect, vi, beforeEach } from 'vitest'
 import { authProfileService } from './authProfileService'
 
 describe('authProfileService', () => {
@@ -86,6 +85,58 @@ describe('authProfileService', () => {
         body: { display_name: displayName }
       })
       expect(result).toEqual(mockResponse)
+    })
+  })
+
+  describe('deleteAccount', () => {
+    it('should call correct endpoint with DELETE method', async () => {
+      const mockResponse = { message: 'Account deleted successfully' }
+      mockFetcher.mockResolvedValue(mockResponse)
+
+      const service = authProfileService(mockFetcher)
+      const result = await service.deleteAccount()
+
+      expect(mockFetcher).toHaveBeenCalledWith('/protected/auth/delete-account', {
+        method: 'DELETE'
+      })
+      expect(result).toEqual(mockResponse)
+    })
+
+    it('should handle successful deletion response', async () => {
+      const mockResponse = { message: 'Account deleted successfully' }
+      mockFetcher.mockResolvedValue(mockResponse)
+
+      const service = authProfileService(mockFetcher)
+      const result = await service.deleteAccount()
+
+      expect(result).toEqual(mockResponse)
+    })
+
+    it('should propagate fetcher errors', async () => {
+      const error = new Error('Account deletion failed')
+      mockFetcher.mockRejectedValue(error)
+
+      const service = authProfileService(mockFetcher)
+
+      await expect(service.deleteAccount()).rejects.toThrow('Account deletion failed')
+    })
+
+    it('should handle system user deletion error', async () => {
+      const error = new Error('Cannot delete system user')
+      mockFetcher.mockRejectedValue(error)
+
+      const service = authProfileService(mockFetcher)
+
+      await expect(service.deleteAccount()).rejects.toThrow('Cannot delete system user')
+    })
+
+    it('should handle user not found error', async () => {
+      const error = new Error('User not found')
+      mockFetcher.mockRejectedValue(error)
+
+      const service = authProfileService(mockFetcher)
+
+      await expect(service.deleteAccount()).rejects.toThrow('User not found')
     })
   })
 

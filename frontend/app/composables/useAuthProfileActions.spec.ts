@@ -13,9 +13,6 @@ vi.mock('../services/authProfileService', () => ({
   authProfileService: vi.fn()
 }))
 
-// Mock useUserSession globally
-global.useUserSession = vi.fn()
-
 import { useAuthProfileActions } from './useAuthProfileActions'
 
 describe('useAuthProfileActions', () => {
@@ -27,13 +24,16 @@ describe('useAuthProfileActions', () => {
     vi.clearAllMocks()
 
     mockUserSession = {
-      fetch: vi.fn().mockResolvedValue(undefined)
+      fetch: vi.fn().mockResolvedValue(undefined),
+      clear: vi.fn().mockResolvedValue(undefined)
     }
     
     mockAuthProfileService = {
       updateProfile: vi.fn(),
       changePassword: vi.fn(),
-      previewSlug: vi.fn()
+      previewSlug: vi.fn(),
+      validateSlug: vi.fn(),
+      deleteAccount: vi.fn()
     }
     
     // Configure mocked modules
@@ -41,9 +41,12 @@ describe('useAuthProfileActions', () => {
     vi.mocked(useBaseService).mockReturnValue({
       executeRequest: vi.fn().mockImplementation(async (fn) => await fn()),
       executeRequestWithSuccess: vi.fn().mockImplementation(async (fn) => await fn()),
-      isLoading: { value: false },
-      error: { value: null },
-      hasError: { value: false }
+      isLoading: { value: false } as any,
+      error: { value: null } as any,
+      hasError: { value: false } as any,
+      setLoading: vi.fn(),
+      setError: vi.fn(),
+      clearError: vi.fn()
     })
     
     const { useSmartFetch } = await import('./useSmartFetch')
@@ -53,7 +56,7 @@ describe('useAuthProfileActions', () => {
     vi.mocked(authProfileService).mockReturnValue(mockAuthProfileService)
     
     // Configure the useUserSession mock
-    global.useUserSession.mockReturnValue(mockUserSession)
+    ;(global as any).useUserSession.mockReturnValue(mockUserSession)
   })
 
   describe('updateProfile orchestration', () => {
@@ -127,6 +130,51 @@ describe('useAuthProfileActions', () => {
     })
   })
 
+  describe('deleteAccount orchestration', () => {
+    it('should orchestrate service call and session clear', async () => {
+      const serviceResponse = { message: 'Account deleted successfully' }
+      
+      // Setup service mock
+      mockAuthProfileService.deleteAccount.mockResolvedValue(serviceResponse)
+
+      const { deleteAccount } = useAuthProfileActions()
+      const result = await deleteAccount()
+
+      // Test orchestration: service called
+      expect(mockAuthProfileService.deleteAccount).toHaveBeenCalledTimes(1)
+      
+      // Test orchestration: session cleared after successful deletion
+      expect(mockUserSession.clear).toHaveBeenCalledTimes(1)
+      
+      // Test orchestration: result returned
+      expect(result).toEqual(serviceResponse)
+    })
+
+    it('should handle deletion errors', async () => {
+      const error = new Error('Account deletion failed')
+      mockAuthProfileService.deleteAccount.mockRejectedValue(error)
+
+      const { deleteAccount } = useAuthProfileActions()
+
+      await expect(deleteAccount()).rejects.toThrow('Account deletion failed')
+    })
+
+    it('should not clear session if deletion fails', async () => {
+      const error = new Error('Account deletion failed')
+      mockAuthProfileService.deleteAccount.mockRejectedValue(error)
+
+      const { deleteAccount } = useAuthProfileActions()
+
+      try {
+        await deleteAccount()
+      } catch (e) {
+        // Expected to throw
+      }
+
+      expect(mockUserSession.clear).not.toHaveBeenCalled()
+    })
+  })
+
   describe('service instantiation', () => {
     it('should create authProfileService with correct fetchers', async () => {
       useAuthProfileActions()
@@ -145,6 +193,8 @@ describe('useAuthProfileActions', () => {
       expect(actions).toHaveProperty('updateProfile')
       expect(actions).toHaveProperty('changePassword')
       expect(actions).toHaveProperty('previewSlug')
+      expect(actions).toHaveProperty('validateSlug')
+      expect(actions).toHaveProperty('deleteAccount')
       
       // Test interface: state from useBaseService exposed
       expect(actions).toHaveProperty('isLoading')
@@ -155,6 +205,8 @@ describe('useAuthProfileActions', () => {
       expect(typeof actions.updateProfile).toBe('function')
       expect(typeof actions.changePassword).toBe('function')
       expect(typeof actions.previewSlug).toBe('function')
+      expect(typeof actions.validateSlug).toBe('function')
+      expect(typeof actions.deleteAccount).toBe('function')
     })
   })
 

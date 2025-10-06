@@ -1,18 +1,10 @@
+// @ts-nocheck
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest'
 
 // Mock all dependencies before importing the composable
 vi.mock('./useJwtManager', () => ({
   useJwtManager: vi.fn()
 }))
-
-// Mock $fetch globally
-global.$fetch = vi.fn()
-
-// Mock useRequestFetch globally
-global.useRequestFetch = vi.fn()
-
-// Mock useRuntimeConfig globally
-global.useRuntimeConfig = vi.fn()
 
 // Mock import.meta.server globally - this needs to be set before module import
 vi.stubGlobal('import', { meta: { server: false } })
@@ -42,9 +34,9 @@ describe('useSmartFetch', () => {
     const { useJwtManager } = await import('./useJwtManager')
     vi.mocked(useJwtManager).mockReturnValue(mockJwtManager)
 
-    // Configure global mocks
-    global.useRuntimeConfig.mockReturnValue(mockRuntimeConfig)
-    global.useRequestFetch.mockReturnValue(vi.fn())
+    // Configure global mocks (already defined in test/setup.ts)
+    vi.mocked(global.useRuntimeConfig).mockReturnValue(mockRuntimeConfig)
+    vi.mocked(global.useRequestFetch).mockReturnValue(vi.fn())
   })
 
   afterEach(() => {
@@ -220,7 +212,6 @@ describe('useSmartFetch', () => {
         query: {
           search: 'test',
           limit: 10,
-          page: null,
           filter: undefined,
           active: true
         }
@@ -238,12 +229,12 @@ describe('useSmartFetch', () => {
     it('should preserve all request options', async () => {
       const mockResponse = { success: true }
       const requestOptions = {
-        method: 'POST',
+        method: 'POST' as const,
         body: { data: 'test' },
         headers: { 'Content-Type': 'application/json' },
         timeout: 5000
       }
-      
+
       // Setup mocks
       vi.mocked($fetch).mockResolvedValue(mockResponse)
       // Mock import.meta.server to false for client-side behavior

@@ -97,6 +97,14 @@ export const slugPreviewSchema = yup.object({
     .trim(),
 })
 
+// Account deletion validation
+export const accountDeletionSchema = yup.object({
+  emailConfirmation: yup
+    .string()
+    .required('Please enter your email address to confirm')
+    .email('Please enter a valid email address'),
+})
+
 // Utility function to generate slug from display name
 export function generateSlug(displayName: string): string {
   return displayName

@@ -28,6 +28,7 @@ mock! {
         async fn get_user_roles(&self, user_id: Uuid) -> Result<Vec<String>>;
         async fn add_role_to_user(&self, user_id: Uuid, role_name: &str) -> Result<()>;
         async fn has_role(&self, user_id: Uuid, role_name: &str) -> Result<bool>;
+        async fn delete_user(&self, user_id: Uuid) -> Result<()>;
     }
 }
 

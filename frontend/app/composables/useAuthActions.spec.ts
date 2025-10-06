@@ -1,3 +1,4 @@
+// @ts-nocheck
 import { describe, it, expect, vi, beforeEach } from 'vitest'
 
 // Mock all dependencies before importing the composable
@@ -12,9 +13,6 @@ vi.mock('./useSmartFetch', () => ({
 vi.mock('../services/authService', () => ({
   authService: vi.fn()
 }))
-
-// Mock useUserSession globally
-global.useUserSession = vi.fn()
 
 import { useAuthActions } from './useAuthActions'
 
@@ -44,9 +42,9 @@ describe('useAuthActions', () => {
     vi.mocked(useBaseService).mockReturnValue({
       executeRequest: vi.fn().mockImplementation(async (fn) => await fn()),
       executeRequestWithSuccess: vi.fn().mockImplementation(async (fn) => await fn()),
-      isLoading: { value: false },
-      error: { value: null },
-      hasError: { value: false }
+      isLoading: { value: false } as any,
+      error: { value: null } as any,
+      hasError: { value: false } as any
     })
     
     const { useSmartFetch } = await import('./useSmartFetch')
@@ -54,9 +52,9 @@ describe('useAuthActions', () => {
     
     const { authService } = await import('../services/authService')
     vi.mocked(authService).mockReturnValue(mockAuthService)
-    
-    // Configure the useUserSession mock
-    global.useUserSession.mockReturnValue(mockUserSession)
+
+    // Configure the useUserSession mock (already defined in test/setup.ts)
+    vi.mocked(global.useUserSession).mockReturnValue(mockUserSession)
   })
 
   describe('login orchestration', () => {

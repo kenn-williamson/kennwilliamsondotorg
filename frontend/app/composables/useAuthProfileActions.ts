@@ -12,7 +12,7 @@ export const useAuthProfileActions = () => {
   // Destructure base service utilities
   const { executeRequest, executeRequestWithSuccess, isLoading, error, hasError } = useBaseService()
   const smartFetch = useSmartFetch()
-  const { fetch: refreshSession } = useUserSession()
+  const { fetch: refreshSession, clear: clearSession } = useUserSession()
   
   // Create service instance
   const authProfileServiceInstance = authProfileService(smartFetch)
@@ -22,7 +22,8 @@ export const useAuthProfileActions = () => {
     updateProfile: updateProfileService, 
     changePassword: changePasswordService, 
     previewSlug: previewSlugService,
-    validateSlug: validateSlugService 
+    validateSlug: validateSlugService,
+    deleteAccount: deleteAccountService
   } = authProfileServiceInstance
 
   const updateProfile = async (data: ProfileUpdateRequest): Promise<{ message: string }> => {
@@ -63,11 +64,28 @@ export const useAuthProfileActions = () => {
     )
   }
 
+  const deleteAccount = async (): Promise<{ message: string }> => {
+    return executeRequestWithSuccess(
+      async () => {
+        // Call service
+        const result = await deleteAccountService()
+        
+        // Clear session after successful deletion
+        await clearSession()
+        
+        return result
+      },
+      'Account deleted successfully',
+      'deleteAccount'
+    )
+  }
+
   return {
     updateProfile,
     changePassword,
     previewSlug,
     validateSlug,
+    deleteAccount,
     isLoading,
     error,
     hasError

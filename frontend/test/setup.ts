@@ -19,10 +19,12 @@ global.useRuntimeConfig = vi.fn(() => ({
     apiBase: 'https://localhost/backend'
   }
 }))
+global.useRequestFetch = vi.fn()
 global.useJwtManager = vi.fn(() => ({
   getToken: vi.fn().mockResolvedValue('mock-jwt-token'),
   refreshToken: vi.fn().mockResolvedValue('mock-refresh-token'),
-  clearTokens: vi.fn()
+  clearTokens: vi.fn(),
+  clearToken: vi.fn()
 }))
 // Mock useUserSession with proper structure
 global.useUserSession = vi.fn(() => ({

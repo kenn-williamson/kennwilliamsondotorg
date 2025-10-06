@@ -299,6 +299,37 @@ pub async fn verify_email_handler(
     }
 }
 
+/// Delete user account and all associated data
+/// DELETE /backend/protected/auth/delete-account
+pub async fn delete_account(
+    req: HttpRequest,
+    auth_service: web::Data<AuthService>,
+) -> ActixResult<HttpResponse> {
+    let user_id = req.extensions().get::<Uuid>().cloned().unwrap();
+
+    match auth_service.delete_account(user_id).await {
+        Ok(()) => Ok(HttpResponse::Ok().json(serde_json::json!({
+            "message": "Account deleted successfully"
+        }))),
+        Err(err) => {
+            if err.to_string().contains("Cannot delete system user") {
+                Ok(HttpResponse::BadRequest().json(serde_json::json!({
+                    "error": "Cannot delete system user"
+                })))
+            } else if err.to_string().contains("User not found") {
+                Ok(HttpResponse::NotFound().json(serde_json::json!({
+                    "error": "User not found"
+                })))
+            } else {
+                log::error!("Account deletion error: {}", err);
+                Ok(HttpResponse::InternalServerError().json(serde_json::json!({
+                    "error": "Account deletion failed"
+                })))
+            }
+        }
+    }
+}
+
 // ============================================================================
 // GOOGLE OAUTH ROUTES  
 // ============================================================================

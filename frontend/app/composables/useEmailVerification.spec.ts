@@ -1,13 +1,12 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest'
-import { useEmailVerification } from './useEmailVerification'
-import type { SendVerificationEmailResponse, VerifyEmailResponse } from '#shared/types'
-import { API_ROUTES } from '#shared/config/api-routes'
 
 // Mock useSmartFetch
 const mockSmartFetch = vi.fn()
 vi.mock('~/composables/useSmartFetch', () => ({
   useSmartFetch: () => mockSmartFetch,
 }))
+
+// Note: useJwtManager is a global auto-import from test/setup.ts, so we configure it there
 
 // Mock useUserSession
 const mockRefreshSession = vi.fn()
@@ -18,9 +17,18 @@ vi.mock('#app', () => ({
   useUserSession: mockUseUserSession,
 }))
 
+// Mock $fetch for API calls
+const mockFetchUser = vi.fn()
+
+import { useEmailVerification } from './useEmailVerification'
+import type { SendVerificationEmailResponse, VerifyEmailResponse } from '#shared/types'
+import { API_ROUTES } from '#shared/config/api-routes'
+
 describe('useEmailVerification', () => {
   beforeEach(() => {
     vi.clearAllMocks()
+    // Setup $fetch mock globally
+    global.$fetch = mockFetchUser as any
   })
 
   describe('sendVerificationEmail', () => {
@@ -94,7 +102,13 @@ describe('useEmailVerification', () => {
       const mockResponse: VerifyEmailResponse = {
         message: 'Email verified successfully',
       }
+      const mockUserData = {
+        id: '123',
+        email: 'test@example.com',
+        roles: ['user', 'verified'],
+      }
       mockSmartFetch.mockResolvedValue(mockResponse)
+      mockFetchUser.mockResolvedValue(mockUserData)
       mockRefreshSession.mockResolvedValue({})
 
       // Act
@@ -136,11 +150,17 @@ describe('useEmailVerification', () => {
       const mockResponse: VerifyEmailResponse = {
         message: 'Email verified successfully',
       }
+      const mockUserData = {
+        id: '123',
+        email: 'test@example.com',
+        roles: ['user', 'verified'],
+      }
       let resolvePromise: (value: any) => void
       const promise = new Promise((resolve) => {
         resolvePromise = resolve
       })
       mockSmartFetch.mockReturnValue(promise)
+      mockFetchUser.mockResolvedValue(mockUserData)
       mockRefreshSession.mockResolvedValue({})
 
       // Act

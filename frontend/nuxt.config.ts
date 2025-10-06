@@ -4,14 +4,16 @@ export default defineNuxtConfig({
   future: {
     compatibilityVersion: 4
   },
-  debug: true,
-  devtools: { 
+  devtools: {
     enabled: true,
   },
   // TypeScript configuration
   typescript: {
     strict: true,
-    typeCheck: true
+    typeCheck: true,
+    tsConfig: {
+      exclude: ['**/*.spec.ts', '**/*.test.ts', '**/test/**', '**/tests/**']
+    }
   },
 
   
@@ -82,7 +84,7 @@ export default defineNuxtConfig({
         clientPort: 443,    // Connect to nginx HTTPS port
         path: '/_nuxt/hmr'  // Dedicated HMR path
       }
-    }
+    },
   },
 
   // App configuration

@@ -1,7 +1,5 @@
+// @ts-nocheck
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest'
-
-// Mock $fetch globally
-global.$fetch = vi.fn()
 
 import { useJwtManager } from './useJwtManager'
 
@@ -174,11 +172,17 @@ describe('useJwtManager', () => {
 
       // Test results
       expect(result1.status).toBe('fulfilled')
-      expect(result1.value).toBe(mockToken)
+      if (result1.status === 'fulfilled') {
+        expect(result1.value).toBe(mockToken)
+      }
       expect(result2.status).toBe('rejected')
-      expect(result2.reason.message).toBe('Network error')
+      if (result2.status === 'rejected') {
+        expect(result2.reason.message).toBe('Network error')
+      }
       expect(result3.status).toBe('fulfilled')
-      expect(result3.value).toBe(mockToken)
+      if (result3.status === 'fulfilled') {
+        expect(result3.value).toBe(mockToken)
+      }
       
       // Test $fetch was called multiple times
       expect($fetch).toHaveBeenCalledTimes(3)

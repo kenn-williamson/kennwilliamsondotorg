@@ -8,6 +8,7 @@ use crate::services::email::EmailService;
 use anyhow::Result;
 
 pub mod builder;
+pub mod account_deletion;
 pub mod email_verification;
 pub mod login;
 pub mod oauth;

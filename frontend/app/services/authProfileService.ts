@@ -33,5 +33,11 @@ export const authProfileService = (fetcher: Fetcher) => ({
       method: 'GET',
       query: { slug }
     })
+  },
+
+  deleteAccount: async (): Promise<{ message: string }> => {
+    return fetcher<{ message: string }>(API_ROUTES.PROTECTED.AUTH.DELETE_ACCOUNT, {
+      method: 'DELETE'
+    })
   }
 })

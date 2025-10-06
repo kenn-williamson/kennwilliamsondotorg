@@ -49,6 +49,7 @@ export const API_ROUTES = {
       CHANGE_PASSWORD: '/protected/auth/change-password',
       VALIDATE_SLUG: '/protected/auth/validate-slug',
       SEND_VERIFICATION: '/protected/auth/send-verification',
+      DELETE_ACCOUNT: '/protected/auth/delete-account',
     },
     TIMERS: {
       LIST: '/protected/incident-timers',
