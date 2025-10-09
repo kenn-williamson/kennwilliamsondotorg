@@ -183,7 +183,7 @@ That's the question I'm trying to answer in my own work, and it's the question I
 
 ---
 
-*Navigation: [← Back to Professional Path](/about/professional) | [View Other Sections](/about)*
+*Navigation: [← Back to Professional Path](/about/professional) | [Continue to Life Now →](/about/now)*
 
 ---
 

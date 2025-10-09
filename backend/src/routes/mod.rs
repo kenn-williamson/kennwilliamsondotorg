@@ -116,6 +116,11 @@ pub fn configure_app_routes(cfg: &mut web::ServiceConfig) {
                                         .route(web::post().to(admin::promote_user_to_admin)),
                                 )
                                 .service(
+                                    web::resource("/users/{id}/roles/{role_name}")
+                                        .route(web::post().to(admin::add_user_role))
+                                        .route(web::delete().to(admin::remove_user_role)),
+                                )
+                                .service(
                                     web::resource("/phrases")
                                         .route(web::get().to(admin::get_phrases))
                                         .route(web::post().to(admin::create_phrase)),

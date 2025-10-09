@@ -60,6 +60,18 @@ export const adminService = (fetcher: Fetcher) => ({
     })
   },
 
+  addUserRole: async (userId: string, roleName: string): Promise<AdminActionResponse> => {
+    return fetcher<AdminActionResponse>(API_ROUTES.PROTECTED.ADMIN.USER_ADD_ROLE(userId, roleName), {
+      method: 'POST'
+    })
+  },
+
+  removeUserRole: async (userId: string, roleName: string): Promise<AdminActionResponse> => {
+    return fetcher<AdminActionResponse>(API_ROUTES.PROTECTED.ADMIN.USER_REMOVE_ROLE(userId, roleName), {
+      method: 'DELETE'
+    })
+  },
+
   approveSuggestion: async (suggestionId: string, adminReason: string): Promise<AdminActionResponse> => {
     return fetcher<AdminActionResponse>(API_ROUTES.PROTECTED.ADMIN.SUGGESTIONS.APPROVE(suggestionId), {
       method: 'POST',

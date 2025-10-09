@@ -92,9 +92,9 @@ The transformation didn't happen all at once. There wasn't a single moment where
 
 During those years with my co-parent, I was still partying heavily, still drinking too much, still trying to cope with substances. But slowly, things started to shift. I started saying yes to the Holy Spirit more often than I said no. I made mistakes, many of them, but the trajectory was changing.
 
-Having kids gave me a purpose I'd been missing. I couldn't destroy myself anymore because I had these three little people depending on me. Rory, Charlie, and Teddy needed a father who was present, who was stable, who was trying.
+Having kids gave me a purpose I'd been missing. I couldn't destroy myself anymore because I had these three little people depending on me. Becoming their father is the greatest gift I've ever received. Rory, Charlie, and Teddy needed a father who was present, who was stable, who was trying.
 
-I went back to church. I started reading. I discovered Jordan Peterson, which led me to Jonathan Pageau, which led me to René Girard and the Church Fathers. I found a reading of the Gospel that made sense of contradictions I'd struggled with. I found a faith that wasn't about control or guilt but about love and transformation.
+I went back to church. I started reading. This was just the beginning. The theological journey ahead would give me language for things I was already sensing but couldn't yet articulate, a way of reading Scripture that would finally resolve contradictions I'd wrestled with since childhood.
 
 The professional crisis that came from my falling out with Roy and my general instability forced me to make a choice: keep drifting, or commit to a new path. I chose the latter. I enrolled in a coding boot camp at Coding Dojo, worked harder than I'd worked at anything, and came out the other side with skills and a plan.
 

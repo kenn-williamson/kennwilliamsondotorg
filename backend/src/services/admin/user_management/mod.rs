@@ -92,6 +92,83 @@ impl UserManagementService {
         Ok(())
     }
 
+    /// Add a role to a user with validation
+    pub async fn add_role(&self, user_id: Uuid, role_name: &str) -> anyhow::Result<()> {
+        // Validate role name
+        Self::validate_role_name(role_name)?;
+
+        // Cannot add 'user' role (it's immutable and auto-assigned)
+        if role_name == "user" {
+            return Err(anyhow::anyhow!(
+                "Cannot manually add 'user' role - it is automatically assigned on registration"
+            ));
+        }
+
+        // Add role using repository
+        self.admin_repository
+            .add_user_role(user_id, role_name)
+            .await?;
+
+        Ok(())
+    }
+
+    /// Remove a role from a user with validation
+    pub async fn remove_role(&self, user_id: Uuid, role_name: &str) -> anyhow::Result<()> {
+        // Validate role name
+        Self::validate_role_name(role_name)?;
+
+        // Cannot remove 'user' role (it's immutable)
+        if role_name == "user" {
+            return Err(anyhow::anyhow!(
+                "Cannot remove 'user' role - it is a permanent base role"
+            ));
+        }
+
+        // Prevent removing the last admin role
+        if role_name == "admin" {
+            let user_roles = self.user_repository.get_user_roles(user_id).await?;
+            if user_roles.contains(&"admin".to_string()) {
+                // Count total admins
+                let all_users = self
+                    .admin_repository
+                    .get_all_users_with_roles(None, Some(1000), None)
+                    .await?;
+                let admin_count = all_users
+                    .iter()
+                    .filter(|u| u.roles.as_ref().map_or(false, |r| r.contains(&"admin".to_string())))
+                    .count();
+
+                if admin_count <= 1 {
+                    return Err(anyhow::anyhow!(
+                        "Cannot remove the last admin role from the system"
+                    ));
+                }
+            }
+        }
+
+        // Remove role using repository
+        self.admin_repository
+            .remove_user_role(user_id, role_name)
+            .await?;
+
+        Ok(())
+    }
+
+    /// Validate role name against allowed manageable roles
+    fn validate_role_name(role_name: &str) -> anyhow::Result<()> {
+        const MANAGEABLE_ROLES: &[&str] = &["user", "email-verified", "trusted-contact", "admin"];
+
+        if !MANAGEABLE_ROLES.contains(&role_name) {
+            return Err(anyhow::anyhow!(
+                "Invalid role name '{}'. Allowed roles: {}",
+                role_name,
+                MANAGEABLE_ROLES.join(", ")
+            ));
+        }
+
+        Ok(())
+    }
+
     /// Check if user is admin
     #[allow(dead_code)] // Part of admin service API for future features
     pub async fn is_user_admin(&self, user_id: Uuid) -> anyhow::Result<bool> {

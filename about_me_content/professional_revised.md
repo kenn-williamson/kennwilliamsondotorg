@@ -34,11 +34,11 @@ The boot camp was intense. It was one of those programs where you get out what y
 
 I did very well and developed a strong capstone project. Near the end of the program, our class took a tour of a local software company's facility. The CEO (then President) and Director of Operations were there, and the CEO asked our group some technical questions. I was the only one who could answer them.
 
-That company was SEQTEK, where I've now been for almost seven and a half years.
+That company was SEQTEK, I joined in 2018 and I've been there ever since.
 
 *[Photo: Coding Dojo graduation or early SEQTEK days]*
 
-## The SEQTEK Journey: Seven and a Half Years of Growth
+## The SEQTEK Journey: Years of Growth
 
 I interviewed at SEQTEK and got hired in February 2018. Interestingly, my very first project wasn't even web development. It was an embedded C/C++ project for a large multinational conglomerate's pipeline measurement division. We successfully upgraded their field application from an old single-threaded Windows system to a modern multi-threaded Linux system where the threads communicated over TCP.
 
@@ -120,7 +120,7 @@ Beyond the work itself, there's the daily reality of trying to balance career wi
 
 ---
 
-*Navigation: [← Back to Theology & Practice](/about/theology) | [Continue to Life Now →](/about/now)*
+*Navigation: [← Back to Theology & Practice](/about/theology) | [Continue to AI & The Future of Work →](/about/ai)*
 
 ---
 

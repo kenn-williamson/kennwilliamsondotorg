@@ -239,6 +239,70 @@ pub async fn promote_user_to_admin(
     }
 }
 
+/// Add role to user (admin only)
+pub async fn add_user_role(
+    admin_service: web::Data<UserManagementService>,
+    _req: HttpRequest,
+    path: web::Path<(Uuid, String)>,
+) -> Result<HttpResponse> {
+    let (user_id, role_name) = path.into_inner();
+
+    match admin_service.add_role(user_id, &role_name).await {
+        Ok(_) => Ok(HttpResponse::Ok().json(serde_json::json!({
+            "message": format!("Role '{}' added successfully", role_name)
+        }))),
+        Err(e) => {
+            log::error!("Failed to add role '{}' to user: {}", role_name, e);
+
+            // Check for specific error types
+            let error_msg = e.to_string();
+            if error_msg.contains("Cannot manually add") || error_msg.contains("Invalid role name") {
+                Ok(HttpResponse::BadRequest().json(serde_json::json!({
+                    "error": error_msg
+                })))
+            } else {
+                Ok(HttpResponse::InternalServerError().json(serde_json::json!({
+                    "error": "Failed to add role"
+                })))
+            }
+        }
+    }
+}
+
+/// Remove role from user (admin only)
+pub async fn remove_user_role(
+    admin_service: web::Data<UserManagementService>,
+    _req: HttpRequest,
+    path: web::Path<(Uuid, String)>,
+) -> Result<HttpResponse> {
+    let (user_id, role_name) = path.into_inner();
+
+    match admin_service.remove_role(user_id, &role_name).await {
+        Ok(_) => Ok(HttpResponse::Ok().json(serde_json::json!({
+            "message": format!("Role '{}' removed successfully", role_name)
+        }))),
+        Err(e) => {
+            log::error!("Failed to remove role '{}' from user: {}", role_name, e);
+
+            // Check for specific error types
+            let error_msg = e.to_string();
+            if error_msg.contains("Cannot remove") && error_msg.contains("last admin") {
+                Ok(HttpResponse::Conflict().json(serde_json::json!({
+                    "error": error_msg
+                })))
+            } else if error_msg.contains("Cannot remove") || error_msg.contains("Invalid role name") {
+                Ok(HttpResponse::BadRequest().json(serde_json::json!({
+                    "error": error_msg
+                })))
+            } else {
+                Ok(HttpResponse::InternalServerError().json(serde_json::json!({
+                    "error": "Failed to remove role"
+                })))
+            }
+        }
+    }
+}
+
 /// Get pending phrase suggestions (admin only)
 pub async fn get_pending_suggestions(
     phrase_moderation_service: web::Data<PhraseModerationService>,

@@ -156,12 +156,40 @@ export const useAdminStore = defineStore('admin', () => {
   const promoteUser = async (userId: string) => {
     await _handleAction(() => adminServiceInstance.promoteUser(userId), 'promoteUser')
     _handleSuccess('User promoted to admin successfully')
-    
+
     // Update local state
     const user = users.value.find(u => u.id === userId)
     if (user) {
       user.roles = [...user.roles, 'admin']
     }
+  }
+
+  const addUserRole = async (userId: string, roleName: string) => {
+    await _handleAction(() => adminServiceInstance.addUserRole(userId, roleName), 'addUserRole')
+    _handleSuccess(`Role '${roleName}' added successfully`)
+
+    // Update local state
+    const user = users.value.find(u => u.id === userId)
+    if (user && !user.roles.includes(roleName)) {
+      user.roles = [...user.roles, roleName]
+    }
+
+    // Refresh users to get latest state
+    await fetchUsers()
+  }
+
+  const removeUserRole = async (userId: string, roleName: string) => {
+    await _handleAction(() => adminServiceInstance.removeUserRole(userId, roleName), 'removeUserRole')
+    _handleSuccess(`Role '${roleName}' removed successfully`)
+
+    // Update local state
+    const user = users.value.find(u => u.id === userId)
+    if (user) {
+      user.roles = user.roles.filter(r => r !== roleName)
+    }
+
+    // Refresh users to get latest state
+    await fetchUsers()
   }
 
   const approveSuggestion = async (suggestionId: string, adminReason: string) => {
@@ -287,6 +315,8 @@ export const useAdminStore = defineStore('admin', () => {
     activateUser,
     resetUserPassword,
     promoteUser,
+    addUserRole,
+    removeUserRole,
     approveSuggestion,
     rejectSuggestion,
     

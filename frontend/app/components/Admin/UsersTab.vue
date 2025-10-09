@@ -105,7 +105,70 @@
             </div>
             
             <div>
-              <h4 class="text-sm font-medium text-gray-900 mb-2">Actions</h4>
+              <h4 class="text-sm font-medium text-gray-900 mb-2">Roles</h4>
+              <div class="space-y-2 mb-4">
+                <!-- User role (base, immutable) -->
+                <div class="flex items-center justify-between p-2 bg-gray-50 rounded-md">
+                  <div class="flex items-center">
+                    <input
+                      type="checkbox"
+                      :checked="user.roles.includes('user')"
+                      disabled
+                      class="h-4 w-4 rounded border-gray-300 text-gray-400 cursor-not-allowed"
+                    />
+                    <label class="ml-2 text-sm text-gray-700">
+                      user <span class="text-xs text-gray-500">(base role)</span>
+                    </label>
+                  </div>
+                </div>
+
+                <!-- Email Verified role (manageable) -->
+                <div class="flex items-center justify-between p-2 bg-gray-50 rounded-md hover:bg-gray-100">
+                  <div class="flex items-center">
+                    <input
+                      type="checkbox"
+                      :checked="user.roles.includes('email-verified')"
+                      @change="toggleRole(user, 'email-verified')"
+                      class="h-4 w-4 rounded border-gray-300 text-blue-600 focus:ring-blue-500"
+                    />
+                    <label class="ml-2 text-sm text-gray-700 cursor-pointer">
+                      email-verified
+                    </label>
+                  </div>
+                </div>
+
+                <!-- Trusted Contact role (manageable) -->
+                <div class="flex items-center justify-between p-2 bg-gray-50 rounded-md hover:bg-gray-100">
+                  <div class="flex items-center">
+                    <input
+                      type="checkbox"
+                      :checked="user.roles.includes('trusted-contact')"
+                      @change="toggleRole(user, 'trusted-contact')"
+                      class="h-4 w-4 rounded border-gray-300 text-amber-600 focus:ring-amber-500"
+                    />
+                    <label class="ml-2 text-sm text-gray-700 cursor-pointer">
+                      trusted-contact
+                    </label>
+                  </div>
+                </div>
+
+                <!-- Admin role (manageable) -->
+                <div class="flex items-center justify-between p-2 bg-gray-50 rounded-md hover:bg-gray-100">
+                  <div class="flex items-center">
+                    <input
+                      type="checkbox"
+                      :checked="user.roles.includes('admin')"
+                      @change="toggleRole(user, 'admin')"
+                      class="h-4 w-4 rounded border-gray-300 text-blue-600 focus:ring-blue-500"
+                    />
+                    <label class="ml-2 text-sm text-gray-700 cursor-pointer">
+                      admin
+                    </label>
+                  </div>
+                </div>
+              </div>
+
+              <h4 class="text-sm font-medium text-gray-900 mb-2 mt-4">Actions</h4>
               <div class="space-y-2">
                 <button
                   @click="toggleUserStatus(user)"
@@ -118,20 +181,12 @@
                 >
                   {{ user.active ? 'Deactivate User' : 'Activate User' }}
                 </button>
-                
+
                 <button
                   @click="resetPassword(user)"
                   class="w-full px-3 py-2 text-sm bg-yellow-100 text-yellow-700 rounded-md hover:bg-yellow-200 transition-colors"
                 >
                   Reset Password
-                </button>
-                
-                <button
-                  v-if="!user.roles.includes('admin')"
-                  @click="handlePromoteUser(user)"
-                  class="w-full px-3 py-2 text-sm bg-blue-100 text-blue-700 rounded-md hover:bg-blue-200 transition-colors"
-                >
-                  Promote to Admin
                 </button>
               </div>
             </div>
@@ -240,12 +295,29 @@ const resetPassword = async (user: any) => {
   }
 }
 
-// Promote user to admin
+// Promote user to admin (legacy - replaced by toggleRole)
 const handlePromoteUser = async (user: any) => {
   try {
     await adminStore.promoteUser(user.id)
   } catch (error) {
     console.error('Promote user error:', error)
+  }
+}
+
+// Toggle user role (add/remove)
+const toggleRole = async (user: any, roleName: string) => {
+  try {
+    const hasRole = user.roles.includes(roleName)
+
+    if (hasRole) {
+      // Remove role
+      await adminStore.removeUserRole(user.id, roleName)
+    } else {
+      // Add role
+      await adminStore.addUserRole(user.id, roleName)
+    }
+  } catch (error) {
+    console.error(`Toggle role ${roleName} error:`, error)
   }
 }
 

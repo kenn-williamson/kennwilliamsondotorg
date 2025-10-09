@@ -123,7 +123,7 @@ All of this theology is meaningless if it doesn't change how I actually live. He
 
 The fruits of the Spirit—love, joy, peace, patience, kindness, goodness, faithfulness, gentleness, self-control—these are what I'm aiming for. I struggle with all of them. But the framework gives me a way to understand why I struggle and what transformation actually looks like.
 
-While my professional life has found stability and direction, all of this theological work has to meet the reality of daily life: three kids, single parenting, and trying to actually live what I believe.
+This theological framework shapes everything, including how I approach my work and professional calling.
 
 ---
 

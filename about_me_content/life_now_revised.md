@@ -151,7 +151,7 @@ These daily realities—the struggles and the small joys—are where faith and w
 
 ---
 
-*Navigation: [← Back to Professional Path](/about/professional) | [Continue to Philosophy & Vision →](/about/vision)*
+*Navigation: [← Back to AI & The Future of Work](/about/ai) | [Continue to Philosophy & Vision →](/about/vision)*
 
 ---
 

@@ -60,7 +60,7 @@ After finishing the Bible, I discovered Jonathan Pageau through Peterson. Pageau
 
 It was Pageau's endorsement of Orthodoxy that prompted me to actually start attending church again. I found an Orthodox parish and loved it immediately—the liturgy, the tradition, the theological depth. Everything resonated with what I'd been reading and discovering.
 
-I also began working through the Church Fathers systematically: Athanasius, Gregory of Nyssa, Ephrem, Maximus the Confessor. Then I discovered René Girard, whose work gave me language for patterns I'd already been seeing. I worked through his books in order: *I See Satan Fall Like Lightning*, *The Scapegoat*, *Things Hidden Since the Foundation of the World*, and I'm currently reading *Violence and the Sacred*.
+I also began working through the Church Fathers systematically. Then I discovered René Girard, whose work gave me language for patterns I'd already been seeing.
 
 What matters about this sequence is that I was developing my own understanding before I had the theological frameworks to articulate it. The reading didn't give me someone else's ideas to adopt. It gave me the tools to understand what I was already discovering.
 
