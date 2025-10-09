@@ -439,4 +439,225 @@ mod tests {
         assert!(result.is_ok());
         assert!(!result.unwrap());
     }
+
+    #[tokio::test]
+    #[allow(unused_mut)]
+    async fn test_add_role_trusted_contact_success() {
+        // Setup mocks
+        let mut mock_user_repo = MockUserRepository::new();
+        let mut mock_refresh_repo = MockRefreshTokenRepository::new();
+        let mut mock_admin_repo = MockAdminRepository::new();
+        let user_id = Uuid::new_v4();
+
+        // Configure mock expectations
+        mock_admin_repo
+            .expect_add_user_role()
+            .with(eq(user_id), eq("trusted-contact"))
+            .times(1)
+            .returning(|_, _| Ok(()));
+
+        // Create service
+        let service = UserManagementService::new(
+            Box::new(mock_user_repo),
+            Box::new(mock_refresh_repo),
+            Box::new(mock_admin_repo),
+        );
+
+        // Test
+        let result = service.add_role(user_id, "trusted-contact").await;
+
+        // Assert
+        assert!(result.is_ok());
+    }
+
+    #[tokio::test]
+    #[allow(unused_mut)]
+    async fn test_add_role_email_verified_success() {
+        // Setup mocks
+        let mut mock_user_repo = MockUserRepository::new();
+        let mut mock_refresh_repo = MockRefreshTokenRepository::new();
+        let mut mock_admin_repo = MockAdminRepository::new();
+        let user_id = Uuid::new_v4();
+
+        // Configure mock expectations
+        mock_admin_repo
+            .expect_add_user_role()
+            .with(eq(user_id), eq("email-verified"))
+            .times(1)
+            .returning(|_, _| Ok(()));
+
+        // Create service
+        let service = UserManagementService::new(
+            Box::new(mock_user_repo),
+            Box::new(mock_refresh_repo),
+            Box::new(mock_admin_repo),
+        );
+
+        // Test
+        let result = service.add_role(user_id, "email-verified").await;
+
+        // Assert
+        assert!(result.is_ok());
+    }
+
+    #[tokio::test]
+    #[allow(unused_mut)]
+    async fn test_add_role_invalid_name_fails() {
+        // Setup mocks
+        let mut mock_user_repo = MockUserRepository::new();
+        let mut mock_refresh_repo = MockRefreshTokenRepository::new();
+        let mut mock_admin_repo = MockAdminRepository::new();
+        let user_id = Uuid::new_v4();
+
+        // Create service
+        let service = UserManagementService::new(
+            Box::new(mock_user_repo),
+            Box::new(mock_refresh_repo),
+            Box::new(mock_admin_repo),
+        );
+
+        // Test
+        let result = service.add_role(user_id, "invalid-role").await;
+
+        // Assert
+        assert!(result.is_err());
+        let error_msg = result.unwrap_err().to_string();
+        assert!(error_msg.contains("Invalid role name"));
+        assert!(error_msg.contains("invalid-role"));
+    }
+
+    #[tokio::test]
+    #[allow(unused_mut)]
+    async fn test_add_role_user_role_fails() {
+        // Setup mocks
+        let mut mock_user_repo = MockUserRepository::new();
+        let mut mock_refresh_repo = MockRefreshTokenRepository::new();
+        let mut mock_admin_repo = MockAdminRepository::new();
+        let user_id = Uuid::new_v4();
+
+        // Create service
+        let service = UserManagementService::new(
+            Box::new(mock_user_repo),
+            Box::new(mock_refresh_repo),
+            Box::new(mock_admin_repo),
+        );
+
+        // Test
+        let result = service.add_role(user_id, "user").await;
+
+        // Assert
+        assert!(result.is_err());
+        let error_msg = result.unwrap_err().to_string();
+        assert!(error_msg.contains("Cannot manually add"));
+        assert!(error_msg.contains("user"));
+    }
+
+    #[tokio::test]
+    #[allow(unused_mut)]
+    async fn test_remove_role_success() {
+        // Setup mocks
+        let mut mock_user_repo = MockUserRepository::new();
+        let mut mock_refresh_repo = MockRefreshTokenRepository::new();
+        let mut mock_admin_repo = MockAdminRepository::new();
+        let user_id = Uuid::new_v4();
+
+        // Configure mock expectations
+        mock_admin_repo
+            .expect_remove_user_role()
+            .with(eq(user_id), eq("trusted-contact"))
+            .times(1)
+            .returning(|_, _| Ok(()));
+
+        // Create service
+        let service = UserManagementService::new(
+            Box::new(mock_user_repo),
+            Box::new(mock_refresh_repo),
+            Box::new(mock_admin_repo),
+        );
+
+        // Test
+        let result = service.remove_role(user_id, "trusted-contact").await;
+
+        // Assert
+        assert!(result.is_ok());
+    }
+
+    #[tokio::test]
+    #[allow(unused_mut)]
+    async fn test_remove_role_user_role_fails() {
+        // Setup mocks
+        let mut mock_user_repo = MockUserRepository::new();
+        let mut mock_refresh_repo = MockRefreshTokenRepository::new();
+        let mut mock_admin_repo = MockAdminRepository::new();
+        let user_id = Uuid::new_v4();
+
+        // Create service
+        let service = UserManagementService::new(
+            Box::new(mock_user_repo),
+            Box::new(mock_refresh_repo),
+            Box::new(mock_admin_repo),
+        );
+
+        // Test
+        let result = service.remove_role(user_id, "user").await;
+
+        // Assert
+        assert!(result.is_err());
+        let error_msg = result.unwrap_err().to_string();
+        assert!(error_msg.contains("Cannot remove"));
+        assert!(error_msg.contains("user"));
+        assert!(error_msg.contains("permanent"));
+    }
+
+    #[tokio::test]
+    #[allow(unused_mut)]
+    async fn test_remove_role_last_admin_fails() {
+        // Setup mocks
+        let mut mock_user_repo = MockUserRepository::new();
+        let mut mock_refresh_repo = MockRefreshTokenRepository::new();
+        let mut mock_admin_repo = MockAdminRepository::new();
+        let user_id = Uuid::new_v4();
+
+        // Create test data - only one admin in the system
+        let admin_user = UserWithRoles {
+            id: user_id,
+            email: "admin@example.com".to_string(),
+            display_name: "Admin User".to_string(),
+            slug: "admin-user".to_string(),
+            active: true,
+            real_name: None,
+            google_user_id: None,
+            roles: Some(vec!["user".to_string(), "admin".to_string()]),
+            created_at: chrono::Utc::now(),
+            updated_at: chrono::Utc::now(),
+        };
+
+        // Configure mock expectations
+        mock_user_repo
+            .expect_get_user_roles()
+            .with(eq(user_id))
+            .times(1)
+            .returning(|_| Ok(vec!["user".to_string(), "admin".to_string()]));
+
+        mock_admin_repo
+            .expect_get_all_users_with_roles()
+            .with(eq(None), eq(Some(1000)), eq(None))
+            .times(1)
+            .returning(move |_, _, _| Ok(vec![admin_user.clone()]));
+
+        // Create service
+        let service = UserManagementService::new(
+            Box::new(mock_user_repo),
+            Box::new(mock_refresh_repo),
+            Box::new(mock_admin_repo),
+        );
+
+        // Test
+        let result = service.remove_role(user_id, "admin").await;
+
+        // Assert
+        assert!(result.is_err());
+        let error_msg = result.unwrap_err().to_string();
+        assert!(error_msg.contains("Cannot remove the last admin"));
+    }
 }

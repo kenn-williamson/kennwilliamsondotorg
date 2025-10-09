@@ -8,7 +8,7 @@
 - **Infrastructure**: Nginx reverse proxy with SSL
 - **Deployment**: Live at kennwilliamson.org
 
-**Current State**: Production application with complete feature set including authentication, incident timers, phrases system, admin panel, 3-layer architecture refactor, and comprehensive test coverage (375 tests total: 200 backend + 175 frontend).
+**Current State**: Production application with complete feature set including authentication, incident timers, phrases system, admin panel, 3-layer architecture refactor, and comprehensive test coverage (402 tests total: 227 backend + 175 frontend).
 
 ## Quick Start
 ```bash
@@ -32,7 +32,7 @@
 - **Profile Management**: Display name, slug editing, and password changes
 - **Data Privacy**: Self-service account deletion and data export (GDPR/CCPA compliant)
 - **Public Display**: Public timer and phrase endpoints (no auth required)
-- **Testing**: 395 tests (220 backend unit/integration + 175 frontend)
+- **Testing**: 402 tests (227 backend unit/integration + 175 frontend)
 - **Architecture**: 3-layer backend (API/Service/Repository) with dependency injection
 - **Frontend Architecture**: Stores with embedded actions for SSR hydration
 - **Responsive UI**: Mobile-first design with TailwindCSS and steampunk aesthetics
