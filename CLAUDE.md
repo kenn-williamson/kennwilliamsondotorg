@@ -30,8 +30,9 @@
 - **Phrases System**: Random motivational phrases with user suggestions and filtering
 - **Admin Panel**: User management, phrase moderation, and system statistics
 - **Profile Management**: Display name, slug editing, and password changes
+- **Data Privacy**: Self-service account deletion and data export (GDPR/CCPA compliant)
 - **Public Display**: Public timer and phrase endpoints (no auth required)
-- **Testing**: 375 tests (200 backend unit/integration + 175 frontend)
+- **Testing**: 395 tests (220 backend unit/integration + 175 frontend)
 - **Architecture**: 3-layer backend (API/Service/Repository) with dependency injection
 - **Frontend Architecture**: Stores with embedded actions for SSR hydration
 - **Responsive UI**: Mobile-first design with TailwindCSS and steampunk aesthetics

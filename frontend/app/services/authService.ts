@@ -73,5 +73,22 @@ export const authService = (fetcher: Fetcher) => ({
     return fetcher<SendVerificationEmailResponse>(API_ROUTES.API.AUTH.SEND_VERIFICATION, {
       method: 'POST'
     })
+  },
+
+  // Data export methods
+  exportUserData: async (): Promise<Blob> => {
+    const response = await fetch(API_ROUTES.PROTECTED.AUTH.EXPORT_DATA, {
+      method: 'GET',
+      headers: {
+        'Accept': 'application/json',
+      },
+      credentials: 'include',
+    })
+
+    if (!response.ok) {
+      throw new Error('Failed to export user data')
+    }
+
+    return response.blob()
   }
 })

@@ -120,6 +120,9 @@
         </div>
       </div>
 
+      <!-- Data Export Section -->
+      <DataExport class="mb-8" />
+
       <!-- Delete Account Section -->
       <DeleteAccountSection v-if="user" :user="user" />
     </div>

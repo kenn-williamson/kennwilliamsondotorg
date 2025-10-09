@@ -531,9 +531,108 @@
 - **Compliance Roadmap**: Clear path to GDPR/CCPA compliance before production deployment
 - **Testing Support**: Mock OAuth service enables complete testing without external dependencies
 
+### About Me Pages & Role-Based Access Control
+**Achievement**: Complete implementation of personal biography pages with role-based access control system for content privacy.
+
+**Key Deliverables**:
+- **About Me Pages**: 9 complete biography pages covering personal journey, faith, professional path, and vision
+- **Role-Based Access**: `trusted-contact` role for viewing personal biography content
+- **Admin Role Management**: Backend endpoints for adding/removing user roles with validation
+- **Frontend Components**: Steampunk-themed accordion and tooltip components for about pages
+- **Request Access Flow**: Public request page for users to request trusted-contact access
+- **Middleware Protection**: Route middleware protecting personal content pages
+
+**Technical Implementation**:
+
+**About Me Pages**:
+- `/about` - Overview/index page with navigation to all biography sections
+- `/about/origins` - Early life and formative experiences
+- `/about/wilderness` - Struggles and transformative period
+- `/about/faith` - Finding faith journey
+- `/about/theology` - Theological perspectives and practice
+- `/about/now` - Current life and work
+- `/about/professional` - Career journey and professional path
+- `/about/ai` - Thoughts on AI and future of work
+- `/about/vision` - Future aspirations and goals
+- `/about/request-access` - Public page for requesting trusted-contact role
+
+**Role Management System**:
+- **Backend Service**: Admin role management with `add_role()` and `remove_role()` methods
+- **Role Validation**: Whitelist validation for allowed role names (`admin`, `user`, `trusted-contact`, `email-verified`)
+- **Admin API**: `POST /backend/admin/users/{id}/roles/{role}` and `DELETE /backend/admin/users/{id}/roles/{role}`
+- **Frontend Integration**: Admin panel users tab with role addition/removal UI
+- **Middleware**: `trusted-contact.ts` middleware protecting personal biography pages
+
+**UI Components**:
+- **SteampunkAccordion**: Collapsible content sections with steampunk aesthetic
+- **SteampunkTooltip**: Contextual help tooltips matching site design
+- **Base Components**: Shared typography and layout components for consistent styling
+- **useAccordion Composable**: Reusable accordion state management
+- **useTooltip Composable**: Reusable tooltip functionality
+
+**Architecture Benefits**:
+- **Privacy Control**: Personal content only visible to users with `trusted-contact` role
+- **Flexible Access**: Admins can grant/revoke access to personal content
+- **User Experience**: Clean request flow for interested users to gain access
+- **Maintainable**: Role-based system easily extensible for future access levels
+- **Secure**: Role validation prevents unauthorized role assignments
+
+### GDPR/CCPA Compliance Implementation - Account Deletion & Data Export
+**Achievement**: Complete implementation of self-service account deletion and data export/portability features fulfilling critical GDPR/CCPA compliance requirements.
+
+**Key Deliverables**:
+- **Account Deletion**: Self-service account deletion with comprehensive data cleanup
+- **Data Export/Portability**: One-click JSON export of all user data with date-stamped downloads
+- **Compliance Fulfillment**: 2/2 critical legal gaps addressed (Account Deletion + Data Export)
+- **Testing Coverage**: 20 backend tests for data export functionality with comprehensive validation
+- **Privacy Rights**: Complete implementation of GDPR Article 17 (Right to Erasure) and Article 20 (Right to Data Portability)
+
+**Technical Implementation**:
+
+**Account Deletion Features**:
+- **Backend Service**: Complete account deletion with cascading cleanup across all user data
+- **Data Cleanup**: Automatic removal of incident timers, phrase suggestions, exclusions, OAuth connections, sessions, and verification tokens
+- **Frontend Component**: DeleteAccountSection component with confirmation modal and password verification
+- **Security**: Password verification required before deletion with rate limiting protection
+- **Database Integration**: Foreign key cascade handling and orphaned data cleanup
+
+**Data Export Features**:
+- **Backend Service**: Complete data aggregation service collecting all user data into structured JSON
+- **Data Structure**: Comprehensive export including user profile, incident timers, phrase suggestions/exclusions, active sessions, and verification history
+- **Frontend Component**: DataExport component with one-click download and proper error handling
+- **File Naming**: Date-stamped JSON files (`data-export-YYYY-MM-DD.json`) for easy organization
+- **API Endpoint**: `GET /backend/protected/auth/export-data` with authentication and rate limiting
+
+**API Endpoints**:
+- `DELETE /backend/protected/auth/delete-account` - Delete user account with password verification
+- `GET /backend/protected/auth/export-data` - Export all user data in JSON format
+
+**Database Operations**:
+- Cascading deletion across 7 tables (users, incident_timers, phrase_suggestions, user_excluded_phrases, user_roles, refresh_tokens, verification_tokens)
+- Complete data aggregation from all user-related tables for export
+- Transaction safety with proper error handling and rollback
+
+**Testing Infrastructure**:
+- **Account Deletion**: 8 backend tests covering deletion flow, password verification, data cleanup, and error scenarios
+- **Data Export**: 20 backend tests (7 service layer + 5 data models + 4 API endpoint + 4 integration)
+- **Test Coverage**: Comprehensive validation of data aggregation, JSON serialization, authorization, and isolation
+
+**Compliance Achievement**:
+- **GDPR Article 17**: ✅ Right to Erasure - Complete account deletion with comprehensive cleanup
+- **GDPR Article 20**: ✅ Right to Data Portability - Machine-readable JSON export
+- **CCPA Section 1798.100**: ✅ Consumer data access and deletion rights
+- **Privacy Policy Promise**: ✅ Automated self-service fulfillment of all data rights
+
+**Architecture Benefits**:
+- **Self-Service**: Users can exercise data rights instantly without manual intervention
+- **Comprehensive**: Complete data cleanup and export covering all user-related data
+- **Secure**: Password verification, authentication, and rate limiting protection
+- **Auditable**: Complete test coverage ensuring proper implementation of legal requirements
+- **Maintainable**: Clean service layer implementation following existing architectural patterns
+
 ## Current Status
 - **Application**: Live at kennwilliamson.org with full production infrastructure
-- **Testing**: 200 total backend tests + 175 frontend tests with comprehensive coverage across all architectural layers
+- **Testing**: 220 total backend tests + 175 frontend tests with comprehensive coverage across all architectural layers
 - **Development Environment**: Complete hot reload with production-like routing
 - **Documentation**: Comprehensive implementation and workflow documentation with hybrid API architecture
 - **Architecture**: Clean 3-layer architecture with repository pattern, dependency injection, and comprehensive testing infrastructure
@@ -541,6 +640,7 @@
 - **OAuth**: Google OAuth integration with PKCE flow and Redis state storage
 - **Email Verification**: AWS SES integration with token-based verification system
 - **Legal Infrastructure**: Privacy Policy and Terms of Service with compliance gaps analysis
+- **Data Privacy**: Self-service account deletion and data export (GDPR/CCPA compliant)
 - **Deployment**: Production deployment complete with SSL and monitoring
 - **User Experience**: Critical timer bugs resolved with proper focus/visibility handling
 - **Phrases System**: Complete dynamic phrase system with 5-tab user interface and admin backend endpoints
@@ -550,4 +650,4 @@
 - **Frontend Architecture**: Complete refactor with 25/25 components migrated to centralized store architecture with improved SSR hydration
 - **Frontend Testing**: Complete testing infrastructure with 175 tests achieving 100% success rate across action composables, pure services, pure stores, and utilities
 - **SSR Hydration**: Improved store hydration and SSR consistency with smart fetch system for intelligent data fetching
-- **Compliance Status**: Legal documents complete, 9 features identified for GDPR/CCPA compliance before full production
+- **Compliance Status**: 2/9 critical compliance features complete (Account Deletion + Data Export), legal documents complete, 7 features remaining for full GDPR/CCPA compliance

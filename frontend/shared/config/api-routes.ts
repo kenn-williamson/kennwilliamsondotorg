@@ -50,6 +50,7 @@ export const API_ROUTES = {
       VALIDATE_SLUG: '/protected/auth/validate-slug',
       SEND_VERIFICATION: '/protected/auth/send-verification',
       DELETE_ACCOUNT: '/protected/auth/delete-account',
+      EXPORT_DATA: '/protected/auth/export-data',
     },
     TIMERS: {
       LIST: '/protected/incident-timers',
@@ -72,6 +73,8 @@ export const API_ROUTES = {
       USER_ACTIVATE: (id: string) => `/protected/admin/users/${id}/activate`,
       USER_RESET_PASSWORD: (id: string) => `/protected/admin/users/${id}/reset-password`,
       USER_PROMOTE: (id: string) => `/protected/admin/users/${id}/promote`,
+      USER_ADD_ROLE: (id: string, roleName: string) => `/protected/admin/users/${id}/roles/${roleName}`,
+      USER_REMOVE_ROLE: (id: string, roleName: string) => `/protected/admin/users/${id}/roles/${roleName}`,
       PHRASES: {
         LIST: '/protected/admin/phrases',
         CREATE: '/protected/admin/phrases',

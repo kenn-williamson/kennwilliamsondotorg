@@ -7,9 +7,9 @@
 
 The Privacy Policy and Terms of Service make explicit promises about features that are **not currently implemented**. This creates legal liability under GDPR, CCPA, and contract law.
 
-**Critical Issues:** 2 features must be implemented before production deployment (1 completed)
+**Critical Issues:** 2 features must be implemented before production deployment (2 completed)
 **Important Issues:** 3 features should be implemented for compliance and user trust
-**Total Implementation Time:** Estimated 2-3 weeks for remaining critical + important features
+**Total Implementation Time:** Estimated 1-2 weeks for remaining important features
 
 ---
 
@@ -55,7 +55,7 @@ The Privacy Policy and Terms of Service make explicit promises about features th
 
 ---
 
-### 2. Data Export/Portability ⚠️ HIGH PRIORITY
+### 2. Data Export/Portability ✅ COMPLETED
 
 **Legal Liability:** HIGH
 **Estimated Effort:** 2-3 days
@@ -63,49 +63,62 @@ The Privacy Policy and Terms of Service make explicit promises about features th
 **Where Claimed:**
 - Privacy Policy: "You can request a machine-readable export of your data (JSON format). Contact me and I'll provide it within 30 days."
 
-**Current Status:** PARTIALLY IMPLEMENTED (manual only)
-- No automated export functionality
-- Requires email to privacy@kennwilliamson.org
-- No self-service option
+**Current Status:** ✅ IMPLEMENTED
+- ✅ Self-service data export functionality
+- ✅ Backend API endpoint: `GET /backend/protected/auth/export-data`
+- ✅ Frontend "Download My Data" button in profile settings
+- ✅ Complete JSON export with all user data
 
 **Compliance Risk:**
 - **GDPR Article 20** (Right to Data Portability) - should be automated and instant
 - **CCPA Section 1798.100** - requires accessible data export within 45 days
 - Policy promises JSON format but no system to deliver it
 
-**Implementation Required:**
-1. Backend API endpoint: `GET /backend/protected/auth/export-data`
-2. Service method: `AuthService::export_user_data()` returning JSON
-3. Data aggregation from all user tables:
+**Implementation Completed:**
+1. ✅ Backend API endpoint: `GET /backend/protected/auth/export-data`
+2. ✅ Service method: `AuthService::export_user_data()` returning JSON
+3. ✅ Data aggregation from all user tables:
    - User profile (email, display_name, slug, created_at, etc.)
    - All incident timers
    - All phrase suggestions
    - All phrase exclusions
    - OAuth connections (Google account info)
-   - Account metadata
-4. Frontend UI: "Download My Data" button in profile settings
-5. Response: Downloadable JSON file with proper filename
+   - Active sessions and verification history
+4. ✅ Frontend UI: "Download My Data" button in profile settings
+5. ✅ Response: Downloadable JSON file with date-stamped filename
 
-**Files to Modify:**
-- `backend/src/routes/auth.rs` - Add export endpoint
-- `backend/src/services/auth/auth_service/data_export.rs` - New file
-- `frontend/app/components/Profile/DataExport.vue` - New component
-- `frontend/app/pages/profile.vue` - Add data export section
+**Files Created/Modified:**
+- ✅ `backend/src/routes/auth.rs` - Export endpoint implemented
+- ✅ `backend/src/services/auth/auth_service/data_export.rs` - Service method with 20 tests
+- ✅ `backend/src/models/api/data_export.rs` - Data structures
+- ✅ `frontend/app/components/Profile/DataExport.vue` - New component
+- ✅ `frontend/app/pages/profile.vue` - Data export section added
+- ✅ `frontend/shared/config/api-routes.ts` - Route constant added
+- ✅ `frontend/app/services/authService.ts` - Export method added
 
-**JSON Structure Example:**
+**JSON Structure (as implemented):**
 ```json
 {
-  "export_date": "2025-10-04T12:00:00Z",
+  "export_date": "2025-10-08T12:00:00Z",
+  "export_version": "1.0",
   "user": {
+    "id": "uuid",
     "email": "user@example.com",
     "display_name": "John Doe",
     "slug": "johndoe",
+    "real_name": "John Doe",
+    "google_user_id": "google_123",
+    "active": true,
+    "email_verified": true,
     "created_at": "2025-01-01T00:00:00Z",
-    "verified": true
+    "updated_at": "2025-10-08T00:00:00Z",
+    "roles": ["user", "email-verified"]
   },
   "incident_timers": [...],
   "phrase_suggestions": [...],
-  "phrase_exclusions": [...]
+  "phrase_exclusions": [...],
+  "active_sessions": [...],
+  "verification_history": [...]
 }
 ```
 
