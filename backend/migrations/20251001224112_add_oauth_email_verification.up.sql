@@ -24,9 +24,10 @@ CREATE INDEX idx_verification_tokens_user_id ON verification_tokens(user_id);
 CREATE INDEX idx_verification_tokens_token_hash ON verification_tokens(token_hash);
 CREATE INDEX idx_verification_tokens_expires_at ON verification_tokens(expires_at);
 
--- Add email-verified role for RBAC-based verification
+-- Add email-verified and trusted-contact roles for RBAC-based verification and access control
 INSERT INTO roles (name, description) VALUES
-    ('email-verified', 'User has verified their email address');
+    ('email-verified', 'User has verified their email address'),
+    ('trusted-contact', 'Trusted contact with access to personal/family content');
 
 -- Add trigger to automatically update updated_at for verification_tokens
 CREATE TRIGGER update_verification_tokens_updated_at

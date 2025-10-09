@@ -54,10 +54,41 @@ Comprehensive security implementation covering authentication, authorization, da
 
 ## Authorization System
 
-### Role-Based Access Control
-- **Roles**: User and admin roles stored in database
+### Role-Based Access Control (RBAC)
+
+The application implements a 4-tier role system stored in the `roles` and `user_roles` tables:
+
+#### Role Definitions
+
+1. **`user`** (Base Role - Immutable)
+   - Automatically assigned on registration
+   - Cannot be removed or changed via admin interface
+   - Represents basic authenticated user status
+   - Permissions: View public content, manage account settings
+
+2. **`email-verified`** (Manageable)
+   - Assigned after successful email verification
+   - Can be manually granted/revoked by admins
+   - Required for creating timers and phrases
+   - Gates features requiring verified identity
+
+3. **`trusted-contact`** (Manageable)
+   - Manually granted by admins after request approval
+   - Provides access to personal/family content on about pages
+   - Protected content: Origins, Wilderness, Faith, Theology, Life Now, Vision pages
+   - Public content: Overview, Professional, AI pages (no authentication required)
+
+4. **`admin`** (Manageable)
+   - Full system access including user management
+   - Can grant/revoke manageable roles (`email-verified`, `trusted-contact`, `admin`)
+   - Cannot remove `user` role (base role is permanent)
+   - Access to admin panel and all privileged endpoints
+
+#### Role Management
+- **Assignment**: Roles assigned via `user_roles` junction table (many-to-many)
 - **Middleware**: JWT validation extracts user context and roles
-- **Route Protection**: Automatic role checking for admin endpoints
+- **Route Protection**: Automatic role checking for admin and protected endpoints
+- **Admin Interface**: Role toggle controls for manageable roles
 - **Implementation**: See `backend/src/middleware/auth.rs`
 
 ### Protected Resources
