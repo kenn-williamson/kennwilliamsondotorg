@@ -2,7 +2,7 @@
  * Centralized Admin Store - State management with actions
  */
 
-import type { User, AdminStats } from '#shared/types'
+import type { User, AdminStats, AdminResetPasswordResponse } from '#shared/types'
 import type { PhraseSuggestion } from '#shared/types/phrases'
 import { adminService } from '~/services/adminService'
 import { useSmartFetch } from '~/composables/useSmartFetch'
@@ -143,10 +143,10 @@ export const useAdminStore = defineStore('admin', () => {
     }
   }
 
-  const resetUserPassword = async (userId: string) => {
+  const resetUserPassword = async (userId: string): Promise<AdminResetPasswordResponse | undefined> => {
     const data = await _handleAction(() => adminServiceInstance.resetUserPassword(userId), 'resetUserPassword')
     _handleSuccess('Password reset successfully')
-    
+
     if (data) {
       newPassword.value = data.new_password
     }

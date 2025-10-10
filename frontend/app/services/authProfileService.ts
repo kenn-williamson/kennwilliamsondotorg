@@ -39,5 +39,14 @@ export const authProfileService = (fetcher: Fetcher) => ({
     return fetcher<{ message: string }>(API_ROUTES.PROTECTED.AUTH.DELETE_ACCOUNT, {
       method: 'DELETE'
     })
+  },
+
+  exportUserData: async (): Promise<Blob> => {
+    // Note: Blob responses require special handling
+    const response = await fetcher<Blob>(API_ROUTES.PROTECTED.AUTH.EXPORT_DATA, {
+      method: 'GET',
+      responseType: 'blob' as any
+    })
+    return response
   }
 })

@@ -1,6 +1,6 @@
 /**
- * Email Verification Composable
- * Handles email verification flow including sending verification emails and verifying tokens
+ * Email Verification Actions Composable
+ * Orchestrates email verification flow with useBaseService for consistent error handling
  */
 
 import { useSmartFetch } from '~/composables/useSmartFetch'
@@ -8,7 +8,7 @@ import { useBaseService } from '~/composables/useBaseService'
 import { API_ROUTES } from '#shared/config/api-routes'
 import type { SendVerificationEmailResponse, VerifyEmailResponse } from '#shared/types'
 
-export const useEmailVerification = () => {
+export const useEmailVerificationActions = () => {
   // Create dependencies
   const smartFetch = useSmartFetch()
   const { clearToken } = useJwtManager()

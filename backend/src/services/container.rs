@@ -3,13 +3,15 @@ use std::sync::Arc;
 
 #[cfg(feature = "mocks")]
 use crate::repositories::mocks::{
-    MockAdminRepository, MockIncidentTimerRepository, MockPhraseRepository, MockPkceStorage,
-    MockRefreshTokenRepository, MockUserRepository, MockVerificationTokenRepository,
+    MockAdminRepository, MockIncidentTimerRepository, MockPasswordResetTokenRepository,
+    MockPhraseRepository, MockPkceStorage, MockRefreshTokenRepository, MockUserRepository,
+    MockVerificationTokenRepository,
 };
 use crate::repositories::postgres::{
     postgres_admin_repository::PostgresAdminRepository,
     postgres_email_suppression_repository::PostgresEmailSuppressionRepository,
     postgres_incident_timer_repository::PostgresIncidentTimerRepository,
+    postgres_password_reset_token_repository::PostgresPasswordResetTokenRepository,
     postgres_phrase_repository::PostgresPhraseRepository,
     postgres_refresh_token_repository::PostgresRefreshTokenRepository,
     postgres_user_repository::PostgresUserRepository,
@@ -74,6 +76,9 @@ impl ServiceContainer {
             .verification_token_repository(Box::new(
                 PostgresVerificationTokenRepository::new(pool.clone()),
             ))
+            .password_reset_token_repository(Box::new(
+                PostgresPasswordResetTokenRepository::new(pool.clone()),
+            ))
             .incident_timer_repository(Box::new(PostgresIncidentTimerRepository::new(
                 pool.clone(),
             )))
@@ -121,6 +126,7 @@ impl ServiceContainer {
         let cleanup_service = Arc::new(CleanupService::new(
             Box::new(PostgresRefreshTokenRepository::new(pool.clone())),
             Box::new(PostgresVerificationTokenRepository::new(pool.clone())),
+            Box::new(PostgresPasswordResetTokenRepository::new(pool.clone())),
         ));
 
         Self {
@@ -181,6 +187,7 @@ impl ServiceContainer {
         let cleanup_service = Arc::new(CleanupService::new(
             Box::new(MockRefreshTokenRepository::new()),
             Box::new(MockVerificationTokenRepository::new()),
+            Box::new(MockPasswordResetTokenRepository::new()),
         ));
 
         Self {

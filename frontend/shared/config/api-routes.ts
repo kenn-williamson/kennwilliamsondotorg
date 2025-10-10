@@ -23,6 +23,8 @@ export const API_ROUTES = {
       GOOGLE_URL: '/public/auth/google/url',
       GOOGLE_CALLBACK: '/public/auth/google/callback',
       VERIFY_EMAIL: '/public/auth/verify-email',
+      FORGOT_PASSWORD: '/public/auth/forgot-password',
+      RESET_PASSWORD: '/public/auth/reset-password',
     },
     HEALTH: {
       BASIC: '/public/health',

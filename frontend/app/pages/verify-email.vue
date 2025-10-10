@@ -49,7 +49,7 @@
 </template>
 
 <script setup lang="ts">
-import { useEmailVerification } from '~/composables/useEmailVerification'
+import { useEmailVerificationActions } from '~/composables/useEmailVerificationActions'
 
 // Page meta
 useHead({
@@ -65,7 +65,7 @@ const router = useRouter()
 const verificationStatus = ref<'loading' | 'success' | 'error'>('loading')
 const errorMessage = ref('Invalid or expired verification link. Please try resending the verification email.')
 
-const { verifyEmail } = useEmailVerification()
+const { verifyEmail } = useEmailVerificationActions()
 
 onMounted(async () => {
   const token = route.query.token as string

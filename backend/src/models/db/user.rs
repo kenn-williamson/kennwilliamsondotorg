@@ -41,3 +41,14 @@ pub struct VerificationToken {
     pub expires_at: DateTime<Utc>,
     pub created_at: DateTime<Utc>,
 }
+
+/// Password reset token for password recovery flow
+#[derive(Debug, Clone, FromRow, Serialize)]
+pub struct PasswordResetToken {
+    pub id: Uuid,
+    pub user_id: Uuid,
+    pub token_hash: String,
+    pub expires_at: DateTime<Utc>,
+    pub used_at: Option<DateTime<Utc>>,
+    pub created_at: DateTime<Utc>,
+}

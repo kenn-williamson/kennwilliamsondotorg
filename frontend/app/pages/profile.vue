@@ -131,7 +131,7 @@
 
 <script setup>
 import { ref } from 'vue'
-import { useEmailVerification } from '~/composables/useEmailVerification'
+import { useEmailVerificationActions } from '~/composables/useEmailVerificationActions'
 
 // Page meta
 useHead({
@@ -161,8 +161,8 @@ const refreshUser = () => refreshSession()
 const userPending = computed(() => false) // Session data is already loaded
 const userError = computed(() => null) // Session handles auth errors
 
-// Email verification
-const { sendVerificationEmail, isLoading: verificationLoading } = useEmailVerification()
+// Email verification actions
+const { sendVerificationEmail, isLoading: verificationLoading } = useEmailVerificationActions()
 const verificationSent = ref(false)
 
 const handleResendVerification = async () => {

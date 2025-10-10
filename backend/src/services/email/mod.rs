@@ -27,4 +27,19 @@ pub trait EmailService: Send + Sync {
         verification_token: &str,
         frontend_url: &str,
     ) -> Result<()>;
+
+    /// Send a password reset email with token
+    ///
+    /// # Arguments
+    /// * `to_email` - Recipient email address
+    /// * `to_name` - Recipient display name (optional, for personalization)
+    /// * `reset_token` - The password reset token to include in the link
+    /// * `frontend_url` - Base URL of the frontend (e.g., "https://kennwilliamson.org")
+    async fn send_password_reset_email(
+        &self,
+        to_email: &str,
+        to_name: Option<&str>,
+        reset_token: &str,
+        frontend_url: &str,
+    ) -> Result<()>;
 }

@@ -43,9 +43,17 @@
 
           <!-- Password Field -->
           <div>
-            <label for="password" class="block text-sm font-medium text-gray-700 mb-2">
-              Password
-            </label>
+            <div class="flex items-center justify-between mb-2">
+              <label for="password" class="block text-sm font-medium text-gray-700">
+                Password
+              </label>
+              <NuxtLink
+                to="/forgot-password"
+                class="text-sm text-sky-600 hover:text-sky-700 font-medium hover:underline transition-colors duration-200"
+              >
+                Forgot password?
+              </NuxtLink>
+            </div>
             <Field
               name="password"
               type="password"

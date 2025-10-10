@@ -125,6 +125,28 @@ pub struct VerifyEmailResponse {
     pub email_verified: bool,
 }
 
+// Password Reset request/response types
+#[derive(Debug, Deserialize)]
+pub struct ForgotPasswordRequest {
+    pub email: String,
+}
+
+#[derive(Debug, Serialize)]
+pub struct ForgotPasswordResponse {
+    pub message: String,
+}
+
+#[derive(Debug, Deserialize)]
+pub struct ResetPasswordRequest {
+    pub token: String,
+    pub new_password: String,
+}
+
+#[derive(Debug, Serialize)]
+pub struct ResetPasswordResponse {
+    pub message: String,
+}
+
 // Google OAuth request/response types
 #[derive(Debug, Serialize)]
 pub struct GoogleOAuthUrlResponse {

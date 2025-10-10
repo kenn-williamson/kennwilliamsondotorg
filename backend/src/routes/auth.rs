@@ -331,7 +331,57 @@ pub async fn delete_account(
 }
 
 // ============================================================================
-// GOOGLE OAUTH ROUTES  
+// PASSWORD RESET ROUTES
+// ============================================================================
+
+/// POST /backend/public/auth/forgot-password
+/// Send password reset email (public endpoint, no auth required)
+/// Returns same response regardless of whether user exists (prevents user enumeration)
+pub async fn forgot_password(
+    data: web::Json<crate::models::api::ForgotPasswordRequest>,
+    auth_service: web::Data<AuthService>,
+) -> ActixResult<HttpResponse> {
+    let frontend_url = std::env::var("FRONTEND_URL")
+        .ok()
+        .unwrap_or_else(|| "https://kennwilliamson.org".to_string());
+
+    match auth_service
+        .send_password_reset_email(&data.email, &frontend_url)
+        .await
+    {
+        Ok(response) => Ok(HttpResponse::Ok().json(response)),
+        Err(err) => {
+            log::error!("Forgot password error: {}", err);
+            // Return generic message even on error to prevent user enumeration
+            Ok(HttpResponse::Ok().json(serde_json::json!({
+                "message": "If an account exists with that email, you will receive a password reset link."
+            })))
+        }
+    }
+}
+
+/// POST /backend/public/auth/reset-password
+/// Reset password with token (public endpoint, no auth required)
+pub async fn reset_password(
+    data: web::Json<crate::models::api::ResetPasswordRequest>,
+    auth_service: web::Data<AuthService>,
+) -> ActixResult<HttpResponse> {
+    match auth_service
+        .reset_password_with_token(&data.token, &data.new_password)
+        .await
+    {
+        Ok(response) => Ok(HttpResponse::Ok().json(response)),
+        Err(err) => {
+            log::error!("Password reset error: {}", err);
+            Ok(HttpResponse::BadRequest().json(serde_json::json!({
+                "error": "Invalid or expired reset token"
+            })))
+        }
+    }
+}
+
+// ============================================================================
+// GOOGLE OAUTH ROUTES
 // ============================================================================
 
 /// GET /backend/public/auth/google/url

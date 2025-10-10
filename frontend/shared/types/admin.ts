@@ -22,8 +22,8 @@ export interface SuggestionsResponse {
   total: number
 }
 
-// Password reset response
-export interface ResetPasswordResponse {
+// Admin password reset response (different from user self-service password reset)
+export interface AdminResetPasswordResponse {
   new_password: string
   message: string
 }

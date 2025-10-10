@@ -1,5 +1,6 @@
 use super::jwt::JwtService;
 use crate::repositories::traits::incident_timer_repository::IncidentTimerRepository;
+use crate::repositories::traits::password_reset_token_repository::PasswordResetTokenRepository;
 use crate::repositories::traits::phrase_repository::PhraseRepository;
 use crate::repositories::traits::pkce_storage::PkceStorage;
 use crate::repositories::traits::refresh_token_repository::RefreshTokenRepository;
@@ -16,6 +17,7 @@ pub mod email_verification;
 pub mod login;
 pub mod oauth;
 pub mod password;
+pub mod password_reset;
 pub mod profile;
 pub mod refresh_token;
 pub mod register;
@@ -28,6 +30,7 @@ pub struct AuthService {
     user_repository: Box<dyn UserRepository>,
     refresh_token_repository: Box<dyn RefreshTokenRepository>,
     verification_token_repository: Option<Box<dyn VerificationTokenRepository>>,
+    password_reset_token_repository: Option<Box<dyn PasswordResetTokenRepository>>,
     email_service: Option<Box<dyn EmailService>>,
     google_oauth_service: Option<Box<dyn GoogleOAuthServiceTrait>>,
     pkce_storage: Option<Box<dyn PkceStorage>>,

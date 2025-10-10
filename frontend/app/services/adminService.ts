@@ -4,11 +4,11 @@
  */
 
 import { API_ROUTES } from '#shared/config/api-routes'
-import type { 
-  AdminStats, 
-  UsersResponse, 
-  SuggestionsResponse, 
-  ResetPasswordResponse,
+import type {
+  AdminStats,
+  UsersResponse,
+  SuggestionsResponse,
+  AdminResetPasswordResponse,
   AdminActionResponse,
   Fetcher
 } from '#shared/types'
@@ -48,8 +48,8 @@ export const adminService = (fetcher: Fetcher) => ({
     })
   },
 
-  resetUserPassword: async (userId: string): Promise<ResetPasswordResponse> => {
-    return fetcher<ResetPasswordResponse>(API_ROUTES.PROTECTED.ADMIN.USER_RESET_PASSWORD(userId), {
+  resetUserPassword: async (userId: string): Promise<AdminResetPasswordResponse> => {
+    return fetcher<AdminResetPasswordResponse>(API_ROUTES.PROTECTED.ADMIN.USER_RESET_PASSWORD(userId), {
       method: 'POST'
     })
   },

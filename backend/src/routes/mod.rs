@@ -32,6 +32,8 @@ pub fn configure_app_routes(cfg: &mut web::ServiceConfig) {
                         )
                         .route("/auth/google/url", web::get().to(auth::google_oauth_url))
                         .route("/auth/google/callback", web::post().to(auth::google_oauth_callback))
+                        .route("/auth/forgot-password", web::post().to(auth::forgot_password))
+                        .route("/auth/reset-password", web::post().to(auth::reset_password))
                         .route(
                             "/{user_slug}/incident-timer",
                             web::get().to(incident_timers::get_latest_by_user_slug),

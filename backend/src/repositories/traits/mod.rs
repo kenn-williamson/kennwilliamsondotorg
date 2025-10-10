@@ -1,6 +1,7 @@
 pub mod admin_repository;
 pub mod email_suppression_repository;
 pub mod incident_timer_repository;
+pub mod password_reset_token_repository;
 pub mod phrase_repository;
 pub mod pkce_storage;
 pub mod refresh_token_repository;
@@ -9,6 +10,7 @@ pub mod verification_token_repository;
 
 pub use admin_repository::AdminRepository;
 pub use incident_timer_repository::IncidentTimerRepository;
+pub use password_reset_token_repository::PasswordResetTokenRepository;
 pub use phrase_repository::PhraseRepository;
 pub use pkce_storage::PkceStorage;
 pub use refresh_token_repository::RefreshTokenRepository;

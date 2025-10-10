@@ -6,6 +6,9 @@
 // Auth types
 export * from './auth'
 
+// Password Reset types
+export * from './password-reset'
+
 // Phrase types
 export * from './phrases'
 

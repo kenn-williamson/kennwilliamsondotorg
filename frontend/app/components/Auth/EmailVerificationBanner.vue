@@ -67,7 +67,7 @@
 </template>
 
 <script setup lang="ts">
-import { useEmailVerification } from '~/composables/useEmailVerification'
+import { useEmailVerificationActions } from '~/composables/useEmailVerificationActions'
 
 const { user, loggedIn } = useUserSession()
 
@@ -96,8 +96,8 @@ const shouldShowBanner = computed(() => {
   return needsVerification.value && !isDismissed.value
 })
 
-// Email verification composable
-const { sendVerificationEmail, isLoading, error } = useEmailVerification()
+// Email verification actions
+const { sendVerificationEmail, isLoading, error } = useEmailVerificationActions()
 const emailSent = ref(false)
 
 const handleResend = async () => {

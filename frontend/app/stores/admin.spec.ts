@@ -2,7 +2,7 @@ import { setActivePinia, createPinia } from 'pinia'
 import { useAdminStore } from './admin'
 import { adminService } from '~/services/adminService'
 import { describe, it, expect, vi, beforeEach } from 'vitest'
-import type { User, AdminStats, UsersResponse, SuggestionsResponse, ResetPasswordResponse } from '#shared/types'
+import type { User, AdminStats, UsersResponse, SuggestionsResponse, AdminResetPasswordResponse } from '#shared/types'
 import type { PhraseSuggestion } from '#shared/types/phrases'
 
 // Create a shared mock service instance that will be used by all stores
@@ -178,7 +178,7 @@ describe('Admin Store', () => {
     it('should call service and update newPassword state on success', async () => {
       // Arrange
       const store = useAdminStore()
-      const mockResponse: ResetPasswordResponse = { new_password: 'generatedPassword123', message: 'Password reset successfully' }
+      const mockResponse: AdminResetPasswordResponse = { new_password: 'generatedPassword123', message: 'Password reset successfully' }
       
       vi.mocked(mockAdminServiceInstance.resetUserPassword).mockResolvedValue(mockResponse)
 

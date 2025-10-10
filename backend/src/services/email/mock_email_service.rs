@@ -73,7 +73,29 @@ impl EmailService for MockEmailService {
 
         self.sent_emails.lock().unwrap().push(email);
 
-        log::info!("Mock email sent to: {}", to_email);
+        log::info!("Mock verification email sent to: {}", to_email);
+
+        Ok(())
+    }
+
+    async fn send_password_reset_email(
+        &self,
+        to_email: &str,
+        to_name: Option<&str>,
+        reset_token: &str,
+        frontend_url: &str,
+    ) -> Result<()> {
+        // Reuse SentEmail struct (verification_token field holds reset_token)
+        let email = SentEmail {
+            to_email: to_email.to_string(),
+            to_name: to_name.map(|s| s.to_string()),
+            verification_token: reset_token.to_string(),
+            frontend_url: frontend_url.to_string(),
+        };
+
+        self.sent_emails.lock().unwrap().push(email);
+
+        log::info!("Mock password reset email sent to: {}", to_email);
 
         Ok(())
     }

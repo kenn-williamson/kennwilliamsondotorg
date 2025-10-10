@@ -20,11 +20,11 @@ vi.mock('#app', () => ({
 // Mock $fetch for API calls
 const mockFetchUser = vi.fn()
 
-import { useEmailVerification } from './useEmailVerification'
+import { useEmailVerificationActions } from './useEmailVerificationActions'
 import type { SendVerificationEmailResponse, VerifyEmailResponse } from '#shared/types'
 import { API_ROUTES } from '#shared/config/api-routes'
 
-describe('useEmailVerification', () => {
+describe('useEmailVerificationActions', () => {
   beforeEach(() => {
     vi.clearAllMocks()
     // Setup $fetch mock globally
@@ -40,7 +40,7 @@ describe('useEmailVerification', () => {
       mockSmartFetch.mockResolvedValue(mockResponse)
 
       // Act
-      const { sendVerificationEmail, isLoading, error } = useEmailVerification()
+      const { sendVerificationEmail, isLoading, error } = useEmailVerificationActions()
       const result = await sendVerificationEmail()
 
       // Assert
@@ -59,7 +59,7 @@ describe('useEmailVerification', () => {
       mockSmartFetch.mockRejectedValue(mockError)
 
       // Act
-      const { sendVerificationEmail, isLoading, error } = useEmailVerification()
+      const { sendVerificationEmail, isLoading, error } = useEmailVerificationActions()
 
       await expect(sendVerificationEmail()).rejects.toThrow('Failed to send verification email')
 
@@ -80,7 +80,7 @@ describe('useEmailVerification', () => {
       mockSmartFetch.mockReturnValue(promise)
 
       // Act
-      const { sendVerificationEmail, isLoading } = useEmailVerification()
+      const { sendVerificationEmail, isLoading } = useEmailVerificationActions()
       const requestPromise = sendVerificationEmail()
 
       // Assert - loading should be true
@@ -112,7 +112,7 @@ describe('useEmailVerification', () => {
       mockRefreshSession.mockResolvedValue({})
 
       // Act
-      const { verifyEmail, isLoading, error } = useEmailVerification()
+      const { verifyEmail, isLoading, error } = useEmailVerificationActions()
       const result = await verifyEmail(mockToken)
 
       // Assert
@@ -136,7 +136,7 @@ describe('useEmailVerification', () => {
       mockSmartFetch.mockRejectedValue(mockError)
 
       // Act
-      const { verifyEmail, error } = useEmailVerification()
+      const { verifyEmail, error } = useEmailVerificationActions()
 
       await expect(verifyEmail(mockToken)).rejects.toThrow('Invalid or expired verification token')
 
@@ -164,7 +164,7 @@ describe('useEmailVerification', () => {
       mockRefreshSession.mockResolvedValue({})
 
       // Act
-      const { verifyEmail, isLoading } = useEmailVerification()
+      const { verifyEmail, isLoading } = useEmailVerificationActions()
       const requestPromise = verifyEmail(mockToken)
 
       // Assert - loading should be true
@@ -191,7 +191,7 @@ describe('useEmailVerification', () => {
         .mockResolvedValueOnce(mockSuccess)
 
       // Act
-      const { sendVerificationEmail, error } = useEmailVerification()
+      const { sendVerificationEmail, error } = useEmailVerificationActions()
 
       // First request fails
       await expect(sendVerificationEmail()).rejects.toThrow('First request failed')
@@ -212,7 +212,7 @@ describe('useEmailVerification', () => {
       mockSmartFetch.mockRejectedValue(mockError)
 
       // Act
-      const { sendVerificationEmail, hasError } = useEmailVerification()
+      const { sendVerificationEmail, hasError } = useEmailVerificationActions()
       await expect(sendVerificationEmail()).rejects.toThrow('Test error')
 
       // Assert
@@ -221,7 +221,7 @@ describe('useEmailVerification', () => {
 
     it('should return false when no error exists', () => {
       // Act
-      const { hasError } = useEmailVerification()
+      const { hasError } = useEmailVerificationActions()
 
       // Assert
       expect(hasError.value).toBe(false)

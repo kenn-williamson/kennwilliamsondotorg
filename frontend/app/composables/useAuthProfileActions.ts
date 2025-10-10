@@ -18,12 +18,13 @@ export const useAuthProfileActions = () => {
   const authProfileServiceInstance = authProfileService(smartFetch)
   
   // Destructure service methods
-  const { 
-    updateProfile: updateProfileService, 
-    changePassword: changePasswordService, 
+  const {
+    updateProfile: updateProfileService,
+    changePassword: changePasswordService,
     previewSlug: previewSlugService,
     validateSlug: validateSlugService,
-    deleteAccount: deleteAccountService
+    deleteAccount: deleteAccountService,
+    exportUserData: exportUserDataService
   } = authProfileServiceInstance
 
   const updateProfile = async (data: ProfileUpdateRequest): Promise<{ message: string }> => {
@@ -69,14 +70,21 @@ export const useAuthProfileActions = () => {
       async () => {
         // Call service
         const result = await deleteAccountService()
-        
+
         // Clear session after successful deletion
         await clearSession()
-        
+
         return result
       },
       'Account deleted successfully',
       'deleteAccount'
+    )
+  }
+
+  const exportUserData = async (): Promise<Blob> => {
+    return executeRequest(
+      () => exportUserDataService(),
+      'exportUserData'
     )
   }
 
@@ -86,6 +94,7 @@ export const useAuthProfileActions = () => {
     previewSlug,
     validateSlug,
     deleteAccount,
+    exportUserData,
     isLoading,
     error,
     hasError

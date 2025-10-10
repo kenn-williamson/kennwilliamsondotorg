@@ -1,5 +1,6 @@
 use super::AuthService;
 use crate::repositories::traits::incident_timer_repository::IncidentTimerRepository;
+use crate::repositories::traits::password_reset_token_repository::PasswordResetTokenRepository;
 use crate::repositories::traits::phrase_repository::PhraseRepository;
 use crate::repositories::traits::pkce_storage::PkceStorage;
 use crate::repositories::traits::refresh_token_repository::RefreshTokenRepository;
@@ -14,6 +15,7 @@ pub struct AuthServiceBuilder {
     user_repository: Option<Box<dyn UserRepository>>,
     refresh_token_repository: Option<Box<dyn RefreshTokenRepository>>,
     verification_token_repository: Option<Box<dyn VerificationTokenRepository>>,
+    password_reset_token_repository: Option<Box<dyn PasswordResetTokenRepository>>,
     email_service: Option<Box<dyn EmailService>>,
     google_oauth_service: Option<Box<dyn GoogleOAuthServiceTrait>>,
     pkce_storage: Option<Box<dyn PkceStorage>>,
@@ -28,6 +30,7 @@ impl AuthServiceBuilder {
             user_repository: None,
             refresh_token_repository: None,
             verification_token_repository: None,
+            password_reset_token_repository: None,
             email_service: None,
             google_oauth_service: None,
             pkce_storage: None,
@@ -52,6 +55,14 @@ impl AuthServiceBuilder {
         repo: Box<dyn VerificationTokenRepository>,
     ) -> Self {
         self.verification_token_repository = Some(repo);
+        self
+    }
+
+    pub fn password_reset_token_repository(
+        mut self,
+        repo: Box<dyn PasswordResetTokenRepository>,
+    ) -> Self {
+        self.password_reset_token_repository = Some(repo);
         self
     }
 
@@ -97,6 +108,7 @@ impl AuthServiceBuilder {
             user_repository,
             refresh_token_repository,
             verification_token_repository: self.verification_token_repository,
+            password_reset_token_repository: self.password_reset_token_repository,
             email_service: self.email_service,
             google_oauth_service: self.google_oauth_service,
             pkce_storage: self.pkce_storage,
