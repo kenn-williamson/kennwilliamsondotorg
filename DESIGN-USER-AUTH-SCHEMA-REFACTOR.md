@@ -5,6 +5,10 @@
 ### Purpose
 This document proposes a comprehensive refactoring of the user authentication and profile system from a monolithic `users` table to a normalized multi-table architecture. This refactor addresses test brittleness, enables multi-provider OAuth, and creates a scalable foundation for future feature development.
 
+### Document Status
+**Updated**: 2025-01-11 after comprehensive web research and codebase analysis
+**Research Validation**: Design validated against 2024-2025 industry best practices, PostgreSQL performance patterns, and zero-downtime migration strategies
+
 ### Strategic Context
 **Upcoming features that make this refactor essential:**
 - Messaging system with extensive preferences (notifications, privacy controls, message settings)
@@ -20,6 +24,224 @@ This document proposes a comprehensive refactoring of the user authentication an
 ### Decision Timeline
 - **Do Now**: If planning to build messaging, multi-OAuth, or invite systems in next 3-6 months
 - **Defer**: If shipping features fast and okay with ongoing test brittleness
+
+---
+
+## Critical Research Findings & Design Corrections
+
+### Research Validation (2024-2025 Best Practices)
+
+**Web Research Conducted:**
+- User authentication database schema separation patterns (Vertabelo, Stack Exchange, DoneDone)
+- Multi-provider OAuth implementation (NestJS, DeployStack, Spring Security)
+- PostgreSQL performance for normalized user tables (PostgreSQL Wiki, CYBERTEC)
+- Zero-downtime database migration strategies (Deep Thought, LaunchDarkly, Spring)
+- Test fixture patterns for Rust/SQLx (SQLx docs, Rust community blogs)
+
+**Validation Results:** ✅ **The proposed multi-table approach is confirmed as industry best practice**
+- Separation of credentials/profile/preferences is standard (Vertabelo, Spring Security)
+- Narrow auth tables perform BETTER than wide tables for OLTP workloads
+- Multi-provider OAuth requires separate external_logins table (confirmed by all OAuth design sources)
+- PostgreSQL handles JOINs efficiently with proper indexing (proven by performance research)
+
+### Critical Corrections to Original Design
+
+#### ❌ CORRECTION 1: OAuth Token Storage (MAJOR ISSUE)
+
+**Original Design Problem:**
+```sql
+CREATE TABLE user_external_logins (
+    ...
+    access_token TEXT,              -- ❌ WRONG: Should NOT be stored here
+    refresh_token TEXT,             -- ❌ WRONG: Confuses OAuth refresh with session refresh
+    token_expires_at TIMESTAMPTZ,
+    ...
+);
+```
+
+**Why This Is Wrong:**
+1. **OAuth access tokens** are short-lived (1 hour) and should NOT be persisted - they're used immediately during callback
+2. **OAuth refresh tokens** (if stored) belong in a separate encrypted table, NOT mixed with static provider IDs
+3. **Confusion with session management**: The existing `refresh_tokens` table handles USER SESSION refresh tokens, not OAuth refresh tokens
+4. **Security risk**: Storing OAuth tokens alongside user IDs creates unnecessary exposure
+
+**Corrected Design:**
+```sql
+CREATE TABLE user_external_logins (
+    id UUID PRIMARY KEY DEFAULT uuid_generate_v7(),
+    user_id UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+    provider VARCHAR(50) NOT NULL,  -- 'google', 'github', 'microsoft', etc.
+    provider_user_id VARCHAR(255) NOT NULL,  -- Their unique ID for us
+    linked_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+    created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+    updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+    UNIQUE(provider, provider_user_id)
+);
+-- NO token storage - access tokens used immediately, then discarded
+-- Future: If OAuth refresh tokens needed, create separate encrypted table
+```
+
+**Rationale:**
+- **Current OAuth flow** (confirmed by codebase analysis): Access token is used immediately in callback, then discarded
+- **No OAuth refresh needed**: We don't make API calls to Google after initial login - we just verify identity
+- **Session management**: User sessions use the existing `refresh_tokens` table (separate concern)
+
+#### ✅ CORRECTION 2: Integration with Existing Tables
+
+**Tables NOT mentioned in original design that MUST be considered:**
+
+1. **`password_reset_tokens` table** (already exists):
+```sql
+-- Existing table - links to users.id
+CREATE TABLE password_reset_tokens (
+    id UUID PRIMARY KEY,
+    user_id UUID REFERENCES users(id) ON DELETE CASCADE,
+    token_hash VARCHAR(255),
+    expires_at TIMESTAMPTZ,
+    used_at TIMESTAMPTZ,
+    created_at TIMESTAMPTZ
+);
+```
+**Required Action:** After refactor, this continues to reference `users.id` (no change needed, but verify CASCADE works)
+
+2. **`verification_tokens` table** (already exists):
+```sql
+-- Existing table - links to users.id
+CREATE TABLE verification_tokens (
+    id UUID PRIMARY KEY,
+    user_id UUID REFERENCES users(id) ON DELETE CASCADE,
+    token_hash VARCHAR(255),
+    expires_at TIMESTAMPTZ,
+    created_at TIMESTAMPTZ
+);
+```
+**Required Action:** Continues to reference `users.id` (no change needed, but test CASCADE deletion)
+
+3. **`refresh_tokens` table** (already exists - for USER SESSIONS, not OAuth):
+- This table is for session management (7-day user sessions)
+- NOT related to OAuth refresh tokens
+- No changes needed to this table
+
+**Updated Foreign Key Cascade Analysis:**
+```
+users (id) [DELETE]
+    ├── user_credentials (user_id) → CASCADE DELETE ✅
+    ├── user_external_logins (user_id) → CASCADE DELETE ✅
+    ├── user_profiles (user_id) → CASCADE DELETE ✅
+    ├── user_preferences (user_id) → CASCADE DELETE ✅
+    ├── password_reset_tokens (user_id) → CASCADE DELETE ✅ (existing)
+    ├── verification_tokens (user_id) → CASCADE DELETE ✅ (existing)
+    ├── refresh_tokens (user_id) → CASCADE DELETE ✅ (existing)
+    ├── incident_timers (user_id) → CASCADE DELETE ✅ (existing)
+    ├── phrase_suggestions (user_id) → CASCADE DELETE ✅ (existing)
+    └── user_excluded_phrases (user_id) → CASCADE DELETE ✅ (existing)
+```
+
+#### ✅ CORRECTION 3: SQLx Testing Considerations
+
+**Critical Addition: SQLx Offline Mode Implications**
+
+The codebase uses SQLx in offline mode (`sqlx-data.json` for compile-time query verification). This has critical implications for the refactor:
+
+**Required Actions:**
+1. **After every SQL query change**: Run `./scripts/prepare-sqlx.sh --clean`
+2. **After schema migrations**: Rebuild SQLx query cache
+3. **Test database setup**: Use existing `TestContainer` builder pattern
+4. **SQLx test fixtures**: Can use `#[sqlx::test(fixtures("users", "profiles"))]` pattern (optional enhancement)
+
+**Existing Test Infrastructure (DO NOT RECREATE):**
+- ✅ `TestContext::builder()` already exists in `test_helpers.rs`
+- ✅ `TestContainer::builder()` already exists for low-level database tests
+- ✅ Builder pattern for fixtures is already the standard
+
+**Enhancement:** The proposed `TestUserBuilder` should extend the existing pattern, not replace it.
+
+#### ✅ CORRECTION 4: Performance Baseline Requirements
+
+**Missing from Original Design: Pre-Migration Benchmarks**
+
+Before starting the migration, establish performance baselines:
+
+```sql
+-- Auth query performance (current monolithic)
+EXPLAIN ANALYZE SELECT * FROM users WHERE email = 'test@example.com';
+
+-- Profile query performance (current monolithic)
+EXPLAIN ANALYZE SELECT * FROM users WHERE id = $1;
+
+-- Timer query performance
+EXPLAIN ANALYZE
+SELECT u.*, it.* FROM users u
+JOIN incident_timers it ON u.id = it.user_id
+WHERE u.id = $1;
+```
+
+**Target Metrics (Post-Refactor):**
+- Auth queries (users table only): Should be **FASTER** (narrow table, better cache hit rate)
+- Profile queries (with JOINs): Should be **SAME or FASTER** (proper indexes)
+- Bulk queries: Should be **SAME** (indexes + query planner optimization)
+
+**Validation:** PostgreSQL research confirms narrow tables with proper B-tree indexes outperform wide tables for OLTP workloads.
+
+#### ✅ CORRECTION 5: Zero-Downtime Migration Enhancements
+
+**Research-Validated Migration Strategy:**
+
+Based on 2024-2025 industry best practices (Spring, LaunchDarkly, Deep Thought blog), enhance migration phases:
+
+**Phase 1-2: Shadow Table Strategy (Recommended)**
+```
+1. Create new tables (empty)
+2. Implement dual-write at repository layer
+3. Backfill existing data
+4. Verify data consistency (checksums)
+5. Implement feature flag for read path
+6. Gradually roll out reads from new tables
+7. Monitor for 48 hours
+8. Drop old columns
+```
+
+**Feature Flag Integration:**
+```rust
+// Example: Gradual rollout of new schema reads
+if feature_flags.use_new_user_schema {
+    // Read from user_credentials + user_profiles + user_preferences
+} else {
+    // Read from monolithic users table
+}
+```
+
+**Dual-Write Implementation (Critical):**
+```rust
+// In UserRepository::update_password()
+async fn update_password(&self, user_id: Uuid, new_hash: &str) -> Result<()> {
+    // Write to BOTH old and new (during transition period)
+    sqlx::query("UPDATE users SET password_hash = $1 WHERE id = $2")
+        .bind(new_hash)
+        .bind(user_id)
+        .execute(&self.pool)
+        .await?;
+
+    sqlx::query("UPDATE user_credentials SET password_hash = $1 WHERE user_id = $2")
+        .bind(new_hash)
+        .bind(user_id)
+        .execute(&self.pool)
+        .await?;
+
+    Ok(())
+}
+```
+
+**Rollback Procedure (Missing from Original):**
+```bash
+# If migration fails during observation period:
+1. Stop application
+2. Run DOWN migration (drops new tables)
+3. Verify old data intact: SELECT COUNT(*) FROM users;
+4. Restart application with old code
+5. Monitor for 1 hour
+6. Investigate failure cause
+```
 
 ---
 
@@ -240,18 +462,17 @@ CREATE TABLE user_external_logins (
     user_id UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE,
     provider VARCHAR(50) NOT NULL,  -- 'google', 'github', 'microsoft', etc.
     provider_user_id VARCHAR(255) NOT NULL,  -- Their unique ID for us
-    access_token TEXT,
-    refresh_token TEXT,
-    token_expires_at TIMESTAMPTZ,
+    linked_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
     created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
     updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
     UNIQUE(provider, provider_user_id)
 );
 -- Allows:
 -- - Multiple providers per user (Google + GitHub)
--- - Provider-specific token storage
 -- - Easy addition of new providers
 -- - Account linking strategy
+-- NOTE: NO token storage - OAuth access tokens used immediately during callback
+-- User sessions managed via separate refresh_tokens table
 
 CREATE INDEX idx_user_external_logins_user_id ON user_external_logins(user_id);
 CREATE INDEX idx_user_external_logins_provider ON user_external_logins(provider, provider_user_id);
@@ -406,12 +627,12 @@ pub struct UserExternalLogin {
     pub user_id: Uuid,
     pub provider: String,  // Or enum: OAuthProvider
     pub provider_user_id: String,
-    pub access_token: Option<String>,
-    pub refresh_token: Option<String>,
-    pub token_expires_at: Option<DateTime<Utc>>,
+    pub linked_at: DateTime<Utc>,
     pub created_at: DateTime<Utc>,
     pub updated_at: DateTime<Utc>,
 }
+// No token storage - OAuth access tokens used immediately during callback
+// User session tokens managed via RefreshToken struct (separate table)
 
 // user_profile.rs
 #[derive(Debug, Clone, FromRow)]
@@ -484,9 +705,10 @@ pub trait UserExternalLoginRepository: Send + Sync {
     async fn create(&self, data: CreateExternalLogin) -> Result<UserExternalLogin>;
     async fn find_by_provider(&self, provider: &str, provider_user_id: &str) -> Result<Option<UserExternalLogin>>;
     async fn find_by_user_id(&self, user_id: Uuid) -> Result<Vec<UserExternalLogin>>;
-    async fn update_tokens(&self, id: Uuid, access_token: String, refresh_token: Option<String>, expires_at: Option<DateTime<Utc>>) -> Result<()>;
     async fn delete(&self, id: Uuid) -> Result<()>;
+    async fn unlink_provider(&self, user_id: Uuid, provider: &str) -> Result<()>;
 }
+// No token update methods - OAuth tokens not stored
 
 // traits/user_profile_repository.rs
 #[async_trait]
@@ -1029,26 +1251,132 @@ ALTER TABLE users DROP COLUMN timer_show_in_list;
 3. Verify old data intact
 4. Restart application
 
-### Risk 2: Breaking GDPR Data Export
+### Risk 2: Breaking GDPR Data Export ⚠️ HIGHEST PRIORITY
 
-**Severity:** CRITICAL (legal compliance)
-**Probability:** MEDIUM
+**Severity:** **CRITICAL** (legal compliance - GDPR Article 15, CCPA Section 1798.110)
+**Probability:** **HIGH** (easy to miss a table during refactor)
 
-**Mitigation:**
-- ✅ Update data export in Phase 4 (BEFORE cutover)
-- ✅ Manual verification of export completeness
-- ✅ Automated tests for export data
-- ✅ Increment export version to 2.0
-- ✅ Test export with real user data (dev environment)
+**Legal Context:**
+- **GDPR fines**: Up to €20 million or 4% of global annual revenue
+- **CCPA fines**: $7,500 per intentional violation
+- **Timeframe**: Must respond to data export requests within 30 days
+- **Current implementation**: `backend/src/services/auth/auth_service/data_export.rs` (lines 15-140)
 
-**Verification Checklist:**
-- [ ] Export includes user credentials (has_password flag, not hash)
-- [ ] Export includes all external logins (provider list)
-- [ ] Export includes profile data (real_name, bio, etc.)
-- [ ] Export includes all preferences
-- [ ] Export includes all associated data (timers, phrases, etc.)
+**Critical Requirements:**
+The data export MUST include data from ALL user-related tables, including the new tables:
+1. `users` (core identity)
+2. `user_credentials` (has_password flag, password_last_changed - NOT the hash itself)
+3. `user_external_logins` (list of linked providers: Google, GitHub, etc.)
+4. `user_profiles` (real_name, bio, avatar, etc.)
+5. `user_preferences` (all preference fields)
+6. `password_reset_tokens` (active reset requests - for transparency)
+7. `verification_tokens` (verification history - for transparency)
+8. `refresh_tokens` (active sessions)
+9. `incident_timers` (all timer history)
+10. `phrase_suggestions` (suggested phrases)
+11. `user_excluded_phrases` (excluded phrase preferences)
+
+**Mitigation Plan:**
+- ✅ **Phase 4 BLOCKER**: Data export update must be complete BEFORE any code cutover
+- ✅ Create comprehensive integration test that verifies ALL tables included
+- ✅ Manual verification with real user account (dev environment)
+- ✅ Increment export version to "2.0" to indicate schema change
+- ✅ Add export validation step to Phase 5 checklist
+- ✅ Test export with edge cases:
+  - OAuth-only user (no password)
+  - Local-only user (no OAuth)
+  - User with both password and OAuth
+  - User with multiple OAuth providers (future)
+
+**Updated Data Export Code Structure:**
+```rust
+pub async fn export_user_data(&self, user_id: Uuid) -> Result<UserDataExport> {
+    // Core identity
+    let user = self.user_repository.find_by_id(user_id).await?;
+
+    // NEW: Credentials (after refactor)
+    let credentials = self.credentials_repository.find_by_user_id(user_id).await?;
+
+    // NEW: External logins (after refactor)
+    let external_logins = self.external_login_repository.find_by_user_id(user_id).await?;
+
+    // NEW: Profile (after refactor)
+    let profile = self.profile_repository.find_by_user_id(user_id).await?;
+
+    // NEW: Preferences (after refactor)
+    let preferences = self.preferences_repository.find_by_user_id(user_id).await?;
+
+    // Existing: All other user data
+    let incident_timers = self.incident_timer_repository.find_by_user_id(user_id).await?;
+    let phrase_suggestions = self.phrase_repository.get_user_suggestions(user_id).await?;
+    let phrase_exclusions = self.phrase_repository.get_user_excluded_phrases(user_id).await?;
+    let active_sessions = self.refresh_token_repository.find_by_user_id(user_id).await?;
+    let verification_history = self.verification_token_repository.find_by_user_id(user_id).await?;
+
+    // NEW: Password reset tokens (for transparency)
+    let password_reset_history = self.password_reset_token_repository.find_by_user_id(user_id).await?;
+
+    Ok(UserDataExport {
+        export_version: "2.0",  // ⚠️ MUST increment version
+        export_date: Utc::now(),
+
+        // Core identity
+        user: user_export,
+
+        // NEW: Authentication details
+        authentication: AuthenticationExport {
+            has_password: credentials.is_some(),
+            password_last_changed: credentials.map(|c| c.password_updated_at),
+        },
+
+        // NEW: External logins
+        external_logins: external_logins.into_iter().map(|l| ExternalLoginExport {
+            provider: l.provider,
+            provider_user_id: l.provider_user_id,  // Their Google/GitHub ID
+            linked_at: l.linked_at,
+        }).collect(),
+
+        // NEW: Profile data
+        profile: profile.map(|p| ProfileExport {
+            real_name: p.real_name,
+            bio: p.bio,
+            avatar_url: p.avatar_url,
+            location: p.location,
+            website: p.website,
+        }),
+
+        // NEW: Preferences
+        preferences: PreferencesExport {
+            timer_is_public: preferences.timer_is_public,
+            timer_show_in_list: preferences.timer_show_in_list,
+            // Future: notification_email, theme, etc.
+        },
+
+        // Existing: All other user data
+        incident_timers,
+        phrase_suggestions,
+        phrase_exclusions,
+        active_sessions,
+        verification_history,
+        password_reset_history,  // NEW: Include for transparency
+    })
+}
+```
+
+**Verification Checklist (Phase 4):**
+- [ ] ⚠️ **CRITICAL**: Export includes `has_password` flag (from user_credentials table)
+- [ ] ⚠️ **CRITICAL**: Export includes ALL external logins (from user_external_logins table)
+- [ ] ⚠️ **CRITICAL**: Export includes profile data (from user_profiles table)
+- [ ] ⚠️ **CRITICAL**: Export includes ALL preferences (from user_preferences table)
+- [ ] Export includes password reset history (from password_reset_tokens table)
+- [ ] Export includes all associated data (timers, phrases, sessions, etc.)
+- [ ] Export version incremented to "2.0"
 - [ ] Export format is valid JSON
 - [ ] Export is downloadable by user
+- [ ] **Integration test** verifies all tables present in export
+- [ ] Manual test with real user account in dev environment
+
+**BLOCKER for Phase 5:** Cannot proceed to testing phase until data export is verified complete.
 
 ### Risk 3: OAuth Flow Breaks
 
@@ -1666,9 +1994,41 @@ let admin = TestUserBuilder::new(&pool)
 | Version | Date | Author | Changes |
 |---------|------|--------|---------|
 | 1.0 | 2025-01-11 | Claude Code | Initial design document created |
+| 1.1 | 2025-01-11 | Claude Code | **Major update after research validation**<br>- Added "Critical Research Findings & Design Corrections" section<br>- **CORRECTION 1**: Removed OAuth token storage from `user_external_logins` (critical security fix)<br>- **CORRECTION 2**: Documented integration with existing tables (password_reset_tokens, verification_tokens)<br>- **CORRECTION 3**: Added SQLx offline mode considerations<br>- **CORRECTION 4**: Added performance baseline requirements<br>- **CORRECTION 5**: Enhanced zero-downtime migration strategy with feature flags and dual-write patterns<br>- **MAJOR ENHANCEMENT**: Expanded GDPR/CCPA data export risk section with legal context and comprehensive mitigation plan<br>- Updated all code examples to reflect corrected schema<br>- Validated design against 2024-2025 industry best practices |
+
+---
+
+## Research Sources & Validation
+
+This design was validated against the following authoritative sources (2024-2025):
+
+**Authentication Schema Design:**
+- Vertabelo: "Best Practices for Designing a User Authentication Module"
+- DoneDone Blog: "Building the Optimal User Database Model"
+- Stack Exchange: "Database structure for multiple authentication sources"
+
+**OAuth Multi-Provider Patterns:**
+- Spring Security Reference: OAuth2 database schema
+- DeployStack Documentation: OAuth provider implementation
+- NestJS: Multi-provider SSO implementation guide
+
+**PostgreSQL Performance:**
+- PostgreSQL Wiki: Database schema recommendations
+- CYBERTEC: Join strategies and performance
+- PostgreSQL Official Documentation: Indexing best practices
+
+**Zero-Downtime Migration:**
+- Spring Blog: "Zero Downtime Deployment with a Database"
+- LaunchDarkly: "3 Best Practices for Zero-Downtime Database Migrations"
+- Deep Thought Blog: "Zero-downtime Database Migration"
+- InfoQ: "Shadow Table Strategy for Data Migrations"
+
+**SQLx Testing:**
+- SQLx Official Documentation: `#[sqlx::test]` macro
+- Rust Community: Test fixture patterns for database integration tests
 
 ---
 
 **End of Design Document**
 
-This document serves as the comprehensive blueprint for refactoring the user authentication schema. Use the Implementation Checklist to track progress across multiple development sessions.
+This document serves as the comprehensive, research-validated blueprint for refactoring the user authentication schema. The design has been validated against 2024-2025 industry best practices and current codebase patterns. Use the Implementation Checklist to track progress across multiple development sessions.
