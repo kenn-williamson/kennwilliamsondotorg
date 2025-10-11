@@ -39,7 +39,7 @@ while [ $attempt -le $max_attempts ]; do
 done
 
 echo "🏗️  Running database migrations..."
-cd backend && sqlx migrate run && cd ..
+cd backend && DATABASE_URL="postgresql://postgres:password@localhost:5432/kennwilliamson" sqlx migrate run && cd ..
 
 echo "🧪 Testing UUIDv7 extension..."
 docker-compose exec -T postgres psql -U postgres -d kennwilliamson -c "SELECT uuid_generate_v7() as test_uuid;" > /dev/null
