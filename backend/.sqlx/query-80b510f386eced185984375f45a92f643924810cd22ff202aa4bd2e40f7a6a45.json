@@ -1,6 +1,6 @@
 {
   "db_name": "PostgreSQL",
-  "query": "\n                SELECT\n                    u.id, u.email, u.display_name, u.slug, u.active, u.real_name, u.google_user_id, u.created_at, u.updated_at,\n                    array_agg(r.name) as roles\n                FROM users u\n                INNER JOIN user_roles ur ON u.id = ur.user_id\n                INNER JOIN roles r ON ur.role_id = r.id\n                GROUP BY u.id, u.email, u.display_name, u.slug, u.active, u.real_name, u.google_user_id, u.created_at, u.updated_at\n                ORDER BY u.created_at DESC\n                LIMIT $1 OFFSET $2\n                ",
+  "query": "\n                SELECT\n                    u.id, u.email, u.display_name, u.slug, u.active, u.real_name, u.google_user_id, u.timer_is_public, u.timer_show_in_list, u.created_at, u.updated_at,\n                    array_agg(r.name) as roles\n                FROM users u\n                INNER JOIN user_roles ur ON u.id = ur.user_id\n                INNER JOIN roles r ON ur.role_id = r.id\n                GROUP BY u.id, u.email, u.display_name, u.slug, u.active, u.real_name, u.google_user_id, u.timer_is_public, u.timer_show_in_list, u.created_at, u.updated_at\n                ORDER BY u.created_at DESC\n                LIMIT $1 OFFSET $2\n                ",
   "describe": {
     "columns": [
       {
@@ -40,16 +40,26 @@
       },
       {
         "ordinal": 7,
+        "name": "timer_is_public",
+        "type_info": "Bool"
+      },
+      {
+        "ordinal": 8,
+        "name": "timer_show_in_list",
+        "type_info": "Bool"
+      },
+      {
+        "ordinal": 9,
         "name": "created_at",
         "type_info": "Timestamptz"
       },
       {
-        "ordinal": 8,
+        "ordinal": 10,
         "name": "updated_at",
         "type_info": "Timestamptz"
       },
       {
-        "ordinal": 9,
+        "ordinal": 11,
         "name": "roles",
         "type_info": "VarcharArray"
       }
@@ -70,8 +80,10 @@
       true,
       false,
       false,
+      false,
+      false,
       null
     ]
   },
-  "hash": "45dae101db9cf9d0233bc0f49ba38f212b59ee88a41619af3bef022053d46e74"
+  "hash": "80b510f386eced185984375f45a92f643924810cd22ff202aa4bd2e40f7a6a45"
 }

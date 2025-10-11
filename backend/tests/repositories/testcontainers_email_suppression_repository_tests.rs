@@ -7,7 +7,7 @@ use chrono::Utc;
 
 #[tokio::test]
 async fn test_create_hard_bounce_suppression() {
-    let test_container = crate::test_helpers::TestContainer::new()
+    let test_container = crate::test_helpers::TestContainer::builder().build()
         .await
         .expect("Failed to create test container");
     let repo = PostgresEmailSuppressionRepository::new(test_container.pool.clone());
@@ -36,7 +36,7 @@ async fn test_create_hard_bounce_suppression() {
 
 #[tokio::test]
 async fn test_create_complaint_suppression() {
-    let test_container = crate::test_helpers::TestContainer::new()
+    let test_container = crate::test_helpers::TestContainer::builder().build()
         .await
         .expect("Failed to create test container");
     let repo = PostgresEmailSuppressionRepository::new(test_container.pool.clone());
@@ -60,7 +60,7 @@ async fn test_create_complaint_suppression() {
 
 #[tokio::test]
 async fn test_create_unsubscribe_suppression() {
-    let test_container = crate::test_helpers::TestContainer::new()
+    let test_container = crate::test_helpers::TestContainer::builder().build()
         .await
         .expect("Failed to create test container");
     let repo = PostgresEmailSuppressionRepository::new(test_container.pool.clone());
@@ -86,7 +86,7 @@ async fn test_create_unsubscribe_suppression() {
 
 #[tokio::test]
 async fn test_create_manual_suppression_with_custom_scope() {
-    let test_container = crate::test_helpers::TestContainer::new()
+    let test_container = crate::test_helpers::TestContainer::builder().build()
         .await
         .expect("Failed to create test container");
     let repo = PostgresEmailSuppressionRepository::new(test_container.pool.clone());
@@ -112,7 +112,7 @@ async fn test_create_manual_suppression_with_custom_scope() {
 
 #[tokio::test]
 async fn test_duplicate_email_constraint() {
-    let test_container = crate::test_helpers::TestContainer::new()
+    let test_container = crate::test_helpers::TestContainer::builder().build()
         .await
         .expect("Failed to create test container");
     let repo = PostgresEmailSuppressionRepository::new(test_container.pool.clone());
@@ -142,7 +142,7 @@ async fn test_duplicate_email_constraint() {
 
 #[tokio::test]
 async fn test_find_by_email() {
-    let test_container = crate::test_helpers::TestContainer::new()
+    let test_container = crate::test_helpers::TestContainer::builder().build()
         .await
         .expect("Failed to create test container");
     let repo = PostgresEmailSuppressionRepository::new(test_container.pool.clone());
@@ -171,7 +171,7 @@ async fn test_find_by_email() {
 
 #[tokio::test]
 async fn test_increment_bounce_count() {
-    let test_container = crate::test_helpers::TestContainer::new()
+    let test_container = crate::test_helpers::TestContainer::builder().build()
         .await
         .expect("Failed to create test container");
     let repo = PostgresEmailSuppressionRepository::new(test_container.pool.clone());
@@ -213,7 +213,7 @@ async fn test_increment_bounce_count() {
 
 #[tokio::test]
 async fn test_delete_suppression() {
-    let test_container = crate::test_helpers::TestContainer::new()
+    let test_container = crate::test_helpers::TestContainer::builder().build()
         .await
         .expect("Failed to create test container");
     let repo = PostgresEmailSuppressionRepository::new(test_container.pool.clone());
@@ -246,7 +246,7 @@ async fn test_delete_suppression() {
 
 #[tokio::test]
 async fn test_clean_email_not_suppressed() {
-    let test_container = crate::test_helpers::TestContainer::new()
+    let test_container = crate::test_helpers::TestContainer::builder().build()
         .await
         .expect("Failed to create test container");
     let repo = PostgresEmailSuppressionRepository::new(test_container.pool.clone());

@@ -1,6 +1,6 @@
 {
   "db_name": "PostgreSQL",
-  "query": "SELECT id, email, password_hash, display_name, slug, active, real_name, google_user_id, created_at, updated_at FROM users WHERE google_user_id = $1",
+  "query": "\n            UPDATE users\n            SET display_name = $1, slug = $2, updated_at = NOW()\n            WHERE id = $3\n            RETURNING id, email, password_hash, display_name, slug, active, real_name, google_user_id, timer_is_public, timer_show_in_list, created_at, updated_at\n            ",
   "describe": {
     "columns": [
       {
@@ -45,18 +45,30 @@
       },
       {
         "ordinal": 8,
+        "name": "timer_is_public",
+        "type_info": "Bool"
+      },
+      {
+        "ordinal": 9,
+        "name": "timer_show_in_list",
+        "type_info": "Bool"
+      },
+      {
+        "ordinal": 10,
         "name": "created_at",
         "type_info": "Timestamptz"
       },
       {
-        "ordinal": 9,
+        "ordinal": 11,
         "name": "updated_at",
         "type_info": "Timestamptz"
       }
     ],
     "parameters": {
       "Left": [
-        "Text"
+        "Varchar",
+        "Varchar",
+        "Uuid"
       ]
     },
     "nullable": [
@@ -69,8 +81,10 @@
       true,
       true,
       false,
+      false,
+      false,
       false
     ]
   },
-  "hash": "c68bf8c9f89063027715b48ffef7e37eece7c0763d1b500fa87d87adbb9e6093"
+  "hash": "fb963cbadc47cd212599ee1c651a2d80683b24d04815d74b2d9b8c0750ab8b81"
 }

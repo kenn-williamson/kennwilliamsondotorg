@@ -3,7 +3,7 @@ use async_trait::async_trait;
 use mockall::mock;
 use uuid::Uuid;
 
-use crate::models::db::user::User;
+use crate::models::db::user::{User, UserWithTimer};
 use crate::repositories::traits::user_repository::{
     CreateOAuthUserData, CreateUserData, UserRepository, UserUpdates,
 };
@@ -29,6 +29,9 @@ mock! {
         async fn add_role_to_user(&self, user_id: Uuid, role_name: &str) -> Result<()>;
         async fn has_role(&self, user_id: Uuid, role_name: &str) -> Result<bool>;
         async fn delete_user(&self, user_id: Uuid) -> Result<()>;
+        async fn update_timer_privacy(&self, user_id: Uuid, is_public: bool, show_in_list: bool) -> Result<User>;
+        async fn get_users_with_public_timers(&self, limit: i64, offset: i64) -> Result<Vec<UserWithTimer>>;
+        async fn get_by_slug(&self, slug: &str) -> Result<User>;
     }
 }
 
@@ -39,8 +42,10 @@ mod tests {
     use mockall::predicate::eq;
     use uuid::Uuid;
 
-    // Helper function to create a test user
+    // Helper function to create a test user using UserBuilder
     fn create_test_user() -> User {
+        // Note: In unit tests, we can't use the test fixtures module
+        // So we keep the manual construction here
         User {
             id: Uuid::new_v4(),
             email: "test@example.com".to_string(),
@@ -50,6 +55,8 @@ mod tests {
             active: true,
             real_name: None,
             google_user_id: None,
+            timer_is_public: false,
+            timer_show_in_list: false,
             created_at: Utc::now(),
             updated_at: Utc::now(),
         }

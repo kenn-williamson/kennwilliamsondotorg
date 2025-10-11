@@ -1,6 +1,6 @@
 {
   "db_name": "PostgreSQL",
-  "query": "\n                SELECT\n                    u.id, u.email, u.display_name, u.slug, u.active, u.real_name, u.google_user_id, u.created_at, u.updated_at,\n                    array_agg(r.name) as roles\n                FROM users u\n                INNER JOIN user_roles ur ON u.id = ur.user_id\n                INNER JOIN roles r ON ur.role_id = r.id\n                WHERE u.display_name ILIKE $1 OR u.email ILIKE $1 OR u.slug ILIKE $1\n                GROUP BY u.id, u.email, u.display_name, u.slug, u.active, u.real_name, u.google_user_id, u.created_at, u.updated_at\n                ORDER BY u.created_at DESC\n                LIMIT $2 OFFSET $3\n                ",
+  "query": "\n                SELECT\n                    u.id, u.email, u.display_name, u.slug, u.active, u.real_name, u.google_user_id, u.timer_is_public, u.timer_show_in_list, u.created_at, u.updated_at,\n                    array_agg(r.name) as roles\n                FROM users u\n                INNER JOIN user_roles ur ON u.id = ur.user_id\n                INNER JOIN roles r ON ur.role_id = r.id\n                WHERE u.display_name ILIKE $1 OR u.email ILIKE $1 OR u.slug ILIKE $1\n                GROUP BY u.id, u.email, u.display_name, u.slug, u.active, u.real_name, u.google_user_id, u.timer_is_public, u.timer_show_in_list, u.created_at, u.updated_at\n                ORDER BY u.created_at DESC\n                LIMIT $2 OFFSET $3\n                ",
   "describe": {
     "columns": [
       {
@@ -40,16 +40,26 @@
       },
       {
         "ordinal": 7,
+        "name": "timer_is_public",
+        "type_info": "Bool"
+      },
+      {
+        "ordinal": 8,
+        "name": "timer_show_in_list",
+        "type_info": "Bool"
+      },
+      {
+        "ordinal": 9,
         "name": "created_at",
         "type_info": "Timestamptz"
       },
       {
-        "ordinal": 8,
+        "ordinal": 10,
         "name": "updated_at",
         "type_info": "Timestamptz"
       },
       {
-        "ordinal": 9,
+        "ordinal": 11,
         "name": "roles",
         "type_info": "VarcharArray"
       }
@@ -71,8 +81,10 @@
       true,
       false,
       false,
+      false,
+      false,
       null
     ]
   },
-  "hash": "fdd6131dce40cca9946ca883b12b15951c55dc4da977d9191fea3047ab70e11f"
+  "hash": "c9393179abc44b1e2ed6ace8112c62462a54734e2626607f4385e397ed494dd8"
 }

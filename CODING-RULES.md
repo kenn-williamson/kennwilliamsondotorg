@@ -36,6 +36,11 @@ This document establishes coding standards and development conventions for the K
 - **Error Handling**: Implement comprehensive error handling with proper Result types
 - **Async**: Use async/await patterns consistently
 - **Testing**: Add integration tests for new API endpoints
+- **Builder Pattern**: Use builder pattern for struct initialization instead of `new()` constructors
+  - ✅ Correct: `MyStruct::builder().with_option(value).build()`
+  - ❌ Avoid: `MyStruct::new(arg1, arg2, arg3)`
+  - Rationale: Builder pattern provides flexibility, discoverability, and prevents breaking changes when adding new fields
+  - Exception: Simple value types (like `String::new()`, `Vec::new()`) can use `new()`
 
 ### SQL/Database
 - **Migrations**: Use SQLx migrations for all schema changes
@@ -103,6 +108,13 @@ This document establishes coding standards and development conventions for the K
 - **Integration Tests**: Comprehensive test coverage for all API endpoints
 - **Database**: Use test database with proper isolation
 - **Cleanup**: Implement proper test cleanup and data management
+- **Test Threads**: Use maximum 4 test threads to prevent resource competition
+  - Run tests with: `cargo test -- --test-threads=4`
+  - Prevents Docker container/database connection pool exhaustion
+- **Test Fixtures**: Use builder pattern for test fixture creation
+  - ✅ `TestContext::builder().build().await` for full integration tests
+  - ✅ `TestContainer::builder().build().await` for low-level database tests
+  - Avoid direct constructor calls to prevent coupling to internal implementation details
 
 ### Frontend Testing
 - **Unit Tests**: Component-level testing (planned)

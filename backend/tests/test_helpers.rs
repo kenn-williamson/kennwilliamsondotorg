@@ -13,91 +13,6 @@ use anyhow::Result;
 // TESTCONTAINERS DATABASE SETUP
 // ============================================================================
 
-/// Wait for database to be ready with retry logic
-#[allow(dead_code)]
-pub async fn wait_for_database_ready(connection_string: &str) -> PgPool {
-    let mut attempt = 0;
-    let max_attempts = 10;
-    
-    while attempt < max_attempts {
-        attempt += 1;
-        println!("🔍 Database readiness check attempt {}/{}", attempt, max_attempts);
-        
-        match sqlx::postgres::PgPoolOptions::new()
-            .max_connections(5)
-            .acquire_timeout(std::time::Duration::from_secs(10))
-            .idle_timeout(std::time::Duration::from_secs(600))
-            .connect(connection_string)
-            .await
-        {
-            Ok(pool) => {
-                // Test the connection
-                match sqlx::query("SELECT 1").fetch_one(&pool).await {
-                    Ok(_) => {
-                        println!("✅ Database is ready!");
-                        return pool;
-                    },
-                    Err(e) => {
-                        println!("⚠️  Connection established but query failed: {}", e);
-                    }
-                }
-            },
-            Err(e) => {
-                println!("❌ Connection failed: {}", e);
-            }
-        }
-        
-        if attempt < max_attempts {
-            let delay = std::cmp::min(1 << attempt, 8); // Exponential backoff, max 8 seconds
-            println!("⏳ Waiting {}s before retry...", delay);
-            tokio::time::sleep(tokio::time::Duration::from_secs(delay)).await;
-        }
-    }
-    
-    panic!("Database failed to become ready after {} attempts", max_attempts);
-}
-
-/// Create a testcontainers database with proper setup
-#[allow(dead_code)]
-pub async fn create_testcontainers_database() -> (PgPool, String) {
-    let image = GenericImage::new("ghcr.io/fboulnois/pg_uuidv7", "1.6.0")
-        .with_exposed_port(5432.tcp())
-        .with_wait_for(WaitFor::message_on_stdout("database system is ready to accept connections"))
-        .with_env_var("POSTGRES_DB", "testdb")
-        .with_env_var("POSTGRES_USER", "postgres")
-        .with_env_var("POSTGRES_PASSWORD", "postgres");
-    
-    println!("🚀 Starting pg_uuidv7 container...");
-    let _container = image.start().await.expect("Failed to start PostgreSQL container");
-    println!("✅ Container started successfully");
-    
-    let port = _container.get_host_port_ipv4(5432).await.unwrap();
-    let connection_string = format!("postgres://postgres:postgres@127.0.0.1:{}/testdb?sslmode=disable", port);
-    
-    println!("🔗 Connection string: {}", connection_string);
-    
-    // Wait for database to be ready with retry logic
-    let pool = wait_for_database_ready(&connection_string).await;
-    println!("✅ Database connection established");
-    
-    // Enable pg_uuidv7 extension
-    println!("🔧 Enabling pg_uuidv7 extension...");
-    sqlx::query("CREATE EXTENSION IF NOT EXISTS pg_uuidv7")
-        .execute(&pool)
-        .await
-        .expect("Failed to enable pg_uuidv7 extension");
-    println!("✅ pg_uuidv7 extension enabled");
-    
-    // Run migrations
-    println!("🔄 Running database migrations...");
-    sqlx::migrate!("./migrations")
-        .run(&pool)
-        .await
-        .expect("Failed to run migrations");
-    println!("✅ Migrations completed successfully");
-    
-    (pool, connection_string)
-}
 
 // ============================================================================
 // TEST CONTEXT WITH BUILDER PATTERN
@@ -166,7 +81,7 @@ impl TestContextBuilder {
         use backend::services::phrase::PhraseService;
         use backend::services::admin::{UserManagementService, PhraseModerationService, StatsService};
 
-        let test_container = TestContainer::new().await.expect("Failed to create test container");
+        let test_container = TestContainer::builder().build().await.expect("Failed to create test container");
         let jwt_secret = "test-jwt-secret-for-api-tests".to_string();
 
         // Create mock email service for testing
@@ -219,9 +134,11 @@ impl TestContextBuilder {
         };
 
         // Create cleanup service
+        use backend::repositories::postgres::postgres_password_reset_token_repository::PostgresPasswordResetTokenRepository;
         let cleanup_service = Arc::new(backend::services::cleanup::CleanupService::new(
             Box::new(PostgresRefreshTokenRepository::new(test_container.pool.clone())),
             Box::new(PostgresVerificationTokenRepository::new(test_container.pool.clone())),
+            Box::new(PostgresPasswordResetTokenRepository::new(test_container.pool.clone())),
         ));
 
         let container = ServiceContainer {
@@ -398,7 +315,7 @@ pub async fn create_test_user_in_db(
     // Fetch the created user
     let user = sqlx::query_as::<_, User>(
         r#"
-        SELECT u.id, u.email, u.password_hash, u.display_name, u.slug, u.active, u.real_name, u.google_user_id, u.created_at, u.updated_at
+        SELECT u.id, u.email, u.password_hash, u.display_name, u.slug, u.active, u.real_name, u.google_user_id, u.timer_is_public, u.timer_show_in_list, u.created_at, u.updated_at
         FROM users u
         WHERE u.id = $1
         "#,
@@ -625,9 +542,29 @@ pub struct TestContainer {
     pub connection_string: String,
 }
 
+/// Builder for TestContainer
+pub struct TestContainerBuilder {
+    // Future: could add configuration options here
+}
+
+impl TestContainerBuilder {
+    pub fn new() -> Self {
+        Self {}
+    }
+
+    pub async fn build(self) -> Result<TestContainer> {
+        TestContainer::new_internal().await
+    }
+}
+
 impl TestContainer {
-    /// Create a new test container with database setup and restart logic
-    pub async fn new() -> Result<Self> {
+    /// Builder pattern entry point
+    pub fn builder() -> TestContainerBuilder {
+        TestContainerBuilder::new()
+    }
+
+    /// Internal constructor - use builder() instead
+    async fn new_internal() -> Result<Self> {
         let mut current_container: Option<Box<dyn std::any::Any + Send + Sync>> = None;
         let mut total_attempts = 0;
         let max_total_attempts = 15; // 3 containers × 5 attempts each

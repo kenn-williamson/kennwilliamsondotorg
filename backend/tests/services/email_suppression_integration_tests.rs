@@ -28,12 +28,13 @@ async fn test_send_verification_email_succeeds_when_not_suppressed() {
         )
         .await;
 
-    // Then: Email should be sent successfully
-    // Note: This will actually fail in tests because we don't have AWS credentials
-    // But the suppression check should pass before reaching AWS SES
-    assert!(result.is_err()); // AWS credentials error, not suppression error
-    let error_msg = result.unwrap_err().to_string();
-    assert!(!error_msg.contains("suppressed"), "Should not be suppressed, got: {}", error_msg);
+    // Then: Email should either succeed OR fail with AWS error (NOT suppression error)
+    // Note: May succeed if AWS credentials are configured, or fail if not
+    if let Err(err) = result {
+        let error_msg = err.to_string();
+        assert!(!error_msg.contains("suppressed"), "Should not be suppressed, got: {}", error_msg);
+    }
+    // If result.is_ok(), that's fine - AWS credentials were available
 }
 
 #[tokio::test]
@@ -113,10 +114,12 @@ async fn test_send_verification_email_allowed_when_only_marketing_suppressed() {
         .await;
 
     // Then: Email should be allowed (transactional emails bypass marketing suppression)
-    // Note: Will fail with AWS credentials error, but NOT suppression error
-    assert!(result.is_err());
-    let error_msg = result.unwrap_err().to_string();
-    assert!(!error_msg.contains("suppressed"), "Transactional email should bypass marketing-only suppression, got: {}", error_msg);
+    // Note: May succeed if AWS credentials are configured, or fail with AWS error (NOT suppression)
+    if let Err(err) = result {
+        let error_msg = err.to_string();
+        assert!(!error_msg.contains("suppressed"), "Transactional email should bypass marketing-only suppression, got: {}", error_msg);
+    }
+    // If result.is_ok(), that's fine - AWS credentials were available and email was sent
 }
 
 #[tokio::test]
@@ -183,9 +186,11 @@ async fn test_email_service_without_suppression_repository_still_works() {
         )
         .await;
 
-    // Then: Should fail with AWS error (not suppression error)
-    // This ensures backwards compatibility - old code without suppression still works
-    assert!(result.is_err());
-    let error_msg = result.unwrap_err().to_string();
-    assert!(!error_msg.contains("suppressed"), "Should not check suppression when repo not provided, got: {}", error_msg);
+    // Then: Should either succeed OR fail with AWS error (NOT suppression error)
+    // This ensures backwards compatibility - code with suppression repo still works
+    if let Err(err) = result {
+        let error_msg = err.to_string();
+        assert!(!error_msg.contains("suppressed"), "Should not have suppression error, got: {}", error_msg);
+    }
+    // If result.is_ok(), that's fine - AWS credentials were available and email was sent
 }

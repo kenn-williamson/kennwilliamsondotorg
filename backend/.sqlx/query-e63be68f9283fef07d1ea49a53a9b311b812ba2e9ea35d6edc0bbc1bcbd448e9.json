@@ -1,6 +1,6 @@
 {
   "db_name": "PostgreSQL",
-  "query": "SELECT id, email, password_hash, display_name, slug, active, real_name, google_user_id, created_at, updated_at FROM users WHERE email = $1",
+  "query": "SELECT id, email, password_hash, display_name, slug, active, real_name, google_user_id, timer_is_public, timer_show_in_list, created_at, updated_at FROM users WHERE email = $1",
   "describe": {
     "columns": [
       {
@@ -45,11 +45,21 @@
       },
       {
         "ordinal": 8,
+        "name": "timer_is_public",
+        "type_info": "Bool"
+      },
+      {
+        "ordinal": 9,
+        "name": "timer_show_in_list",
+        "type_info": "Bool"
+      },
+      {
+        "ordinal": 10,
         "name": "created_at",
         "type_info": "Timestamptz"
       },
       {
-        "ordinal": 9,
+        "ordinal": 11,
         "name": "updated_at",
         "type_info": "Timestamptz"
       }
@@ -69,8 +79,10 @@
       true,
       true,
       false,
+      false,
+      false,
       false
     ]
   },
-  "hash": "3725e075bcbea2f752156c0cdbf6122f37a9d0333e68ddaacebabec176385358"
+  "hash": "e63be68f9283fef07d1ea49a53a9b311b812ba2e9ea35d6edc0bbc1bcbd448e9"
 }

@@ -2,6 +2,9 @@ use serde_json::json;
 use uuid::Uuid;
 use crate::test_helpers::TestContext;
 
+#[path = "../fixtures/mod.rs"]
+mod fixtures;
+
 // ============================================================================
 // ACCOUNT DELETION TESTS - TDD Phase 1 (Red Phase)
 // ============================================================================
@@ -324,22 +327,17 @@ async fn test_account_deletion_works_with_no_phrases() {
 /// Create test JWT token for a user
 fn create_test_jwt(_ctx: &TestContext, user_id: Uuid) -> String {
     use backend::services::auth::jwt::JwtService;
-    
+    use fixtures::UserBuilder;
+
     let jwt_service = JwtService::new("test-jwt-secret-for-api-tests".to_string());
-    let user = backend::models::db::user::User {
-        id: user_id,
-        email: "test@example.com".to_string(),
-        password_hash: Some("hash".to_string()),
-        display_name: "Test User".to_string(),
-        slug: "testuser".to_string(),
-        active: true,
-        created_at: chrono::Utc::now(),
-        updated_at: chrono::Utc::now(),
-        real_name: None,
-        google_user_id: None,
-    };
+    let user = UserBuilder::new()
+        .with_id(user_id)
+        .with_email("test@example.com")
+        .with_display_name("Test User")
+        .with_slug("testuser")
+        .build();
     let roles = vec!["user".to_string(), "email-verified".to_string()];
-    
+
     jwt_service.generate_token(&user, &roles).unwrap()
 }
 

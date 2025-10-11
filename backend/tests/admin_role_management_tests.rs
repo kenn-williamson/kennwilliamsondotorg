@@ -12,6 +12,9 @@ use uuid::Uuid;
 #[path = "test_helpers.rs"]
 mod test_helpers;
 
+#[path = "fixtures/mod.rs"]
+mod fixtures;
+
 /// Create a test admin user with admin role
 async fn create_test_admin(pool: &PgPool) -> (User, String) {
     let user_id = Uuid::new_v4();
@@ -35,14 +38,14 @@ async fn create_test_admin(pool: &PgPool) -> (User, String) {
     .unwrap();
 
     // Add user role
-    sqlx::query("INSERT INTO user_roles (user_id, role_name) VALUES ($1, 'user')")
+    sqlx::query("INSERT INTO user_roles (user_id, role_id) SELECT $1, id FROM roles WHERE name = 'user'")
         .bind(user_id)
         .execute(pool)
         .await
         .unwrap();
 
     // Add admin role
-    sqlx::query("INSERT INTO user_roles (user_id, role_name) VALUES ($1, 'admin')")
+    sqlx::query("INSERT INTO user_roles (user_id, role_id) SELECT $1, id FROM roles WHERE name = 'admin'")
         .bind(user_id)
         .execute(pool)
         .await
@@ -79,7 +82,7 @@ async fn create_test_user(pool: &PgPool) -> User {
     .unwrap();
 
     // Add user role
-    sqlx::query("INSERT INTO user_roles (user_id, role_name) VALUES ($1, 'user')")
+    sqlx::query("INSERT INTO user_roles (user_id, role_id) SELECT $1, id FROM roles WHERE name = 'user'")
         .bind(user_id)
         .execute(pool)
         .await
@@ -94,33 +97,30 @@ async fn create_test_user(pool: &PgPool) -> User {
 
 /// Generate admin JWT token
 fn generate_admin_jwt(admin_id: Uuid) -> String {
+    use fixtures::UserBuilder;
+
     let jwt_service = JwtService::new("test_secret_key_that_is_at_least_256_bits_long_for_hs256".to_string());
 
-    // Create a minimal user struct for token generation
-    let user = User {
-        id: admin_id,
-        email: "admin@test.com".to_string(),
-        password_hash: None,
-        display_name: "Admin".to_string(),
-        slug: "admin".to_string(),
-        real_name: None,
-        google_user_id: None,
-        active: true,
-        created_at: chrono::Utc::now(),
-        updated_at: chrono::Utc::now(),
-    };
+    // Create a minimal user struct for token generation using UserBuilder
+    let user = UserBuilder::new()
+        .with_id(admin_id)
+        .with_email("admin@test.com")
+        .with_display_name("Admin")
+        .with_slug("admin")
+        .without_password()
+        .build();
 
     jwt_service.generate_token(&user, &vec!["user".to_string(), "admin".to_string()]).unwrap()
 }
 
 #[tokio::test]
 async fn test_add_role_trusted_contact_success() {
-    println!("🚀 Starting PostgreSQL container...");
-    let (pool, _connection_string) = test_helpers::create_testcontainers_database().await;
+    let container = test_helpers::TestContainer::builder().build().await.expect("Failed to create test container");
+    let pool = &container.pool;
 
     // Create admin and regular user
-    let (admin, _) = create_test_admin(&pool).await;
-    let user = create_test_user(&pool).await;
+    let (admin, _) = create_test_admin(pool).await;
+    let user = create_test_user(pool).await;
 
     // Create services
     let user_repo = PostgresUserRepository::new(pool.clone());
@@ -167,11 +167,11 @@ async fn test_add_role_trusted_contact_success() {
 
 #[tokio::test]
 async fn test_add_role_requires_admin_auth() {
-    println!("🚀 Starting PostgreSQL container...");
-    let (pool, _connection_string) = test_helpers::create_testcontainers_database().await;
+    let container = test_helpers::TestContainer::builder().build().await.expect("Failed to create test container");
+    let pool = &container.pool;
 
     // Create regular user
-    let user = create_test_user(&pool).await;
+    let user = create_test_user(pool).await;
 
     // Create services
     let user_repo = PostgresUserRepository::new(pool.clone());
@@ -215,12 +215,12 @@ async fn test_add_role_requires_admin_auth() {
 
 #[tokio::test]
 async fn test_add_role_invalid_name_returns_400() {
-    println!("🚀 Starting PostgreSQL container...");
-    let (pool, _connection_string) = test_helpers::create_testcontainers_database().await;
+    let container = test_helpers::TestContainer::builder().build().await.expect("Failed to create test container");
+    let pool = &container.pool;
 
     // Create admin and regular user
-    let (admin, _) = create_test_admin(&pool).await;
-    let user = create_test_user(&pool).await;
+    let (admin, _) = create_test_admin(pool).await;
+    let user = create_test_user(pool).await;
 
     // Create services
     let user_repo = PostgresUserRepository::new(pool.clone());
@@ -267,12 +267,12 @@ async fn test_add_role_invalid_name_returns_400() {
 
 #[tokio::test]
 async fn test_add_role_user_role_returns_400() {
-    println!("🚀 Starting PostgreSQL container...");
-    let (pool, _connection_string) = test_helpers::create_testcontainers_database().await;
+    let container = test_helpers::TestContainer::builder().build().await.expect("Failed to create test container");
+    let pool = &container.pool;
 
     // Create admin and regular user
-    let (admin, _) = create_test_admin(&pool).await;
-    let user = create_test_user(&pool).await;
+    let (admin, _) = create_test_admin(pool).await;
+    let user = create_test_user(pool).await;
 
     // Create services
     let user_repo = PostgresUserRepository::new(pool.clone());
@@ -316,17 +316,17 @@ async fn test_add_role_user_role_returns_400() {
 
 #[tokio::test]
 async fn test_remove_role_success() {
-    println!("🚀 Starting PostgreSQL container...");
-    let (pool, _connection_string) = test_helpers::create_testcontainers_database().await;
+    let container = test_helpers::TestContainer::builder().build().await.expect("Failed to create test container");
+    let pool = &container.pool;
 
     // Create admin and regular user
-    let (admin, _) = create_test_admin(&pool).await;
-    let user = create_test_user(&pool).await;
+    let (admin, _) = create_test_admin(pool).await;
+    let user = create_test_user(pool).await;
 
     // Add trusted-contact role to user
-    sqlx::query("INSERT INTO user_roles (user_id, role_name) VALUES ($1, 'trusted-contact')")
+    sqlx::query("INSERT INTO user_roles (user_id, role_id) SELECT $1, id FROM roles WHERE name = 'trusted-contact'")
         .bind(user.id)
-        .execute(&pool)
+        .execute(pool)
         .await
         .unwrap();
 
@@ -375,12 +375,12 @@ async fn test_remove_role_success() {
 
 #[tokio::test]
 async fn test_remove_role_user_role_returns_400() {
-    println!("🚀 Starting PostgreSQL container...");
-    let (pool, _connection_string) = test_helpers::create_testcontainers_database().await;
+    let container = test_helpers::TestContainer::builder().build().await.expect("Failed to create test container");
+    let pool = &container.pool;
 
     // Create admin and regular user
-    let (admin, _) = create_test_admin(&pool).await;
-    let user = create_test_user(&pool).await;
+    let (admin, _) = create_test_admin(pool).await;
+    let user = create_test_user(pool).await;
 
     // Create services
     let user_repo = PostgresUserRepository::new(pool.clone());
@@ -424,11 +424,11 @@ async fn test_remove_role_user_role_returns_400() {
 
 #[tokio::test]
 async fn test_remove_role_last_admin_returns_409() {
-    println!("🚀 Starting PostgreSQL container...");
-    let (pool, _connection_string) = test_helpers::create_testcontainers_database().await;
+    let container = test_helpers::TestContainer::builder().build().await.expect("Failed to create test container");
+    let pool = &container.pool;
 
     // Create admin (only admin in system)
-    let (admin, _) = create_test_admin(&pool).await;
+    let (admin, _) = create_test_admin(pool).await;
 
     // Create services
     let user_repo = PostgresUserRepository::new(pool.clone());
@@ -472,16 +472,16 @@ async fn test_remove_role_last_admin_returns_409() {
 
 #[tokio::test]
 async fn test_remove_role_requires_admin_auth() {
-    println!("🚀 Starting PostgreSQL container...");
-    let (pool, _connection_string) = test_helpers::create_testcontainers_database().await;
+    let container = test_helpers::TestContainer::builder().build().await.expect("Failed to create test container");
+    let pool = &container.pool;
 
     // Create regular user
-    let user = create_test_user(&pool).await;
+    let user = create_test_user(pool).await;
 
     // Add trusted-contact role to user
-    sqlx::query("INSERT INTO user_roles (user_id, role_name) VALUES ($1, 'trusted-contact')")
+    sqlx::query("INSERT INTO user_roles (user_id, role_id) SELECT $1, id FROM roles WHERE name = 'trusted-contact'")
         .bind(user.id)
-        .execute(&pool)
+        .execute(pool)
         .await
         .unwrap();
 

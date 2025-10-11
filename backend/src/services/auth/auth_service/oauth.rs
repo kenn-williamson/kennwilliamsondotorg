@@ -343,10 +343,12 @@ mod tests {
                     slug: "mock-user".to_string(),
                     password_hash: None,
                     active: true,
-                    created_at: chrono::Utc::now(),
-                    updated_at: chrono::Utc::now(),
                     real_name: None,
                     google_user_id: Some(google_id.clone()),
+                    timer_is_public: false,
+                    timer_show_in_list: false,
+                    created_at: chrono::Utc::now(),
+                    updated_at: chrono::Utc::now(),
                 })
             });
         user_repo
@@ -701,10 +703,12 @@ mod tests {
                     slug: "existing-user".to_string(),
                     password_hash: None,
                     active: true,
-                    created_at: chrono::Utc::now(),
-                    updated_at: chrono::Utc::now(),
                     real_name: Some("Old Name".to_string()),
                     google_user_id: Some(existing_google_id.clone()),
+                    timer_is_public: false,
+                    timer_show_in_list: false,
+                    created_at: chrono::Utc::now(),
+                    updated_at: chrono::Utc::now(),
                 }))
             });
         user_repo
@@ -756,10 +760,12 @@ mod tests {
                     slug: "email-user".to_string(),
                     password_hash: Some("hash".to_string()),
                     active: true,
-                    created_at: chrono::Utc::now(),
-                    updated_at: chrono::Utc::now(),
                     real_name: None,
                     google_user_id: None,
+                    timer_is_public: false,
+                    timer_show_in_list: false,
+                    created_at: chrono::Utc::now(),
+                    updated_at: chrono::Utc::now(),
                 }))
             });
         user_repo
@@ -778,10 +784,12 @@ mod tests {
                     slug: "email-user".to_string(),
                     password_hash: Some("hash".to_string()),
                     active: true,
-                    created_at: chrono::Utc::now(),
-                    updated_at: chrono::Utc::now(),
                     real_name: Some("Link User".to_string()),
                     google_user_id: Some("linking_google_id".to_string()),
+                    timer_is_public: false,
+                    timer_show_in_list: false,
+                    created_at: chrono::Utc::now(),
+                    updated_at: chrono::Utc::now(),
                 }))
             });
         user_repo
@@ -832,10 +840,12 @@ mod tests {
                     slug: "unverified-user".to_string(),
                     password_hash: Some("hash".to_string()),
                     active: true,
-                    created_at: chrono::Utc::now(),
-                    updated_at: chrono::Utc::now(),
                     real_name: None,
                     google_user_id: None,
+                    timer_is_public: false,
+                    timer_show_in_list: false,
+                    created_at: chrono::Utc::now(),
+                    updated_at: chrono::Utc::now(),
                 }))
             });
         user_repo
@@ -857,10 +867,12 @@ mod tests {
                     slug: "unverified-user".to_string(),
                     password_hash: Some("hash".to_string()),
                     active: true,
-                    created_at: chrono::Utc::now(),
-                    updated_at: chrono::Utc::now(),
                     real_name: Some("Link Test".to_string()),
                     google_user_id: Some("link_unverified_id".to_string()),
+                    timer_is_public: false,
+                    timer_show_in_list: false,
+                    created_at: chrono::Utc::now(),
+                    updated_at: chrono::Utc::now(),
                 }))
             });
         user_repo
@@ -960,10 +972,12 @@ mod tests {
                     slug: "update-user".to_string(),
                     password_hash: None,
                     active: true,
-                    created_at: chrono::Utc::now(),
-                    updated_at: chrono::Utc::now(),
                     real_name: Some("Old Name".to_string()),
                     google_user_id: Some(update_google_id.clone()),
+                    timer_is_public: false,
+                    timer_show_in_list: false,
+                    created_at: chrono::Utc::now(),
+                    updated_at: chrono::Utc::now(),
                 }))
             });
         user_repo

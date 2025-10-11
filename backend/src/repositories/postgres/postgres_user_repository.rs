@@ -3,7 +3,7 @@ use async_trait::async_trait;
 use sqlx::PgPool;
 use uuid::Uuid;
 
-use crate::models::db::user::User;
+use crate::models::db::user::{User, UserWithTimer};
 use crate::repositories::traits::user_repository::{
     CreateOAuthUserData, CreateUserData, UserRepository, UserUpdates,
 };
@@ -28,7 +28,7 @@ impl UserRepository for PostgresUserRepository {
             r#"
             INSERT INTO users (email, password_hash, display_name, slug)
             VALUES ($1, $2, $3, $4)
-            RETURNING id, email, password_hash, display_name, slug, active, real_name, google_user_id, created_at, updated_at
+            RETURNING id, email, password_hash, display_name, slug, active, real_name, google_user_id, timer_is_public, timer_show_in_list, created_at, updated_at
             "#,
             user_data.email,
             user_data.password_hash,
@@ -59,7 +59,7 @@ impl UserRepository for PostgresUserRepository {
             r#"
             INSERT INTO users (email, display_name, slug, real_name, google_user_id)
             VALUES ($1, $2, $3, $4, $5)
-            RETURNING id, email, password_hash, display_name, slug, active, real_name, google_user_id, created_at, updated_at
+            RETURNING id, email, password_hash, display_name, slug, active, real_name, google_user_id, timer_is_public, timer_show_in_list, created_at, updated_at
             "#,
             user_data.email,
             user_data.display_name,
@@ -98,7 +98,7 @@ impl UserRepository for PostgresUserRepository {
     async fn find_by_email(&self, email: &str) -> Result<Option<User>> {
         let user = sqlx::query_as!(
             User,
-            "SELECT id, email, password_hash, display_name, slug, active, real_name, google_user_id, created_at, updated_at FROM users WHERE email = $1",
+            "SELECT id, email, password_hash, display_name, slug, active, real_name, google_user_id, timer_is_public, timer_show_in_list, created_at, updated_at FROM users WHERE email = $1",
             email
         )
         .fetch_optional(&self.pool)
@@ -110,7 +110,7 @@ impl UserRepository for PostgresUserRepository {
     async fn find_by_google_user_id(&self, google_user_id: &str) -> Result<Option<User>> {
         let user = sqlx::query_as!(
             User,
-            "SELECT id, email, password_hash, display_name, slug, active, real_name, google_user_id, created_at, updated_at FROM users WHERE google_user_id = $1",
+            "SELECT id, email, password_hash, display_name, slug, active, real_name, google_user_id, timer_is_public, timer_show_in_list, created_at, updated_at FROM users WHERE google_user_id = $1",
             google_user_id
         )
         .fetch_optional(&self.pool)
@@ -122,7 +122,7 @@ impl UserRepository for PostgresUserRepository {
     async fn find_by_id(&self, id: Uuid) -> Result<Option<User>> {
         let user = sqlx::query_as!(
             User,
-            "SELECT id, email, password_hash, display_name, slug, active, real_name, google_user_id, created_at, updated_at FROM users WHERE id = $1",
+            "SELECT id, email, password_hash, display_name, slug, active, real_name, google_user_id, timer_is_public, timer_show_in_list, created_at, updated_at FROM users WHERE id = $1",
             id
         )
         .fetch_optional(&self.pool)
@@ -139,7 +139,7 @@ impl UserRepository for PostgresUserRepository {
             UPDATE users
             SET display_name = $1, slug = $2, updated_at = NOW()
             WHERE id = $3
-            RETURNING id, email, password_hash, display_name, slug, active, real_name, google_user_id, created_at, updated_at
+            RETURNING id, email, password_hash, display_name, slug, active, real_name, google_user_id, timer_is_public, timer_show_in_list, created_at, updated_at
             "#,
             updates.display_name,
             updates.slug,
@@ -321,5 +321,81 @@ impl UserRepository for PostgresUserRepository {
 
         log::info!("Successfully deleted user {} and all associated data", user_id);
         Ok(())
+    }
+
+    async fn update_timer_privacy(
+        &self,
+        user_id: Uuid,
+        is_public: bool,
+        show_in_list: bool,
+    ) -> Result<User> {
+        // Validation: Cannot show in list if not public
+        if show_in_list && !is_public {
+            return Err(anyhow::anyhow!(
+                "Cannot enable 'Show in List' when timer is not public"
+            ));
+        }
+
+        let user = sqlx::query_as!(
+            User,
+            r#"
+            UPDATE users
+            SET timer_is_public = $1,
+                timer_show_in_list = $2,
+                updated_at = NOW()
+            WHERE id = $3
+            RETURNING id, email, password_hash, display_name, slug, active, real_name, google_user_id, timer_is_public, timer_show_in_list, created_at, updated_at
+            "#,
+            is_public,
+            show_in_list,
+            user_id
+        )
+        .fetch_one(&self.pool)
+        .await?;
+
+        Ok(user)
+    }
+
+    async fn get_users_with_public_timers(
+        &self,
+        limit: i64,
+        offset: i64,
+    ) -> Result<Vec<UserWithTimer>> {
+        let users = sqlx::query_as!(
+            UserWithTimer,
+            r#"
+            SELECT
+                u.id,
+                u.display_name,
+                u.slug,
+                u.created_at,
+                it.reset_timestamp,
+                it.notes
+            FROM users u
+            INNER JOIN incident_timers it ON u.id = it.user_id
+            WHERE u.timer_is_public = true
+              AND u.timer_show_in_list = true
+            ORDER BY it.reset_timestamp DESC
+            LIMIT $1 OFFSET $2
+            "#,
+            limit,
+            offset
+        )
+        .fetch_all(&self.pool)
+        .await?;
+
+        Ok(users)
+    }
+
+    async fn get_by_slug(&self, slug: &str) -> Result<User> {
+        let user = sqlx::query_as!(
+            User,
+            "SELECT id, email, password_hash, display_name, slug, active, real_name, google_user_id, timer_is_public, timer_show_in_list, created_at, updated_at FROM users WHERE slug = $1",
+            slug
+        )
+        .fetch_one(&self.pool)
+        .await?;
+
+        Ok(user)
     }
 }

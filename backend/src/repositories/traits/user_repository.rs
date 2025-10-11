@@ -2,7 +2,7 @@ use anyhow::Result;
 use async_trait::async_trait;
 use uuid::Uuid;
 
-use crate::models::db::user::User;
+use crate::models::db::user::{User, UserWithTimer};
 
 /// Data structure for creating a new user (email/password registration)
 #[derive(Debug, Clone)]
@@ -83,4 +83,24 @@ pub trait UserRepository: Send + Sync {
     /// Delete a user and all associated data
     /// This performs a hard delete with proper cleanup of related data
     async fn delete_user(&self, user_id: Uuid) -> Result<()>;
+
+    /// Update timer privacy settings for a user
+    /// Returns error if show_in_list=true but is_public=false
+    async fn update_timer_privacy(
+        &self,
+        user_id: Uuid,
+        is_public: bool,
+        show_in_list: bool,
+    ) -> Result<User>;
+
+    /// Get users with public timers for the list page
+    /// Only returns users where both flags are true
+    async fn get_users_with_public_timers(
+        &self,
+        limit: i64,
+        offset: i64,
+    ) -> Result<Vec<UserWithTimer>>;
+
+    /// Get user by slug (for public pages)
+    async fn get_by_slug(&self, slug: &str) -> Result<User>;
 }

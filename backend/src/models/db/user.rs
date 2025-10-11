@@ -13,8 +13,21 @@ pub struct User {
     pub active: bool,
     pub real_name: Option<String>,
     pub google_user_id: Option<String>,
+    pub timer_is_public: bool,
+    pub timer_show_in_list: bool,
     pub created_at: DateTime<Utc>,
     pub updated_at: DateTime<Utc>,
+}
+
+/// User with timer data for public timer list
+#[derive(Debug, Clone, FromRow, Serialize)]
+pub struct UserWithTimer {
+    pub id: Uuid,
+    pub display_name: String,
+    pub slug: String,
+    pub created_at: DateTime<Utc>,
+    pub reset_timestamp: DateTime<Utc>,
+    pub notes: Option<String>,
 }
 
 /// User with roles from database (raw SQLx result)
@@ -27,6 +40,8 @@ pub struct UserWithRoles {
     pub active: bool,
     pub real_name: Option<String>,
     pub google_user_id: Option<String>,
+    pub timer_is_public: bool,
+    pub timer_show_in_list: bool,
     pub created_at: DateTime<Utc>,
     pub updated_at: DateTime<Utc>,
     pub roles: Option<Vec<String>>,

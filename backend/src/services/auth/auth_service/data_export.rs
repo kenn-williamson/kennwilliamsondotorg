@@ -163,6 +163,8 @@ mod tests {
             real_name: Some("Test User Real Name".to_string()),
             google_user_id: Some("google_123".to_string()),
             active: true,
+            timer_is_public: false,
+            timer_show_in_list: false,
             created_at: Utc::now(),
             updated_at: Utc::now(),
         }

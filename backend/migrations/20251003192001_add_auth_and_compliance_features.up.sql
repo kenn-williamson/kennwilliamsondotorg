@@ -8,13 +8,20 @@
 -- Add OAuth and user identity fields to users table
 ALTER TABLE users
   ADD COLUMN real_name VARCHAR(255),
-  ADD COLUMN google_user_id VARCHAR(255) UNIQUE;
+  ADD COLUMN google_user_id VARCHAR(255) UNIQUE,
+  ADD COLUMN timer_is_public BOOLEAN NOT NULL DEFAULT false,
+  ADD COLUMN timer_show_in_list BOOLEAN NOT NULL DEFAULT false;
 
 -- Make password_hash nullable for OAuth-only users (users who only sign in via Google)
 ALTER TABLE users ALTER COLUMN password_hash DROP NOT NULL;
 
 -- Create index for OAuth lookups
 CREATE INDEX idx_users_google_id ON users(google_user_id);
+
+-- Composite index for efficient public timer list queries
+CREATE INDEX idx_users_timer_visibility
+  ON users(timer_is_public, timer_show_in_list)
+  WHERE timer_is_public = true AND timer_show_in_list = true;
 
 -- ========================================
 -- Email Verification
@@ -117,3 +124,5 @@ COMMENT ON TABLE email_suppressions IS 'Email suppression list for AWS SES compl
 COMMENT ON COLUMN email_suppressions.suppression_type IS 'Type: bounce (hard bounces), complaint (spam reports), unsubscribe (user opt-out), manual (admin action)';
 COMMENT ON COLUMN email_suppressions.suppress_transactional IS 'If true, blocks ALL emails including verification and password reset';
 COMMENT ON COLUMN email_suppressions.suppress_marketing IS 'If true, blocks marketing emails (newsletters, announcements)';
+COMMENT ON COLUMN users.timer_is_public IS 'If true, user timer is publicly accessible at /{slug}/incident-timer';
+COMMENT ON COLUMN users.timer_show_in_list IS 'If true (and timer_is_public=true), user appears in public timer list';

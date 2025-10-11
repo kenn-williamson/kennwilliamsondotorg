@@ -9,7 +9,7 @@ async fn test_cleanup_expired_refresh_tokens() {
     use backend::repositories::postgres::postgres_verification_token_repository::PostgresVerificationTokenRepository;
     use backend::services::cleanup::CleanupService;
 
-    let test_container = test_helpers::TestContainer::new()
+    let test_container = test_helpers::TestContainer::builder().build()
         .await
         .expect("Failed to create test container");
     let pool = &test_container.pool;
@@ -40,7 +40,8 @@ async fn test_cleanup_expired_refresh_tokens() {
     // Create cleanup service
     let refresh_repo = Box::new(PostgresRefreshTokenRepository::new(pool.clone()));
     let verification_repo = Box::new(PostgresVerificationTokenRepository::new(pool.clone()));
-    let cleanup_service = CleanupService::new(refresh_repo, verification_repo);
+    let password_reset_repo = Box::new(backend::repositories::postgres::postgres_password_reset_token_repository::PostgresPasswordResetTokenRepository::new(pool.clone()));
+    let cleanup_service = CleanupService::new(refresh_repo, verification_repo, password_reset_repo);
 
     // Run cleanup
     let deleted_count = cleanup_service
@@ -68,7 +69,7 @@ async fn test_cleanup_expired_verification_tokens() {
     use backend::repositories::postgres::postgres_verification_token_repository::PostgresVerificationTokenRepository;
     use backend::services::cleanup::CleanupService;
 
-    let test_container = test_helpers::TestContainer::new()
+    let test_container = test_helpers::TestContainer::builder().build()
         .await
         .expect("Failed to create test container");
     let pool = &test_container.pool;
@@ -111,7 +112,8 @@ async fn test_cleanup_expired_verification_tokens() {
     // Create cleanup service
     let refresh_repo = Box::new(PostgresRefreshTokenRepository::new(pool.clone()));
     let verification_repo = Box::new(PostgresVerificationTokenRepository::new(pool.clone()));
-    let cleanup_service = CleanupService::new(refresh_repo, verification_repo);
+    let password_reset_repo = Box::new(backend::repositories::postgres::postgres_password_reset_token_repository::PostgresPasswordResetTokenRepository::new(pool.clone()));
+    let cleanup_service = CleanupService::new(refresh_repo, verification_repo, password_reset_repo);
 
     // Run cleanup
     let deleted_count = cleanup_service
@@ -140,7 +142,7 @@ async fn test_cleanup_both_token_types() {
     use backend::repositories::postgres::postgres_verification_token_repository::PostgresVerificationTokenRepository;
     use backend::services::cleanup::CleanupService;
 
-    let test_container = test_helpers::TestContainer::new()
+    let test_container = test_helpers::TestContainer::builder().build()
         .await
         .expect("Failed to create test container");
     let pool = &test_container.pool;
@@ -209,7 +211,8 @@ async fn test_cleanup_both_token_types() {
     // Create cleanup service
     let refresh_repo = Box::new(PostgresRefreshTokenRepository::new(pool.clone()));
     let verification_repo = Box::new(PostgresVerificationTokenRepository::new(pool.clone()));
-    let cleanup_service = CleanupService::new(refresh_repo, verification_repo);
+    let password_reset_repo = Box::new(backend::repositories::postgres::postgres_password_reset_token_repository::PostgresPasswordResetTokenRepository::new(pool.clone()));
+    let cleanup_service = CleanupService::new(refresh_repo, verification_repo, password_reset_repo);
 
     // Run cleanup
     let deleted_count = cleanup_service
@@ -246,7 +249,7 @@ async fn test_cleanup_no_expired_tokens() {
     use backend::repositories::postgres::postgres_verification_token_repository::PostgresVerificationTokenRepository;
     use backend::services::cleanup::CleanupService;
 
-    let test_container = test_helpers::TestContainer::new()
+    let test_container = test_helpers::TestContainer::builder().build()
         .await
         .expect("Failed to create test container");
     let pool = &test_container.pool;
@@ -271,7 +274,8 @@ async fn test_cleanup_no_expired_tokens() {
     // Create cleanup service
     let refresh_repo = Box::new(PostgresRefreshTokenRepository::new(pool.clone()));
     let verification_repo = Box::new(PostgresVerificationTokenRepository::new(pool.clone()));
-    let cleanup_service = CleanupService::new(refresh_repo, verification_repo);
+    let password_reset_repo = Box::new(backend::repositories::postgres::postgres_password_reset_token_repository::PostgresPasswordResetTokenRepository::new(pool.clone()));
+    let cleanup_service = CleanupService::new(refresh_repo, verification_repo, password_reset_repo);
 
     // Run cleanup
     let deleted_count = cleanup_service
@@ -300,7 +304,7 @@ async fn test_cleanup_empty_database() {
     use backend::repositories::postgres::postgres_verification_token_repository::PostgresVerificationTokenRepository;
     use backend::services::cleanup::CleanupService;
 
-    let test_container = test_helpers::TestContainer::new()
+    let test_container = test_helpers::TestContainer::builder().build()
         .await
         .expect("Failed to create test container");
     let pool = &test_container.pool;
@@ -308,7 +312,8 @@ async fn test_cleanup_empty_database() {
     // Create cleanup service
     let refresh_repo = Box::new(PostgresRefreshTokenRepository::new(pool.clone()));
     let verification_repo = Box::new(PostgresVerificationTokenRepository::new(pool.clone()));
-    let cleanup_service = CleanupService::new(refresh_repo, verification_repo);
+    let password_reset_repo = Box::new(backend::repositories::postgres::postgres_password_reset_token_repository::PostgresPasswordResetTokenRepository::new(pool.clone()));
+    let cleanup_service = CleanupService::new(refresh_repo, verification_repo, password_reset_repo);
 
     // Run cleanup on empty database
     let deleted_count = cleanup_service

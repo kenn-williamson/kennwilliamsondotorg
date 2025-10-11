@@ -8,8 +8,11 @@ DROP TABLE IF EXISTS verification_tokens;
 -- Remove roles
 DELETE FROM roles WHERE name IN ('email-verified', 'trusted-contact');
 
--- Remove OAuth fields from users table
+-- Remove OAuth fields and timer privacy fields from users table
+DROP INDEX IF EXISTS idx_users_timer_visibility;
 DROP INDEX IF EXISTS idx_users_google_id;
+ALTER TABLE users DROP COLUMN IF EXISTS timer_show_in_list;
+ALTER TABLE users DROP COLUMN IF EXISTS timer_is_public;
 ALTER TABLE users DROP COLUMN IF EXISTS google_user_id;
 ALTER TABLE users DROP COLUMN IF EXISTS real_name;
 

@@ -163,6 +163,8 @@ mod tests {
             real_name: None,
             google_user_id: None,
             active: true,
+            timer_is_public: false,
+            timer_show_in_list: false,
             created_at: Utc::now(),
             updated_at: Utc::now(),
         }

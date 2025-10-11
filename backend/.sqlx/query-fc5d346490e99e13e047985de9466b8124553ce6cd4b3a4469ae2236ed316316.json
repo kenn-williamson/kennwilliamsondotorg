@@ -1,6 +1,6 @@
 {
   "db_name": "PostgreSQL",
-  "query": "\n            INSERT INTO users (email, password_hash, display_name, slug)\n            VALUES ($1, $2, $3, $4)\n            RETURNING id, email, password_hash, display_name, slug, active, real_name, google_user_id, created_at, updated_at\n            ",
+  "query": "SELECT id, email, password_hash, display_name, slug, active, real_name, google_user_id, timer_is_public, timer_show_in_list, created_at, updated_at FROM users WHERE google_user_id = $1",
   "describe": {
     "columns": [
       {
@@ -45,21 +45,28 @@
       },
       {
         "ordinal": 8,
+        "name": "timer_is_public",
+        "type_info": "Bool"
+      },
+      {
+        "ordinal": 9,
+        "name": "timer_show_in_list",
+        "type_info": "Bool"
+      },
+      {
+        "ordinal": 10,
         "name": "created_at",
         "type_info": "Timestamptz"
       },
       {
-        "ordinal": 9,
+        "ordinal": 11,
         "name": "updated_at",
         "type_info": "Timestamptz"
       }
     ],
     "parameters": {
       "Left": [
-        "Varchar",
-        "Varchar",
-        "Varchar",
-        "Varchar"
+        "Text"
       ]
     },
     "nullable": [
@@ -72,8 +79,10 @@
       true,
       true,
       false,
+      false,
+      false,
       false
     ]
   },
-  "hash": "707336bb48b4bbeada0d50c0e9f1f18a941f32e884d05e2fe0719d1ff5151a63"
+  "hash": "fc5d346490e99e13e047985de9466b8124553ce6cd4b3a4469ae2236ed316316"
 }
