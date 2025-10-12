@@ -38,13 +38,13 @@ impl AuthService {
         Ok((auth_url, csrf_token))
     }
 
-    /// Handle Google OAuth callback
+    /// Handle Google OAuth callback (Phase 4C: Using external_logins table)
     /// Validates authorization code, exchanges for token, fetches user info, and performs account linking
     ///
-    /// Account linking strategy (per design doc section 4):
-    /// 1. Check if google_user_id exists → Login existing user
-    /// 2. Check if email exists AND has email-verified role → Link to existing account
-    /// 3. Otherwise → Create new OAuth user with email-verified role
+    /// Account linking strategy:
+    /// 1. Check if external login exists (provider + provider_user_id) → Login existing user
+    /// 2. Check if email exists → Link OAuth to account + Add email-verified role (trust OAuth)
+    /// 3. Otherwise → Create new OAuth user with all tables (user, external_login, profile, preferences)
     pub async fn google_oauth_callback(
         &self,
         code: String,
@@ -79,61 +79,128 @@ impl AuthService {
         // Fetch user info from Google
         let google_user_info = oauth_service.get_user_info(&access_token).await?;
 
-        // Account linking strategy
-        let user = if let Some(existing_user) = self
-            .user_repository
-            .find_by_google_user_id(&google_user_info.sub)
-            .await?
-        {
-            // Case 1: Existing Google user - log them in and update real_name
-            self.user_repository
-                .update_real_name(existing_user.id, google_user_info.name.clone())
-                .await?;
-
-            existing_user
-        } else if let Some(existing_user) = self
-            .user_repository
-            .find_by_email(&google_user_info.email)
-            .await?
-        {
-            // Case 2: Email exists - check if verified before linking
-            let has_verified_role = self
-                .user_repository
-                .has_role(existing_user.id, "email-verified")
-                .await?;
-
-            // Link Google account to existing user (verified or not)
-            // If unverified, trust Google's verification and add email-verified role
-            self.user_repository
-                .link_google_account(
-                    existing_user.id,
-                    &google_user_info.sub,
-                    google_user_info.name.clone(),
-                )
-                .await?;
-
-            // If user wasn't verified, add email-verified role (Google verified it)
-            if !has_verified_role {
-                self.user_repository
-                    .add_role_to_user(existing_user.id, "email-verified")
-                    .await?;
-            }
-
-            // Refetch user to get updated google_user_id and real_name
-            self.user_repository
-                .find_by_id(existing_user.id)
+        // Phase 4C: Use new external_logins table if available, otherwise fall back to old behavior
+        let user = if let Some(external_login_repo) = &self.external_login_repository {
+            // NEW: Phase 4C implementation using external_logins table
+            if let Some(existing_login) = external_login_repo
+                .find_by_provider("google", &google_user_info.sub)
                 .await?
-                .ok_or_else(|| anyhow!("User not found after linking"))?
+            {
+                // Case 1: Existing OAuth user - load their account
+                self.user_repository
+                    .find_by_id(existing_login.user_id)
+                    .await?
+                    .ok_or_else(|| anyhow!("User not found for external login"))?
+            } else if let Some(existing_user) = self
+                .user_repository
+                .find_by_email(&google_user_info.email)
+                .await?
+            {
+                // Case 2: Email exists - link OAuth to existing account
+                // Trust OAuth provider's verification
+                use crate::repositories::traits::user_external_login_repository::CreateExternalLogin;
+
+                external_login_repo
+                    .create(CreateExternalLogin {
+                        user_id: existing_user.id,
+                        provider: "google".to_string(),
+                        provider_user_id: google_user_info.sub.clone(),
+                    })
+                    .await?;
+
+                // Update profile with OAuth data if profile repository is available
+                if let Some(profile_repo) = &self.profile_repository {
+                    use crate::repositories::traits::user_profile_repository::UpdateProfile;
+
+                    profile_repo
+                        .update(
+                            existing_user.id,
+                            UpdateProfile {
+                                real_name: google_user_info.name.clone(),
+                                avatar_url: google_user_info.picture.clone(),
+                                bio: None,
+                                location: None,
+                                website: None,
+                            },
+                        )
+                        .await
+                        .ok(); // Ignore errors for optional profile update
+                }
+
+                // Add email-verified role if not present (OAuth verification is trusted)
+                let roles = self
+                    .user_repository
+                    .get_user_roles(existing_user.id)
+                    .await?;
+                if !roles.contains(&"email-verified".to_string()) {
+                    self.user_repository
+                        .add_role_to_user(existing_user.id, "email-verified")
+                        .await?;
+                }
+
+                existing_user
+            } else {
+                // Case 3: New OAuth user - create user + external_login + profile + preferences
+                self.create_new_oauth_user_phase4c(google_user_info).await?
+            }
         } else {
-            // Case 3: New user - create OAuth account
-            self.create_new_oauth_user(google_user_info).await?
+            // OLD: Fallback to Phase 4B implementation (for backward compatibility during migration)
+            if let Some(existing_user) = self
+                .user_repository
+                .find_by_google_user_id(&google_user_info.sub)
+                .await?
+            {
+                // Case 1: Existing Google user - log them in and update real_name
+                self.user_repository
+                    .update_real_name(existing_user.id, google_user_info.name.clone())
+                    .await?;
+
+                existing_user
+            } else if let Some(existing_user) = self
+                .user_repository
+                .find_by_email(&google_user_info.email)
+                .await?
+            {
+                // Case 2: Email exists - check if verified before linking
+                let has_verified_role = self
+                    .user_repository
+                    .has_role(existing_user.id, "email-verified")
+                    .await?;
+
+                // Link Google account to existing user (verified or not)
+                // If unverified, trust Google's verification and add email-verified role
+                self.user_repository
+                    .link_google_account(
+                        existing_user.id,
+                        &google_user_info.sub,
+                        google_user_info.name.clone(),
+                    )
+                    .await?;
+
+                // If user wasn't verified, add email-verified role (Google verified it)
+                if !has_verified_role {
+                    self.user_repository
+                        .add_role_to_user(existing_user.id, "email-verified")
+                        .await?;
+                }
+
+                // Refetch user to get updated google_user_id and real_name
+                self.user_repository
+                    .find_by_id(existing_user.id)
+                    .await?
+                    .ok_or_else(|| anyhow!("User not found after linking"))?
+            } else {
+                // Case 3: New user - create OAuth account
+                self.create_new_oauth_user(google_user_info).await?
+            }
         };
 
         // Generate tokens and return AuthResponse
         self.generate_auth_response(user).await
     }
 
-    /// Helper: Create new OAuth user
+    /// Helper: Create new OAuth user (OLD - Phase 4B)
+    /// This is kept for backward compatibility during migration
     async fn create_new_oauth_user(
         &self,
         google_user_info: crate::models::oauth::GoogleUserInfo,
@@ -169,6 +236,90 @@ impl AuthService {
         self.user_repository
             .create_oauth_user(&oauth_user_data)
             .await
+    }
+
+    /// Helper: Create new OAuth user (Phase 4C - multi-table)
+    /// Creates user + external_login + profile + preferences atomically
+    async fn create_new_oauth_user_phase4c(
+        &self,
+        google_user_info: crate::models::oauth::GoogleUserInfo,
+    ) -> Result<User> {
+        use crate::repositories::traits::user_external_login_repository::CreateExternalLogin;
+        use crate::repositories::traits::user_profile_repository::UpdateProfile;
+        use crate::repositories::traits::user_repository::CreateUserData;
+        use crate::services::auth::auth_service::slug::generate_slug_from_display_name;
+
+        // Generate slug from email or name
+        let base_slug = if let Some(name) = &google_user_info.name {
+            generate_slug_from_display_name(name)
+        } else {
+            let email_local = google_user_info
+                .email
+                .split('@')
+                .next()
+                .unwrap_or("user");
+            generate_slug_from_display_name(email_local)
+        };
+
+        // Ensure slug is unique
+        let slug = self.ensure_unique_slug(&base_slug).await?;
+
+        // 1. Create user
+        let user_data = CreateUserData {
+            email: google_user_info.email.clone(),
+            password_hash: String::new(), // Temporary: still required by schema during migration
+            display_name: google_user_info
+                .name
+                .clone()
+                .unwrap_or_else(|| "User".to_string()),
+            slug,
+        };
+
+        let user = self.user_repository.create_user(&user_data).await?;
+
+        // 2. Create external login
+        let external_login_repo = self
+            .external_login_repository
+            .as_ref()
+            .ok_or_else(|| anyhow!("External login repository not configured"))?;
+
+        external_login_repo
+            .create(CreateExternalLogin {
+                user_id: user.id,
+                provider: "google".to_string(),
+                provider_user_id: google_user_info.sub,
+            })
+            .await?;
+
+        // 3. Create profile and update with OAuth data
+        if let Some(profile_repo) = &self.profile_repository {
+            profile_repo.create(user.id).await?;
+            profile_repo
+                .update(
+                    user.id,
+                    UpdateProfile {
+                        real_name: google_user_info.name.clone(),
+                        avatar_url: google_user_info.picture.clone(),
+                        bio: None,
+                        location: None,
+                        website: None,
+                    },
+                )
+                .await
+                .ok(); // Ignore errors for optional profile update
+        }
+
+        // 4. Create preferences
+        if let Some(prefs_repo) = &self.preferences_repository {
+            prefs_repo.create(user.id).await?;
+        }
+
+        // 5. Assign email-verified role (OAuth emails are pre-verified by provider)
+        self.user_repository
+            .add_role_to_user(user.id, "email-verified")
+            .await?;
+
+        Ok(user)
     }
 
     /// Helper: Ensure slug is unique by appending numbers if needed
@@ -260,6 +411,7 @@ mod tests {
     use crate::repositories::traits::pkce_storage::PkceStorage;
     use crate::services::auth::oauth::MockGoogleOAuthService;
     use crate::services::email::MockEmailService;
+    use uuid::Uuid;
 
     // Test state constant used across all tests
     const TEST_STATE: &str = "test-state-token";
@@ -995,5 +1147,377 @@ mod tests {
             .await;
 
         assert!(result.is_ok());
+    }
+
+    // ==================== Phase 4C: New OAuth Flow Tests ====================
+    // Tests for OAuth flow using user_external_logins table
+
+    #[tokio::test]
+    async fn test_phase4c_new_oauth_user_creates_all_tables() {
+        use crate::repositories::mocks::{
+            MockUserExternalLoginRepository, MockUserPreferencesRepository,
+            MockUserProfileRepository,
+        };
+        use crate::models::db::user_external_login::UserExternalLogin;
+        use crate::models::db::user_profile::UserProfile;
+        use crate::models::db::user_preferences::UserPreferences;
+
+        let user_info = GoogleUserInfo {
+            given_name: None,
+            family_name: None,
+            picture: Some("https://example.com/avatar.jpg".to_string()),
+            locale: None,
+            sub: "new_oauth_123".to_string(),
+            email: "newoauth@example.com".to_string(),
+            name: Some("New OAuth User".to_string()),
+            email_verified: Some(true),
+        };
+
+        let mock_oauth = MockGoogleOAuthService::new().with_user_info(user_info);
+
+        // Mock external login repository - no existing login
+        let mut external_login_repo = MockUserExternalLoginRepository::new();
+        external_login_repo
+            .expect_find_by_provider()
+            .returning(|_, _| Ok(None));
+        external_login_repo.expect_create().returning(|data| {
+            Ok(UserExternalLogin {
+                id: Uuid::new_v4(),
+                user_id: data.user_id,
+                provider: data.provider,
+                provider_user_id: data.provider_user_id,
+                linked_at: chrono::Utc::now(),
+                created_at: chrono::Utc::now(),
+                updated_at: chrono::Utc::now(),
+            })
+        });
+
+        // Mock user repository - no existing user
+        let mut user_repo = MockUserRepository::new();
+        user_repo
+            .expect_find_by_email()
+            .returning(|_| Ok(None));
+        user_repo.expect_slug_exists().returning(|_| Ok(false));
+        user_repo.expect_create_user().returning(|data| {
+            Ok(User {
+                id: Uuid::new_v4(),
+                email: data.email.clone(),
+                display_name: data.display_name.clone(),
+                slug: data.slug.clone(),
+                password_hash: None,
+                active: true,
+                real_name: None,
+                google_user_id: None,
+                timer_is_public: false,
+                timer_show_in_list: false,
+                created_at: chrono::Utc::now(),
+                updated_at: chrono::Utc::now(),
+            })
+        });
+        user_repo
+            .expect_add_role_to_user()
+            .returning(|_, _| Ok(()));
+        user_repo
+            .expect_get_user_roles()
+            .returning(|_| Ok(vec!["user".to_string(), "email-verified".to_string()]));
+
+        // Mock profile repository
+        let mut profile_repo = MockUserProfileRepository::new();
+        profile_repo.expect_create().returning(|user_id| {
+            Ok(UserProfile {
+                user_id,
+                real_name: None,
+                bio: None,
+                avatar_url: None,
+                location: None,
+                website: None,
+                created_at: chrono::Utc::now(),
+                updated_at: chrono::Utc::now(),
+            })
+        });
+        profile_repo.expect_update().returning(|user_id, _| {
+            Ok(UserProfile {
+                user_id,
+                real_name: Some("New OAuth User".to_string()),
+                bio: None,
+                avatar_url: Some("https://example.com/avatar.jpg".to_string()),
+                location: None,
+                website: None,
+                created_at: chrono::Utc::now(),
+                updated_at: chrono::Utc::now(),
+            })
+        });
+
+        // Mock preferences repository
+        let mut prefs_repo = MockUserPreferencesRepository::new();
+        prefs_repo.expect_create().returning(|user_id| {
+            Ok(UserPreferences {
+                user_id,
+                timer_is_public: false,
+                timer_show_in_list: false,
+                created_at: chrono::Utc::now(),
+                updated_at: chrono::Utc::now(),
+            })
+        });
+
+        let token_repo = mock_token_repo();
+        let pkce_storage = MockPkceStorage::new();
+        pkce_storage
+            .store_pkce(TEST_STATE, TEST_VERIFIER, 300)
+            .await
+            .unwrap();
+
+        let service = AuthService::builder()
+            .user_repository(Box::new(user_repo))
+            .refresh_token_repository(Box::new(token_repo))
+            .verification_token_repository(Box::new(MockVerificationTokenRepository::new()))
+            .email_service(Box::new(MockEmailService::new()))
+            .google_oauth_service(Box::new(mock_oauth))
+            .pkce_storage(Box::new(pkce_storage))
+            .external_login_repository(Box::new(external_login_repo))
+            .profile_repository(Box::new(profile_repo))
+            .preferences_repository(Box::new(prefs_repo))
+            .jwt_secret("test-secret".to_string())
+            .build();
+
+        let result = service
+            .google_oauth_callback("auth_code".to_string(), TEST_STATE.to_string())
+            .await;
+
+        assert!(result.is_ok());
+    }
+
+    #[tokio::test]
+    async fn test_phase4c_existing_external_login() {
+        use crate::repositories::mocks::MockUserExternalLoginRepository;
+        use crate::models::db::user_external_login::UserExternalLogin;
+
+        let user_id = Uuid::new_v4();
+        let user_info = GoogleUserInfo {
+            given_name: None,
+            family_name: None,
+            picture: None,
+            locale: None,
+            sub: "existing_oauth_123".to_string(),
+            email: "existing@example.com".to_string(),
+            name: Some("Existing User".to_string()),
+            email_verified: Some(true),
+        };
+
+        let mock_oauth = MockGoogleOAuthService::new().with_user_info(user_info);
+
+        // Mock external login repository - existing login found
+        let mut external_login_repo = MockUserExternalLoginRepository::new();
+        external_login_repo
+            .expect_find_by_provider()
+            .returning(move |_, _| {
+                Ok(Some(UserExternalLogin {
+                    id: Uuid::new_v4(),
+                    user_id,
+                    provider: "google".to_string(),
+                    provider_user_id: "existing_oauth_123".to_string(),
+                    linked_at: chrono::Utc::now(),
+                    created_at: chrono::Utc::now(),
+                    updated_at: chrono::Utc::now(),
+                }))
+            });
+
+        // Mock user repository - return user by ID
+        let mut user_repo = MockUserRepository::new();
+        user_repo.expect_find_by_id().returning(move |_| {
+            Ok(Some(User {
+                id: user_id,
+                email: "existing@example.com".to_string(),
+                display_name: "Existing User".to_string(),
+                slug: "existing-user".to_string(),
+                password_hash: None,
+                active: true,
+                real_name: Some("Existing User".to_string()),
+                google_user_id: None,
+                timer_is_public: false,
+                timer_show_in_list: false,
+                created_at: chrono::Utc::now(),
+                updated_at: chrono::Utc::now(),
+            }))
+        });
+        user_repo
+            .expect_get_user_roles()
+            .returning(|_| Ok(vec!["user".to_string(), "email-verified".to_string()]));
+
+        let token_repo = mock_token_repo();
+        let pkce_storage = MockPkceStorage::new();
+        pkce_storage
+            .store_pkce(TEST_STATE, TEST_VERIFIER, 300)
+            .await
+            .unwrap();
+
+        let service = AuthService::builder()
+            .user_repository(Box::new(user_repo))
+            .refresh_token_repository(Box::new(token_repo))
+            .verification_token_repository(Box::new(MockVerificationTokenRepository::new()))
+            .email_service(Box::new(MockEmailService::new()))
+            .google_oauth_service(Box::new(mock_oauth))
+            .pkce_storage(Box::new(pkce_storage))
+            .external_login_repository(Box::new(external_login_repo))
+            .jwt_secret("test-secret".to_string())
+            .build();
+
+        let result = service
+            .google_oauth_callback("auth_code".to_string(), TEST_STATE.to_string())
+            .await;
+
+        assert!(result.is_ok());
+    }
+
+    #[tokio::test]
+    async fn test_phase4c_link_to_any_account_and_verify() {
+        use crate::repositories::mocks::{
+            MockUserExternalLoginRepository, MockUserProfileRepository,
+        };
+        use crate::models::db::user_external_login::UserExternalLogin;
+        use crate::models::db::user_profile::UserProfile;
+
+        let user_id = Uuid::new_v4();
+        let user_info = GoogleUserInfo {
+            given_name: None,
+            family_name: None,
+            picture: Some("https://example.com/pic.jpg".to_string()),
+            locale: None,
+            sub: "link_oauth_123".to_string(),
+            email: "anyaccount@example.com".to_string(),
+            name: Some("Link User".to_string()),
+            email_verified: Some(true),
+        };
+
+        let mock_oauth = MockGoogleOAuthService::new().with_user_info(user_info);
+
+        // No existing external login
+        let mut external_login_repo = MockUserExternalLoginRepository::new();
+        external_login_repo
+            .expect_find_by_provider()
+            .returning(|_, _| Ok(None));
+        external_login_repo.expect_create().returning(move |data| {
+            Ok(UserExternalLogin {
+                id: Uuid::new_v4(),
+                user_id: data.user_id,
+                provider: data.provider,
+                provider_user_id: data.provider_user_id,
+                linked_at: chrono::Utc::now(),
+                created_at: chrono::Utc::now(),
+                updated_at: chrono::Utc::now(),
+            })
+        });
+
+        // Existing user with email (may or may not be verified)
+        let mut user_repo = MockUserRepository::new();
+        user_repo.expect_find_by_email().returning(move |_| {
+            Ok(Some(User {
+                id: user_id,
+                email: "anyaccount@example.com".to_string(),
+                display_name: "Email User".to_string(),
+                slug: "email-user".to_string(),
+                password_hash: Some("hash".to_string()),
+                active: true,
+                real_name: None,
+                google_user_id: None,
+                timer_is_public: false,
+                timer_show_in_list: false,
+                created_at: chrono::Utc::now(),
+                updated_at: chrono::Utc::now(),
+            }))
+        });
+        user_repo
+            .expect_get_user_roles()
+            .returning(|_| Ok(vec!["user".to_string()])); // Not yet verified
+
+        // Should add email-verified role (OAuth verification is trusted)
+        user_repo
+            .expect_add_role_to_user()
+            .withf(|_, role| role == "email-verified")
+            .returning(|_, _| Ok(()));
+
+        // Mock profile repository to update with OAuth data
+        let mut profile_repo = MockUserProfileRepository::new();
+        profile_repo.expect_update().returning(move |uid, _| {
+            Ok(UserProfile {
+                user_id: uid,
+                real_name: Some("Link User".to_string()),
+                bio: None,
+                avatar_url: Some("https://example.com/pic.jpg".to_string()),
+                location: None,
+                website: None,
+                created_at: chrono::Utc::now(),
+                updated_at: chrono::Utc::now(),
+            })
+        });
+
+        let token_repo = mock_token_repo();
+        let pkce_storage = MockPkceStorage::new();
+        pkce_storage
+            .store_pkce(TEST_STATE, TEST_VERIFIER, 300)
+            .await
+            .unwrap();
+
+        let service = AuthService::builder()
+            .user_repository(Box::new(user_repo))
+            .refresh_token_repository(Box::new(token_repo))
+            .verification_token_repository(Box::new(MockVerificationTokenRepository::new()))
+            .email_service(Box::new(MockEmailService::new()))
+            .google_oauth_service(Box::new(mock_oauth))
+            .pkce_storage(Box::new(pkce_storage))
+            .external_login_repository(Box::new(external_login_repo))
+            .profile_repository(Box::new(profile_repo))
+            .jwt_secret("test-secret".to_string())
+            .build();
+
+        let result = service
+            .google_oauth_callback("auth_code".to_string(), TEST_STATE.to_string())
+            .await;
+
+        assert!(result.is_ok());
+    }
+
+    #[tokio::test]
+    async fn test_phase4c_user_with_multiple_providers() {
+        use crate::models::db::user_external_login::UserExternalLogin;
+        use crate::repositories::mocks::MockUserExternalLoginRepository;
+        use crate::repositories::traits::user_external_login_repository::UserExternalLoginRepository;
+
+        let user_id = Uuid::new_v4();
+
+        // Mock external login repository
+        let mut external_login_repo = MockUserExternalLoginRepository::new();
+        external_login_repo
+            .expect_find_by_user_id()
+            .returning(move |_| {
+                Ok(vec![
+                    UserExternalLogin {
+                        id: Uuid::new_v4(),
+                        user_id,
+                        provider: "google".to_string(),
+                        provider_user_id: "google_123".to_string(),
+                        linked_at: chrono::Utc::now(),
+                        created_at: chrono::Utc::now(),
+                        updated_at: chrono::Utc::now(),
+                    },
+                    UserExternalLogin {
+                        id: Uuid::new_v4(),
+                        user_id,
+                        provider: "github".to_string(),
+                        provider_user_id: "github_456".to_string(),
+                        linked_at: chrono::Utc::now(),
+                        created_at: chrono::Utc::now(),
+                        updated_at: chrono::Utc::now(),
+                    },
+                ])
+            });
+
+        // Verify user has multiple providers
+        let logins = external_login_repo.find_by_user_id(user_id).await.unwrap();
+        assert_eq!(logins.len(), 2);
+
+        let providers: Vec<String> = logins.iter().map(|l| l.provider.clone()).collect();
+        assert!(providers.contains(&"google".to_string()));
+        assert!(providers.contains(&"github".to_string()));
     }
 }

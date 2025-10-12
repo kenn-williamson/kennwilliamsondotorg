@@ -1,0 +1,15 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "\n                INSERT INTO user_external_logins (user_id, provider, provider_user_id)\n                VALUES ($1, 'google', $2)\n                ",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Left": [
+        "Uuid",
+        "Varchar"
+      ]
+    },
+    "nullable": []
+  },
+  "hash": "f14032a3b5f84b7dcb661cd233a4f189ea616fad1cc26b84464d67d74299a095"
+}

@@ -9,11 +9,10 @@ use backend::services::auth::jwt::JwtService;
 use sqlx::PgPool;
 use uuid::Uuid;
 
-#[path = "test_helpers.rs"]
-mod test_helpers;
-
 #[path = "fixtures/mod.rs"]
 mod fixtures;
+
+use fixtures::TestContainer;
 
 /// Create a test admin user with admin role
 async fn create_test_admin(pool: &PgPool) -> (User, String) {
@@ -115,7 +114,7 @@ fn generate_admin_jwt(admin_id: Uuid) -> String {
 
 #[tokio::test]
 async fn test_add_role_trusted_contact_success() {
-    let container = test_helpers::TestContainer::builder().build().await.expect("Failed to create test container");
+    let container = TestContainer::builder().build().await.expect("Failed to create test container");
     let pool = &container.pool;
 
     // Create admin and regular user
@@ -167,7 +166,7 @@ async fn test_add_role_trusted_contact_success() {
 
 #[tokio::test]
 async fn test_add_role_requires_admin_auth() {
-    let container = test_helpers::TestContainer::builder().build().await.expect("Failed to create test container");
+    let container = TestContainer::builder().build().await.expect("Failed to create test container");
     let pool = &container.pool;
 
     // Create regular user
@@ -215,7 +214,7 @@ async fn test_add_role_requires_admin_auth() {
 
 #[tokio::test]
 async fn test_add_role_invalid_name_returns_400() {
-    let container = test_helpers::TestContainer::builder().build().await.expect("Failed to create test container");
+    let container = TestContainer::builder().build().await.expect("Failed to create test container");
     let pool = &container.pool;
 
     // Create admin and regular user
@@ -267,7 +266,7 @@ async fn test_add_role_invalid_name_returns_400() {
 
 #[tokio::test]
 async fn test_add_role_user_role_returns_400() {
-    let container = test_helpers::TestContainer::builder().build().await.expect("Failed to create test container");
+    let container = TestContainer::builder().build().await.expect("Failed to create test container");
     let pool = &container.pool;
 
     // Create admin and regular user
@@ -316,7 +315,7 @@ async fn test_add_role_user_role_returns_400() {
 
 #[tokio::test]
 async fn test_remove_role_success() {
-    let container = test_helpers::TestContainer::builder().build().await.expect("Failed to create test container");
+    let container = TestContainer::builder().build().await.expect("Failed to create test container");
     let pool = &container.pool;
 
     // Create admin and regular user
@@ -375,7 +374,7 @@ async fn test_remove_role_success() {
 
 #[tokio::test]
 async fn test_remove_role_user_role_returns_400() {
-    let container = test_helpers::TestContainer::builder().build().await.expect("Failed to create test container");
+    let container = TestContainer::builder().build().await.expect("Failed to create test container");
     let pool = &container.pool;
 
     // Create admin and regular user
@@ -424,7 +423,7 @@ async fn test_remove_role_user_role_returns_400() {
 
 #[tokio::test]
 async fn test_remove_role_last_admin_returns_409() {
-    let container = test_helpers::TestContainer::builder().build().await.expect("Failed to create test container");
+    let container = TestContainer::builder().build().await.expect("Failed to create test container");
     let pool = &container.pool;
 
     // Create admin (only admin in system)
@@ -472,7 +471,7 @@ async fn test_remove_role_last_admin_returns_409() {
 
 #[tokio::test]
 async fn test_remove_role_requires_admin_auth() {
-    let container = test_helpers::TestContainer::builder().build().await.expect("Failed to create test container");
+    let container = TestContainer::builder().build().await.expect("Failed to create test container");
     let pool = &container.pool;
 
     // Create regular user

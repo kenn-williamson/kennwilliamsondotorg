@@ -4,6 +4,10 @@ use crate::repositories::traits::password_reset_token_repository::PasswordResetT
 use crate::repositories::traits::phrase_repository::PhraseRepository;
 use crate::repositories::traits::pkce_storage::PkceStorage;
 use crate::repositories::traits::refresh_token_repository::RefreshTokenRepository;
+use crate::repositories::traits::user_credentials_repository::UserCredentialsRepository;
+use crate::repositories::traits::user_external_login_repository::UserExternalLoginRepository;
+use crate::repositories::traits::user_preferences_repository::UserPreferencesRepository;
+use crate::repositories::traits::user_profile_repository::UserProfileRepository;
 use crate::repositories::traits::user_repository::UserRepository;
 use crate::repositories::traits::verification_token_repository::VerificationTokenRepository;
 use crate::services::auth::jwt::JwtService;
@@ -21,6 +25,10 @@ pub struct AuthServiceBuilder {
     pkce_storage: Option<Box<dyn PkceStorage>>,
     incident_timer_repository: Option<Box<dyn IncidentTimerRepository>>,
     phrase_repository: Option<Box<dyn PhraseRepository>>,
+    credentials_repository: Option<Box<dyn UserCredentialsRepository>>,
+    external_login_repository: Option<Box<dyn UserExternalLoginRepository>>,
+    profile_repository: Option<Box<dyn UserProfileRepository>>,
+    preferences_repository: Option<Box<dyn UserPreferencesRepository>>,
     jwt_secret: Option<String>,
 }
 
@@ -36,6 +44,10 @@ impl AuthServiceBuilder {
             pkce_storage: None,
             incident_timer_repository: None,
             phrase_repository: None,
+            credentials_repository: None,
+            external_login_repository: None,
+            profile_repository: None,
+            preferences_repository: None,
             jwt_secret: None,
         }
     }
@@ -96,6 +108,29 @@ impl AuthServiceBuilder {
         self
     }
 
+    pub fn credentials_repository(mut self, repo: Box<dyn UserCredentialsRepository>) -> Self {
+        self.credentials_repository = Some(repo);
+        self
+    }
+
+    pub fn external_login_repository(
+        mut self,
+        repo: Box<dyn UserExternalLoginRepository>,
+    ) -> Self {
+        self.external_login_repository = Some(repo);
+        self
+    }
+
+    pub fn profile_repository(mut self, repo: Box<dyn UserProfileRepository>) -> Self {
+        self.profile_repository = Some(repo);
+        self
+    }
+
+    pub fn preferences_repository(mut self, repo: Box<dyn UserPreferencesRepository>) -> Self {
+        self.preferences_repository = Some(repo);
+        self
+    }
+
     pub fn build(self) -> AuthService {
         let jwt_secret = self.jwt_secret.expect("jwt_secret is required");
         let user_repository = self.user_repository.expect("user_repository is required");
@@ -114,6 +149,10 @@ impl AuthServiceBuilder {
             pkce_storage: self.pkce_storage,
             incident_timer_repository: self.incident_timer_repository,
             phrase_repository: self.phrase_repository,
+            credentials_repository: self.credentials_repository,
+            external_login_repository: self.external_login_repository,
+            profile_repository: self.profile_repository,
+            preferences_repository: self.preferences_repository,
         }
     }
 }

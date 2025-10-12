@@ -1,5 +1,5 @@
 use serde_json::json;
-use crate::test_helpers::TestContext;
+use crate::fixtures::TestContext;
 
 // Use consolidated test helpers from test_helpers module
 
@@ -8,7 +8,7 @@ async fn test_get_user_timers_success() {
     let ctx = TestContext::builder().build().await;
     
     // First register a user to get proper authentication
-    let email = crate::test_helpers::unique_test_email();
+    let email = crate::fixtures::unique_test_email();
     let password = "TestPassword123!";
     let display_name = "Test User";
     
@@ -65,7 +65,7 @@ async fn test_create_timer_success() {
     let ctx = TestContext::builder().build().await;
 
     // First register a user
-    let email = crate::test_helpers::unique_test_email();
+    let email = crate::fixtures::unique_test_email();
     let password = "TestPassword123!";
     let display_name = "Test User";
 
@@ -86,7 +86,7 @@ async fn test_create_timer_success() {
     let user_id = register_body["user"]["id"].as_str().unwrap();
 
     // Assign email-verified role (simulates email verification)
-    crate::test_helpers::assign_email_verified_role(&ctx.pool, user_id).await;
+    crate::fixtures::assign_email_verified_role(&ctx.pool, user_id).await;
 
     // Login to get token with updated roles
     let mut login_resp = ctx.server.post("/backend/public/auth/login")
@@ -129,7 +129,7 @@ async fn test_create_timer_minimal() {
     let ctx = TestContext::builder().build().await;
 
     // First register a user
-    let email = crate::test_helpers::unique_test_email();
+    let email = crate::fixtures::unique_test_email();
     let password = "TestPassword123!";
     let display_name = "Test User";
 
@@ -150,7 +150,7 @@ async fn test_create_timer_minimal() {
     let user_id = register_body["user"]["id"].as_str().unwrap();
 
     // Assign email-verified role (simulates email verification)
-    crate::test_helpers::assign_email_verified_role(&ctx.pool, user_id).await;
+    crate::fixtures::assign_email_verified_role(&ctx.pool, user_id).await;
 
     // Login to get token with updated roles
     let mut login_resp = ctx.server.post("/backend/public/auth/login")
@@ -207,7 +207,7 @@ async fn test_update_timer_success() {
     let ctx = TestContext::builder().build().await;
 
     // First register a user
-    let email = crate::test_helpers::unique_test_email();
+    let email = crate::fixtures::unique_test_email();
     let password = "TestPassword123!";
     let display_name = "Test User";
 
@@ -228,7 +228,7 @@ async fn test_update_timer_success() {
     let user_id = register_body["user"]["id"].as_str().unwrap();
 
     // Assign email-verified role (simulates email verification)
-    crate::test_helpers::assign_email_verified_role(&ctx.pool, user_id).await;
+    crate::fixtures::assign_email_verified_role(&ctx.pool, user_id).await;
 
     // Login to get token with updated roles
     let mut login_resp = ctx.server.post("/backend/public/auth/login")
@@ -286,7 +286,7 @@ async fn test_update_timer_not_found() {
     let ctx = TestContext::builder().build().await;
 
     // First register a user
-    let email = crate::test_helpers::unique_test_email();
+    let email = crate::fixtures::unique_test_email();
     let password = "TestPassword123!";
     let display_name = "Test User";
     
@@ -307,7 +307,7 @@ async fn test_update_timer_not_found() {
     let user_id = register_body["user"]["id"].as_str().unwrap();
 
     // Assign email-verified role (simulates email verification)
-    crate::test_helpers::assign_email_verified_role(&ctx.pool, user_id).await;
+    crate::fixtures::assign_email_verified_role(&ctx.pool, user_id).await;
 
     // Login to get token with updated roles
     let mut login_resp = ctx.server.post("/backend/public/auth/login")
@@ -359,7 +359,7 @@ async fn test_delete_timer_success() {
     let ctx = TestContext::builder().build().await;
 
     // First register a user
-    let email = crate::test_helpers::unique_test_email();
+    let email = crate::fixtures::unique_test_email();
     let password = "TestPassword123!";
     let display_name = "Test User";
 
@@ -380,7 +380,7 @@ async fn test_delete_timer_success() {
     let user_id = register_body["user"]["id"].as_str().unwrap();
 
     // Assign email-verified role (simulates email verification)
-    crate::test_helpers::assign_email_verified_role(&ctx.pool, user_id).await;
+    crate::fixtures::assign_email_verified_role(&ctx.pool, user_id).await;
 
     // Login to get token with updated roles
     let mut login_resp = ctx.server.post("/backend/public/auth/login")
@@ -441,7 +441,7 @@ async fn test_delete_timer_not_found() {
     let ctx = TestContext::builder().build().await;
 
     // First register a user
-    let email = crate::test_helpers::unique_test_email();
+    let email = crate::fixtures::unique_test_email();
     let password = "TestPassword123!";
     let display_name = "Test User";
 
@@ -462,7 +462,7 @@ async fn test_delete_timer_not_found() {
     let user_id = register_body["user"]["id"].as_str().unwrap();
 
     // Assign email-verified role (simulates email verification)
-    crate::test_helpers::assign_email_verified_role(&ctx.pool, user_id).await;
+    crate::fixtures::assign_email_verified_role(&ctx.pool, user_id).await;
 
     // Login to get token with updated roles
     let mut login_resp = ctx.server.post("/backend/public/auth/login")
@@ -509,7 +509,7 @@ async fn test_get_public_timer_success() {
     let ctx = TestContext::builder().build().await;
 
     // First register a user
-    let email = crate::test_helpers::unique_test_email();
+    let email = crate::fixtures::unique_test_email();
     let password = "TestPassword123!";
     let display_name = "Public Test User";
 
@@ -534,7 +534,7 @@ async fn test_get_public_timer_success() {
     let user_slug = user.get("slug").unwrap().as_str().unwrap();
 
     // Assign email-verified role (simulates email verification)
-    crate::test_helpers::assign_email_verified_role(&ctx.pool, user_id).await;
+    crate::fixtures::assign_email_verified_role(&ctx.pool, user_id).await;
 
     // Login to get token with updated roles
     let mut login_resp = ctx.server.post("/backend/public/auth/login")
@@ -604,7 +604,7 @@ async fn test_get_public_timer_no_timers() {
     let ctx = TestContext::builder().build().await;
     
     // First register a user but don't create any timers
-    let email = crate::test_helpers::unique_test_email();
+    let email = crate::fixtures::unique_test_email();
     let password = "TestPassword123!";
     let display_name = "User With No Timers";
     

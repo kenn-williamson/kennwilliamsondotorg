@@ -7,11 +7,17 @@ pub struct UserDataExport {
     pub export_date: DateTime<Utc>,
     pub export_version: String,
     pub user: UserExportData,
+    pub authentication: AuthenticationExport,
+    pub external_logins: Vec<ExternalLoginExport>,
+    pub profile: Option<ProfileExport>,
+    pub preferences: Option<PreferencesExport>,
     pub incident_timers: Vec<IncidentTimerExportData>,
     pub phrase_suggestions: Vec<PhraseSuggestionExportData>,
     pub phrase_exclusions: Vec<PhraseExclusionExportData>,
     pub active_sessions: Vec<SessionExportData>,
     pub verification_history: Vec<VerificationTokenExportData>,
+    pub password_reset_history: Vec<PasswordResetExportData>,
+    pub email_suppression: Option<EmailSuppressionExport>,
 }
 
 #[derive(Debug, Serialize)]
@@ -20,13 +26,40 @@ pub struct UserExportData {
     pub email: String,
     pub display_name: String,
     pub slug: String,
-    pub real_name: Option<String>,
-    pub google_user_id: Option<String>,
     pub active: bool,
     pub email_verified: bool,
     pub created_at: DateTime<Utc>,
     pub updated_at: DateTime<Utc>,
     pub roles: Vec<String>,
+}
+
+#[derive(Debug, Serialize)]
+pub struct AuthenticationExport {
+    pub has_password: bool,
+    pub password_last_changed: Option<DateTime<Utc>>,
+    // NOTE: password_hash is NOT included for security reasons
+}
+
+#[derive(Debug, Serialize)]
+pub struct ExternalLoginExport {
+    pub provider: String,
+    pub provider_user_id: String,
+    pub linked_at: DateTime<Utc>,
+}
+
+#[derive(Debug, Serialize)]
+pub struct ProfileExport {
+    pub real_name: Option<String>,
+    pub bio: Option<String>,
+    pub avatar_url: Option<String>,
+    pub location: Option<String>,
+    pub website: Option<String>,
+}
+
+#[derive(Debug, Serialize)]
+pub struct PreferencesExport {
+    pub timer_is_public: bool,
+    pub timer_show_in_list: bool,
 }
 
 #[derive(Debug, Serialize)]
@@ -72,6 +105,21 @@ pub struct VerificationTokenExportData {
     pub created_at: DateTime<Utc>,
 }
 
+#[derive(Debug, Serialize)]
+pub struct PasswordResetExportData {
+    pub id: Uuid,
+    pub expires_at: DateTime<Utc>,
+    pub used_at: Option<DateTime<Utc>>,
+    pub created_at: DateTime<Utc>,
+}
+
+#[derive(Debug, Serialize)]
+pub struct EmailSuppressionExport {
+    pub email: String,
+    pub suppression_reason: String,
+    pub created_at: DateTime<Utc>,
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -81,28 +129,44 @@ mod tests {
     fn test_user_data_export_serialization() {
         // Test JSON serialization of UserDataExport struct
         // Verify proper field names and types
-        
+
         let export_data = UserDataExport {
             export_date: Utc::now(),
-            export_version: "1.0".to_string(),
+            export_version: "2.0".to_string(),
             user: UserExportData {
                 id: Uuid::new_v4(),
                 email: "test@example.com".to_string(),
                 display_name: "Test User".to_string(),
                 slug: "testuser".to_string(),
-                real_name: Some("Test User Real Name".to_string()),
-                google_user_id: Some("google_123".to_string()),
                 active: true,
                 email_verified: true,
                 created_at: Utc::now(),
                 updated_at: Utc::now(),
                 roles: vec!["user".to_string(), "email-verified".to_string()],
             },
+            authentication: AuthenticationExport {
+                has_password: true,
+                password_last_changed: Some(Utc::now()),
+            },
+            external_logins: vec![],
+            profile: Some(ProfileExport {
+                real_name: Some("Test User Real Name".to_string()),
+                bio: None,
+                avatar_url: None,
+                location: None,
+                website: None,
+            }),
+            preferences: Some(PreferencesExport {
+                timer_is_public: false,
+                timer_show_in_list: false,
+            }),
             incident_timers: vec![],
             phrase_suggestions: vec![],
             phrase_exclusions: vec![],
             active_sessions: vec![],
             verification_history: vec![],
+            password_reset_history: vec![],
+            email_suppression: None,
         };
         
         // Test that serialization works
@@ -114,58 +178,80 @@ mod tests {
         
         // Verify required fields are present
         assert!(parsed.get("export_date").is_some());
-        assert!(parsed.get("export_version").is_some());
+        assert_eq!(parsed.get("export_version").unwrap().as_str().unwrap(), "2.0");
         assert!(parsed.get("user").is_some());
+        assert!(parsed.get("authentication").is_some());
+        assert!(parsed.get("external_logins").is_some());
+        assert!(parsed.get("profile").is_some());
+        assert!(parsed.get("preferences").is_some());
         assert!(parsed.get("incident_timers").is_some());
         assert!(parsed.get("phrase_suggestions").is_some());
         assert!(parsed.get("phrase_exclusions").is_some());
         assert!(parsed.get("active_sessions").is_some());
         assert!(parsed.get("verification_history").is_some());
-        
+        assert!(parsed.get("password_reset_history").is_some());
+        assert!(parsed.get("email_suppression").is_some());
+
         // Verify user data structure
         let user = parsed.get("user").unwrap();
         assert!(user.get("id").is_some());
         assert!(user.get("email").is_some());
         assert!(user.get("display_name").is_some());
         assert!(user.get("slug").is_some());
-        assert!(user.get("real_name").is_some());
-        assert!(user.get("google_user_id").is_some());
         assert!(user.get("active").is_some());
         assert!(user.get("email_verified").is_some());
         assert!(user.get("created_at").is_some());
         assert!(user.get("updated_at").is_some());
         assert!(user.get("roles").is_some());
-        
+
+        // Verify authentication structure
+        let auth = parsed.get("authentication").unwrap();
+        assert!(auth.get("has_password").is_some());
+        assert!(auth.get("password_last_changed").is_some());
+        assert!(auth.get("password_hash").is_none()); // Security: must NOT be present
+
+        // Verify profile structure
+        let profile = parsed.get("profile").unwrap();
+        assert!(profile.get("real_name").is_some());
+
         // Verify sensitive data is NOT present
         assert!(user.get("password_hash").is_none());
+        assert!(parsed.get("password_hash").is_none());
     }
 
     #[test]
     fn test_export_structure_validation() {
         // Test that all required fields are present
         // Test that optional fields are handled correctly
-        
+
         let export_data = UserDataExport {
             export_date: Utc::now(),
-            export_version: "1.0".to_string(),
+            export_version: "2.0".to_string(),
             user: UserExportData {
                 id: Uuid::new_v4(),
                 email: "test@example.com".to_string(),
                 display_name: "Test User".to_string(),
                 slug: "testuser".to_string(),
-                real_name: None, // Test optional field
-                google_user_id: None, // Test optional field
                 active: true,
                 email_verified: false,
                 created_at: Utc::now(),
                 updated_at: Utc::now(),
                 roles: vec!["user".to_string()],
             },
+            authentication: AuthenticationExport {
+                has_password: false,
+                password_last_changed: None,
+            },
+            external_logins: vec![],
+            profile: None, // Test optional field
+            preferences: None, // Test optional field
             incident_timers: vec![],
             phrase_suggestions: vec![],
             phrase_exclusions: vec![],
             active_sessions: vec![],
             verification_history: vec![],
+            password_reset_history: vec![],
+            email_suppression: None,
         };
         
         // Test serialization with optional fields as None
@@ -176,16 +262,18 @@ mod tests {
         let parsed: serde_json::Value = serde_json::from_str(&json_string).unwrap();
         
         // Verify optional fields are handled correctly
-        let user = parsed.get("user").unwrap();
-        assert!(user.get("real_name").is_some()); // Should be null in JSON
-        assert!(user.get("google_user_id").is_some()); // Should be null in JSON
-        
+        assert!(parsed.get("profile").unwrap().is_null()); // Should be null in JSON
+        assert!(parsed.get("preferences").unwrap().is_null()); // Should be null in JSON
+        assert!(parsed.get("email_suppression").unwrap().is_null());
+
         // Verify arrays are present (even if empty)
+        assert!(parsed.get("external_logins").unwrap().is_array());
         assert!(parsed.get("incident_timers").unwrap().is_array());
         assert!(parsed.get("phrase_suggestions").unwrap().is_array());
         assert!(parsed.get("phrase_exclusions").unwrap().is_array());
         assert!(parsed.get("active_sessions").unwrap().is_array());
         assert!(parsed.get("verification_history").unwrap().is_array());
+        assert!(parsed.get("password_reset_history").unwrap().is_array());
     }
 
     #[test]

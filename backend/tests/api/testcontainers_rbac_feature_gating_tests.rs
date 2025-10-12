@@ -1,6 +1,6 @@
 use serde_json::json;
 use sqlx::PgPool;
-use crate::test_helpers::TestContext;
+use crate::fixtures::TestContext;
 
 /// Test: Login includes roles in JWT claims
 #[actix_web::test]
@@ -8,7 +8,7 @@ async fn test_login_includes_roles_in_jwt() {
     let ctx = TestContext::builder().build().await;
 
     // Register a user
-    let email = crate::test_helpers::unique_test_email();
+    let email = crate::fixtures::unique_test_email();
     let password = "TestPassword123!";
     let register_body = json!({
         "email": email,
@@ -66,7 +66,7 @@ async fn test_token_refresh_includes_updated_roles() {
     let ctx = TestContext::builder().build().await;
 
     // Register and login
-    let email = crate::test_helpers::unique_test_email();
+    let email = crate::fixtures::unique_test_email();
     let password = "TestPassword123!";
     let register_body = json!({
         "email": email,
@@ -131,7 +131,7 @@ async fn test_unverified_user_blocked_from_creating_timer() {
     let ctx = TestContext::builder().build().await;
 
     // Register user (no email-verified role)
-    let email = crate::test_helpers::unique_test_email();
+    let email = crate::fixtures::unique_test_email();
     let password = "TestPassword123!";
     let register_body = json!({
         "email": email,
@@ -172,7 +172,7 @@ async fn test_verified_user_can_create_timer() {
     let ctx = TestContext::builder().build().await;
 
     // Register user
-    let email = crate::test_helpers::unique_test_email();
+    let email = crate::fixtures::unique_test_email();
     let password = "TestPassword123!";
     let register_body = json!({
         "email": email,
@@ -236,7 +236,7 @@ async fn test_unverified_user_blocked_from_phrase_suggestion() {
     let ctx = TestContext::builder().build().await;
 
     // Register user (no email-verified role)
-    let email = crate::test_helpers::unique_test_email();
+    let email = crate::fixtures::unique_test_email();
     let password = "TestPassword123!";
     let register_body = json!({
         "email": email,
@@ -276,7 +276,7 @@ async fn test_verified_user_can_submit_phrase_suggestion() {
     let ctx = TestContext::builder().build().await;
 
     // Register user
-    let email = crate::test_helpers::unique_test_email();
+    let email = crate::fixtures::unique_test_email();
     let password = "TestPassword123!";
     let register_body = json!({
         "email": email,

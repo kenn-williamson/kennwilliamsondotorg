@@ -1,6 +1,6 @@
 use serde_json::json;
 use uuid::Uuid;
-use crate::test_helpers::TestContext;
+use crate::fixtures::TestContext;
 
 #[path = "../fixtures/mod.rs"]
 mod fixtures;

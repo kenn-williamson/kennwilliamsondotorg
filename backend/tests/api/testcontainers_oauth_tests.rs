@@ -20,7 +20,7 @@ async fn create_email_password_user(pool: &PgPool, email: &str, verified: bool) 
 
     // Assign email-verified role if requested
     if verified {
-        crate::test_helpers::assign_email_verified_role(pool, &user.id.to_string()).await;
+        crate::fixtures::assign_email_verified_role(pool, &user.id.to_string()).await;
     }
 
     user.id
@@ -52,7 +52,7 @@ async fn create_oauth_user(pool: &PgPool, google_user_id: &str, email: &str) -> 
 /// Test: New user via Google OAuth creates user with email-verified role
 #[actix_web::test]
 async fn test_oauth_new_user_creates_account_with_verified_role() {
-    let ctx = crate::test_helpers::TestContext::builder().build().await;
+    let ctx = crate::fixtures::TestContext::builder().build().await;
 
     // This test verifies the complete flow for a new OAuth user:
     // 1. User authenticates with Google (simulated via mock)
@@ -78,7 +78,7 @@ async fn test_oauth_new_user_creates_account_with_verified_role() {
 /// Test: Existing user with google_user_id logs in (no new account created)
 #[actix_web::test]
 async fn test_oauth_existing_google_user_logs_in() {
-    let ctx = crate::test_helpers::TestContext::builder().build().await;
+    let ctx = crate::fixtures::TestContext::builder().build().await;
 
     // Pre-create OAuth user to simulate someone who has logged in before
     let google_user_id = "existing_google_123";
@@ -109,10 +109,10 @@ async fn test_oauth_existing_google_user_logs_in() {
 /// Test: Existing verified email links Google account
 #[actix_web::test]
 async fn test_oauth_existing_verified_email_links_account() {
-    let ctx = crate::test_helpers::TestContext::builder().build().await;
+    let ctx = crate::fixtures::TestContext::builder().build().await;
 
     // Pre-create verified email/password user (simulates user who registered with email)
-    let email = crate::test_helpers::unique_test_email();
+    let email = crate::fixtures::unique_test_email();
     let existing_user_id = create_email_password_user(&ctx.pool, &email, true).await;
 
     // This test verifies account linking for verified users per design doc section 4:
@@ -138,7 +138,7 @@ async fn test_oauth_existing_verified_email_links_account() {
 /// Test: Existing unverified email does NOT link (security)
 #[actix_web::test]
 async fn test_oauth_existing_unverified_email_creates_new_account_security() {
-    let ctx = crate::test_helpers::TestContext::builder().build().await;
+    let ctx = crate::fixtures::TestContext::builder().build().await;
 
     // Pre-create UNVERIFIED email/password user
     let email = "unverified@example.com";
@@ -172,7 +172,7 @@ async fn test_oauth_existing_unverified_email_creates_new_account_security() {
 /// Test: OAuth user created with correct roles in database
 #[actix_web::test]
 async fn test_oauth_user_has_correct_roles_in_database() {
-    let ctx = crate::test_helpers::TestContext::builder().build().await;
+    let ctx = crate::fixtures::TestContext::builder().build().await;
 
     // This test verifies database-level role assignment for OAuth users.
     // OAuth users should get email-verified role automatically because Google
@@ -193,7 +193,7 @@ async fn test_oauth_user_has_correct_roles_in_database() {
 /// Test: real_name persists and updates correctly
 #[actix_web::test]
 async fn test_oauth_real_name_persists_and_updates() {
-    let ctx = crate::test_helpers::TestContext::builder().build().await;
+    let ctx = crate::fixtures::TestContext::builder().build().await;
 
     // This test verifies the real_name vs display_name distinction per design doc section 3:
     // - real_name: From OAuth provider, auto-updates on login, read-only to user
@@ -235,7 +235,7 @@ mod account_linking_edge_cases {
     /// Test: Duplicate google_user_id returns error (data integrity)
     #[actix_web::test]
     async fn test_duplicate_google_user_id_returns_error() {
-        let ctx = crate::test_helpers::TestContext::builder().build().await;
+        let ctx = crate::fixtures::TestContext::builder().build().await;
 
         // Pre-create OAuth user
         let google_user_id = "duplicate_test_123";
@@ -261,7 +261,7 @@ mod account_linking_edge_cases {
     /// Test: Email case-insensitivity in account linking
     #[actix_web::test]
     async fn test_email_case_insensitive_linking() {
-        let ctx = crate::test_helpers::TestContext::builder().build().await;
+        let ctx = crate::fixtures::TestContext::builder().build().await;
 
         // Create user with lowercase email
         let email_lower = "testuser@example.com";

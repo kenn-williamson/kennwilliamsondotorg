@@ -52,8 +52,86 @@ impl UserRepository for PostgresUserRepository {
         Ok(user)
     }
 
+    async fn create_user_with_auth_data(
+        &self,
+        user_data: &CreateUserData,
+        password_hash: String,
+    ) -> Result<User> {
+        // Begin transaction
+        let mut tx = self.pool.begin().await?;
+
+        // 1. Create user in users table (without password_hash temporarily during migration)
+        let user = sqlx::query_as!(
+            User,
+            r#"
+            INSERT INTO users (email, password_hash, display_name, slug)
+            VALUES ($1, $2, $3, $4)
+            RETURNING id, email, password_hash, display_name, slug, active, real_name, google_user_id, timer_is_public, timer_show_in_list, created_at, updated_at
+            "#,
+            user_data.email,
+            user_data.password_hash,
+            user_data.display_name,
+            user_data.slug
+        )
+        .fetch_one(&mut *tx)
+        .await?;
+
+        // 2. Add default 'user' role
+        sqlx::query!(
+            r#"
+            INSERT INTO user_roles (user_id, role_id)
+            SELECT $1, id FROM roles WHERE name = 'user'
+            "#,
+            user.id
+        )
+        .execute(&mut *tx)
+        .await?;
+
+        // 3. Create credentials in user_credentials table
+        sqlx::query!(
+            r#"
+            INSERT INTO user_credentials (user_id, password_hash)
+            VALUES ($1, $2)
+            "#,
+            user.id,
+            password_hash
+        )
+        .execute(&mut *tx)
+        .await?;
+
+        // 4. Create preferences in user_preferences table with defaults
+        sqlx::query!(
+            r#"
+            INSERT INTO user_preferences (user_id, timer_is_public, timer_show_in_list)
+            VALUES ($1, false, false)
+            "#,
+            user.id
+        )
+        .execute(&mut *tx)
+        .await?;
+
+        // 5. Create profile in user_profiles table (empty but row exists)
+        sqlx::query!(
+            r#"
+            INSERT INTO user_profiles (user_id)
+            VALUES ($1)
+            "#,
+            user.id
+        )
+        .execute(&mut *tx)
+        .await?;
+
+        // Commit transaction - all or nothing
+        tx.commit().await?;
+
+        Ok(user)
+    }
+
     async fn create_oauth_user(&self, user_data: &CreateOAuthUserData) -> Result<User> {
-        // Create OAuth user (no password)
+        // Begin transaction for atomic multi-table creation
+        let mut tx = self.pool.begin().await?;
+
+        // 1. Create OAuth user in users table (no password)
         let user = sqlx::query_as!(
             User,
             r#"
@@ -67,10 +145,10 @@ impl UserRepository for PostgresUserRepository {
             user_data.real_name,
             user_data.google_user_id
         )
-        .fetch_one(&self.pool)
+        .fetch_one(&mut *tx)
         .await?;
 
-        // Add default 'user' role
+        // 2. Add default 'user' role
         sqlx::query!(
             r#"
             INSERT INTO user_roles (user_id, role_id)
@@ -78,10 +156,10 @@ impl UserRepository for PostgresUserRepository {
             "#,
             user.id
         )
-        .execute(&self.pool)
+        .execute(&mut *tx)
         .await?;
 
-        // Add 'email-verified' role (OAuth emails are pre-verified by provider)
+        // 3. Add 'email-verified' role (OAuth emails are pre-verified by provider)
         sqlx::query!(
             r#"
             INSERT INTO user_roles (user_id, role_id)
@@ -89,8 +167,48 @@ impl UserRepository for PostgresUserRepository {
             "#,
             user.id
         )
-        .execute(&self.pool)
+        .execute(&mut *tx)
         .await?;
+
+        // 4. Create external login record if Google ID provided
+        if let Some(ref google_id) = user_data.google_user_id {
+            sqlx::query!(
+                r#"
+                INSERT INTO user_external_logins (user_id, provider, provider_user_id)
+                VALUES ($1, 'google', $2)
+                "#,
+                user.id,
+                google_id
+            )
+            .execute(&mut *tx)
+            .await?;
+        }
+
+        // 5. Create preferences in user_preferences table with defaults
+        sqlx::query!(
+            r#"
+            INSERT INTO user_preferences (user_id, timer_is_public, timer_show_in_list)
+            VALUES ($1, false, false)
+            "#,
+            user.id
+        )
+        .execute(&mut *tx)
+        .await?;
+
+        // 6. Create profile in user_profiles table (with real_name if provided)
+        sqlx::query!(
+            r#"
+            INSERT INTO user_profiles (user_id, real_name)
+            VALUES ($1, $2)
+            "#,
+            user.id,
+            user_data.real_name
+        )
+        .execute(&mut *tx)
+        .await?;
+
+        // Commit transaction - all or nothing
+        tx.commit().await?;
 
         Ok(user)
     }
@@ -157,6 +275,10 @@ impl UserRepository for PostgresUserRepository {
         google_user_id: &str,
         real_name: Option<String>,
     ) -> Result<()> {
+        // Begin transaction for atomic multi-table updates
+        let mut tx = self.pool.begin().await?;
+
+        // 1. Update users table with real_name and google_user_id (for backward compatibility)
         sqlx::query!(
             r#"
             UPDATE users
@@ -167,10 +289,50 @@ impl UserRepository for PostgresUserRepository {
             real_name.as_deref(),
             user_id
         )
-        .execute(&self.pool)
+        .execute(&mut *tx)
         .await?;
 
-        // Add 'email-verified' role if not already present (OAuth emails are verified)
+        // 2. Insert or update external login record
+        sqlx::query!(
+            r#"
+            INSERT INTO user_external_logins (user_id, provider, provider_user_id)
+            VALUES ($1, 'google', $2)
+            ON CONFLICT (user_id, provider)
+            DO UPDATE SET provider_user_id = $2, updated_at = NOW()
+            "#,
+            user_id,
+            google_user_id
+        )
+        .execute(&mut *tx)
+        .await?;
+
+        // 3. Ensure user_profiles entry exists then update with real_name
+        sqlx::query!(
+            r#"
+            INSERT INTO user_profiles (user_id, real_name)
+            VALUES ($1, $2)
+            ON CONFLICT (user_id)
+            DO UPDATE SET real_name = $2, updated_at = NOW()
+            "#,
+            user_id,
+            real_name.as_deref()
+        )
+        .execute(&mut *tx)
+        .await?;
+
+        // 3b. Ensure user_preferences entry exists
+        sqlx::query!(
+            r#"
+            INSERT INTO user_preferences (user_id, timer_is_public, timer_show_in_list)
+            VALUES ($1, false, false)
+            ON CONFLICT (user_id) DO NOTHING
+            "#,
+            user_id
+        )
+        .execute(&mut *tx)
+        .await?;
+
+        // 4. Add 'email-verified' role if not already present (OAuth emails are verified)
         sqlx::query!(
             r#"
             INSERT INTO user_roles (user_id, role_id)
@@ -179,8 +341,11 @@ impl UserRepository for PostgresUserRepository {
             "#,
             user_id
         )
-        .execute(&self.pool)
+        .execute(&mut *tx)
         .await?;
+
+        // Commit transaction
+        tx.commit().await?;
 
         Ok(())
     }

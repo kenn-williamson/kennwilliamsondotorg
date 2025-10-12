@@ -1,0 +1,15 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "\n            INSERT INTO user_external_logins (user_id, provider, provider_user_id)\n            VALUES ($1, 'google', $2)\n            ON CONFLICT (user_id, provider)\n            DO UPDATE SET provider_user_id = $2, updated_at = NOW()\n            ",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Left": [
+        "Uuid",
+        "Varchar"
+      ]
+    },
+    "nullable": []
+  },
+  "hash": "4dd4e23f99e92938d146e9137773b2d6af111aa5391eafc592d544ed67c14e33"
+}

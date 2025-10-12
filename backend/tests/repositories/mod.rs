@@ -1,1 +1,5 @@
 mod testcontainers_email_suppression_repository_tests;
+mod testcontainers_user_credentials_repository_tests;
+mod testcontainers_user_external_login_repository_tests;
+mod testcontainers_user_preferences_repository_tests;
+mod testcontainers_user_profile_repository_tests;

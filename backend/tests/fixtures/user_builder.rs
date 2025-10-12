@@ -1,6 +1,8 @@
 use backend::models::db::user::User;
 use chrono::{DateTime, Utc};
 use uuid::Uuid;
+use sqlx::PgPool;
+use anyhow::Result;
 
 /// Builder for creating User instances in tests with sensible defaults.
 ///
@@ -8,24 +10,24 @@ use uuid::Uuid;
 ///
 /// ```rust
 /// // Minimal user with defaults
-/// let user = UserBuilder::new().build();
+/// let user = UserBuilder::new().persist(pool);
 ///
 /// // Verified user with custom email
 /// let user = UserBuilder::new()
 ///     .verified()
 ///     .with_email("test@example.com")
-///     .build();
+///     .persist(pool);
 ///
 /// // OAuth user
 /// let user = UserBuilder::new()
 ///     .oauth("google_id_123", "Real Name")
 ///     .with_email("oauth@example.com")
-///     .build();
+///     .persist(pool);
 ///
 /// // User with public timer
 /// let user = UserBuilder::new()
 ///     .with_public_timer(true, true)
-///     .build();
+///     .persist(pool);
 /// ```
 #[derive(Clone)]
 pub struct UserBuilder {
@@ -62,7 +64,7 @@ impl UserBuilder {
         }
     }
 
-    /// Build the User with defaults for any unset fields
+    /// Build the User with defaults for any unset fields (in-memory only, no database)
     pub fn build(self) -> User {
         let now = Utc::now();
         let id = self.id.unwrap_or_else(Uuid::new_v4);
@@ -82,6 +84,93 @@ impl UserBuilder {
             created_at: self.created_at.unwrap_or(now),
             updated_at: self.updated_at.unwrap_or(now),
         }
+    }
+
+    /// Persist User to database with multi-table setup (for integration tests)
+    /// Creates entries in users, user_credentials, user_external_logins, user_profiles, and user_preferences
+    pub async fn persist(self, pool: &PgPool) -> Result<User> {
+        // Start transaction for atomic multi-table creation
+        let mut tx = pool.begin().await?;
+
+        // Generate defaults
+        let id = self.id.unwrap_or_else(Uuid::new_v4);
+        let email = self.email.unwrap_or_else(|| format!("test-{}@example.com", id));
+        let display_name = self.display_name.unwrap_or("Test User".to_string());
+        let slug = self.slug.unwrap_or_else(|| format!("test-user-{}", id));
+
+        // 1. Create user (core identity)
+        let user = sqlx::query_as::<_, User>(
+            "INSERT INTO users (email, display_name, slug)
+             VALUES ($1, $2, $3)
+             RETURNING *"
+        )
+        .bind(&email)
+        .bind(&display_name)
+        .bind(&slug)
+        .fetch_one(&mut *tx)
+        .await?;
+
+        // 2. Create credentials if password provided
+        if let Some(Some(password)) = self.password_hash {
+            // Hash if not already hashed (starts with $2b$ = bcrypt)
+            let hash = if password.starts_with("$2b$") {
+                password
+            } else {
+                bcrypt::hash(password, 4)?  // Low cost for tests
+            };
+
+            sqlx::query(
+                "INSERT INTO user_credentials (user_id, password_hash)
+                 VALUES ($1, $2)"
+            )
+            .bind(user.id)
+            .bind(hash)
+            .execute(&mut *tx)
+            .await?;
+        }
+
+        // 3. Create external logins if OAuth IDs provided
+        if let Some(Some(google_id)) = self.google_user_id {
+            sqlx::query(
+                "INSERT INTO user_external_logins (user_id, provider, provider_user_id, linked_at)
+                 VALUES ($1, 'google', $2, NOW())"
+            )
+            .bind(user.id)
+            .bind(google_id)
+            .execute(&mut *tx)
+            .await?;
+        }
+
+        // 4. Create profile if real_name provided
+        if let Some(Some(real_name)) = self.real_name {
+            sqlx::query(
+                "INSERT INTO user_profiles (user_id, real_name)
+                 VALUES ($1, $2)"
+            )
+            .bind(user.id)
+            .bind(real_name)
+            .execute(&mut *tx)
+            .await?;
+        }
+
+        // 5. Create preferences (always - required for all users)
+        let timer_public = self.timer_is_public.unwrap_or(false);
+        let timer_in_list = self.timer_show_in_list.unwrap_or(false);
+
+        sqlx::query(
+            "INSERT INTO user_preferences (user_id, timer_is_public, timer_show_in_list)
+             VALUES ($1, $2, $3)"
+        )
+        .bind(user.id)
+        .bind(timer_public)
+        .bind(timer_in_list)
+        .execute(&mut *tx)
+        .await?;
+
+        // Commit transaction
+        tx.commit().await?;
+
+        Ok(user)
     }
 
     // ============================================================================
@@ -193,6 +282,33 @@ impl UserBuilder {
     pub fn admin(self) -> Self {
         self.with_display_name("Admin User")
             .with_slug("admin-user")
+    }
+
+    /// Create a password user ready to persist
+    pub fn password_user(email: impl Into<String>, password: impl Into<String>) -> Self {
+        Self::new()
+            .with_email(email)
+            .with_password(password)
+    }
+
+    /// Create an OAuth user ready to persist
+    pub fn oauth_user(email: impl Into<String>, provider_id: impl Into<String>) -> Self {
+        Self::new()
+            .with_email(email)
+            .with_google_id(provider_id)
+            .without_password()
+    }
+
+    /// Create a hybrid user (password + OAuth)
+    pub fn hybrid_user(
+        email: impl Into<String>,
+        password: impl Into<String>,
+        google_id: impl Into<String>
+    ) -> Self {
+        Self::new()
+            .with_email(email)
+            .with_password(password)
+            .with_google_id(google_id)
     }
 }
 

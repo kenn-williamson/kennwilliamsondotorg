@@ -1,6 +1,7 @@
 use chrono::{Duration, Utc};
 
-mod test_helpers;
+mod fixtures;
+use fixtures::TestContext;
 
 /// Test cleanup of expired refresh tokens
 #[actix_web::test]
@@ -9,31 +10,30 @@ async fn test_cleanup_expired_refresh_tokens() {
     use backend::repositories::postgres::postgres_verification_token_repository::PostgresVerificationTokenRepository;
     use backend::services::cleanup::CleanupService;
 
-    let test_container = test_helpers::TestContainer::builder().build()
+    let test_container = fixtures::TestContainer::builder().build()
         .await
         .expect("Failed to create test container");
     let pool = &test_container.pool;
 
     // Create a test user
-    let user = test_helpers::create_test_user_in_db(
-        pool,
-        &test_helpers::unique_test_email(),
-        "$2b$04$test_hash",
-        "Cleanup Test User",
-        &test_helpers::unique_test_slug(),
-    )
-    .await
-    .expect("Failed to create test user");
+    let user = fixtures::UserBuilder::new()
+        .with_email(&fixtures::unique_test_email())
+        .with_display_name("Cleanup Test User")
+        .with_slug(&fixtures::unique_test_slug())
+        .with_password("password123")
+        .persist(pool)
+        .await
+        .expect("Failed to create test user");
 
     // Create expired refresh token
     let expired_time = Utc::now() - Duration::days(8);
-    test_helpers::create_test_refresh_token_in_db(pool, user.id, "expired_token_1", expired_time)
+    fixtures::create_test_refresh_token_in_db(pool, user.id, "expired_token_1", expired_time)
         .await
         .expect("Failed to create expired token");
 
     // Create valid refresh token
     let valid_time = Utc::now() + Duration::days(7);
-    test_helpers::create_test_refresh_token_in_db(pool, user.id, "valid_token_1", valid_time)
+    fixtures::create_test_refresh_token_in_db(pool, user.id, "valid_token_1", valid_time)
         .await
         .expect("Failed to create valid token");
 
@@ -69,21 +69,20 @@ async fn test_cleanup_expired_verification_tokens() {
     use backend::repositories::postgres::postgres_verification_token_repository::PostgresVerificationTokenRepository;
     use backend::services::cleanup::CleanupService;
 
-    let test_container = test_helpers::TestContainer::builder().build()
+    let test_container = fixtures::TestContainer::builder().build()
         .await
         .expect("Failed to create test container");
     let pool = &test_container.pool;
 
     // Create a test user
-    let user = test_helpers::create_test_user_in_db(
-        pool,
-        &test_helpers::unique_test_email(),
-        "$2b$04$test_hash",
-        "Verification Cleanup Test User",
-        &test_helpers::unique_test_slug(),
-    )
-    .await
-    .expect("Failed to create test user");
+    let user = fixtures::UserBuilder::new()
+        .with_email(&fixtures::unique_test_email())
+        .with_display_name("Verification Cleanup Test User")
+        .with_slug(&fixtures::unique_test_slug())
+        .with_password("password123")
+        .persist(pool)
+        .await
+        .expect("Failed to create test user");
 
     // Create expired verification token
     let expired_time = Utc::now() - Duration::hours(25); // Expired (assuming 24h validity)
@@ -142,26 +141,25 @@ async fn test_cleanup_both_token_types() {
     use backend::repositories::postgres::postgres_verification_token_repository::PostgresVerificationTokenRepository;
     use backend::services::cleanup::CleanupService;
 
-    let test_container = test_helpers::TestContainer::builder().build()
+    let test_container = fixtures::TestContainer::builder().build()
         .await
         .expect("Failed to create test container");
     let pool = &test_container.pool;
 
     // Create a test user
-    let user = test_helpers::create_test_user_in_db(
-        pool,
-        &test_helpers::unique_test_email(),
-        "$2b$04$test_hash",
-        "Both Tokens Cleanup Test User",
-        &test_helpers::unique_test_slug(),
-    )
-    .await
-    .expect("Failed to create test user");
+    let user = fixtures::UserBuilder::new()
+        .with_email(&fixtures::unique_test_email())
+        .with_display_name("Both Tokens Cleanup Test User")
+        .with_slug(&fixtures::unique_test_slug())
+        .with_password("password123")
+        .persist(pool)
+        .await
+        .expect("Failed to create test user");
 
     // Create 3 expired refresh tokens
     let expired_time = Utc::now() - Duration::days(8);
     for i in 1..=3 {
-        test_helpers::create_test_refresh_token_in_db(
+        fixtures::create_test_refresh_token_in_db(
             pool,
             user.id,
             &format!("expired_refresh_{}", i),
@@ -187,7 +185,7 @@ async fn test_cleanup_both_token_types() {
 
     // Create 1 valid refresh token
     let valid_refresh_time = Utc::now() + Duration::days(7);
-    test_helpers::create_test_refresh_token_in_db(
+    fixtures::create_test_refresh_token_in_db(
         pool,
         user.id,
         "valid_refresh",
@@ -249,25 +247,24 @@ async fn test_cleanup_no_expired_tokens() {
     use backend::repositories::postgres::postgres_verification_token_repository::PostgresVerificationTokenRepository;
     use backend::services::cleanup::CleanupService;
 
-    let test_container = test_helpers::TestContainer::builder().build()
+    let test_container = fixtures::TestContainer::builder().build()
         .await
         .expect("Failed to create test container");
     let pool = &test_container.pool;
 
     // Create a test user
-    let user = test_helpers::create_test_user_in_db(
-        pool,
-        &test_helpers::unique_test_email(),
-        "$2b$04$test_hash",
-        "No Expired Tokens Test User",
-        &test_helpers::unique_test_slug(),
-    )
-    .await
-    .expect("Failed to create test user");
+    let user = fixtures::UserBuilder::new()
+        .with_email(&fixtures::unique_test_email())
+        .with_display_name("No Expired Tokens Test User")
+        .with_slug(&fixtures::unique_test_slug())
+        .with_password("password123")
+        .persist(pool)
+        .await
+        .expect("Failed to create test user");
 
     // Create only valid tokens
     let valid_time = Utc::now() + Duration::days(7);
-    test_helpers::create_test_refresh_token_in_db(pool, user.id, "valid_token", valid_time)
+    fixtures::create_test_refresh_token_in_db(pool, user.id, "valid_token", valid_time)
         .await
         .expect("Failed to create valid token");
 
@@ -304,7 +301,7 @@ async fn test_cleanup_empty_database() {
     use backend::repositories::postgres::postgres_verification_token_repository::PostgresVerificationTokenRepository;
     use backend::services::cleanup::CleanupService;
 
-    let test_container = test_helpers::TestContainer::builder().build()
+    let test_container = fixtures::TestContainer::builder().build()
         .await
         .expect("Failed to create test container");
     let pool = &test_container.pool;

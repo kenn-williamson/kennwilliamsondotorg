@@ -15,6 +15,7 @@ mock! {
     #[async_trait]
     impl UserRepository for UserRepository {
         async fn create_user(&self, user_data: &CreateUserData) -> Result<User>;
+        async fn create_user_with_auth_data(&self, user_data: &CreateUserData, password_hash: String) -> Result<User>;
         async fn create_oauth_user(&self, user_data: &CreateOAuthUserData) -> Result<User>;
         async fn find_by_email(&self, email: &str) -> Result<Option<User>>;
         async fn find_by_google_user_id(&self, google_user_id: &str) -> Result<Option<User>>;

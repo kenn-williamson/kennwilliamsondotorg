@@ -1,7 +1,7 @@
 use chrono::{Duration, Utc};
-use crate::test_helpers::TestContext;
 
-mod test_helpers;
+mod fixtures;
+use fixtures::TestContext;
 
 /// Test the complete refresh token flow to ensure refactor preserved functionality
 #[actix_web::test]
@@ -10,7 +10,7 @@ async fn test_refresh_token_complete_flow() {
     let ctx = TestContext::builder().build().await;
 
     // Step 1: Register a new user
-    let test_email = test_helpers::unique_test_email();
+    let test_email = fixtures::unique_test_email();
     let register_request_body = serde_json::json!({
         "email": test_email.clone(),
         "password": "password123",
@@ -108,20 +108,20 @@ async fn test_refresh_token_expiration() {
     let ctx = TestContext::builder().build().await;
     
     // Create a user
-    let user = test_helpers::create_test_user_in_db(
-        &ctx.pool,
-        &test_helpers::unique_test_email(),
-        "$2b$04$test_hash",
-        "Expiry Test User",
-        &test_helpers::unique_test_slug()
-    ).await
-    .expect("Failed to create test user");
+    let user = fixtures::UserBuilder::new()
+        .with_email(&fixtures::unique_test_email())
+        .with_display_name("Expiry Test User")
+        .with_slug(&fixtures::unique_test_slug())
+        .with_password("password123")
+        .persist(&ctx.pool)
+        .await
+        .expect("Failed to create test user");
 
     // Create an expired refresh token directly in the database
     let expired_time = Utc::now() - Duration::days(8); // 8 days ago (expired)
     let token_hash = "expired_token_hash";
     
-    test_helpers::create_test_refresh_token_in_db(
+    fixtures::create_test_refresh_token_in_db(
         &ctx.pool,
         user.id,
         token_hash,

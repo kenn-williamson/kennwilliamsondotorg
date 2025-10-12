@@ -2,7 +2,7 @@ use serde_json::json;
 use backend::services::auth::oauth::MockGoogleOAuthService;
 use backend::models::oauth::GoogleUserInfo;
 
-use crate::test_helpers::TestContext;
+use crate::fixtures::TestContext;
 
 // ==================== OAuth URL Generation Tests ====================
 
@@ -245,10 +245,17 @@ async fn test_oauth_callback_links_to_existing_verified_user() {
 
     assert_eq!(resp.status(), 200);
 
-    // Verify user now has google_user_id linked
-    let updated_user = ctx.get_user_by_id(user.id).await;
-    assert!(updated_user.google_user_id.is_some());
-    assert_eq!(updated_user.google_user_id.unwrap(), "mock_google_user_id");
+    // Verify user now has Google account linked in user_external_logins table
+    let external_login: Option<(String,)> = sqlx::query_as(
+        "SELECT provider_user_id FROM user_external_logins WHERE user_id = $1 AND provider = 'google'"
+    )
+    .bind(user.id)
+    .fetch_optional(&ctx.pool)
+    .await
+    .unwrap();
+
+    assert!(external_login.is_some(), "Google account should be linked");
+    assert_eq!(external_login.unwrap().0, "mock_google_user_id");
 }
 
 #[actix_web::test]
@@ -314,10 +321,17 @@ async fn test_oauth_callback_links_and_verifies_unverified_user() {
     let users = ctx.get_users_by_email("mock@example.com").await;
     assert_eq!(users.len(), 1); // Only one user
 
-    // Verify the user now has google_user_id linked
-    let updated_user = ctx.get_user_by_id(existing_user.id).await;
-    assert!(updated_user.google_user_id.is_some());
-    assert_eq!(updated_user.google_user_id.unwrap(), "mock_google_user_id");
+    // Verify the user now has Google account linked in user_external_logins table
+    let external_login: Option<(String,)> = sqlx::query_as(
+        "SELECT provider_user_id FROM user_external_logins WHERE user_id = $1 AND provider = 'google'"
+    )
+    .bind(existing_user.id)
+    .fetch_optional(&ctx.pool)
+    .await
+    .unwrap();
+
+    assert!(external_login.is_some(), "Google account should be linked");
+    assert_eq!(external_login.unwrap().0, "mock_google_user_id");
 }
 
 #[actix_web::test]

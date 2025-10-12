@@ -5,14 +5,21 @@
 
 set -e  # Exit on any error
 
+# Load environment configuration
+ENV_FILE=".env.development"
+COMPOSE_FILES="-f docker-compose.yml -f docker-compose.development.yml"
+
+echo "🔨 Rebuilding migrations container with latest migration files..."
+docker compose --env-file "$ENV_FILE" $COMPOSE_FILES build migrations
+
 echo "🗑️  Stopping and removing PostgreSQL container..."
-docker-compose down postgres 2>/dev/null || true
+docker compose --env-file "$ENV_FILE" $COMPOSE_FILES down postgres 2>/dev/null || true
 
 echo "🧹 Removing old database volume..."
 docker volume rm kennwilliamsondotorg_postgres_data 2>/dev/null || true
 
 echo "🚀 Starting fresh PostgreSQL container..."
-docker-compose up postgres -d
+docker compose --env-file "$ENV_FILE" $COMPOSE_FILES up postgres -d
 
 echo "⏳ Waiting for PostgreSQL to be ready..."
 sleep 15
@@ -22,30 +29,30 @@ echo "🔍 Checking PostgreSQL health..."
 max_attempts=30
 attempt=1
 while [ $attempt -le $max_attempts ]; do
-    if docker-compose ps postgres | grep -q "healthy"; then
+    if docker compose --env-file "$ENV_FILE" $COMPOSE_FILES ps postgres | grep -q "healthy"; then
         echo "✅ PostgreSQL is healthy!"
         break
     fi
-    
+
     if [ $attempt -eq $max_attempts ]; then
         echo "❌ PostgreSQL failed to become healthy after $max_attempts attempts"
-        docker-compose logs postgres --tail 10
+        docker compose --env-file "$ENV_FILE" $COMPOSE_FILES logs postgres --tail 10
         exit 1
     fi
-    
+
     echo "⏳ Attempt $attempt/$max_attempts - waiting for PostgreSQL..."
     sleep 2
     ((attempt++))
 done
 
-echo "🏗️  Running database migrations..."
-cd backend && DATABASE_URL="postgresql://postgres:password@localhost:5432/kennwilliamson" sqlx migrate run && cd ..
+echo "🧹 Dropping existing schema to ensure clean slate..."
+docker compose --env-file "$ENV_FILE" $COMPOSE_FILES exec -T postgres psql -U postgres -d kennwilliamson -c "DROP SCHEMA IF EXISTS public CASCADE; CREATE SCHEMA public;" || true
 
-echo "🧪 Testing UUIDv7 extension..."
-docker-compose exec -T postgres psql -U postgres -d kennwilliamson -c "SELECT uuid_generate_v7() as test_uuid;" > /dev/null
+echo "🏗️  Running database migrations..."
+./scripts/setup-db.sh --dev
 
 echo "📋 Listing database tables..."
-docker-compose exec -T postgres psql -U postgres -d kennwilliamson -c "\dt"
+docker compose --env-file "$ENV_FILE" $COMPOSE_FILES exec -T postgres psql -U postgres -d kennwilliamson -c "\dt"
 
 echo "👤 Creating test user..."
 # Generate hash for "Password123!" using our utility (cost 4 for faster development)
@@ -65,7 +72,7 @@ fi
 
 echo "✅ Password hash generated successfully"
 
-docker-compose exec -T postgres psql -U postgres -d kennwilliamson <<EOF
+docker compose --env-file "$ENV_FILE" $COMPOSE_FILES exec -T postgres psql -U postgres -d kennwilliamson <<EOF
 -- Insert test user
 INSERT INTO users (email, password_hash, display_name, slug)
 VALUES ('kenn@seqtek.com', '$TEST_PASSWORD_HASH', 'Kenn', 'kenn')
@@ -87,6 +94,14 @@ echo "📊 Database is ready with:"
 echo "   • PostgreSQL 17 with UUIDv7 support"
 echo "   • All migrations applied"
 echo "   • Triggers for updated_at timestamps"
+echo ""
+
+echo "🔄 Restarting backend to connect to fresh database..."
+docker compose --env-file "$ENV_FILE" $COMPOSE_FILES restart backend
+
+echo ""
+echo "✅ Backend restarted successfully!"
+echo "💡 You may also want to regenerate SQLx cache: ./scripts/prepare-sqlx.sh --clean"
 echo ""
 
 # Future: Add seed data loading here

@@ -1,5 +1,5 @@
 // Use consolidated test helpers from test_helpers module
-use crate::test_helpers::TestContext;
+use crate::fixtures::TestContext;
 
 // ============================================================================
 // HEALTH ENDPOINT TESTS

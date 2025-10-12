@@ -5,7 +5,8 @@ use testcontainers::{
     GenericImage,
 };
 
-mod test_helpers;
+mod fixtures;
+use fixtures::TestContext;
 
 // Test rate limiting through actual HTTP requests with real Redis backend
 
@@ -21,7 +22,7 @@ async fn test_rate_limiting_blocks_excessive_requests() {
     let redis_url = format!("redis://127.0.0.1:{}", redis_port);
 
     // Create test app with Redis-backed rate limiting
-    let ctx = test_helpers::TestContext::builder()
+    let ctx = TestContext::builder()
         .with_redis(redis_url)
         .build()
         .await;
@@ -29,7 +30,7 @@ async fn test_rate_limiting_blocks_excessive_requests() {
     // Make multiple rapid requests to trigger rate limiting
     // Registration endpoint has very restrictive limits (3/hour, 1 burst)
     let request_body = json!({
-        "email": test_helpers::unique_test_email(),
+        "email": fixtures::unique_test_email(),
         "password": "TestPassword123!",
         "display_name": "Test User"
     });
@@ -45,7 +46,7 @@ async fn test_rate_limiting_blocks_excessive_requests() {
 
     // Second request should be rate limited (burst limit = 1)
     let request_body2 = json!({
-        "email": test_helpers::unique_test_email(),
+        "email": fixtures::unique_test_email(),
         "password": "TestPassword123!",
         "display_name": "Test User 2"
     });
@@ -70,7 +71,7 @@ async fn test_rate_limiting_allows_normal_usage() {
     let redis_port = _redis_container.get_host_port_ipv4(6379).await.unwrap();
     let redis_url = format!("redis://127.0.0.1:{}", redis_port);
 
-    let ctx = test_helpers::TestContext::builder()
+    let ctx = TestContext::builder()
         .with_redis(redis_url)
         .build()
         .await;
@@ -105,7 +106,7 @@ async fn test_rate_limiting_different_endpoints_have_different_limits() {
     let redis_port = _redis_container.get_host_port_ipv4(6379).await.unwrap();
     let redis_url = format!("redis://127.0.0.1:{}", redis_port);
 
-    let ctx = test_helpers::TestContext::builder()
+    let ctx = TestContext::builder()
         .with_redis(redis_url)
         .build()
         .await;
@@ -113,7 +114,7 @@ async fn test_rate_limiting_different_endpoints_have_different_limits() {
     // Test that different endpoints have different rate limits
     // Registration is very restrictive
     let request_body = json!({
-        "email": test_helpers::unique_test_email(),
+        "email": fixtures::unique_test_email(),
         "password": "TestPassword123!",
         "display_name": "Test User"
     });
@@ -126,7 +127,7 @@ async fn test_rate_limiting_different_endpoints_have_different_limits() {
 
     // Second registration should be blocked
     let request_body2 = json!({
-        "email": test_helpers::unique_test_email(),
+        "email": fixtures::unique_test_email(),
         "password": "TestPassword123!",
         "display_name": "Test User 2"
     });

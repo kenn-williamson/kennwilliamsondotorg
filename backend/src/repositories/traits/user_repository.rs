@@ -36,6 +36,15 @@ pub trait UserRepository: Send + Sync {
     /// Create a new user with email/password
     async fn create_user(&self, user_data: &CreateUserData) -> Result<User>;
 
+    /// Create a new user with credentials and preferences in a single transaction
+    /// This is the atomic operation for user registration that ensures all related
+    /// tables are created together or none at all.
+    async fn create_user_with_auth_data(
+        &self,
+        user_data: &CreateUserData,
+        password_hash: String,
+    ) -> Result<User>;
+
     /// Create a new OAuth user (no password)
     async fn create_oauth_user(&self, user_data: &CreateOAuthUserData) -> Result<User>;
 

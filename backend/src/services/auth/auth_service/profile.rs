@@ -98,20 +98,51 @@ impl AuthService {
 
         Ok(UserResponse::from_user_with_roles(user, roles))
     }
+
+    /// Update timer privacy settings
+    pub async fn update_timer_privacy(
+        &self,
+        user_id: Uuid,
+        is_public: bool,
+        show_in_list: bool,
+    ) -> Result<()> {
+        // Validate business rule: show_in_list requires is_public
+        if show_in_list && !is_public {
+            return Err(anyhow::anyhow!(
+                "Timer must be public to show in list"
+            ));
+        }
+
+        // Update preferences in user_preferences table
+        if let Some(prefs_repo) = &self.preferences_repository {
+            prefs_repo
+                .update_timer_settings(user_id, is_public, show_in_list)
+                .await?;
+        }
+
+        Ok(())
+    }
 }
 
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::repositories::mocks::mock_refresh_token_repository::MockRefreshTokenRepository;
-    use crate::repositories::mocks::mock_user_repository::MockUserRepository;
+    use crate::repositories::mocks::{
+        mock_refresh_token_repository::MockRefreshTokenRepository,
+        mock_user_credentials_repository::MockUserCredentialsRepository,
+        mock_user_external_login_repository::MockUserExternalLoginRepository,
+        mock_user_preferences_repository::MockUserPreferencesRepository,
+        mock_user_profile_repository::MockUserProfileRepository,
+        mock_user_repository::MockUserRepository,
+    };
+    use crate::models::db::{User, UserCore, UserPreferences, UserProfile};
     use anyhow::Result;
     use chrono::Utc;
     use mockall::predicate::eq;
     use uuid::Uuid;
 
-    fn create_test_user() -> crate::models::db::User {
-        crate::models::db::User {
+    fn create_test_user() -> User {
+        User {
             id: Uuid::new_v4(),
             email: "test@example.com".to_string(),
             password_hash: Some("hashed".to_string()),
@@ -120,6 +151,41 @@ mod tests {
             active: true,
             real_name: None,
             google_user_id: None,
+            timer_is_public: false,
+            timer_show_in_list: false,
+            created_at: Utc::now(),
+            updated_at: Utc::now(),
+        }
+    }
+
+    fn create_test_user_core(user_id: Uuid) -> UserCore {
+        UserCore {
+            id: user_id,
+            email: "test@example.com".to_string(),
+            display_name: "Test User".to_string(),
+            slug: "test-user".to_string(),
+            active: true,
+            created_at: Utc::now(),
+            updated_at: Utc::now(),
+        }
+    }
+
+    fn create_test_profile(user_id: Uuid) -> UserProfile {
+        UserProfile {
+            user_id,
+            real_name: Some("John Doe".to_string()),
+            bio: None,
+            avatar_url: None,
+            location: None,
+            website: None,
+            created_at: Utc::now(),
+            updated_at: Utc::now(),
+        }
+    }
+
+    fn create_test_preferences(user_id: Uuid) -> UserPreferences {
+        UserPreferences {
+            user_id,
             timer_is_public: false,
             timer_show_in_list: false,
             created_at: Utc::now(),
@@ -582,6 +648,110 @@ mod tests {
         let result = auth_service.update_profile(user_id, request).await;
         assert!(result.is_err());
         assert!(result.unwrap_err().to_string().contains("Database error"));
+
+        Ok(())
+    }
+
+    // ========================================
+    // Phase 4D: New Multi-Table Profile Tests
+    // ========================================
+
+    #[tokio::test]
+    async fn test_update_timer_privacy_successful() -> Result<()> {
+        let user_repo = MockUserRepository::new();
+        let mut prefs_repo = MockUserPreferencesRepository::new();
+        let user_id = Uuid::new_v4();
+
+        prefs_repo
+            .expect_update_timer_settings()
+            .times(1)
+            .with(eq(user_id), eq(true), eq(true))
+            .returning(|_, _, _| Ok(()));
+
+        let auth_service = AuthService::builder()
+            .user_repository(Box::new(user_repo))
+            .refresh_token_repository(Box::new(MockRefreshTokenRepository::new()))
+            .preferences_repository(Box::new(prefs_repo))
+            .jwt_secret("test-secret".to_string())
+            .build();
+
+        let result = auth_service.update_timer_privacy(user_id, true, true).await;
+        assert!(result.is_ok());
+
+        Ok(())
+    }
+
+    #[tokio::test]
+    async fn test_update_timer_privacy_validates_show_in_list_requires_public() -> Result<()> {
+        let user_repo = MockUserRepository::new();
+        let prefs_repo = MockUserPreferencesRepository::new();
+        let user_id = Uuid::new_v4();
+
+        let auth_service = AuthService::builder()
+            .user_repository(Box::new(user_repo))
+            .refresh_token_repository(Box::new(MockRefreshTokenRepository::new()))
+            .preferences_repository(Box::new(prefs_repo))
+            .jwt_secret("test-secret".to_string())
+            .build();
+
+        // Try to set show_in_list=true but is_public=false (should fail)
+        let result = auth_service.update_timer_privacy(user_id, false, true).await;
+
+        assert!(result.is_err());
+        assert!(result
+            .unwrap_err()
+            .to_string()
+            .contains("must be public"));
+
+        Ok(())
+    }
+
+    #[tokio::test]
+    async fn test_update_timer_privacy_allows_both_false() -> Result<()> {
+        let user_repo = MockUserRepository::new();
+        let mut prefs_repo = MockUserPreferencesRepository::new();
+        let user_id = Uuid::new_v4();
+
+        prefs_repo
+            .expect_update_timer_settings()
+            .times(1)
+            .with(eq(user_id), eq(false), eq(false))
+            .returning(|_, _, _| Ok(()));
+
+        let auth_service = AuthService::builder()
+            .user_repository(Box::new(user_repo))
+            .refresh_token_repository(Box::new(MockRefreshTokenRepository::new()))
+            .preferences_repository(Box::new(prefs_repo))
+            .jwt_secret("test-secret".to_string())
+            .build();
+
+        let result = auth_service.update_timer_privacy(user_id, false, false).await;
+        assert!(result.is_ok());
+
+        Ok(())
+    }
+
+    #[tokio::test]
+    async fn test_update_timer_privacy_allows_public_without_list() -> Result<()> {
+        let user_repo = MockUserRepository::new();
+        let mut prefs_repo = MockUserPreferencesRepository::new();
+        let user_id = Uuid::new_v4();
+
+        prefs_repo
+            .expect_update_timer_settings()
+            .times(1)
+            .with(eq(user_id), eq(true), eq(false))
+            .returning(|_, _, _| Ok(()));
+
+        let auth_service = AuthService::builder()
+            .user_repository(Box::new(user_repo))
+            .refresh_token_repository(Box::new(MockRefreshTokenRepository::new()))
+            .preferences_repository(Box::new(prefs_repo))
+            .jwt_secret("test-secret".to_string())
+            .build();
+
+        let result = auth_service.update_timer_privacy(user_id, true, false).await;
+        assert!(result.is_ok());
 
         Ok(())
     }

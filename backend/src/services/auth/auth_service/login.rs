@@ -20,13 +20,23 @@ impl AuthService {
             None => return Ok(None), // User not found
         };
 
-        // Verify password (return None if user has no password - OAuth-only user)
-        let password_hash = match &user.password_hash {
-            Some(hash) => hash,
-            None => return Ok(None), // OAuth-only user, cannot login with password
+        // NEW: Check credentials table for password
+        let password_hash = if let Some(ref creds_repo) = self.credentials_repository {
+            // Query credentials table
+            let credentials = creds_repo.find_by_user_id(user.id).await?;
+            match credentials {
+                Some(creds) => creds.password_hash,
+                None => return Ok(None), // OAuth-only user, no password credentials
+            }
+        } else {
+            // Fallback to legacy password_hash in users table (for backward compatibility)
+            match &user.password_hash {
+                Some(hash) => hash.clone(),
+                None => return Ok(None), // OAuth-only user, cannot login with password
+            }
         };
 
-        if !verify(&data.password, password_hash)? {
+        if !verify(&data.password, &password_hash)? {
             return Ok(None); // Invalid password
         }
 
@@ -94,7 +104,9 @@ fn hash_token(token: &str) -> String {
 mod tests {
     use super::*;
     use crate::models::db::refresh_token::RefreshToken;
+    use crate::models::db::UserCredentials;
     use crate::repositories::mocks::mock_refresh_token_repository::MockRefreshTokenRepository;
+    use crate::repositories::mocks::mock_user_credentials_repository::MockUserCredentialsRepository;
     use crate::repositories::mocks::mock_user_repository::MockUserRepository;
     use crate::services::auth::jwt::JwtService;
     use anyhow::Result;
@@ -117,6 +129,32 @@ mod tests {
             timer_show_in_list: false,
             created_at: Utc::now(),
             updated_at: Utc::now(),
+        }
+    }
+
+    fn create_test_user_without_password(user_id: Uuid) -> crate::models::db::User {
+        crate::models::db::User {
+            id: user_id,
+            email: "oauth@example.com".to_string(),
+            password_hash: None, // OAuth-only user
+            display_name: "OAuth User".to_string(),
+            slug: "oauth-user".to_string(),
+            active: true,
+            real_name: None,
+            google_user_id: Some("google123".to_string()),
+            timer_is_public: false,
+            timer_show_in_list: false,
+            created_at: Utc::now(),
+            updated_at: Utc::now(),
+        }
+    }
+
+    fn create_test_credentials(user_id: Uuid, password: &str) -> UserCredentials {
+        UserCredentials {
+            user_id,
+            password_hash: hash(password, DEFAULT_COST).unwrap(),
+            password_updated_at: Utc::now(),
+            created_at: Utc::now(),
         }
     }
 
@@ -302,6 +340,224 @@ mod tests {
         );
         let result = auth_service.login(request, None).await;
         assert!(result.is_err());
+
+        Ok(())
+    }
+
+    // ========== NEW TESTS FOR PHASE 4B: user_credentials table ==========
+
+    #[tokio::test]
+    async fn test_login_with_credentials_table_success() -> Result<()> {
+        let mut user_repo = MockUserRepository::new();
+        let mut creds_repo = MockUserCredentialsRepository::new();
+        let mut refresh_repo = MockRefreshTokenRepository::new();
+
+        let user_id = Uuid::new_v4();
+        let user = crate::models::db::User {
+            id: user_id,
+            email: "creds@example.com".to_string(),
+            password_hash: None, // No longer used
+            display_name: "Creds User".to_string(),
+            slug: "creds-user".to_string(),
+            active: true,
+            real_name: None,
+            google_user_id: None,
+            timer_is_public: false,
+            timer_show_in_list: false,
+            created_at: Utc::now(),
+            updated_at: Utc::now(),
+        };
+
+        // User exists
+        user_repo
+            .expect_find_by_email()
+            .times(1)
+            .with(eq("creds@example.com"))
+            .returning(move |_| Ok(Some(user.clone())));
+
+        // User has credentials in credentials table
+        creds_repo
+            .expect_find_by_user_id()
+            .times(1)
+            .returning(move |_| Ok(Some(create_test_credentials(user_id, "password123"))));
+
+        user_repo
+            .expect_get_user_roles()
+            .times(1)
+            .returning(|_| Ok(vec!["user".to_string()]));
+
+        refresh_repo
+            .expect_create_token()
+            .times(1)
+            .returning(|_| Ok(create_test_refresh_token()));
+
+        let request = LoginRequest {
+            email: "creds@example.com".to_string(),
+            password: "password123".to_string(),
+        };
+
+        let auth_service = AuthService::builder()
+            .user_repository(Box::new(user_repo))
+            .credentials_repository(Box::new(creds_repo))
+            .refresh_token_repository(Box::new(refresh_repo))
+            .jwt_secret("test-secret".to_string())
+            .build();
+
+        let result = auth_service.login(request, None).await?;
+        assert!(result.is_some());
+
+        Ok(())
+    }
+
+    #[tokio::test]
+    async fn test_login_oauth_only_user_rejects_password() -> Result<()> {
+        let mut user_repo = MockUserRepository::new();
+        let mut creds_repo = MockUserCredentialsRepository::new();
+        let refresh_repo = MockRefreshTokenRepository::new();
+
+        let user_id = Uuid::new_v4();
+
+        // OAuth-only user exists
+        user_repo
+            .expect_find_by_email()
+            .times(1)
+            .with(eq("oauth@example.com"))
+            .returning(move |_| Ok(Some(create_test_user_without_password(user_id))));
+
+        // User has NO credentials (OAuth-only)
+        creds_repo
+            .expect_find_by_user_id()
+            .times(1)
+            .returning(|_| Ok(None));
+
+        let request = LoginRequest {
+            email: "oauth@example.com".to_string(),
+            password: "anypassword".to_string(),
+        };
+
+        let auth_service = AuthService::builder()
+            .user_repository(Box::new(user_repo))
+            .credentials_repository(Box::new(creds_repo))
+            .refresh_token_repository(Box::new(refresh_repo))
+            .jwt_secret("test-secret".to_string())
+            .build();
+
+        let result = auth_service.login(request, None).await?;
+        // Should return None (or error in updated implementation) for OAuth-only users
+        assert!(result.is_none());
+
+        Ok(())
+    }
+
+    #[tokio::test]
+    async fn test_login_user_with_both_password_and_oauth() -> Result<()> {
+        let mut user_repo = MockUserRepository::new();
+        let mut creds_repo = MockUserCredentialsRepository::new();
+        let mut refresh_repo = MockRefreshTokenRepository::new();
+
+        let user_id = Uuid::new_v4();
+        let user = crate::models::db::User {
+            id: user_id,
+            email: "both@example.com".to_string(),
+            password_hash: None,
+            display_name: "Both User".to_string(),
+            slug: "both-user".to_string(),
+            active: true,
+            real_name: None,
+            google_user_id: Some("google123".to_string()), // Has OAuth
+            timer_is_public: false,
+            timer_show_in_list: false,
+            created_at: Utc::now(),
+            updated_at: Utc::now(),
+        };
+
+        // User has both password and OAuth
+        user_repo
+            .expect_find_by_email()
+            .times(1)
+            .with(eq("both@example.com"))
+            .returning(move |_| Ok(Some(user.clone())));
+
+        creds_repo
+            .expect_find_by_user_id()
+            .times(1)
+            .returning(move |_| Ok(Some(create_test_credentials(user_id, "password123"))));
+
+        user_repo
+            .expect_get_user_roles()
+            .times(1)
+            .returning(|_| Ok(vec!["user".to_string()]));
+
+        refresh_repo
+            .expect_create_token()
+            .times(1)
+            .returning(|_| Ok(create_test_refresh_token()));
+
+        let request = LoginRequest {
+            email: "both@example.com".to_string(),
+            password: "password123".to_string(),
+        };
+
+        let auth_service = AuthService::builder()
+            .user_repository(Box::new(user_repo))
+            .credentials_repository(Box::new(creds_repo))
+            .refresh_token_repository(Box::new(refresh_repo))
+            .jwt_secret("test-secret".to_string())
+            .build();
+
+        let result = auth_service.login(request, None).await?;
+        assert!(result.is_some());
+
+        Ok(())
+    }
+
+    #[tokio::test]
+    async fn test_login_wrong_password_with_credentials_table() -> Result<()> {
+        let mut user_repo = MockUserRepository::new();
+        let mut creds_repo = MockUserCredentialsRepository::new();
+        let refresh_repo = MockRefreshTokenRepository::new();
+
+        let user_id = Uuid::new_v4();
+        let user = crate::models::db::User {
+            id: user_id,
+            email: "test@example.com".to_string(),
+            password_hash: None,
+            display_name: "Test User".to_string(),
+            slug: "test-user".to_string(),
+            active: true,
+            real_name: None,
+            google_user_id: None,
+            timer_is_public: false,
+            timer_show_in_list: false,
+            created_at: Utc::now(),
+            updated_at: Utc::now(),
+        };
+
+        user_repo
+            .expect_find_by_email()
+            .times(1)
+            .with(eq("test@example.com"))
+            .returning(move |_| Ok(Some(user.clone())));
+
+        creds_repo
+            .expect_find_by_user_id()
+            .times(1)
+            .returning(move |_| Ok(Some(create_test_credentials(user_id, "correct_password"))));
+
+        let request = LoginRequest {
+            email: "test@example.com".to_string(),
+            password: "wrong_password".to_string(),
+        };
+
+        let auth_service = AuthService::builder()
+            .user_repository(Box::new(user_repo))
+            .credentials_repository(Box::new(creds_repo))
+            .refresh_token_repository(Box::new(refresh_repo))
+            .jwt_secret("test-secret".to_string())
+            .build();
+
+        let result = auth_service.login(request, None).await?;
+        assert!(result.is_none());
 
         Ok(())
     }

@@ -1,5 +1,5 @@
 use serde_json::json;
-use crate::test_helpers::TestContext;
+use crate::fixtures::TestContext;
 
 // Use consolidated test helpers from test_helpers module
 
@@ -8,7 +8,7 @@ async fn test_register_success() {
     let ctx = TestContext::builder().build().await;
     
     let request_body = json!({
-        "email": crate::test_helpers::unique_test_email(),
+        "email": crate::fixtures::unique_test_email(),
         "password": "TestPassword123!",
         "display_name": "Test User"
     });
@@ -40,7 +40,7 @@ async fn test_register_success() {
 async fn test_register_duplicate_email() {
     let ctx = TestContext::builder().build().await;
     
-    let email = crate::test_helpers::unique_test_email();
+    let email = crate::fixtures::unique_test_email();
     let request_body = json!({
         "email": email,
         "password": "TestPassword123!",
@@ -72,7 +72,7 @@ async fn test_login_success() {
     let ctx = TestContext::builder().build().await;
     
     // First register a user to get proper password hashing
-    let email = crate::test_helpers::unique_test_email();
+    let email = crate::fixtures::unique_test_email();
     let password = "TestPassword123!";
     let display_name = "Test User";
     
@@ -142,7 +142,7 @@ async fn test_get_current_user_success() {
     let ctx = TestContext::builder().build().await;
     
     // First register a user to get proper password hashing
-    let email = crate::test_helpers::unique_test_email();
+    let email = crate::fixtures::unique_test_email();
     let password = "TestPassword123!";
     let display_name = "Test User";
     
@@ -215,7 +215,7 @@ async fn test_update_profile_success() {
     let ctx = TestContext::builder().build().await;
     
     // First register a user to get proper password hashing
-    let email = crate::test_helpers::unique_test_email();
+    let email = crate::fixtures::unique_test_email();
     let password = "TestPassword123!";
     let display_name = "Original Name";
     
@@ -264,7 +264,7 @@ async fn test_change_password_success() {
     let ctx = TestContext::builder().build().await;
     
     // First register a user to get proper password hashing
-    let email = crate::test_helpers::unique_test_email();
+    let email = crate::fixtures::unique_test_email();
     let password = "TestPassword123!";
     let display_name = "Test User";
     
@@ -312,7 +312,7 @@ async fn test_change_password_wrong_current() {
     let ctx = TestContext::builder().build().await;
     
     // First register a user to get proper password hashing
-    let email = crate::test_helpers::unique_test_email();
+    let email = crate::fixtures::unique_test_email();
     let password = "TestPassword123!";
     let display_name = "Test User";
     
@@ -361,10 +361,10 @@ async fn test_change_password_wrong_current() {
 
 #[actix_web::test]
 async fn test_verify_email_success() {
-    let ctx = crate::test_helpers::TestContext::builder().build().await;
+    let ctx = crate::fixtures::TestContext::builder().build().await;
 
     // Register a user (this triggers verification email)
-    let email = crate::test_helpers::unique_test_email();
+    let email = crate::fixtures::unique_test_email();
     let password = "TestPassword123!";
     let display_name = "Test User";
 
@@ -406,7 +406,7 @@ async fn test_verify_email_success() {
 
 #[actix_web::test]
 async fn test_verify_email_invalid_token() {
-    let ctx = crate::test_helpers::TestContext::builder().build().await;
+    let ctx = crate::fixtures::TestContext::builder().build().await;
 
     // Try to verify with invalid token
     let mut resp = ctx.server.get("/backend/public/auth/verify-email?token=invalid_token_123")
@@ -424,10 +424,10 @@ async fn test_verify_email_invalid_token() {
 
 #[actix_web::test]
 async fn test_send_verification_email_success() {
-    let ctx = crate::test_helpers::TestContext::builder().build().await;
+    let ctx = crate::fixtures::TestContext::builder().build().await;
 
     // Register a user to get JWT token
-    let email = crate::test_helpers::unique_test_email();
+    let email = crate::fixtures::unique_test_email();
     let password = "TestPassword123!";
     let display_name = "Test User";
 
@@ -474,7 +474,7 @@ async fn test_send_verification_email_success() {
 
 #[actix_web::test]
 async fn test_send_verification_email_unauthorized() {
-    let ctx = crate::test_helpers::TestContext::builder().build().await;
+    let ctx = crate::fixtures::TestContext::builder().build().await;
 
     // Try to send verification email without authentication
     let resp = ctx.server.post("/backend/protected/auth/send-verification")

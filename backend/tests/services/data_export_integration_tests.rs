@@ -1,15 +1,15 @@
-use crate::test_helpers::TestContext;
+use crate::fixtures::TestContext;
 
 #[actix_web::test]
 async fn test_full_export_workflow() {
     let ctx = TestContext::builder().build().await;
     
     // Create a test user
-    let email = crate::test_helpers::unique_test_email();
-    let slug = crate::test_helpers::unique_test_slug();
+    let email = crate::fixtures::unique_test_email();
+    let slug = crate::fixtures::unique_test_slug();
     let user = ctx.create_verified_user(&email, &slug).await;
     
-    let token = crate::test_helpers::create_test_jwt_token(&user).await.unwrap();
+    let token = crate::fixtures::create_test_jwt_token(&user).await.unwrap();
     
     // Create some test data - incident timer
     let timer_request = serde_json::json!({
@@ -37,7 +37,7 @@ async fn test_full_export_workflow() {
     assert_eq!(resp.status(), 200);
     
     let body = resp.json::<serde_json::Value>().await.unwrap();
-    
+
     // Verify export structure
     assert_eq!(body["export_version"], "1.0");
     assert_eq!(body["user"]["id"], user.id.to_string());
@@ -61,11 +61,11 @@ async fn test_export_with_all_data_types() {
     let ctx = TestContext::builder().build().await;
     
     // Create a test user
-    let email = crate::test_helpers::unique_test_email();
-    let slug = crate::test_helpers::unique_test_slug();
+    let email = crate::fixtures::unique_test_email();
+    let slug = crate::fixtures::unique_test_slug();
     let user = ctx.create_verified_user(&email, &slug).await;
     
-    let token = crate::test_helpers::create_test_jwt_token(&user).await.unwrap();
+    let token = crate::fixtures::create_test_jwt_token(&user).await.unwrap();
     
     // Create incident timer
     let timer_request = serde_json::json!({
@@ -132,16 +132,16 @@ async fn test_export_data_isolation() {
     let ctx = TestContext::builder().build().await;
     
     // Create two test users
-    let email1 = crate::test_helpers::unique_test_email();
-    let slug1 = crate::test_helpers::unique_test_slug();
+    let email1 = crate::fixtures::unique_test_email();
+    let slug1 = crate::fixtures::unique_test_slug();
     let user1 = ctx.create_verified_user(&email1, &slug1).await;
     
-    let email2 = crate::test_helpers::unique_test_email();
-    let slug2 = crate::test_helpers::unique_test_slug();
+    let email2 = crate::fixtures::unique_test_email();
+    let slug2 = crate::fixtures::unique_test_slug();
     let user2 = ctx.create_verified_user(&email2, &slug2).await;
     
-    let token1 = crate::test_helpers::create_test_jwt_token(&user1).await.unwrap();
-    let token2 = crate::test_helpers::create_test_jwt_token(&user2).await.unwrap();
+    let token1 = crate::fixtures::create_test_jwt_token(&user1).await.unwrap();
+    let token2 = crate::fixtures::create_test_jwt_token(&user2).await.unwrap();
     
     // Create timer for user 1
     let timer_request1 = serde_json::json!({
@@ -221,11 +221,11 @@ async fn test_export_data_empty_user() {
     let ctx = TestContext::builder().build().await;
     
     // Create a test user
-    let email = crate::test_helpers::unique_test_email();
-    let slug = crate::test_helpers::unique_test_slug();
+    let email = crate::fixtures::unique_test_email();
+    let slug = crate::fixtures::unique_test_slug();
     let user = ctx.create_verified_user(&email, &slug).await;
     
-    let token = crate::test_helpers::create_test_jwt_token(&user).await.unwrap();
+    let token = crate::fixtures::create_test_jwt_token(&user).await.unwrap();
     
     // Test data export (no additional data created)
     #[allow(unused_mut)]
@@ -253,11 +253,11 @@ async fn test_export_data_response_headers() {
     let ctx = TestContext::builder().build().await;
     
     // Create a test user
-    let email = crate::test_helpers::unique_test_email();
-    let slug = crate::test_helpers::unique_test_slug();
+    let email = crate::fixtures::unique_test_email();
+    let slug = crate::fixtures::unique_test_slug();
     let user = ctx.create_verified_user(&email, &slug).await;
     
-    let token = crate::test_helpers::create_test_jwt_token(&user).await.unwrap();
+    let token = crate::fixtures::create_test_jwt_token(&user).await.unwrap();
     
     // Test data export
     #[allow(unused_mut)]

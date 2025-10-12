@@ -28,13 +28,17 @@ impl AuthService {
         // Create user data
         let user_data = CreateUserData {
             email: data.email.clone(),
-            password_hash,
+            password_hash: password_hash.clone(),
             display_name: data.display_name.clone(),
             slug,
         };
 
-        // Create user via repository
-        let user = self.user_repository.create_user(&user_data).await?;
+        // Create user with credentials and preferences in a single transaction
+        // This ensures atomicity - all tables created or none at all
+        let user = self
+            .user_repository
+            .create_user_with_auth_data(&user_data, password_hash)
+            .await?;
 
         // Send verification email if configured
         if let (Some(verification_repo), Some(email_service), Some(url)) = (
@@ -196,9 +200,9 @@ mod tests {
             .returning(|_| Ok(false)); // Slug doesn't exist
 
         user_repo
-            .expect_create_user()
+            .expect_create_user_with_auth_data()
             .times(1)
-            .returning(|_| Ok(create_test_user()));
+            .returning(|_, _| Ok(create_test_user()));
 
         user_repo
             .expect_get_user_roles()
@@ -246,9 +250,9 @@ mod tests {
             .returning(|_| Ok(false)); // Slug doesn't exist
 
         user_repo
-            .expect_create_user()
+            .expect_create_user_with_auth_data()
             .times(1)
-            .returning(|_| Err(anyhow::anyhow!("Database error")));
+            .returning(|_, _| Err(anyhow::anyhow!("Database error")));
 
         let request = CreateUserRequest {
             email: "test@example.com".to_string(),
@@ -281,9 +285,9 @@ mod tests {
             .returning(|_| Ok(false)); // Slug doesn't exist
 
         user_repo
-            .expect_create_user()
+            .expect_create_user_with_auth_data()
             .times(1)
-            .returning(|_| Ok(create_test_user()));
+            .returning(|_, _| Ok(create_test_user()));
 
         user_repo
             .expect_get_user_roles()
@@ -331,9 +335,9 @@ mod tests {
             .returning(|_| Ok(false));
 
         user_repo
-            .expect_create_user()
+            .expect_create_user_with_auth_data()
             .times(1)
-            .returning(move |_| {
+            .returning(move |_, _| {
                 let mut user = create_test_user();
                 user.id = user_id;
                 Ok(user)
@@ -409,9 +413,9 @@ mod tests {
             .returning(|_| Ok(false));
 
         user_repo
-            .expect_create_user()
+            .expect_create_user_with_auth_data()
             .times(1)
-            .returning(|_| Ok(create_test_user()));
+            .returning(|_, _| Ok(create_test_user()));
 
         user_repo
             .expect_get_user_roles()
@@ -441,6 +445,59 @@ mod tests {
 
         assert!(!result.token.is_empty());
         assert!(!result.refresh_token.is_empty());
+
+        Ok(())
+    }
+
+    #[tokio::test]
+    async fn test_register_creates_user_with_auth_data_transactionally() -> Result<()> {
+        let user_id = Uuid::new_v4();
+        let mut user_repo = MockUserRepository::new();
+        let mut refresh_repo = MockRefreshTokenRepository::new();
+
+        // Setup mock expectations
+        user_repo
+            .expect_slug_exists()
+            .times(1)
+            .returning(|_| Ok(false));
+
+        // Expect the atomic create_user_with_auth_data call
+        user_repo
+            .expect_create_user_with_auth_data()
+            .times(1)
+            .returning(move |_, _| {
+                let mut user = create_test_user();
+                user.id = user_id;
+                Ok(user)
+            });
+
+        user_repo
+            .expect_get_user_roles()
+            .times(1)
+            .returning(|_| Ok(vec!["user".to_string()]));
+
+        refresh_repo
+            .expect_create_token()
+            .times(1)
+            .returning(|_| Ok(create_test_refresh_token()));
+
+        let request = CreateUserRequest {
+            email: "test@example.com".to_string(),
+            password: "password123".to_string(),
+            display_name: "Test User".to_string(),
+        };
+
+        let auth_service = AuthService::builder()
+            .user_repository(Box::new(user_repo))
+            .refresh_token_repository(Box::new(refresh_repo))
+            .jwt_secret("test-secret".to_string())
+            .build();
+
+        let result = auth_service.register(request, None, None).await?;
+
+        assert!(!result.token.is_empty());
+        assert!(!result.refresh_token.is_empty());
+        assert_eq!(result.user.email, "test@example.com");
 
         Ok(())
     }

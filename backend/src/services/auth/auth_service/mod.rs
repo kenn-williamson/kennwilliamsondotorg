@@ -4,6 +4,10 @@ use crate::repositories::traits::password_reset_token_repository::PasswordResetT
 use crate::repositories::traits::phrase_repository::PhraseRepository;
 use crate::repositories::traits::pkce_storage::PkceStorage;
 use crate::repositories::traits::refresh_token_repository::RefreshTokenRepository;
+use crate::repositories::traits::user_credentials_repository::UserCredentialsRepository;
+use crate::repositories::traits::user_external_login_repository::UserExternalLoginRepository;
+use crate::repositories::traits::user_preferences_repository::UserPreferencesRepository;
+use crate::repositories::traits::user_profile_repository::UserProfileRepository;
 use crate::repositories::traits::user_repository::UserRepository;
 use crate::repositories::traits::verification_token_repository::VerificationTokenRepository;
 use crate::services::auth::oauth::GoogleOAuthServiceTrait;
@@ -36,6 +40,10 @@ pub struct AuthService {
     pkce_storage: Option<Box<dyn PkceStorage>>,
     incident_timer_repository: Option<Box<dyn IncidentTimerRepository>>,
     phrase_repository: Option<Box<dyn PhraseRepository>>,
+    credentials_repository: Option<Box<dyn UserCredentialsRepository>>,
+    external_login_repository: Option<Box<dyn UserExternalLoginRepository>>,
+    profile_repository: Option<Box<dyn UserProfileRepository>>,
+    preferences_repository: Option<Box<dyn UserPreferencesRepository>>,
 }
 
 impl AuthService {

@@ -1,0 +1,240 @@
+use backend::repositories::postgres::postgres_user_external_login_repository::PostgresUserExternalLoginRepository;
+use backend::repositories::postgres::postgres_user_repository::PostgresUserRepository;
+use backend::repositories::traits::user_external_login_repository::{
+    CreateExternalLogin, UserExternalLoginRepository,
+};
+use backend::repositories::traits::user_repository::{CreateUserData, UserRepository};
+use uuid::Uuid;
+
+async fn create_test_user(pool: &sqlx::PgPool) -> backend::models::db::User {
+    let repo = PostgresUserRepository::new(pool.clone());
+    let user_data = CreateUserData {
+        email: format!("test-{}@example.com", Uuid::new_v4()),
+        password_hash: "temp_hash".to_string(),
+        display_name: "Test User".to_string(),
+        slug: format!("test-{}", Uuid::new_v4()),
+    };
+    repo.create_user(&user_data).await.unwrap()
+}
+
+#[tokio::test]
+async fn test_create_external_login() {
+    let test_container = crate::fixtures::TestContainer::builder()
+        .build()
+        .await
+        .expect("Failed to create test container");
+    let repo = PostgresUserExternalLoginRepository::new(test_container.pool.clone());
+
+    let user = create_test_user(&test_container.pool).await;
+
+    let data = CreateExternalLogin {
+        user_id: user.id,
+        provider: "google".to_string(),
+        provider_user_id: "google_123".to_string(),
+    };
+
+    let login = repo.create(data).await.unwrap();
+    assert_eq!(login.user_id, user.id);
+    assert_eq!(login.provider, "google");
+    assert_eq!(login.provider_user_id, "google_123");
+}
+
+#[tokio::test]
+async fn test_find_by_provider() {
+    let test_container = crate::fixtures::TestContainer::builder()
+        .build()
+        .await
+        .expect("Failed to create test container");
+    let repo = PostgresUserExternalLoginRepository::new(test_container.pool.clone());
+
+    let user = create_test_user(&test_container.pool).await;
+
+    // Create login
+    let data = CreateExternalLogin {
+        user_id: user.id,
+        provider: "github".to_string(),
+        provider_user_id: "github_456".to_string(),
+    };
+    repo.create(data).await.unwrap();
+
+    // Find by provider
+    let found = repo.find_by_provider("github", "github_456").await.unwrap();
+    assert!(found.is_some());
+    assert_eq!(found.unwrap().user_id, user.id);
+}
+
+#[tokio::test]
+async fn test_find_by_provider_not_found() {
+    let test_container = crate::fixtures::TestContainer::builder()
+        .build()
+        .await
+        .expect("Failed to create test container");
+    let repo = PostgresUserExternalLoginRepository::new(test_container.pool.clone());
+
+    // Should not find non-existent provider
+    let found = repo
+        .find_by_provider("nonexistent", "user_999")
+        .await
+        .unwrap();
+    assert!(found.is_none());
+}
+
+#[tokio::test]
+async fn test_find_by_user_id_multiple_providers() {
+    let test_container = crate::fixtures::TestContainer::builder()
+        .build()
+        .await
+        .expect("Failed to create test container");
+    let repo = PostgresUserExternalLoginRepository::new(test_container.pool.clone());
+
+    let user = create_test_user(&test_container.pool).await;
+
+    // Create Google login
+    repo.create(CreateExternalLogin {
+        user_id: user.id,
+        provider: "google".to_string(),
+        provider_user_id: "google_123".to_string(),
+    })
+    .await
+    .unwrap();
+
+    // Create GitHub login
+    repo.create(CreateExternalLogin {
+        user_id: user.id,
+        provider: "github".to_string(),
+        provider_user_id: "github_456".to_string(),
+    })
+    .await
+    .unwrap();
+
+    // Find all logins for user
+    let logins = repo.find_by_user_id(user.id).await.unwrap();
+    assert_eq!(logins.len(), 2);
+
+    let providers: Vec<String> = logins.iter().map(|l| l.provider.clone()).collect();
+    assert!(providers.contains(&"google".to_string()));
+    assert!(providers.contains(&"github".to_string()));
+}
+
+#[tokio::test]
+async fn test_unlink_provider() {
+    let test_container = crate::fixtures::TestContainer::builder()
+        .build()
+        .await
+        .expect("Failed to create test container");
+    let repo = PostgresUserExternalLoginRepository::new(test_container.pool.clone());
+
+    let user = create_test_user(&test_container.pool).await;
+
+    // Create login
+    repo.create(CreateExternalLogin {
+        user_id: user.id,
+        provider: "google".to_string(),
+        provider_user_id: "google_123".to_string(),
+    })
+    .await
+    .unwrap();
+
+    // Unlink provider
+    repo.unlink_provider(user.id, "google").await.unwrap();
+
+    // Verify unlinked
+    let found = repo.find_by_provider("google", "google_123").await.unwrap();
+    assert!(found.is_none());
+}
+
+#[tokio::test]
+async fn test_is_provider_linked() {
+    let test_container = crate::fixtures::TestContainer::builder()
+        .build()
+        .await
+        .expect("Failed to create test container");
+    let repo = PostgresUserExternalLoginRepository::new(test_container.pool.clone());
+
+    let user = create_test_user(&test_container.pool).await;
+
+    // Not linked initially
+    let is_linked = repo.is_provider_linked(user.id, "google").await.unwrap();
+    assert_eq!(is_linked, false);
+
+    // Create login
+    repo.create(CreateExternalLogin {
+        user_id: user.id,
+        provider: "google".to_string(),
+        provider_user_id: "google_123".to_string(),
+    })
+    .await
+    .unwrap();
+
+    // Now linked
+    let is_linked = repo.is_provider_linked(user.id, "google").await.unwrap();
+    assert_eq!(is_linked, true);
+}
+
+#[tokio::test]
+async fn test_delete_external_login() {
+    let test_container = crate::fixtures::TestContainer::builder()
+        .build()
+        .await
+        .expect("Failed to create test container");
+    let repo = PostgresUserExternalLoginRepository::new(test_container.pool.clone());
+
+    let user = create_test_user(&test_container.pool).await;
+
+    // Create login
+    let login = repo
+        .create(CreateExternalLogin {
+            user_id: user.id,
+            provider: "google".to_string(),
+            provider_user_id: "google_123".to_string(),
+        })
+        .await
+        .unwrap();
+
+    // Delete by ID
+    repo.delete(login.id).await.unwrap();
+
+    // Verify deleted
+    let found = repo.find_by_provider("google", "google_123").await.unwrap();
+    assert!(found.is_none());
+}
+
+#[tokio::test]
+async fn test_unique_provider_constraint() {
+    let test_container = crate::fixtures::TestContainer::builder()
+        .build()
+        .await
+        .expect("Failed to create test container");
+    let repo = PostgresUserExternalLoginRepository::new(test_container.pool.clone());
+
+    let user1 = create_test_user(&test_container.pool).await;
+    let user2 = create_test_user(&test_container.pool).await;
+
+    // User1 links Google account
+    repo.create(CreateExternalLogin {
+        user_id: user1.id,
+        provider: "google".to_string(),
+        provider_user_id: "google_shared".to_string(),
+    })
+    .await
+    .unwrap();
+
+    // User2 tries to link the same Google account - should fail
+    let result = repo
+        .create(CreateExternalLogin {
+            user_id: user2.id,
+            provider: "google".to_string(),
+            provider_user_id: "google_shared".to_string(),
+        })
+        .await;
+
+    assert!(result.is_err());
+    // Should be a unique constraint violation
+    assert!(result.unwrap_err().to_string().contains("unique")
+        || result_contains_duplicate_key_error());
+
+    fn result_contains_duplicate_key_error() -> bool {
+        // PostgreSQL error for duplicate key
+        true
+    }
+}

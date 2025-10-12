@@ -1,6 +1,6 @@
 /// Phase 3 Integration Tests: SNS Webhook API Endpoints
 /// Tests the actual HTTP endpoints that AWS SNS will call
-use crate::test_helpers::TestContext;
+use crate::fixtures::TestContext;
 
 #[actix_web::test]
 async fn test_sns_subscription_confirmation_endpoint() {
