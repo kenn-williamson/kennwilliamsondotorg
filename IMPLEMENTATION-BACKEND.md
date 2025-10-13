@@ -4,7 +4,7 @@
 Rust-based REST API using Actix-web 4.x with PostgreSQL integration and comprehensive test coverage. The backend has been refactored with a modular service architecture, enhanced admin capabilities, and comprehensive testing infrastructure.
 
 ## Technology Stack
-- **Language**: Rust 1.89.0
+- **Language**: Rust 1.90.0
 - **Framework**: Actix-web 4.x
 - **Database**: SQLx with PostgreSQL
 - **Serialization**: Serde
@@ -135,18 +135,22 @@ backend/
 
 ## Core Features
 - **Authentication**: JWT-based with refresh tokens (see [IMPLEMENTATION-SECURITY.md](IMPLEMENTATION-SECURITY.md#authentication-system))
+- **OAuth Integration**: Google OAuth 2.0 with PKCE flow and Redis-backed state management
 - **Email Verification**: Token-based email verification with role-based access control
+- **Password Reset**: Secure token-based password reset with expiration and usage tracking
 - **Token Cleanup**: Automatic background cleanup of expired tokens (refresh + verification)
 - **User Management**: Registration, login, slug generation, profile updates
 - **Profile Management**: Display name and slug editing, password changes
+- **Account Management**: Self-service account deletion and data export (GDPR/CCPA compliance)
+- **Email Suppression**: AWS SES compliance with bounce/complaint/unsubscribe handling
 - **Admin Management**: User deactivation, password reset, user promotion, system statistics
-- **Incident Timers**: CRUD operations with user ownership
+- **Incident Timers**: CRUD operations with user ownership and public sharing
 - **Phrases System**: Dynamic phrases with user suggestions and admin approval
 - **Enhanced Search**: PostgreSQL full-text search with `ts_rank` ranking and ILIKE fallback
 - **Public API**: Unauthenticated access to user timers and phrases
 - **Database Integration**: SQLx with compile-time query verification
 - **3-Layer Architecture**: Clean separation with repository pattern and dependency injection
-- **Modular Services**: Auth service split into focused modules (register, login, refresh, profile, password, slug, email_verification)
+- **Modular Services**: Auth service split into focused modules (register, login, refresh, profile, password, slug, email_verification, oauth)
 - **Modular Incident Timer Service**: Split into focused modules (create, read, update, delete)
 - **Modular Phrase Service**: Split into focused modules (public_access, user_management, admin_management, exclusions, suggestions)
 - **Modular Admin Services**: Split into focused modules (user_management, phrase_moderation, stats)

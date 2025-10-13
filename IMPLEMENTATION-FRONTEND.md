@@ -208,14 +208,16 @@ Page-specific aesthetics following [UX-LAYOUT.md](UX-LAYOUT.md):
 - AppHeader.vue (responsive header with auth states and mobile menu) ✅ **Refactored**
 - AppFooter.vue (site footer with copyright and legal page links)
 
-**Timer Components** (10 components) ✅ **All Refactored**:
-- TimerStats.vue, TimerListItem.vue, TimerEditModal.vue, TimerResetModal.vue
+**Timer Components** (11 components) ✅ **All Refactored**:
+- TimerStats.vue, TimerList.vue, TimerListItem.vue, TimerEditModal.vue, TimerResetModal.vue
 - TimerDisplayTab.vue, TimerControlsTab.vue, PhraseSuggestionsTab.vue, PhraseFilterTab.vue, SuggestionHistoryTab.vue, TabNavigation.vue
 - **Pattern**: All use `useIncidentTimerStore()` with embedded actions for SSR hydration
 
-**Profile Components** (2 components) ✅ **All Refactored**:
+**Profile Components** (4 components) ✅ **All Refactored**:
 - AccountInformationForm.vue (display name and slug editing with validation)
 - SecurityForm.vue (password change with current password verification)
+- DataExport.vue (GDPR/CCPA data export functionality)
+- DeleteAccountSection.vue (self-service account deletion)
 - **Pattern**: All use `useAuthProfileActions()` composable (only remaining action composable)
 
 **Admin Components** (6 components) ✅ **All Refactored**:
@@ -240,8 +242,10 @@ Page-specific aesthetics following [UX-LAYOUT.md](UX-LAYOUT.md):
 - terms.vue (Terms of Service with user rights)
 - **Styling**: Steampunk aesthetic matching site design (gold, silver, prussian blue, mahogany)
 
-**Steampunk Design** (6 components):
-- SteamClock.vue, FlippingDigit.vue, SlidingTimeGroup.vue, SteampunkBackground.vue, SteampunkBanner.vue, VintageNoteCard.vue
+**Steampunk Design** (9 components):
+- SteamClock.vue, FlippingDigit.vue, SlidingTimeGroup.vue, TimeGroup.vue
+- SteampunkBackground.vue, SteampunkBanner.vue, VintageNoteCard.vue
+- SteampunkAccordion.vue, SteampunkTooltip.vue
 
 **Phrases**: RandomPhrase.vue (random phrase display component) ✅ **Refactored**
 
