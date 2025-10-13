@@ -27,10 +27,9 @@ Supports both SSR proxy routes and direct backend calls. See [ARCHITECTURE.md](A
 
 ### Configuration Files
 - **`nginx/conf.d/default.conf`**: Production configuration
-- **`nginx/conf.d-local-prod/default.conf`**: Local production testing
+- **`nginx/conf.d-local-prod/default.conf`**: Local production testing (mounted via docker-compose.local-prod.yml)
 - **`nginx/nginx.conf`**: Global settings
-- **`nginx/ssl/`**: Development certificates
-- **`nginx/ssl-local/`**: Local production certificates
+- **SSL Certificates**: Generated at runtime by scripts, not stored in repository
 
 ### Environment-Specific Features
 - **Development**: Self-signed SSL, HMR support, verbose logging
@@ -41,8 +40,8 @@ Supports both SSR proxy routes and direct backend calls. See [ARCHITECTURE.md](A
 
 ### Development SSL
 - **Certificates**: Self-signed for localhost
-- **Generation**: `./scripts/generate-ssl.sh`
-- **Location**: `nginx/ssl/`
+- **Generation**: `./scripts/generate-ssl.sh` (generates at runtime, not stored in repo)
+- **Location**: Generated in container at runtime
 
 ### Production SSL
 - **Provider**: Let's Encrypt
@@ -75,8 +74,8 @@ See [DEVELOPMENT-WORKFLOW.md](DEVELOPMENT-WORKFLOW.md#local-production-environme
 
 ### Security
 - **HTTPS Enforcement**: HTTP redirect
-- **Security Headers**: CSP, HSTS, etc.
-- **Rate Limiting**: API protection
+- **Security Headers**: HSTS, X-Frame-Options, X-Content-Type-Options, X-XSS-Protection, Referrer-Policy
+- **Rate Limiting**: Currently disabled (TODO: fix Docker shared memory allocation issues)
 - **Details**: See [IMPLEMENTATION-SECURITY.md](IMPLEMENTATION-SECURITY.md#infrastructure-security)
 
 ## Technical Details

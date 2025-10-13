@@ -6,87 +6,152 @@ Testing architecture and implementation for backend with comprehensive test cove
 ## Backend Testing Status
 
 ### Current Test Coverage
-- **Unit Tests (Library)**: 142 tests passing (repository mocks, service layer, business logic)
-- **API Integration Tests**: 55 tests (54 passing, 1 intermittent timeout failure)
-- **Refresh Token Tests**: 3 tests passing (end-to-end token validation)
-- **Test Infrastructure**: Consolidated test helpers with proper container scope management
-- **Total Tests**: 200 tests with comprehensive coverage across all layers
+Run `cargo test -- --test-threads=4` to see current test counts and pass rates.
 
-### Test Architecture by Layer
+**Test Coverage Includes**:
+- Unit tests with mockall-based repository mocks
+- API integration tests with testcontainers and full HTTP/database cycles
+- Specialized integration tests for background services and external dependencies
+- Comprehensive coverage across all business logic and API endpoints
 
-**Unit Tests (Library)** (✅ Complete):
-- **Framework**: Rust with comprehensive unit testing
-- **Tests**: 142 unit tests covering all business logic layers
-- **Execution**: Fast unit tests with mocked dependencies
+### Testing Patterns
+
+**Unit Testing Pattern** (✅ Comprehensive):
+- **Framework**: Rust with [mockall](https://github.com/asomers/mockall) for repository mocking
+- **Organization**: Embedded in service modules with `#[cfg(test)]`
+- **Mocking Strategy**: `mock!` macro generates trait implementations with expectation setups
+- **Feature Flag**: Mock implementations behind `mocks` feature (excluded from production builds)
+- **Execution**: Fast unit tests with mocked dependencies (no database required)
 - **Coverage**: Repository mocks, service layer, business logic, error handling
-- **Modular Design**: Tests embedded in each service module with `#[cfg(test)]`
+- **Pattern**: Service layer testing with mocked repository dependencies
 
-**API Integration Tests** (✅ Complete):
-- **Framework**: Rust with actix-test and testcontainers
-- **Tests**: 55 API endpoint tests (auth + incident timer + phrase + admin + health endpoints)
-- **Execution**: Parallel with isolated container per test and robust restart logic
-- **Database**: Testcontainers with proper scope management
-- **Status**: 54 passing, 1 intermittent timeout failure (resource contention)
+**Example Mockall Pattern**:
+```rust
+// In repositories/mocks/mock_user_repository.rs
+use mockall::mock;
 
-**Refresh Token Tests** (✅ Complete):
-- **Framework**: Rust with actix-test and testcontainers
-- **Tests**: 3 refresh token validation tests
-- **Execution**: Parallel with isolated container per test
-- **Coverage**: End-to-end refresh token flow testing
+mock! {
+    pub UserRepository {}
+
+    #[async_trait]
+    impl UserRepository for UserRepository {
+        async fn create_user(&self, user_data: &CreateUserData) -> Result<User>;
+        async fn find_by_email(&self, email: &str) -> Result<Option<User>>;
+        // ... other trait methods
+    }
+}
+
+// In service tests
+#[tokio::test]
+async fn test_register_user() {
+    let mut mock_repo = MockUserRepository::new();
+
+    // Setup expectations
+    mock_repo
+        .expect_find_by_email()
+        .times(1)
+        .returning(|_| Ok(None)); // Email doesn't exist
+
+    mock_repo
+        .expect_create_user()
+        .times(1)
+        .returning(|_| Ok(create_test_user()));
+
+    // Test service logic with mocked repository
+    let service = AuthService::new(Arc::new(mock_repo));
+    let result = service.register(user_data).await;
+    assert!(result.is_ok());
+}
+```
+
+**API Integration Testing Pattern** (✅ Comprehensive):
+- **Framework**: actix-test + testcontainers for full HTTP request/response testing
+- **Organization**: `tests/api/` directory with feature-based test files
+- **Execution**: Parallel with isolated PostgreSQL container per test
+- **Database**: Testcontainers with proper scope management and retry logic
+- **Resource Management**: Requires `--test-threads=4` to prevent Docker resource exhaustion
+- **Coverage**: All API endpoints (auth, timers, phrases, admin, OAuth, RBAC, account management, etc.)
+
+**Specialized Integration Tests** (✅ Complete):
+- **Token Cleanup**: Automated expired token removal testing
+- **Refresh Tokens**: End-to-end refresh token flow validation
+- **Rate Limiting**: Request throttling and protection testing
+- **Redis PKCE**: OAuth PKCE storage and state management
+- **Admin Roles**: RBAC and permission testing
 
 ## Backend Test Architecture
 
 ### Test Organization
 ```
 backend/
-├── src/                    # Unit tests (142 tests)
-│   ├── repositories/mocks/ # Repository layer unit tests
-│   │   ├── mock_user_repository.rs          # User repository mocks
-│   │   ├── mock_refresh_token_repository.rs # Refresh token repository mocks
-│   │   ├── mock_incident_timer_repository.rs # Incident timer repository mocks
-│   │   ├── mock_phrase_repository.rs        # Phrase repository mocks
-│   │   └── mock_admin_repository.rs         # Admin repository mocks
-│   └── services/           # Service layer unit tests
+├── src/                    # Unit tests (embedded with #[cfg(test)])
+│   ├── repositories/mocks/ # Repository layer mocks
+│   │   ├── mock_user_repository.rs
+│   │   ├── mock_refresh_token_repository.rs
+│   │   ├── mock_verification_token_repository.rs
+│   │   ├── mock_incident_timer_repository.rs
+│   │   ├── mock_phrase_repository.rs
+│   │   └── mock_admin_repository.rs
+│   └── services/           # Service layer tests (embedded in each module)
 │       ├── auth/           # Authentication service tests
 │       ├── incident_timer/ # Incident timer service tests
 │       ├── phrase/         # Phrase service tests
-│       └── admin/          # Admin service tests
-└── tests/                  # Integration and API tests (58 tests)
-    ├── api/                # API endpoint tests (55 tests)
-    │   ├── testcontainers_auth_api_tests.rs # 10 auth API tests
-    │   ├── testcontainers_incident_timer_api_tests.rs # 14 incident timer API tests
-    │   ├── testcontainers_phrase_api_tests.rs # 12 phrase API tests
-    │   ├── testcontainers_admin_api_tests.rs # 14 admin API tests
-    │   └── testcontainers_health_api_tests.rs # 5 health API tests
-    ├── refresh_token_validation.rs         # 3 refresh token tests
+│       ├── admin/          # Admin service tests
+│       ├── cleanup/        # Token cleanup service tests
+│       └── email/          # Email service tests (mock implementations)
+└── tests/                  # Integration and API tests
+    ├── api/                # API endpoint tests (feature-based organization)
+    │   ├── testcontainers_auth_api_tests.rs
+    │   ├── testcontainers_incident_timer_api_tests.rs
+    │   ├── testcontainers_phrase_api_tests.rs
+    │   ├── testcontainers_admin_api_tests.rs
+    │   ├── testcontainers_health_api_tests.rs
+    │   ├── oauth_routes_tests.rs
+    │   ├── testcontainers_account_deletion_tests.rs
+    │   ├── testcontainers_sns_webhook_api_tests.rs
+    │   ├── testcontainers_rbac_feature_gating_tests.rs
+    │   └── testcontainers_oauth_tests.rs
+    ├── admin_role_management_tests.rs      # RBAC integration tests
+    ├── rate_limiting_integration_tests.rs  # Rate limiting tests
+    ├── redis_integration_tests.rs          # Redis connection tests
+    ├── redis_pkce_storage_integration_tests.rs # OAuth PKCE storage tests
+    ├── token_cleanup_tests.rs              # Token cleanup integration tests
+    ├── refresh_token_validation.rs         # Refresh token flow tests
     ├── test_helpers.rs                     # Consolidated test utilities
     └── mod.rs                              # Test module organization
 ```
 
 ### Test Coverage by Layer
 
-**Unit Tests (Library)** (✅ Complete - 142 tests):
+**Unit Tests (Library)** (✅ Comprehensive):
 - **Repository Mocks**: Complete mockall-based mocks for all repository traits
 - **Service Layer**: Comprehensive business logic testing across all services
-- **Auth Services**: Authentication, registration, profile management, password handling
+- **Auth Services**: Authentication, registration, OAuth, email verification, profile management, password handling
 - **Incident Timer Services**: CRUD operations, ownership validation, public access
 - **Phrase Services**: Phrase management, suggestions, exclusions, admin operations
-- **Admin Services**: User management, system statistics, phrase moderation
-- **Execution**: Fast unit tests with mocked dependencies (~0.01s total)
+- **Admin Services**: User management, system statistics, phrase moderation, RBAC
+- **Cleanup Services**: Token expiration and cleanup logic
+- **Pattern**: Fast unit tests with mocked dependencies
 
-**API Integration Tests** (✅ Complete - 55 tests):
-- **Auth API Tests**: 10 API endpoint tests (registration, login, profile, password changes)
-- **Incident Timer API Tests**: 14 API endpoint tests (CRUD operations, public access)
-- **Phrase API Tests**: 12 API endpoint tests (phrase management, suggestions, exclusions)
-- **Admin API Tests**: 14 API endpoint tests (user management, phrase moderation, system stats)
-- **Health API Tests**: 5 API endpoint tests (service and database health checks)
-- **Coverage**: All API endpoints with real HTTP requests
-- **Status**: 54 passing, 1 intermittent timeout failure (resource contention)
+**API Integration Tests** (✅ Comprehensive):
+- **Auth API Tests**: Registration, login, profile, password changes, OAuth flows
+- **Incident Timer API Tests**: CRUD operations, public access, ownership validation
+- **Phrase API Tests**: Phrase management, suggestions, exclusions, search
+- **Admin API Tests**: User management, phrase moderation, system stats, RBAC
+- **Health API Tests**: Service and database health checks
+- **Account Management**: Account deletion, data export, email suppression
+- **OAuth Integration**: Google OAuth PKCE flow, state management
+- **RBAC**: Role-based feature gating and permissions
+- **SNS Webhooks**: AWS SES bounce/complaint handling
+- **Pattern**: All API endpoints tested with real HTTP requests and database operations
 
-**Refresh Token Tests** (✅ Complete - 3 tests):
-- **Refresh Token Validation**: 3 tests (end-to-end refresh token flow)
-- **Coverage**: Complete refresh token lifecycle testing
-- **Execution**: Testcontainers with proper container scope management
+**Specialized Integration Tests** (✅ Complete):
+- **Token Cleanup Tests**: Expired token removal (refresh + verification)
+- **Refresh Token Tests**: End-to-end refresh token flow validation
+- **Rate Limiting Tests**: Request throttling and protection
+- **Redis PKCE Tests**: OAuth PKCE state storage and retrieval
+- **Admin Role Tests**: RBAC permission validation
+- **Pattern**: Full integration tests with real database and external services
 
 ### Test Architecture by Layer
 
@@ -164,17 +229,14 @@ cargo test -- --test-threads=4
 ## Coverage Summary
 
 ### Current Status
-- **Unit Tests (Library)**: 142 tests passing (100% coverage)
-- **API Integration Tests**: 55 tests (54 passing, 1 intermittent timeout failure)
-- **Refresh Token Tests**: 3 tests passing (100% coverage)
-- **Total Tests**: 200 tests with comprehensive coverage across all layers
+Run `cargo test -- --test-threads=4` to see current test counts and pass rates.
 
-### Target Coverage
-- **Unit Tests (Library)**: ✅ Complete (142/142 tests) - all business logic covered
-- **API Integration Tests**: ✅ Complete (55/55 tests) - all API endpoints covered
-- **Refresh Token Tests**: ✅ Complete (3/3 tests) - end-to-end token flow covered
-- **Error Cases**: Comprehensive coverage across all layers
-- **Total Coverage**: ✅ Complete (200/200 tests) - comprehensive coverage achieved
+### Coverage Achieved
+- **Unit Tests**: ✅ Complete - All business logic covered with mocked dependencies
+- **API Integration Tests**: ✅ Complete - All API endpoints tested with real HTTP and database
+- **Specialized Tests**: ✅ Complete - Token cleanup, refresh flows, rate limiting, OAuth PKCE, RBAC
+- **Error Cases**: ✅ Comprehensive coverage across all layers
+- **Overall**: ✅ Complete - Comprehensive test coverage achieved
 
 ## Container Restart Logic Implementation
 
@@ -191,26 +253,26 @@ cargo test -- --test-threads=4
 - **Exponential Backoff**: Smart retry delays to avoid overwhelming the system
 
 ### Results
-- **100% Success Rate**: All 36 tests pass consistently in parallel execution
+- **High Reliability**: Tests pass consistently in parallel execution
 - **No Timeouts**: Container restart logic handles resource contention gracefully
-- **Fast Execution**: Tests complete in ~83 seconds with 4 parallel threads
-- **Reliable**: No more intermittent failures due to resource contention
+- **Efficient Execution**: Parallel tests with 4 threads balance speed and resource usage
+- **Reliable**: No intermittent failures due to resource contention
 
 ## Frontend Testing Status
 
 ### Current Test Coverage
-- **Total Tests**: 175 tests passing (100% success rate)
-- **Test Files**: 12 test files
-- **Execution Time**: ~5.7 seconds
+Run `npm test` to see current test counts and pass rates.
+
 - **Framework**: Vitest with comprehensive module mocking
 - **Coverage**: Complete data layer coverage across all frontend components
+- **Execution**: Fast unit tests with mocked dependencies
 
 ### Frontend Test Architecture
 
-**Comprehensive Test Coverage** (✅ Complete - 175 tests):
+**Comprehensive Test Coverage** (✅ Complete):
 - **Framework**: Vitest with comprehensive module mocking and auto-import handling
-- **Test Files**: 12 test files covering all frontend data layer components
-- **Execution**: Fast unit tests with mocked dependencies (~5.7 seconds total)
+- **Test Files**: Organized by layer (composables, services, stores, utils)
+- **Execution**: Fast unit tests with mocked dependencies
 - **Coverage**: Complete data layer coverage including:
   - Action composables (orchestration and service calls)
   - Base service functionality (loading states, error handling)
@@ -357,18 +419,23 @@ npm test -- --reporter=verbose
 ## Testing Summary
 
 ### Backend Testing
-- **Total Tests**: 200 tests (142 unit + 55 API integration + 3 refresh token)
+Run `cargo test -- --test-threads=4` for current test counts.
+
 - **Coverage**: Comprehensive coverage across all business logic and API endpoints
+- **Test Types**: Unit tests (mocked), API integration tests (testcontainers), specialized integration tests
 - **Execution**: Fast unit tests + robust integration tests with testcontainers
-- **Resource Management**: API tests require `--test-threads=4` for reliable execution
+- **Resource Management**: Integration tests require `--test-threads=4` for reliable execution
+- **Status**: ✅ Complete - All tests passing
 
 ### Frontend Testing
-- **Total Tests**: 175 tests (100% passing)
+Run `npm test` for current test counts.
+
 - **Coverage**: Complete data layer coverage across all frontend components
-- **Execution**: Fast unit tests with comprehensive mocking (~5.7 seconds)
+- **Execution**: Fast unit tests with comprehensive mocking
 - **Framework**: Vitest with module mocking and auto-import handling
+- **Status**: ✅ Complete - Comprehensive coverage achieved
 
 ### Overall Status
-- **Backend**: ✅ Complete (200/200 tests) - comprehensive coverage achieved
-- **Frontend**: ✅ Complete (175/175 tests) - comprehensive coverage achieved
-- **Total Project**: 375 tests with complete coverage across all layers
+- **Backend**: ✅ Complete - comprehensive coverage achieved
+- **Frontend**: ✅ Complete - comprehensive coverage achieved
+- **Test Commands**: `cargo test -- --test-threads=4` (backend), `npm test` (frontend)
