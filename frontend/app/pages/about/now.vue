@@ -281,50 +281,66 @@
     <h2>The Dating Question</h2>
 
     <p>
-      I'm open about this: I'm looking for the right person to share life with. I'm also
-      open about the fact that it's been hard.
+      I'm open about this: I'd love to find the right person to share life with. I'm a
+      romantic at heart. I'm the guy who handmade a Halloween costume of a juice box with
+      Betty Boop on it (we called it "Boop Juice"), who's crafted throw pillows and
+      jewelry boxes, who stops at the store to pick up something just because I know
+      she'd like it. I'm considerate. I think about how my actions affect my partner. I
+      keep her on my mind: calling before making plans with friends, remembering the
+      little things, doing sweet things for birthdays and anniversaries.
     </p>
 
     <p>
-      I've tried dating apps. I've gone on blind dates. Nothing has stuck. Part of the
-      problem is that I don't present well in a dating app format. All of my previous
-      serious relationships developed organically from situations where I got to know
-      someone in a non-dating context: friends, friends of friends, coworkers next door,
-      someone at the pool where I was a lifeguard.
+      Physical affection is important to me. I imagine cuddling on the couch reading or
+      watching anime together, waking up before she does just to watch her sleep for a
+      moment, cooking dinner side by side, having someone there when I get home. I want
+      the everyday partnership: cleaning up the house together, working through
+      frustrations with good communication and making up, having my bathroom cluttered
+      with her makeup and curlers, downsizing my sprawling closet to one tiny rack so the
+      rest can be hers. I want her to decorate the house because my walls are bare and I
+      have no desire to pick out décor, but I'd love to live in a home that feels warm
+      and beautiful because she made it that way.
     </p>
 
     <p>
-      Dating apps require you to sell yourself immediately based on photos and a brief
-      bio, and that's not my strength. I'm better in long-form conversation where my
-      depth and intelligence and care for people can actually come through.
+      I do better with organic connection than dating apps. All of my previous serious
+      relationships developed naturally: friends, friends of friends, coworkers, someone
+      at the pool where I was a lifeguard. Dating apps require you to sell yourself
+      immediately based on photos and a brief bio, and that's not my strength. I'm better
+      in long-form conversation where depth and care for people can actually come
+      through. Coffee at a local shop, walking through Philbrook Museum, dinner and a
+      stroll along the Riverwalk. These are where I connect with people.
     </p>
 
     <p>
-      I'm picky, and I don't apologize for that. I've learned from past relationships
-      that being with the wrong person is worse than being alone. I'm looking for
-      someone who is Kingdom-oriented—her faith needs to be central, not peripheral. I
-      need someone who's genuinely pursuing Christ and understands what that means. I
-      want to build a traditional family with someone who embodies those values, not
-      someone focused on climbing the corporate ladder. And I need genuine mutual
-      attraction; I've learned that relationships work best when I'm reaching toward
-      someone I deeply admire, someone who feels slightly out of my league. Without that
-      dynamic, weird power imbalances develop.
+      Here's what I'm looking for: someone who's Kingdom-oriented, where faith is central
+      rather than peripheral. Someone bubbly, vivacious, outgoing, the kind of person
+      who's a natural connector, who can draw me out of my introverted default without
+      getting frustrated when there's resistance. I need loyalty, sincerity, earnestness,
+      someone hardworking who embodies traditional family values rather than focusing on
+      climbing the corporate ladder. I want to build something together.
     </p>
 
     <p>
-      That's a specific combination, and dating apps haven't been able to deliver it. So
-      I'm giving it to God. I'm working on myself, trying to be the best Kingdom version
-      of myself I can be, and trusting that if it's His will for me to find someone,
-      He'll bring her into my life.
+      I'm attracted to women who take care of themselves and carry themselves with
+      confidence. Physical chemistry matters, and I know it when I feel it. I've learned
+      from past relationships that genuine mutual attraction is important. When there's
+      real chemistry and admiration, everything else works better.
     </p>
 
     <p>
-      I have a medium-sized fear that I'm going to be alone for the rest of my life in a
-      romantic sense. I'm coming to terms with it. It's hard, but it's better than being
-      with the wrong person. I know that much from experience. At the same time, I hope.
-      I'd love to have more children. I'd love to build a life with someone. I'd love to
-      have a partner in this parenting journey. But if that's not in the cards, I'll
-      trust that God has a different plan.
+      I'm picky, and I don't apologize for that. I've learned that being with the wrong
+      person is worse than being alone. So I'm working on being the best version of
+      myself I can be: growing in patience, fighting my tendency to isolate, learning to
+      reach out to people despite my fear of rejection. I'm trusting that if it's God's
+      will for me to find someone, He'll bring her into my life in His timing.
+    </p>
+
+    <p>
+      I hope that happens. I'd love to have more children. I'd love to build a life with
+      someone and have a partner in this parenting journey. But I'm holding it with open
+      hands. I'm focused on being faithful with what's in front of me and loving the
+      people around me well. The rest is in God's hands.
     </p>
 
     <h2>Daily Struggles: The Ongoing Work</h2>
