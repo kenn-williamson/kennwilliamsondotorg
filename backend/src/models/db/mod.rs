@@ -12,7 +12,13 @@ pub use email_suppression::*;
 pub use incident_timer::*;
 pub use phrase::*;
 pub use user::*;
+
+// Re-export for use in other modules (tests, services, etc.)
+#[allow(unused_imports)]
 pub use user_credentials::UserCredentials;
+#[allow(unused_imports)]
 pub use user_external_login::UserExternalLogin;
+#[allow(unused_imports)]
 pub use user_profile::UserProfile;
+#[allow(unused_imports)]
 pub use user_preferences::UserPreferences;

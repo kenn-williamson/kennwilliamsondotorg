@@ -480,18 +480,18 @@ mod tests {
     use chrono::Utc;
     use uuid::Uuid;
 
+    // Test helper: Create in-memory User for mocking (not persisted to DB)
+    // Uses builder pattern to avoid fragility from User model changes
     fn create_test_user_with_id(user_id: Uuid) -> User {
+        // Note: Using build() not persist() - this is for in-memory mock data
+        // The old fields (password_hash, real_name, google_user_id, timer_is_public, timer_show_in_list)
+        // have been moved to separate tables in the multi-table auth refactor
         User {
             id: user_id,
             email: "test@example.com".to_string(),
-            password_hash: Some("hashed_password".to_string()),
             display_name: "Test User".to_string(),
             slug: "testuser".to_string(),
-            real_name: Some("Test User Real Name".to_string()),
-            google_user_id: Some("google_123".to_string()),
             active: true,
-            timer_is_public: false,
-            timer_show_in_list: false,
             created_at: Utc::now(),
             updated_at: Utc::now(),
         }

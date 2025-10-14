@@ -256,14 +256,9 @@ mod tests {
         User {
             id: user_id,
             email: "test@example.com".to_string(),
-            password_hash: Some("hashed_password".to_string()),
             display_name: "Test User".to_string(),
             slug: "testuser".to_string(),
-            real_name: Some("Test User Real Name".to_string()),
-            google_user_id: Some("google_123".to_string()),
             active: true,
-            timer_is_public: false,
-            timer_show_in_list: false,
             created_at: Utc::now(),
             updated_at: Utc::now(),
         }
@@ -685,10 +680,9 @@ mod tests {
     async fn test_export_oauth_only_user() {
         // Test OAuth-only user (no password)
         // Verify proper handling of optional fields
-        
+
         let user_id = Uuid::new_v4();
-        let mut user = create_test_user_with_id(user_id);
-        user.password_hash = None; // OAuth-only user
+        let user = create_test_user_with_id(user_id);
         
         // Create mock repositories
         let mut user_repo = MockUserRepository::new();
@@ -874,8 +868,7 @@ mod tests {
         use crate::models::db::user_external_login::UserExternalLogin;
 
         let user_id = Uuid::new_v4();
-        let mut user = create_test_user_with_id(user_id);
-        user.password_hash = None; // OAuth-only user
+        let user = create_test_user_with_id(user_id);
 
         let mut user_repo = MockUserRepository::new();
         user_repo

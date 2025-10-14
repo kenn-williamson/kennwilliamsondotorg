@@ -22,16 +22,15 @@ impl PostgresUserRepository {
 #[async_trait]
 impl UserRepository for PostgresUserRepository {
     async fn create_user(&self, user_data: &CreateUserData) -> Result<User> {
-        // Create user with email/password
+        // Create user with basic info only (auth data in separate tables)
         let user = sqlx::query_as!(
             User,
             r#"
-            INSERT INTO users (email, password_hash, display_name, slug)
-            VALUES ($1, $2, $3, $4)
-            RETURNING id, email, password_hash, display_name, slug, active, real_name, google_user_id, timer_is_public, timer_show_in_list, created_at, updated_at
+            INSERT INTO users (email, display_name, slug)
+            VALUES ($1, $2, $3)
+            RETURNING id, email, display_name, slug, active, created_at, updated_at
             "#,
             user_data.email,
-            user_data.password_hash,
             user_data.display_name,
             user_data.slug
         )
@@ -60,16 +59,15 @@ impl UserRepository for PostgresUserRepository {
         // Begin transaction
         let mut tx = self.pool.begin().await?;
 
-        // 1. Create user in users table (without password_hash temporarily during migration)
+        // 1. Create user in users table (core identity only)
         let user = sqlx::query_as!(
             User,
             r#"
-            INSERT INTO users (email, password_hash, display_name, slug)
-            VALUES ($1, $2, $3, $4)
-            RETURNING id, email, password_hash, display_name, slug, active, real_name, google_user_id, timer_is_public, timer_show_in_list, created_at, updated_at
+            INSERT INTO users (email, display_name, slug)
+            VALUES ($1, $2, $3)
+            RETURNING id, email, display_name, slug, active, created_at, updated_at
             "#,
             user_data.email,
-            user_data.password_hash,
             user_data.display_name,
             user_data.slug
         )
@@ -131,19 +129,17 @@ impl UserRepository for PostgresUserRepository {
         // Begin transaction for atomic multi-table creation
         let mut tx = self.pool.begin().await?;
 
-        // 1. Create OAuth user in users table (no password)
+        // 1. Create OAuth user in users table (core identity only)
         let user = sqlx::query_as!(
             User,
             r#"
-            INSERT INTO users (email, display_name, slug, real_name, google_user_id)
-            VALUES ($1, $2, $3, $4, $5)
-            RETURNING id, email, password_hash, display_name, slug, active, real_name, google_user_id, timer_is_public, timer_show_in_list, created_at, updated_at
+            INSERT INTO users (email, display_name, slug)
+            VALUES ($1, $2, $3)
+            RETURNING id, email, display_name, slug, active, created_at, updated_at
             "#,
             user_data.email,
             user_data.display_name,
-            user_data.slug,
-            user_data.real_name,
-            user_data.google_user_id
+            user_data.slug
         )
         .fetch_one(&mut *tx)
         .await?;
@@ -216,7 +212,7 @@ impl UserRepository for PostgresUserRepository {
     async fn find_by_email(&self, email: &str) -> Result<Option<User>> {
         let user = sqlx::query_as!(
             User,
-            "SELECT id, email, password_hash, display_name, slug, active, real_name, google_user_id, timer_is_public, timer_show_in_list, created_at, updated_at FROM users WHERE email = $1",
+            "SELECT id, email, display_name, slug, active, created_at, updated_at FROM users WHERE email = $1",
             email
         )
         .fetch_optional(&self.pool)
@@ -226,9 +222,15 @@ impl UserRepository for PostgresUserRepository {
     }
 
     async fn find_by_google_user_id(&self, google_user_id: &str) -> Result<Option<User>> {
+        // Query through user_external_logins table
         let user = sqlx::query_as!(
             User,
-            "SELECT id, email, password_hash, display_name, slug, active, real_name, google_user_id, timer_is_public, timer_show_in_list, created_at, updated_at FROM users WHERE google_user_id = $1",
+            r#"
+            SELECT u.id, u.email, u.display_name, u.slug, u.active, u.created_at, u.updated_at
+            FROM users u
+            INNER JOIN user_external_logins uel ON u.id = uel.user_id
+            WHERE uel.provider = 'google' AND uel.provider_user_id = $1
+            "#,
             google_user_id
         )
         .fetch_optional(&self.pool)
@@ -240,7 +242,7 @@ impl UserRepository for PostgresUserRepository {
     async fn find_by_id(&self, id: Uuid) -> Result<Option<User>> {
         let user = sqlx::query_as!(
             User,
-            "SELECT id, email, password_hash, display_name, slug, active, real_name, google_user_id, timer_is_public, timer_show_in_list, created_at, updated_at FROM users WHERE id = $1",
+            "SELECT id, email, display_name, slug, active, created_at, updated_at FROM users WHERE id = $1",
             id
         )
         .fetch_optional(&self.pool)
@@ -257,7 +259,7 @@ impl UserRepository for PostgresUserRepository {
             UPDATE users
             SET display_name = $1, slug = $2, updated_at = NOW()
             WHERE id = $3
-            RETURNING id, email, password_hash, display_name, slug, active, real_name, google_user_id, timer_is_public, timer_show_in_list, created_at, updated_at
+            RETURNING id, email, display_name, slug, active, created_at, updated_at
             "#,
             updates.display_name,
             updates.slug,
@@ -278,21 +280,7 @@ impl UserRepository for PostgresUserRepository {
         // Begin transaction for atomic multi-table updates
         let mut tx = self.pool.begin().await?;
 
-        // 1. Update users table with real_name and google_user_id (for backward compatibility)
-        sqlx::query!(
-            r#"
-            UPDATE users
-            SET google_user_id = $1, real_name = $2, updated_at = NOW()
-            WHERE id = $3
-            "#,
-            google_user_id,
-            real_name.as_deref(),
-            user_id
-        )
-        .execute(&mut *tx)
-        .await?;
-
-        // 2. Insert or update external login record
+        // 1. Insert or update external login record
         sqlx::query!(
             r#"
             INSERT INTO user_external_logins (user_id, provider, provider_user_id)
@@ -306,7 +294,7 @@ impl UserRepository for PostgresUserRepository {
         .execute(&mut *tx)
         .await?;
 
-        // 3. Ensure user_profiles entry exists then update with real_name
+        // 2. Ensure user_profiles entry exists then update with real_name
         sqlx::query!(
             r#"
             INSERT INTO user_profiles (user_id, real_name)
@@ -320,7 +308,7 @@ impl UserRepository for PostgresUserRepository {
         .execute(&mut *tx)
         .await?;
 
-        // 3b. Ensure user_preferences entry exists
+        // 3. Ensure user_preferences entry exists
         sqlx::query!(
             r#"
             INSERT INTO user_preferences (user_id, timer_is_public, timer_show_in_list)
@@ -351,14 +339,16 @@ impl UserRepository for PostgresUserRepository {
     }
 
     async fn update_real_name(&self, user_id: Uuid, real_name: Option<String>) -> Result<()> {
+        // Update real_name in user_profiles table
         sqlx::query!(
             r#"
-            UPDATE users
-            SET real_name = $1, updated_at = NOW()
-            WHERE id = $2
+            INSERT INTO user_profiles (user_id, real_name)
+            VALUES ($1, $2)
+            ON CONFLICT (user_id)
+            DO UPDATE SET real_name = $2, updated_at = NOW()
             "#,
-            real_name.as_deref(),
-            user_id
+            user_id,
+            real_name.as_deref()
         )
         .execute(&self.pool)
         .await?;
@@ -377,11 +367,16 @@ impl UserRepository for PostgresUserRepository {
     }
 
     async fn update_password(&self, id: Uuid, password_hash: &str) -> Result<()> {
-        // Match exact query from UserManagementService::change_password
+        // Update password in user_credentials table
         sqlx::query!(
-            "UPDATE users SET password_hash = $1, updated_at = NOW() WHERE id = $2",
-            password_hash,
-            id
+            r#"
+            INSERT INTO user_credentials (user_id, password_hash)
+            VALUES ($1, $2)
+            ON CONFLICT (user_id)
+            DO UPDATE SET password_hash = $2, password_updated_at = NOW()
+            "#,
+            id,
+            password_hash
         )
         .execute(&self.pool)
         .await?;
@@ -501,24 +496,25 @@ impl UserRepository for PostgresUserRepository {
             ));
         }
 
-        let user = sqlx::query_as!(
-            User,
+        // Update preferences in user_preferences table
+        sqlx::query!(
             r#"
-            UPDATE users
-            SET timer_is_public = $1,
-                timer_show_in_list = $2,
-                updated_at = NOW()
-            WHERE id = $3
-            RETURNING id, email, password_hash, display_name, slug, active, real_name, google_user_id, timer_is_public, timer_show_in_list, created_at, updated_at
+            INSERT INTO user_preferences (user_id, timer_is_public, timer_show_in_list)
+            VALUES ($1, $2, $3)
+            ON CONFLICT (user_id)
+            DO UPDATE SET timer_is_public = $2, timer_show_in_list = $3, updated_at = NOW()
             "#,
+            user_id,
             is_public,
-            show_in_list,
-            user_id
+            show_in_list
         )
-        .fetch_one(&self.pool)
+        .execute(&self.pool)
         .await?;
 
-        Ok(user)
+        // Return the user
+        self.find_by_id(user_id)
+            .await?
+            .ok_or_else(|| anyhow::anyhow!("User not found"))
     }
 
     async fn get_users_with_public_timers(
@@ -538,8 +534,9 @@ impl UserRepository for PostgresUserRepository {
                 it.notes
             FROM users u
             INNER JOIN incident_timers it ON u.id = it.user_id
-            WHERE u.timer_is_public = true
-              AND u.timer_show_in_list = true
+            INNER JOIN user_preferences up ON u.id = up.user_id
+            WHERE up.timer_is_public = true
+              AND up.timer_show_in_list = true
             ORDER BY it.reset_timestamp DESC
             LIMIT $1 OFFSET $2
             "#,
@@ -555,7 +552,7 @@ impl UserRepository for PostgresUserRepository {
     async fn get_by_slug(&self, slug: &str) -> Result<User> {
         let user = sqlx::query_as!(
             User,
-            "SELECT id, email, password_hash, display_name, slug, active, real_name, google_user_id, timer_is_public, timer_show_in_list, created_at, updated_at FROM users WHERE slug = $1",
+            "SELECT id, email, display_name, slug, active, created_at, updated_at FROM users WHERE slug = $1",
             slug
         )
         .fetch_one(&self.pool)

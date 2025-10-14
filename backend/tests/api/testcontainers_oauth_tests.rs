@@ -1,22 +1,18 @@
 use sqlx::PgPool;
 use uuid::Uuid;
+use backend::test_utils::UserBuilder;
 
-/// Helper: Create a user with email/password (for testing account linking)
+/// Fixture helper: Create a user with email/password (for testing account linking)
+/// Uses UserBuilder pattern for resilient test fixtures
 async fn create_email_password_user(pool: &PgPool, email: &str, verified: bool) -> Uuid {
-    use backend::repositories::postgres::postgres_user_repository::PostgresUserRepository;
-    use backend::repositories::traits::user_repository::{CreateUserData, UserRepository};
-
-    let repo = PostgresUserRepository::new(pool.clone());
-
-    // Create user
-    let user_data = CreateUserData {
-        email: email.to_string(),
-        password_hash: "$2b$12$test_hash".to_string(), // Dummy hash
-        display_name: "Test User".to_string(),
-        slug: format!("test-{}", Uuid::new_v4()),
-    };
-
-    let user = repo.create_user(&user_data).await.unwrap();
+    let user = UserBuilder::new()
+        .with_email(email)
+        .with_slug(&format!("test-{}", Uuid::new_v4()))
+        .with_display_name("Test User")
+        .with_password("$2b$12$test_hash")
+        .persist(pool)
+        .await
+        .expect("Failed to create email/password user");
 
     // Assign email-verified role if requested
     if verified {
@@ -26,24 +22,18 @@ async fn create_email_password_user(pool: &PgPool, email: &str, verified: bool) 
     user.id
 }
 
-/// Helper: Create OAuth user directly in DB (simulates existing Google user)
+/// Fixture helper: Create OAuth user directly in DB (simulates existing Google user)
+/// Uses UserBuilder pattern for resilient test fixtures
 async fn create_oauth_user(pool: &PgPool, google_user_id: &str, email: &str) -> Uuid {
-    use backend::repositories::postgres::postgres_user_repository::PostgresUserRepository;
-    use backend::repositories::traits::user_repository::{
-        CreateOAuthUserData, UserRepository,
-    };
+    let user = UserBuilder::new()
+        .oauth(google_user_id, "Real Name")
+        .with_email(email)
+        .with_slug(&format!("oauth-{}", Uuid::new_v4()))
+        .with_display_name("OAuth User")
+        .persist(pool)
+        .await
+        .expect("Failed to create OAuth user");
 
-    let repo = PostgresUserRepository::new(pool.clone());
-
-    let user_data = CreateOAuthUserData {
-        email: email.to_string(),
-        display_name: "OAuth User".to_string(),
-        slug: format!("oauth-{}", Uuid::new_v4()),
-        real_name: Some("Real Name".to_string()),
-        google_user_id: Some(google_user_id.to_string()),
-    };
-
-    let user = repo.create_oauth_user(&user_data).await.unwrap();
     user.id
 }
 

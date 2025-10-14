@@ -65,12 +65,12 @@
               </svg>
               <div class="ml-3">
                 <p class="text-sm font-medium text-gray-900">Google</p>
-                <p v-if="user.google_user_id && user.real_name" class="text-sm text-gray-500">{{ user.real_name }}</p>
-                <p v-else-if="user.google_user_id" class="text-sm text-gray-500">Connected</p>
+                <p v-if="hasGoogleAccount && user.profile?.real_name" class="text-sm text-gray-500">{{ user.profile.real_name }}</p>
+                <p v-else-if="hasGoogleAccount" class="text-sm text-gray-500">Connected</p>
                 <p v-else class="text-sm text-gray-500">Not connected</p>
               </div>
             </div>
-            <div v-if="user.google_user_id">
+            <div v-if="hasGoogleAccount">
               <span class="inline-flex items-center px-3 py-1 rounded-full text-xs font-medium bg-green-100 text-green-800">
                 <svg class="w-4 h-4 mr-1" fill="currentColor" viewBox="0 0 20 20">
                   <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd" />
@@ -178,6 +178,11 @@ const handleResendVerification = async () => {
     console.error('Failed to resend verification email:', error)
   }
 }
+
+// Check if user has Google account linked
+const hasGoogleAccount = computed(() => {
+  return user.value?.external_accounts?.some(account => account.provider === 'google') ?? false
+})
 
 // Event handlers removed - components handle success via action composables
 </script>

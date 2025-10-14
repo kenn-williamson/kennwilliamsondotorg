@@ -1,20 +1,20 @@
 use backend::repositories::postgres::postgres_user_profile_repository::PostgresUserProfileRepository;
-use backend::repositories::postgres::postgres_user_repository::PostgresUserRepository;
 use backend::repositories::traits::user_profile_repository::{
     UpdateProfile, UserProfileRepository,
 };
-use backend::repositories::traits::user_repository::{CreateUserData, UserRepository};
+use backend::test_utils::UserBuilder;
 use uuid::Uuid;
 
+// Fixture helper: Create a user for testing profile repository
+// Uses UserBuilder pattern for resilient test fixtures
 async fn create_test_user(pool: &sqlx::PgPool) -> backend::models::db::User {
-    let repo = PostgresUserRepository::new(pool.clone());
-    let user_data = CreateUserData {
-        email: format!("test-{}@example.com", Uuid::new_v4()),
-        password_hash: "temp_hash".to_string(),
-        display_name: "Test User".to_string(),
-        slug: format!("test-{}", Uuid::new_v4()),
-    };
-    repo.create_user(&user_data).await.unwrap()
+    UserBuilder::new()
+        .with_email(&format!("test-{}@example.com", Uuid::new_v4()))
+        .with_slug(&format!("test-{}", Uuid::new_v4()))
+        .with_password("temp_hash")
+        .persist(pool)
+        .await
+        .expect("Failed to create test user")
 }
 
 #[tokio::test]

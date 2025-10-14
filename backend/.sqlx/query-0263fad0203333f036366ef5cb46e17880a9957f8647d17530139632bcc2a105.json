@@ -1,6 +1,6 @@
 {
   "db_name": "PostgreSQL",
-  "query": "\n            SELECT\n                u.id,\n                u.display_name,\n                u.slug,\n                u.created_at,\n                it.reset_timestamp,\n                it.notes\n            FROM users u\n            INNER JOIN incident_timers it ON u.id = it.user_id\n            WHERE u.timer_is_public = true\n              AND u.timer_show_in_list = true\n            ORDER BY it.reset_timestamp DESC\n            LIMIT $1 OFFSET $2\n            ",
+  "query": "\n            SELECT\n                u.id,\n                u.display_name,\n                u.slug,\n                u.created_at,\n                it.reset_timestamp,\n                it.notes\n            FROM users u\n            INNER JOIN incident_timers it ON u.id = it.user_id\n            INNER JOIN user_preferences up ON u.id = up.user_id\n            WHERE up.timer_is_public = true\n              AND up.timer_show_in_list = true\n            ORDER BY it.reset_timestamp DESC\n            LIMIT $1 OFFSET $2\n            ",
   "describe": {
     "columns": [
       {
@@ -49,5 +49,5 @@
       true
     ]
   },
-  "hash": "6f3a5f36098209678d981d3b55ef1c12f37bf75d782d6800b6201bca987c2637"
+  "hash": "0263fad0203333f036366ef5cb46e17880a9957f8647d17530139632bcc2a105"
 }

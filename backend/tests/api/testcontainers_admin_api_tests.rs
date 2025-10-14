@@ -187,7 +187,7 @@ async fn test_deactivate_user_success() {
     let token = crate::fixtures::create_test_jwt_token(&admin_user).await.unwrap();
     
     // Create a regular user to deactivate
-    let regular_user = crate::fixtures::UserBuilder::new()
+    let regular_user = backend::test_utils::UserBuilder::new()
         .with_email(&crate::fixtures::unique_test_email())
         .with_display_name("Regular User")
         .with_slug(&crate::fixtures::unique_test_slug())
@@ -232,7 +232,7 @@ async fn test_activate_user_success() {
     let token = crate::fixtures::create_test_jwt_token(&admin_user).await.unwrap();
     
     // Create a regular user to activate
-    let regular_user = crate::fixtures::UserBuilder::new()
+    let regular_user = backend::test_utils::UserBuilder::new()
         .with_email(&crate::fixtures::unique_test_email())
         .with_display_name("Regular User")
         .with_slug(&crate::fixtures::unique_test_slug())
@@ -277,7 +277,7 @@ async fn test_reset_user_password_success() {
     let token = crate::fixtures::create_test_jwt_token(&admin_user).await.unwrap();
     
     // Create a regular user to reset password
-    let regular_user = crate::fixtures::UserBuilder::new()
+    let regular_user = backend::test_utils::UserBuilder::new()
         .with_email(&crate::fixtures::unique_test_email())
         .with_display_name("Regular User")
         .with_slug(&crate::fixtures::unique_test_slug())
@@ -322,7 +322,7 @@ async fn test_promote_user_to_admin_success() {
     let token = crate::fixtures::create_test_jwt_token(&admin_user).await.unwrap();
     
     // Create a regular user to promote
-    let regular_user = crate::fixtures::UserBuilder::new()
+    let regular_user = backend::test_utils::UserBuilder::new()
         .with_email(&crate::fixtures::unique_test_email())
         .with_display_name("Regular User")
         .with_slug(&crate::fixtures::unique_test_slug())

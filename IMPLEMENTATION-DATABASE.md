@@ -31,19 +31,36 @@ migrations/
 ├── 20250914134654_add_refresh_tokens_and_user_active.up.sql # Refresh tokens + user.active
 ├── 20250914134703_add_phrases_system.up.sql      # Phrases system with initial data
 ├── 20250927212836_add_search_and_performance_optimization.up.sql # Full-text search + trigram + indexes
-└── 20251003192001_add_auth_and_compliance_features.up.sql # OAuth, email verification, password reset, email suppression
+├── 20251003192001_add_auth_and_compliance_features.up.sql # OAuth, email verification, password reset, email suppression
+├── 20251011000000_create_normalized_auth_tables.up.sql # Normalized auth schema (Phase 1)
+└── 20251012222532_drop_old_auth_columns.up.sql   # Data backfill and old column removal (Phase 9)
 ```
 
 ## Schema Design
 
 ### Core Tables
-- **users**: User accounts with authentication data (OAuth support, timer visibility settings)
-- **roles** & **user_roles**: Role-based access control (user, email-verified, trusted-contact, admin)
-- **incident_timers**: User timer entries
-- **refresh_tokens**: Secure token storage with expiration
+
+#### User Management (Normalized Multi-Table Architecture)
+- **users**: Core user identity (id, email, display_name, slug, active status)
+- **user_credentials**: Password authentication (password_hash, password_updated_at)
+- **user_external_logins**: OAuth provider linkage (provider, provider_user_id, linked_at)
+- **user_profiles**: User profile data (real_name, bio, avatar_url, etc.)
+- **user_preferences**: User settings (timer_is_public, timer_show_in_list, email preferences)
+
+**Schema Refactor**: Completed January 2025 (Phases 0-9). Previously monolithic `users` table split into normalized structure for better maintainability, multi-provider OAuth support, and GDPR/CCPA compliance.
+
+#### Access Control
+- **roles**: System role definitions (user, email-verified, trusted-contact, admin)
+- **user_roles**: User-to-role mapping with role-based access control (RBAC)
+
+#### Authentication & Security
+- **refresh_tokens**: Secure token storage with expiration and rotation
 - **verification_tokens**: Email verification tokens with expiration
 - **password_reset_tokens**: Password reset tokens with expiration and usage tracking
 - **email_suppressions**: Email suppression list for AWS SES compliance (bounces, complaints, unsubscribes)
+
+#### Features
+- **incident_timers**: User timer entries with public sharing
 - **phrases**: Motivational phrase system with full-text search
 - **user_excluded_phrases**: Phrase filtering preferences
 - **phrase_suggestions**: User submission workflow

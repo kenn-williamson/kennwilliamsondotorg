@@ -134,14 +134,9 @@ mod tests {
         User {
             id,
             email: "test@example.com".to_string(),
-            password_hash: Some("hashed".to_string()),
             display_name: "Test User".to_string(),
             slug: "test-user".to_string(),
-            real_name: None,
-            google_user_id: None,
             active: true,
-            timer_is_public: false,
-            timer_show_in_list: false,
             created_at: Utc::now(),
             updated_at: Utc::now(),
         }

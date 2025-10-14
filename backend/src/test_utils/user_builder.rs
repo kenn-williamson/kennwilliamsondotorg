@@ -1,4 +1,4 @@
-use backend::models::db::user::User;
+use crate::models::db::user::{User, UserWithRoles};
 use chrono::{DateTime, Utc};
 use uuid::Uuid;
 use sqlx::PgPool;
@@ -8,26 +8,26 @@ use anyhow::Result;
 ///
 /// # Examples
 ///
-/// ```rust
+/// ```rust,ignore
 /// // Minimal user with defaults
-/// let user = UserBuilder::new().persist(pool);
+/// let user = UserBuilder::new().persist(pool).await?;
 ///
 /// // Verified user with custom email
 /// let user = UserBuilder::new()
 ///     .verified()
 ///     .with_email("test@example.com")
-///     .persist(pool);
+///     .persist(pool).await?;
 ///
 /// // OAuth user
 /// let user = UserBuilder::new()
 ///     .oauth("google_id_123", "Real Name")
 ///     .with_email("oauth@example.com")
-///     .persist(pool);
+///     .persist(pool).await?;
 ///
 /// // User with public timer
 /// let user = UserBuilder::new()
 ///     .with_public_timer(true, true)
-///     .persist(pool);
+///     .persist(pool).await?;
 /// ```
 #[derive(Clone)]
 pub struct UserBuilder {
@@ -43,6 +43,7 @@ pub struct UserBuilder {
     timer_show_in_list: Option<bool>,
     created_at: Option<DateTime<Utc>>,
     updated_at: Option<DateTime<Utc>>,
+    roles: Option<Vec<String>>,
 }
 
 impl UserBuilder {
@@ -61,10 +62,12 @@ impl UserBuilder {
             timer_show_in_list: None,
             created_at: None,
             updated_at: None,
+            roles: None,
         }
     }
 
     /// Build the User with defaults for any unset fields (in-memory only, no database)
+    /// Note: This creates only the core User model without credentials/profile/preferences
     pub fn build(self) -> User {
         let now = Utc::now();
         let id = self.id.unwrap_or_else(Uuid::new_v4);
@@ -73,16 +76,30 @@ impl UserBuilder {
         User {
             id,
             email: self.email.unwrap_or_else(|| format!("test-{}@example.com", id)),
-            password_hash: self.password_hash.unwrap_or(Some("hashed_password".to_string())),
             display_name: self.display_name.unwrap_or("Test User".to_string()),
             slug,
             active: self.active.unwrap_or(true),
-            real_name: self.real_name.unwrap_or(None),
-            google_user_id: self.google_user_id.unwrap_or(None),
-            timer_is_public: self.timer_is_public.unwrap_or(false),
-            timer_show_in_list: self.timer_show_in_list.unwrap_or(false),
             created_at: self.created_at.unwrap_or(now),
             updated_at: self.updated_at.unwrap_or(now),
+        }
+    }
+
+    /// Build UserWithRoles with defaults for any unset fields (in-memory only)
+    /// This is useful for testing admin operations that need role information
+    pub fn build_with_roles(self) -> UserWithRoles {
+        let now = Utc::now();
+        let id = self.id.unwrap_or_else(Uuid::new_v4);
+        let slug = self.slug.unwrap_or_else(|| format!("test-user-{}", id));
+
+        UserWithRoles {
+            id,
+            email: self.email.unwrap_or_else(|| format!("test-{}@example.com", id)),
+            display_name: self.display_name.unwrap_or("Test User".to_string()),
+            slug,
+            active: self.active.unwrap_or(true),
+            created_at: self.created_at.unwrap_or(now),
+            updated_at: self.updated_at.unwrap_or(now),
+            roles: self.roles,
         }
     }
 
@@ -255,6 +272,23 @@ impl UserBuilder {
         self
     }
 
+    /// Set roles (for building UserWithRoles)
+    pub fn with_roles(mut self, roles: Vec<String>) -> Self {
+        self.roles = Some(roles);
+        self
+    }
+
+    /// Add a single role (for building UserWithRoles)
+    pub fn with_role(mut self, role: impl Into<String>) -> Self {
+        let role = role.into();
+        if let Some(ref mut roles) = self.roles {
+            roles.push(role);
+        } else {
+            self.roles = Some(vec![role]);
+        }
+        self
+    }
+
     // ============================================================================
     // CONVENIENCE PRESETS
     // ============================================================================
@@ -327,12 +361,9 @@ mod tests {
         let user = UserBuilder::new().build();
 
         assert!(!user.email.is_empty());
-        assert!(user.password_hash.is_some());
         assert_eq!(user.display_name, "Test User");
         assert!(!user.slug.is_empty());
         assert!(user.active);
-        assert!(!user.timer_is_public);
-        assert!(!user.timer_show_in_list);
     }
 
     #[test]
@@ -352,9 +383,7 @@ mod tests {
             .build();
 
         assert_eq!(user.email, "oauth@example.com");
-        assert!(user.password_hash.is_none());
-        assert_eq!(user.google_user_id, Some("google_123".to_string()));
-        assert_eq!(user.real_name, Some("John Doe".to_string()));
+        // Note: OAuth metadata is stored in separate tables, not in User model
     }
 
     #[test]
@@ -374,8 +403,8 @@ mod tests {
             .with_public_timer(true, true)
             .build();
 
-        assert!(user.timer_is_public);
-        assert!(user.timer_show_in_list);
+        // Note: Timer preferences are stored in user_preferences table, not in User model
+        assert!(!user.email.is_empty());
     }
 
     #[test]
@@ -403,7 +432,8 @@ mod tests {
             .without_password()
             .build();
 
-        assert!(user.password_hash.is_none());
+        // Note: Password is stored in user_credentials table, not in User model
+        assert!(!user.email.is_empty());
     }
 
     #[test]
@@ -419,7 +449,7 @@ mod tests {
         assert_eq!(user.email, "chain@example.com");
         assert_eq!(user.display_name, "Chained User");
         assert_eq!(user.slug, "chained-user");
-        assert_eq!(user.real_name, Some("Real Name".to_string()));
+        // Note: real_name is stored in user_profile table, not in User model
         assert!(user.active);
     }
 }

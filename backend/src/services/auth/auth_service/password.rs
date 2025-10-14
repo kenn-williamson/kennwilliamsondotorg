@@ -12,16 +12,21 @@ impl AuthService {
         user_id: Uuid,
         request: PasswordChangeRequest,
     ) -> Result<()> {
-        // Get current user
+        // Get current user to verify they exist
         let user = self.user_repository.find_by_id(user_id).await?;
-        let user = match user {
-            Some(user) => user,
-            None => return Err(anyhow::anyhow!("User not found")),
-        };
+        if user.is_none() {
+            return Err(anyhow::anyhow!("User not found"));
+        }
 
-        // Verify current password (OAuth-only users cannot change password)
-        let password_hash = match &user.password_hash {
-            Some(hash) => hash,
+        // Get current password from credentials (OAuth-only users cannot change password)
+        let credentials_repo = self
+            .credentials_repository
+            .as_ref()
+            .ok_or_else(|| anyhow::anyhow!("Credentials repository not configured"))?;
+
+        let credential = credentials_repo.find_by_user_id(user_id).await?;
+        let password_hash = match credential {
+            Some(cred) => cred.password_hash,
             None => {
                 return Err(anyhow::anyhow!(
                     "Cannot change password for OAuth-only accounts"
@@ -29,16 +34,16 @@ impl AuthService {
             }
         };
 
-        if !verify(&request.current_password, password_hash)? {
+        if !verify(&request.current_password, &password_hash)? {
             return Err(anyhow::anyhow!("Current password is incorrect"));
         }
 
         // Hash new password
         let new_password_hash = hash(&request.new_password, DEFAULT_COST)?;
 
-        // Update password
-        self.user_repository
-            .update_password(user_id, &new_password_hash)
+        // Update password in credentials table
+        credentials_repo
+            .update_password(user_id, new_password_hash)
             .await?;
 
         Ok(())
@@ -49,6 +54,7 @@ impl AuthService {
 mod tests {
     use super::*;
     use crate::repositories::mocks::mock_refresh_token_repository::MockRefreshTokenRepository;
+    use crate::repositories::mocks::mock_user_credentials_repository::MockUserCredentialsRepository;
     use crate::repositories::mocks::mock_user_repository::MockUserRepository;
     use anyhow::Result;
     use bcrypt::{hash, DEFAULT_COST};
@@ -60,39 +66,55 @@ mod tests {
         crate::models::db::User {
             id: Uuid::new_v4(),
             email: "test@example.com".to_string(),
-            password_hash: Some(hash("current_password", DEFAULT_COST).unwrap()),
             display_name: "Test User".to_string(),
             slug: "test-user".to_string(),
             active: true,
-            real_name: None,
-            google_user_id: None,
-            timer_is_public: false,
-            timer_show_in_list: false,
             created_at: Utc::now(),
             updated_at: Utc::now(),
+        }
+    }
+
+    fn create_test_credential() -> crate::models::db::UserCredentials {
+        crate::models::db::UserCredentials {
+            user_id: Uuid::new_v4(),
+            password_hash: hash("current_password", DEFAULT_COST).unwrap(),
+            password_updated_at: Utc::now(),
+            created_at: Utc::now(),
         }
     }
 
     #[tokio::test]
     async fn change_password_successful() -> Result<()> {
         let mut user_repo = MockUserRepository::new();
+        let mut creds_repo = MockUserCredentialsRepository::new();
         let user = create_test_user();
         let user_id = user.id;
 
-        // Setup mock expectations
         user_repo
             .expect_find_by_id()
             .times(1)
             .with(eq(user_id))
             .returning(move |_| Ok(Some(user.clone())));
 
-        user_repo
+        creds_repo
+            .expect_find_by_user_id()
+            .times(1)
+            .with(eq(user_id))
+            .returning(move |_| {
+                Ok(Some(crate::models::db::UserCredentials {
+                    user_id,
+                    password_hash: hash("current_password", DEFAULT_COST).unwrap(),
+                    password_updated_at: Utc::now(),
+                    created_at: Utc::now(),
+                }))
+            });
+
+        creds_repo
             .expect_update_password()
             .times(1)
             .with(
                 eq(user_id),
-                mockall::predicate::function(|hash: &str| {
-                    // Verify that the new password hash is different from the old one
+                mockall::predicate::function(|hash: &String| {
                     let current_hash = bcrypt::hash("current_password", DEFAULT_COST).unwrap();
                     hash != &current_hash
                 }),
@@ -104,11 +126,13 @@ mod tests {
             new_password: "new_password123".to_string(),
         };
 
-        let auth_service = AuthService::new(
-            Box::new(user_repo),
-            Box::new(MockRefreshTokenRepository::new()),
-            "test-secret".to_string(),
-        );
+        let auth_service = AuthService::builder()
+            .user_repository(Box::new(user_repo))
+            .credentials_repository(Box::new(creds_repo))
+            .refresh_token_repository(Box::new(MockRefreshTokenRepository::new()))
+            .jwt_secret("test-secret".to_string())
+            .build();
+
         let result = auth_service.change_password(user_id, request).await;
         assert!(result.is_ok());
 
@@ -147,26 +171,41 @@ mod tests {
     #[tokio::test]
     async fn change_password_fails_with_incorrect_current_password() -> Result<()> {
         let mut user_repo = MockUserRepository::new();
+        let mut creds_repo = MockUserCredentialsRepository::new();
         let user = create_test_user();
         let user_id = user.id;
 
-        // Setup mock expectations
         user_repo
             .expect_find_by_id()
             .times(1)
             .with(eq(user_id))
             .returning(move |_| Ok(Some(user.clone())));
 
+        creds_repo
+            .expect_find_by_user_id()
+            .times(1)
+            .with(eq(user_id))
+            .returning(move |_| {
+                Ok(Some(crate::models::db::UserCredentials {
+                    user_id,
+                    password_hash: hash("current_password", DEFAULT_COST).unwrap(),
+                    password_updated_at: Utc::now(),
+                    created_at: Utc::now(),
+                }))
+            });
+
         let request = PasswordChangeRequest {
             current_password: "wrong_password".to_string(),
             new_password: "new_password123".to_string(),
         };
 
-        let auth_service = AuthService::new(
-            Box::new(user_repo),
-            Box::new(MockRefreshTokenRepository::new()),
-            "test-secret".to_string(),
-        );
+        let auth_service = AuthService::builder()
+            .user_repository(Box::new(user_repo))
+            .credentials_repository(Box::new(creds_repo))
+            .refresh_token_repository(Box::new(MockRefreshTokenRepository::new()))
+            .jwt_secret("test-secret".to_string())
+            .build();
+
         let result = auth_service.change_password(user_id, request).await;
         assert!(result.is_err());
         assert!(result
@@ -209,17 +248,30 @@ mod tests {
     #[tokio::test]
     async fn change_password_handles_database_error_during_password_update() -> Result<()> {
         let mut user_repo = MockUserRepository::new();
+        let mut creds_repo = MockUserCredentialsRepository::new();
         let user = create_test_user();
         let user_id = user.id;
 
-        // Setup mock expectations
         user_repo
             .expect_find_by_id()
             .times(1)
             .with(eq(user_id))
             .returning(move |_| Ok(Some(user.clone())));
 
-        user_repo
+        creds_repo
+            .expect_find_by_user_id()
+            .times(1)
+            .with(eq(user_id))
+            .returning(move |_| {
+                Ok(Some(crate::models::db::UserCredentials {
+                    user_id,
+                    password_hash: hash("current_password", DEFAULT_COST).unwrap(),
+                    password_updated_at: Utc::now(),
+                    created_at: Utc::now(),
+                }))
+            });
+
+        creds_repo
             .expect_update_password()
             .times(1)
             .returning(|_, _| Err(anyhow::anyhow!("Database error")));
@@ -229,11 +281,13 @@ mod tests {
             new_password: "new_password123".to_string(),
         };
 
-        let auth_service = AuthService::new(
-            Box::new(user_repo),
-            Box::new(MockRefreshTokenRepository::new()),
-            "test-secret".to_string(),
-        );
+        let auth_service = AuthService::builder()
+            .user_repository(Box::new(user_repo))
+            .credentials_repository(Box::new(creds_repo))
+            .refresh_token_repository(Box::new(MockRefreshTokenRepository::new()))
+            .jwt_secret("test-secret".to_string())
+            .build();
+
         let result = auth_service.change_password(user_id, request).await;
         assert!(result.is_err());
         assert!(result.unwrap_err().to_string().contains("Database error"));
@@ -252,17 +306,30 @@ mod tests {
 
         for (current_pass, new_pass) in test_cases {
             let mut user_repo = MockUserRepository::new();
+            let mut creds_repo = MockUserCredentialsRepository::new();
             let user = create_test_user();
             let user_id = user.id;
 
-            // Setup mock expectations
             user_repo
                 .expect_find_by_id()
                 .times(1)
                 .with(eq(user_id))
                 .returning(move |_| Ok(Some(user.clone())));
 
-            user_repo
+            creds_repo
+                .expect_find_by_user_id()
+                .times(1)
+                .with(eq(user_id))
+                .returning(move |_| {
+                    Ok(Some(crate::models::db::UserCredentials {
+                        user_id,
+                        password_hash: hash(current_pass, DEFAULT_COST).unwrap(),
+                        password_updated_at: Utc::now(),
+                        created_at: Utc::now(),
+                    }))
+                });
+
+            creds_repo
                 .expect_update_password()
                 .times(1)
                 .returning(|_, _| Ok(()));
@@ -272,11 +339,13 @@ mod tests {
                 new_password: new_pass.to_string(),
             };
 
-            let auth_service = AuthService::new(
-                Box::new(user_repo),
-                Box::new(MockRefreshTokenRepository::new()),
-                "test-secret".to_string(),
-            );
+            let auth_service = AuthService::builder()
+                .user_repository(Box::new(user_repo))
+                .credentials_repository(Box::new(creds_repo))
+                .refresh_token_repository(Box::new(MockRefreshTokenRepository::new()))
+                .jwt_secret("test-secret".to_string())
+                .build();
+
             let result = auth_service.change_password(user_id, request).await;
             assert!(
                 result.is_ok(),
@@ -289,48 +358,4 @@ mod tests {
         Ok(())
     }
 
-    #[tokio::test]
-    async fn change_password_verifies_password_hash_difference() -> Result<()> {
-        let mut user_repo = MockUserRepository::new();
-        let user = create_test_user();
-        let user_id = user.id;
-        let old_hash = user.password_hash.clone();
-
-        // Setup mock expectations
-        user_repo
-            .expect_find_by_id()
-            .times(1)
-            .with(eq(user_id))
-            .returning(move |_| Ok(Some(user.clone())));
-
-        user_repo
-            .expect_update_password()
-            .times(1)
-            .with(
-                eq(user_id),
-                mockall::predicate::function(move |hash: &str| {
-                    // Verify that the new password hash is different from the old one
-                    match &old_hash {
-                        Some(old) => hash != old,
-                        None => true, // OAuth users have no password
-                    }
-                }),
-            )
-            .returning(|_, _| Ok(()));
-
-        let request = PasswordChangeRequest {
-            current_password: "current_password".to_string(),
-            new_password: "completely_different_password".to_string(),
-        };
-
-        let auth_service = AuthService::new(
-            Box::new(user_repo),
-            Box::new(MockRefreshTokenRepository::new()),
-            "test-secret".to_string(),
-        );
-        let result = auth_service.change_password(user_id, request).await;
-        assert!(result.is_ok());
-
-        Ok(())
-    }
 }

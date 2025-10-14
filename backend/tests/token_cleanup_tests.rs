@@ -16,7 +16,7 @@ async fn test_cleanup_expired_refresh_tokens() {
     let pool = &test_container.pool;
 
     // Create a test user
-    let user = fixtures::UserBuilder::new()
+    let user = backend::test_utils::UserBuilder::new()
         .with_email(&fixtures::unique_test_email())
         .with_display_name("Cleanup Test User")
         .with_slug(&fixtures::unique_test_slug())
@@ -75,7 +75,7 @@ async fn test_cleanup_expired_verification_tokens() {
     let pool = &test_container.pool;
 
     // Create a test user
-    let user = fixtures::UserBuilder::new()
+    let user = backend::test_utils::UserBuilder::new()
         .with_email(&fixtures::unique_test_email())
         .with_display_name("Verification Cleanup Test User")
         .with_slug(&fixtures::unique_test_slug())
@@ -147,7 +147,7 @@ async fn test_cleanup_both_token_types() {
     let pool = &test_container.pool;
 
     // Create a test user
-    let user = fixtures::UserBuilder::new()
+    let user = backend::test_utils::UserBuilder::new()
         .with_email(&fixtures::unique_test_email())
         .with_display_name("Both Tokens Cleanup Test User")
         .with_slug(&fixtures::unique_test_slug())
@@ -253,7 +253,7 @@ async fn test_cleanup_no_expired_tokens() {
     let pool = &test_container.pool;
 
     // Create a test user
-    let user = fixtures::UserBuilder::new()
+    let user = backend::test_utils::UserBuilder::new()
         .with_email(&fixtures::unique_test_email())
         .with_display_name("No Expired Tokens Test User")
         .with_slug(&fixtures::unique_test_slug())

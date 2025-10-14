@@ -18,9 +18,15 @@ pub use password_reset_token_repository::PasswordResetTokenRepository;
 pub use phrase_repository::PhraseRepository;
 pub use pkce_storage::PkceStorage;
 pub use refresh_token_repository::RefreshTokenRepository;
-pub use user_credentials_repository::UserCredentialsRepository;
-pub use user_external_login_repository::UserExternalLoginRepository;
-pub use user_preferences_repository::UserPreferencesRepository;
-pub use user_profile_repository::UserProfileRepository;
 pub use user_repository::UserRepository;
 pub use verification_token_repository::VerificationTokenRepository;
+
+// Re-export new trait definitions for use in service layer
+#[allow(unused_imports)]
+pub use user_credentials_repository::UserCredentialsRepository;
+#[allow(unused_imports)]
+pub use user_external_login_repository::UserExternalLoginRepository;
+#[allow(unused_imports)]
+pub use user_preferences_repository::UserPreferencesRepository;
+#[allow(unused_imports)]
+pub use user_profile_repository::UserProfileRepository;

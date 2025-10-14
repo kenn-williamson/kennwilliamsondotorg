@@ -220,14 +220,8 @@ async fn test_deleted_user_cannot_login() {
     // Given: A user with password
     let user = ctx.create_verified_user("test@example.com", "testuser").await;
     let user_id = user.id;
-    
-    // Set a password for the user
-    sqlx::query("UPDATE users SET password_hash = $1 WHERE id = $2")
-        .bind("$2b$12$test_hash_for_login")
-        .bind(user_id)
-        .execute(&ctx.pool)
-        .await
-        .unwrap();
+
+    // User created by create_verified_user already has credentials via UserBuilder
     
     // When: User deletes their account
     let resp = ctx.server
@@ -327,7 +321,7 @@ async fn test_account_deletion_works_with_no_phrases() {
 /// Create test JWT token for a user
 fn create_test_jwt(_ctx: &TestContext, user_id: Uuid) -> String {
     use backend::services::auth::jwt::JwtService;
-    use fixtures::UserBuilder;
+    use backend::test_utils::UserBuilder;
 
     let jwt_service = JwtService::new("test-jwt-secret-for-api-tests".to_string());
     let user = UserBuilder::new()
@@ -469,8 +463,8 @@ async fn ensure_system_user_exists(ctx: &TestContext) {
     if !exists {
         // Create system user
         sqlx::query(
-            "INSERT INTO users (email, password_hash, display_name, slug, active) 
-             VALUES ('system@kennwilliamson.org', '$2b$12$system.hash.placeholder', 'System', 'system', true)"
+            "INSERT INTO users (email, display_name, slug, active)
+             VALUES ('system@kennwilliamson.org', 'System', 'system', true)"
         )
         .execute(&ctx.pool)
         .await

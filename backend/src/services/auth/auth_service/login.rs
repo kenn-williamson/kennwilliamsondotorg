@@ -2,7 +2,7 @@ use anyhow::Result;
 use bcrypt::verify;
 
 use super::AuthService;
-use crate::models::api::{AuthResponse, LoginRequest, UserResponse};
+use crate::models::api::{AuthResponse, LoginRequest};
 use crate::models::db::refresh_token::CreateRefreshToken;
 use crate::repositories::traits::refresh_token_repository::RefreshTokenRepository;
 
@@ -20,20 +20,14 @@ impl AuthService {
             None => return Ok(None), // User not found
         };
 
-        // NEW: Check credentials table for password
-        let password_hash = if let Some(ref creds_repo) = self.credentials_repository {
-            // Query credentials table
-            let credentials = creds_repo.find_by_user_id(user.id).await?;
-            match credentials {
-                Some(creds) => creds.password_hash,
-                None => return Ok(None), // OAuth-only user, no password credentials
-            }
-        } else {
-            // Fallback to legacy password_hash in users table (for backward compatibility)
-            match &user.password_hash {
-                Some(hash) => hash.clone(),
-                None => return Ok(None), // OAuth-only user, cannot login with password
-            }
+        // Check credentials table for password
+        let creds_repo = self.credentials_repository.as_ref()
+            .ok_or_else(|| anyhow::anyhow!("Credentials repository not configured"))?;
+
+        let credentials = creds_repo.find_by_user_id(user.id).await?;
+        let password_hash = match credentials {
+            Some(creds) => creds.password_hash,
+            None => return Ok(None), // OAuth-only user, no password credentials
         };
 
         if !verify(&data.password, &password_hash)? {
@@ -48,10 +42,13 @@ impl AuthService {
         let refresh_token =
             create_refresh_token(user.id, device_info, &*self.refresh_token_repository).await?;
 
+        // Build fully populated user response
+        let user_response = self.build_user_response_with_details(user, roles).await?;
+
         Ok(Some(AuthResponse {
             token,
             refresh_token,
-            user: UserResponse::from_user_with_roles(user, roles),
+            user: user_response,
         }))
     }
 }
@@ -119,14 +116,9 @@ mod tests {
         crate::models::db::User {
             id: Uuid::new_v4(),
             email: "test@example.com".to_string(),
-            password_hash: Some(hash("password123", DEFAULT_COST).unwrap()),
             display_name: "Test User".to_string(),
             slug: "test-user".to_string(),
             active: true,
-            real_name: None,
-            google_user_id: None,
-            timer_is_public: false,
-            timer_show_in_list: false,
             created_at: Utc::now(),
             updated_at: Utc::now(),
         }
@@ -136,14 +128,9 @@ mod tests {
         crate::models::db::User {
             id: user_id,
             email: "oauth@example.com".to_string(),
-            password_hash: None, // OAuth-only user
             display_name: "OAuth User".to_string(),
             slug: "oauth-user".to_string(),
             active: true,
-            real_name: None,
-            google_user_id: Some("google123".to_string()),
-            timer_is_public: false,
-            timer_show_in_list: false,
             created_at: Utc::now(),
             updated_at: Utc::now(),
         }
@@ -174,15 +161,30 @@ mod tests {
     #[tokio::test]
     async fn login_successful_with_valid_credentials() -> Result<()> {
         let mut user_repo = MockUserRepository::new();
+        let mut creds_repo = MockUserCredentialsRepository::new();
         let mut refresh_repo = MockRefreshTokenRepository::new();
-        let _jwt_service = JwtService::new("test-secret".to_string());
 
-        // Setup mock expectations
+        let user_id = Uuid::new_v4();
+        let user = crate::models::db::User {
+            id: user_id,
+            email: "test@example.com".to_string(),
+            display_name: "Test User".to_string(),
+            slug: "test-user".to_string(),
+            active: true,
+            created_at: Utc::now(),
+            updated_at: Utc::now(),
+        };
+
         user_repo
             .expect_find_by_email()
             .times(1)
             .with(eq("test@example.com"))
-            .returning(|_| Ok(Some(create_test_user())));
+            .returning(move |_| Ok(Some(user.clone())));
+
+        creds_repo
+            .expect_find_by_user_id()
+            .times(1)
+            .returning(move |_| Ok(Some(create_test_credentials(user_id, "password123"))));
 
         user_repo
             .expect_get_user_roles()
@@ -199,11 +201,13 @@ mod tests {
             password: "password123".to_string(),
         };
 
-        let auth_service = AuthService::new(
-            Box::new(user_repo),
-            Box::new(refresh_repo),
-            "test-secret".to_string(),
-        );
+        let auth_service = AuthService::builder()
+            .user_repository(Box::new(user_repo))
+            .credentials_repository(Box::new(creds_repo))
+            .refresh_token_repository(Box::new(refresh_repo))
+            .jwt_secret("test-secret".to_string())
+            .build();
+
         let result = auth_service.login(request, None).await?;
 
         assert!(result.is_some());
@@ -216,29 +220,45 @@ mod tests {
     }
 
     #[tokio::test]
-    #[allow(unused_mut)]
     async fn login_fails_with_invalid_password() -> Result<()> {
         let mut user_repo = MockUserRepository::new();
-        let mut refresh_repo = MockRefreshTokenRepository::new();
-        let _jwt_service = JwtService::new("test-secret".to_string());
+        let mut creds_repo = MockUserCredentialsRepository::new();
+        let refresh_repo = MockRefreshTokenRepository::new();
 
-        // Setup mock expectations
+        let user_id = Uuid::new_v4();
+        let user = crate::models::db::User {
+            id: user_id,
+            email: "test@example.com".to_string(),
+            display_name: "Test User".to_string(),
+            slug: "test-user".to_string(),
+            active: true,
+            created_at: Utc::now(),
+            updated_at: Utc::now(),
+        };
+
         user_repo
             .expect_find_by_email()
             .times(1)
             .with(eq("test@example.com"))
-            .returning(|_| Ok(Some(create_test_user())));
+            .returning(move |_| Ok(Some(user.clone())));
+
+        creds_repo
+            .expect_find_by_user_id()
+            .times(1)
+            .returning(move |_| Ok(Some(create_test_credentials(user_id, "correct_password"))));
 
         let request = LoginRequest {
             email: "test@example.com".to_string(),
             password: "wrongpassword".to_string(),
         };
 
-        let auth_service = AuthService::new(
-            Box::new(user_repo),
-            Box::new(refresh_repo),
-            "test-secret".to_string(),
-        );
+        let auth_service = AuthService::builder()
+            .user_repository(Box::new(user_repo))
+            .credentials_repository(Box::new(creds_repo))
+            .refresh_token_repository(Box::new(refresh_repo))
+            .jwt_secret("test-secret".to_string())
+            .build();
+
         let result = auth_service.login(request, None).await?;
         assert!(result.is_none());
 
@@ -308,15 +328,30 @@ mod tests {
     #[tokio::test]
     async fn handles_database_error_during_refresh_token_creation() -> Result<()> {
         let mut user_repo = MockUserRepository::new();
+        let mut creds_repo = MockUserCredentialsRepository::new();
         let mut refresh_repo = MockRefreshTokenRepository::new();
-        let _jwt_service = JwtService::new("test-secret".to_string());
 
-        // Setup mock expectations
+        let user_id = Uuid::new_v4();
+        let user = crate::models::db::User {
+            id: user_id,
+            email: "test@example.com".to_string(),
+            display_name: "Test User".to_string(),
+            slug: "test-user".to_string(),
+            active: true,
+            created_at: Utc::now(),
+            updated_at: Utc::now(),
+        };
+
         user_repo
             .expect_find_by_email()
             .times(1)
             .with(eq("test@example.com"))
-            .returning(|_| Ok(Some(create_test_user())));
+            .returning(move |_| Ok(Some(user.clone())));
+
+        creds_repo
+            .expect_find_by_user_id()
+            .times(1)
+            .returning(move |_| Ok(Some(create_test_credentials(user_id, "password123"))));
 
         user_repo
             .expect_get_user_roles()
@@ -333,18 +368,18 @@ mod tests {
             password: "password123".to_string(),
         };
 
-        let auth_service = AuthService::new(
-            Box::new(user_repo),
-            Box::new(refresh_repo),
-            "test-secret".to_string(),
-        );
+        let auth_service = AuthService::builder()
+            .user_repository(Box::new(user_repo))
+            .credentials_repository(Box::new(creds_repo))
+            .refresh_token_repository(Box::new(refresh_repo))
+            .jwt_secret("test-secret".to_string())
+            .build();
+
         let result = auth_service.login(request, None).await;
         assert!(result.is_err());
 
         Ok(())
     }
-
-    // ========== NEW TESTS FOR PHASE 4B: user_credentials table ==========
 
     #[tokio::test]
     async fn test_login_with_credentials_table_success() -> Result<()> {
@@ -356,14 +391,9 @@ mod tests {
         let user = crate::models::db::User {
             id: user_id,
             email: "creds@example.com".to_string(),
-            password_hash: None, // No longer used
             display_name: "Creds User".to_string(),
             slug: "creds-user".to_string(),
             active: true,
-            real_name: None,
-            google_user_id: None,
-            timer_is_public: false,
-            timer_show_in_list: false,
             created_at: Utc::now(),
             updated_at: Utc::now(),
         };
@@ -459,14 +489,9 @@ mod tests {
         let user = crate::models::db::User {
             id: user_id,
             email: "both@example.com".to_string(),
-            password_hash: None,
             display_name: "Both User".to_string(),
             slug: "both-user".to_string(),
             active: true,
-            real_name: None,
-            google_user_id: Some("google123".to_string()), // Has OAuth
-            timer_is_public: false,
-            timer_show_in_list: false,
             created_at: Utc::now(),
             updated_at: Utc::now(),
         };
@@ -521,14 +546,9 @@ mod tests {
         let user = crate::models::db::User {
             id: user_id,
             email: "test@example.com".to_string(),
-            password_hash: None,
             display_name: "Test User".to_string(),
             slug: "test-user".to_string(),
             active: true,
-            real_name: None,
-            google_user_id: None,
-            timer_is_public: false,
-            timer_show_in_list: false,
             created_at: Utc::now(),
             updated_at: Utc::now(),
         };

@@ -75,13 +75,13 @@ impl AdminRepository for PostgresAdminRepository {
                 crate::models::db::UserWithRoles,
                 r#"
                 SELECT
-                    u.id, u.email, u.display_name, u.slug, u.active, u.real_name, u.google_user_id, u.timer_is_public, u.timer_show_in_list, u.created_at, u.updated_at,
+                    u.id, u.email, u.display_name, u.slug, u.active, u.created_at, u.updated_at,
                     array_agg(r.name) as roles
                 FROM users u
                 INNER JOIN user_roles ur ON u.id = ur.user_id
                 INNER JOIN roles r ON ur.role_id = r.id
                 WHERE u.display_name ILIKE $1 OR u.email ILIKE $1 OR u.slug ILIKE $1
-                GROUP BY u.id, u.email, u.display_name, u.slug, u.active, u.real_name, u.google_user_id, u.timer_is_public, u.timer_show_in_list, u.created_at, u.updated_at
+                GROUP BY u.id, u.email, u.display_name, u.slug, u.active, u.created_at, u.updated_at
                 ORDER BY u.created_at DESC
                 LIMIT $2 OFFSET $3
                 "#,
@@ -97,12 +97,12 @@ impl AdminRepository for PostgresAdminRepository {
                 crate::models::db::UserWithRoles,
                 r#"
                 SELECT
-                    u.id, u.email, u.display_name, u.slug, u.active, u.real_name, u.google_user_id, u.timer_is_public, u.timer_show_in_list, u.created_at, u.updated_at,
+                    u.id, u.email, u.display_name, u.slug, u.active, u.created_at, u.updated_at,
                     array_agg(r.name) as roles
                 FROM users u
                 INNER JOIN user_roles ur ON u.id = ur.user_id
                 INNER JOIN roles r ON ur.role_id = r.id
-                GROUP BY u.id, u.email, u.display_name, u.slug, u.active, u.real_name, u.google_user_id, u.timer_is_public, u.timer_show_in_list, u.created_at, u.updated_at
+                GROUP BY u.id, u.email, u.display_name, u.slug, u.active, u.created_at, u.updated_at
                 ORDER BY u.created_at DESC
                 LIMIT $1 OFFSET $2
                 "#,

@@ -1,124 +1,66 @@
 // Database utility fixtures for tests
+//
+// IMPORTANT: These functions use the UserBuilder pattern for test fixture creation.
+// This ensures tests remain resilient to User model changes.
 
 use sqlx::PgPool;
 use anyhow::Result;
+use backend::test_utils::UserBuilder;
 
 // ============================================================================
 // USER CREATION
 // ============================================================================
 
-/// Creates a test user in the database
-#[allow(dead_code)]
-pub async fn create_test_user_in_db(
-    pool: &PgPool,
-    email: &str,
-    password_hash: &str,
-    display_name: &str,
-    slug: &str,
-) -> Result<backend::models::db::user::User, sqlx::Error> {
-    use backend::models::db::user::User;
-    use sqlx::Row;
-
-    // Insert user (let database generate the ID)
-    let result = sqlx::query(
-        r#"
-        INSERT INTO users (email, password_hash, display_name, slug, active, created_at, updated_at)
-        VALUES ($1, $2, $3, $4, true, NOW(), NOW())
-        RETURNING id
-        "#,
-    )
-    .bind(email)
-    .bind(password_hash)
-    .bind(display_name)
-    .bind(slug)
-    .fetch_one(pool)
-    .await?;
-
-    let user_id: uuid::Uuid = result.get("id");
-
-    // Add user role
-    sqlx::query(
-        "INSERT INTO user_roles (user_id, role_id)
-         SELECT $1, id FROM roles WHERE name = 'user'",
-    )
-    .bind(user_id)
-    .execute(pool)
-    .await?;
-
-    // Fetch the created user
-    let user = sqlx::query_as::<_, User>(
-        r#"
-        SELECT u.id, u.email, u.password_hash, u.display_name, u.slug, u.active, u.real_name, u.google_user_id, u.timer_is_public, u.timer_show_in_list, u.created_at, u.updated_at
-        FROM users u
-        WHERE u.id = $1
-        "#,
-    )
-    .bind(user_id)
-    .fetch_one(pool)
-    .await?;
-
-    Ok(user)
-}
-
 /// Create a verified user (with email-verified role)
+/// Uses UserBuilder pattern for resilient test fixtures
 #[allow(dead_code)]
 pub async fn create_verified_user(pool: &PgPool, email: &str, slug: &str) -> backend::models::db::User {
-    use backend::repositories::postgres::postgres_user_repository::PostgresUserRepository;
-    use backend::repositories::traits::user_repository::{UserRepository, CreateUserData};
-
-    let user_repo = PostgresUserRepository::new(pool.clone());
-    let user_data = CreateUserData {
-        email: email.to_string(),
-        password_hash: "hash".to_string(),
-        display_name: slug.to_string(),
-        slug: slug.to_string(),
-    };
-
-    let user = user_repo.create_user(&user_data).await.unwrap();
-
-    // Assign email-verified role (using dynamic query for test helpers)
-    sqlx::query("INSERT INTO user_roles (user_id, role_id) SELECT $1, id FROM roles WHERE name = 'email-verified'")
-        .bind(user.id)
-        .execute(pool)
+    let user = UserBuilder::new()
+        .with_email(email)
+        .with_slug(slug)
+        .with_display_name(slug)
+        .with_password("test_password")
+        .persist(pool)
         .await
-        .unwrap();
+        .expect("Failed to create verified user");
+
+    // Assign email-verified role
+    assign_email_verified_role(pool, &user.id.to_string()).await;
 
     user
 }
 
 /// Create an unverified user (without email-verified role)
+/// Uses UserBuilder pattern for resilient test fixtures
 #[allow(dead_code)]
 pub async fn create_unverified_user(pool: &PgPool, email: &str, slug: &str) -> backend::models::db::User {
-    use backend::repositories::postgres::postgres_user_repository::PostgresUserRepository;
-    use backend::repositories::traits::user_repository::{UserRepository, CreateUserData};
-
-    let user_repo = PostgresUserRepository::new(pool.clone());
-    let user_data = CreateUserData {
-        email: email.to_string(),
-        password_hash: "hash".to_string(),
-        display_name: slug.to_string(),
-        slug: slug.to_string(),
-    };
-
-    user_repo.create_user(&user_data).await.unwrap()
+    UserBuilder::new()
+        .with_email(email)
+        .with_slug(slug)
+        .with_display_name(slug)
+        .with_password("test_password")
+        .persist(pool)
+        .await
+        .expect("Failed to create unverified user")
 }
 
 /// Create an OAuth user (with Google ID and email-verified role)
+/// Uses UserBuilder pattern for resilient test fixtures
 #[allow(dead_code)]
 pub async fn create_oauth_user(pool: &PgPool, email: &str, slug: &str, google_user_id: &str) -> backend::models::db::User {
-    use backend::repositories::postgres::postgres_user_repository::PostgresUserRepository;
-    use backend::repositories::traits::user_repository::{UserRepository, CreateOAuthUserData};
+    let user = UserBuilder::new()
+        .oauth(google_user_id, "OAuth User")
+        .with_email(email)
+        .with_slug(slug)
+        .with_display_name(slug)
+        .persist(pool)
+        .await
+        .expect("Failed to create OAuth user");
 
-    let user_repo = PostgresUserRepository::new(pool.clone());
-    let user_data = CreateOAuthUserData {
-        email: email.to_string(),
-        display_name: slug.to_string(),
-        slug: slug.to_string(),
-        real_name: Some("OAuth User".to_string()),
-        google_user_id: Some(google_user_id.to_string()),
-    };
+    // OAuth users get email-verified role automatically
+    assign_email_verified_role(pool, &user.id.to_string()).await;
 
-    user_repo.create_oauth_user(&user_data).await.unwrap()
+    user
 }
 
 /// Get user by ID

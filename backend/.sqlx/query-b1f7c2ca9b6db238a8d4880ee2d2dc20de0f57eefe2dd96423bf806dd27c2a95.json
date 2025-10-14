@@ -1,0 +1,16 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "\n            INSERT INTO user_preferences (user_id, timer_is_public, timer_show_in_list)\n            VALUES ($1, $2, $3)\n            ON CONFLICT (user_id)\n            DO UPDATE SET timer_is_public = $2, timer_show_in_list = $3, updated_at = NOW()\n            ",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Left": [
+        "Uuid",
+        "Bool",
+        "Bool"
+      ]
+    },
+    "nullable": []
+  },
+  "hash": "b1f7c2ca9b6db238a8d4880ee2d2dc20de0f57eefe2dd96423bf806dd27c2a95"
+}

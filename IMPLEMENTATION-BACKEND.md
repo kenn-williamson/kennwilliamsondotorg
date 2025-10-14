@@ -32,25 +32,44 @@ backend/
 │   │   ├── mod.rs        # Repository exports
 │   │   ├── traits/       # Repository trait definitions
 │   │   │   ├── mod.rs
-│   │   │   ├── user_repository.rs
+│   │   │   ├── user_repository.rs # Core user identity operations
+│   │   │   ├── user_credentials_repository.rs # Password authentication
+│   │   │   ├── user_external_login_repository.rs # OAuth provider linkage
+│   │   │   ├── user_profile_repository.rs # User profile data
+│   │   │   ├── user_preferences_repository.rs # User settings
 │   │   │   ├── refresh_token_repository.rs
 │   │   │   ├── verification_token_repository.rs
+│   │   │   ├── password_reset_token_repository.rs
+│   │   │   ├── email_suppression_repository.rs
 │   │   │   ├── incident_timer_repository.rs
 │   │   │   ├── phrase_repository.rs
-│   │   │   └── admin_repository.rs
+│   │   │   ├── admin_repository.rs
+│   │   │   └── pkce_storage.rs
 │   │   ├── postgres/     # PostgreSQL implementations
 │   │   │   ├── mod.rs
 │   │   │   ├── postgres_user_repository.rs
+│   │   │   ├── postgres_user_credentials_repository.rs
+│   │   │   ├── postgres_user_external_login_repository.rs
+│   │   │   ├── postgres_user_profile_repository.rs
+│   │   │   ├── postgres_user_preferences_repository.rs
 │   │   │   ├── postgres_refresh_token_repository.rs
 │   │   │   ├── postgres_verification_token_repository.rs
+│   │   │   ├── postgres_password_reset_token_repository.rs
+│   │   │   ├── postgres_email_suppression_repository.rs
 │   │   │   ├── postgres_incident_timer_repository.rs
 │   │   │   ├── postgres_phrase_repository.rs
 │   │   │   └── postgres_admin_repository.rs
 │   │   └── mocks/        # Mock implementations for testing
 │   │       ├── mod.rs
 │   │       ├── mock_user_repository.rs
+│   │       ├── mock_user_credentials_repository.rs
+│   │       ├── mock_user_external_login_repository.rs
+│   │       ├── mock_user_profile_repository.rs
+│   │       ├── mock_user_preferences_repository.rs
 │   │       ├── mock_refresh_token_repository.rs
 │   │       ├── mock_verification_token_repository.rs
+│   │       ├── mock_password_reset_token_repository.rs
+│   │       ├── mock_email_suppression_repository.rs
 │   │       ├── mock_incident_timer_repository.rs
 │   │       ├── mock_phrase_repository.rs
 │   │       └── mock_admin_repository.rs
@@ -134,8 +153,9 @@ backend/
 ```
 
 ## Core Features
-- **Authentication**: JWT-based with refresh tokens (see [IMPLEMENTATION-SECURITY.md](IMPLEMENTATION-SECURITY.md#authentication-system))
-- **OAuth Integration**: Google OAuth 2.0 with PKCE flow and Redis-backed state management
+- **Authentication**: Normalized multi-table schema with JWT-based auth and refresh tokens (see [IMPLEMENTATION-SECURITY.md](IMPLEMENTATION-SECURITY.md#authentication-system))
+- **Database Architecture**: Normalized user data across dedicated tables (credentials, external logins, profiles, preferences)
+- **OAuth Integration**: Multi-provider OAuth support with PKCE flow (Google implemented)
 - **Email Verification**: Token-based email verification with role-based access control
 - **Password Reset**: Secure token-based password reset with expiration and usage tracking
 - **Token Cleanup**: Automatic background cleanup of expired tokens (refresh + verification)

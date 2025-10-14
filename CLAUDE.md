@@ -8,7 +8,9 @@
 - **Infrastructure**: Nginx reverse proxy with SSL
 - **Deployment**: Live at kennwilliamson.org
 
-**Current State**: Production application with complete feature set including authentication, OAuth, email verification, incident timers, phrases system, admin panel, GDPR/CCPA compliance, 3-layer architecture refactor, and comprehensive test coverage (~620 tests total: ~445 backend + 175 frontend).
+**Current State**: Production application with complete feature set including authentication (normalized multi-table schema), multi-provider OAuth, email verification, incident timers, phrases system, admin panel, GDPR/CCPA compliance, 3-layer architecture refactor, and comprehensive test coverage (~620 tests total: ~445 backend + 175 frontend).
+
+**Recent Major Update**: Auth schema refactor completed (January 2025, Phases 0-9). Migrated from monolithic `users` table to normalized multi-table architecture (`users`, `user_credentials`, `user_external_logins`, `user_profiles`, `user_preferences`) for improved maintainability, multi-provider OAuth support, and enhanced GDPR/CCPA compliance.
 
 ## Quick Start
 ```bash
@@ -25,7 +27,8 @@
 ```
 
 ## Key Features
-- **Authentication**: JWT + refresh token system with session management and OAuth (Google)
+- **Authentication**: Normalized multi-table schema with JWT + refresh token system, session management, and multi-provider OAuth support
+- **Database Schema**: Normalized user authentication (credentials, external logins, profiles, preferences in separate tables)
 - **Email Verification**: Token-based email verification with role-based access control
 - **Password Reset**: Secure token-based password reset with expiration tracking
 - **Incident Timers**: Full CRUD operations with public sharing and steampunk UI

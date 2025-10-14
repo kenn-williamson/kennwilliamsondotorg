@@ -354,61 +354,66 @@ impl TestContext {
     }
 
     /// Create a verified user (with email-verified role)
+    /// Uses UserBuilder pattern for resilient test fixtures
     pub async fn create_verified_user(&self, email: &str, slug: &str) -> backend::models::db::User {
-        use backend::repositories::postgres::postgres_user_repository::PostgresUserRepository;
-        use backend::repositories::traits::user_repository::{UserRepository, CreateUserData};
+        use backend::test_utils::UserBuilder;
 
-        let user_repo = PostgresUserRepository::new(self.pool.clone());
-        let user_data = CreateUserData {
-            email: email.to_string(),
-            password_hash: "hash".to_string(),
-            display_name: slug.to_string(),
-            slug: slug.to_string(),
-        };
+        let user = UserBuilder::new()
+            .with_email(email)
+            .with_slug(slug)
+            .with_display_name(slug)
+            .with_password("test_password")
+            .persist(&self.pool)
+            .await
+            .expect("Failed to create verified user");
 
-        let user = user_repo.create_user(&user_data).await.unwrap();
-
-        // Assign email-verified role (using dynamic query for test helpers)
+        // Assign email-verified role
         sqlx::query("INSERT INTO user_roles (user_id, role_id) SELECT $1, id FROM roles WHERE name = 'email-verified'")
             .bind(user.id)
             .execute(&self.pool)
             .await
-            .unwrap();
+            .expect("Failed to assign email-verified role");
 
         user
     }
 
     /// Create an unverified user (without email-verified role)
+    /// Uses UserBuilder pattern for resilient test fixtures
     pub async fn create_unverified_user(&self, email: &str, slug: &str) -> backend::models::db::User {
-        use backend::repositories::postgres::postgres_user_repository::PostgresUserRepository;
-        use backend::repositories::traits::user_repository::{UserRepository, CreateUserData};
+        use backend::test_utils::UserBuilder;
 
-        let user_repo = PostgresUserRepository::new(self.pool.clone());
-        let user_data = CreateUserData {
-            email: email.to_string(),
-            password_hash: "hash".to_string(),
-            display_name: slug.to_string(),
-            slug: slug.to_string(),
-        };
-
-        user_repo.create_user(&user_data).await.unwrap()
+        UserBuilder::new()
+            .with_email(email)
+            .with_slug(slug)
+            .with_display_name(slug)
+            .with_password("test_password")
+            .persist(&self.pool)
+            .await
+            .expect("Failed to create unverified user")
     }
 
     /// Create an OAuth user (with Google ID and email-verified role)
+    /// Uses UserBuilder pattern for resilient test fixtures
     pub async fn create_oauth_user(&self, email: &str, slug: &str, google_user_id: &str) -> backend::models::db::User {
-        use backend::repositories::postgres::postgres_user_repository::PostgresUserRepository;
-        use backend::repositories::traits::user_repository::{UserRepository, CreateOAuthUserData};
+        use backend::test_utils::UserBuilder;
 
-        let user_repo = PostgresUserRepository::new(self.pool.clone());
-        let user_data = CreateOAuthUserData {
-            email: email.to_string(),
-            display_name: slug.to_string(),
-            slug: slug.to_string(),
-            real_name: Some("OAuth User".to_string()),
-            google_user_id: Some(google_user_id.to_string()),
-        };
+        let user = UserBuilder::new()
+            .oauth(google_user_id, "OAuth User")
+            .with_email(email)
+            .with_slug(slug)
+            .with_display_name(slug)
+            .persist(&self.pool)
+            .await
+            .expect("Failed to create OAuth user");
 
-        user_repo.create_oauth_user(&user_data).await.unwrap()
+        // OAuth users get email-verified role automatically
+        sqlx::query("INSERT INTO user_roles (user_id, role_id) SELECT $1, id FROM roles WHERE name = 'email-verified'")
+            .bind(user.id)
+            .execute(&self.pool)
+            .await
+            .expect("Failed to assign email-verified role");
+
+        user
     }
 
     /// Get user by ID

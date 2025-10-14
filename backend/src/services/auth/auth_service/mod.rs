@@ -70,4 +70,74 @@ impl AuthService {
     pub async fn verify_token(&self, token: &str) -> Result<Option<super::jwt::Claims>> {
         self.jwt_service.verify_token(token).await
     }
+
+    /// Build a fully populated UserResponse with nested data from all related tables
+    /// This queries each repository individually (credentials, external_logins, profile, preferences)
+    /// and constructs a complete UserResponse with all nested fields populated.
+    pub async fn build_user_response_with_details(
+        &self,
+        user: crate::models::db::User,
+        roles: Vec<String>,
+    ) -> Result<crate::models::api::UserResponse> {
+        use crate::models::api::{UserResponse, ProfileData, ExternalAccount, PreferencesData};
+
+        let email_verified = roles.contains(&"email-verified".to_string());
+
+        // Query profile data
+        let profile = if let Some(profile_repo) = &self.profile_repository {
+            profile_repo
+                .find_by_user_id(user.id)
+                .await?
+                .map(|p| ProfileData {
+                    real_name: p.real_name,
+                    bio: p.bio,
+                    avatar_url: p.avatar_url,
+                    location: p.location,
+                    website: p.website,
+                })
+        } else {
+            None
+        };
+
+        // Query external logins
+        let external_accounts = if let Some(ext_repo) = &self.external_login_repository {
+            ext_repo
+                .find_by_user_id(user.id)
+                .await?
+                .into_iter()
+                .map(|login| ExternalAccount {
+                    provider: login.provider,
+                    linked_at: login.linked_at,
+                })
+                .collect()
+        } else {
+            vec![]
+        };
+
+        // Query preferences
+        let preferences = if let Some(prefs_repo) = &self.preferences_repository {
+            prefs_repo
+                .find_by_user_id(user.id)
+                .await?
+                .map(|p| PreferencesData {
+                    timer_is_public: p.timer_is_public,
+                    timer_show_in_list: p.timer_show_in_list,
+                })
+        } else {
+            None
+        };
+
+        Ok(UserResponse {
+            id: user.id,
+            email: user.email,
+            display_name: user.display_name,
+            slug: user.slug,
+            roles,
+            email_verified,
+            created_at: user.created_at,
+            profile,
+            external_accounts,
+            preferences,
+        })
+    }
 }

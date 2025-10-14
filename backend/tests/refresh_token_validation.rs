@@ -108,7 +108,7 @@ async fn test_refresh_token_expiration() {
     let ctx = TestContext::builder().build().await;
     
     // Create a user
-    let user = fixtures::UserBuilder::new()
+    let user = backend::test_utils::UserBuilder::new()
         .with_email(&fixtures::unique_test_email())
         .with_display_name("Expiry Test User")
         .with_slug(&fixtures::unique_test_slug())

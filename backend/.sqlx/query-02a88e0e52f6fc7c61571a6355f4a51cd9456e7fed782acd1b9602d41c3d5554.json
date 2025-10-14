@@ -1,0 +1,15 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "\n            INSERT INTO user_credentials (user_id, password_hash)\n            VALUES ($1, $2)\n            ON CONFLICT (user_id)\n            DO UPDATE SET password_hash = $2, password_updated_at = NOW()\n            ",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Left": [
+        "Uuid",
+        "Varchar"
+      ]
+    },
+    "nullable": []
+  },
+  "hash": "02a88e0e52f6fc7c61571a6355f4a51cd9456e7fed782acd1b9602d41c3d5554"
+}

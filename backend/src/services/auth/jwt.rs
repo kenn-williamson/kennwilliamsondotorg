@@ -65,14 +65,9 @@ mod tests {
         User {
             id: Uuid::new_v4(),
             email: "test@example.com".to_string(),
-            password_hash: Some("hashed_password".to_string()),
             display_name: "Test User".to_string(),
             slug: "test-user".to_string(),
             active: true,
-            real_name: None,
-            google_user_id: None,
-            timer_is_public: false,
-            timer_show_in_list: false,
             created_at: Utc::now(),
             updated_at: Utc::now(),
         }

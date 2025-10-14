@@ -39,29 +39,9 @@ mock! {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use chrono::Utc;
+    use crate::models::db::user::test_helpers::*;
     use mockall::predicate::eq;
     use uuid::Uuid;
-
-    // Helper function to create a test user using UserBuilder
-    fn create_test_user() -> User {
-        // Note: In unit tests, we can't use the test fixtures module
-        // So we keep the manual construction here
-        User {
-            id: Uuid::new_v4(),
-            email: "test@example.com".to_string(),
-            password_hash: Some("hashed_password".to_string()),
-            display_name: "Test User".to_string(),
-            slug: "test-user".to_string(),
-            active: true,
-            real_name: None,
-            google_user_id: None,
-            timer_is_public: false,
-            timer_show_in_list: false,
-            created_at: Utc::now(),
-            updated_at: Utc::now(),
-        }
-    }
 
     // Helper function to create test data
     fn create_test_user_data() -> CreateUserData {
@@ -82,13 +62,13 @@ mod tests {
         mock_repo
             .expect_create_user()
             .times(1)
-            .returning(|_| Ok(create_test_user()));
+            .returning(|_| Ok(build_test_user()));
 
         // Test the mock
         let result = mock_repo.create_user(&user_data).await;
         assert!(result.is_ok());
         let user = result.unwrap();
-        assert_eq!(user.email, "test@example.com");
+        assert!(user.email.contains("@example.com"));
     }
 
     #[tokio::test]
@@ -100,14 +80,14 @@ mod tests {
             .expect_find_by_email()
             .times(1)
             .with(eq("test@example.com"))
-            .returning(|_| Ok(Some(create_test_user())));
+            .returning(|_| Ok(Some(build_test_user())));
 
         // Test the mock
         let result = mock_repo.find_by_email("test@example.com").await;
         assert!(result.is_ok());
         let user = result.unwrap();
         assert!(user.is_some());
-        assert_eq!(user.unwrap().email, "test@example.com");
+        assert!(user.unwrap().email.contains("@example.com"));
     }
 
     #[tokio::test]

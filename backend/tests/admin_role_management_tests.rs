@@ -14,89 +14,53 @@ mod fixtures;
 
 use fixtures::TestContainer;
 
-/// Create a test admin user with admin role
+/// Fixture helper: Create a test admin user with admin role
+/// Uses UserBuilder pattern for resilient test fixtures
 async fn create_test_admin(pool: &PgPool) -> (User, String) {
-    let user_id = Uuid::new_v4();
-    let email = format!("admin-{}@test.com", user_id);
+    use backend::test_utils::UserBuilder;
+
     let password = "Test123!@#";
-    let password_hash = bcrypt::hash(password, 4).unwrap();
-
-    sqlx::query(
-        r#"
-        INSERT INTO users (id, email, password_hash, display_name, slug, active)
-        VALUES ($1, $2, $3, $4, $5, true)
-        "#
-    )
-    .bind(user_id)
-    .bind(&email)
-    .bind(&password_hash)
-    .bind("Admin User")
-    .bind(format!("admin-{}", user_id))
-    .execute(pool)
-    .await
-    .unwrap();
-
-    // Add user role
-    sqlx::query("INSERT INTO user_roles (user_id, role_id) SELECT $1, id FROM roles WHERE name = 'user'")
-        .bind(user_id)
-        .execute(pool)
+    let user_id = Uuid::new_v4();
+    let user = UserBuilder::new()
+        .with_id(user_id)
+        .with_email(&format!("admin-{}@test.com", user_id))
+        .with_password(password)
+        .with_display_name("Admin User")
+        .with_slug(&format!("admin-{}", user_id))
+        .persist(pool)
         .await
-        .unwrap();
+        .expect("Failed to create admin user");
 
-    // Add admin role
+    // Add admin role (using raw SQL since we're testing admin role management)
     sqlx::query("INSERT INTO user_roles (user_id, role_id) SELECT $1, id FROM roles WHERE name = 'admin'")
-        .bind(user_id)
+        .bind(user.id)
         .execute(pool)
-        .await
-        .unwrap();
-
-    let user = sqlx::query_as::<_, User>("SELECT * FROM users WHERE id = $1")
-        .bind(user_id)
-        .fetch_one(pool)
         .await
         .unwrap();
 
     (user, password.to_string())
 }
 
-/// Create a test regular user
+/// Fixture helper: Create a test regular user
+/// Uses UserBuilder pattern for resilient test fixtures
 async fn create_test_user(pool: &PgPool) -> User {
+    use backend::test_utils::UserBuilder;
+
     let user_id = Uuid::new_v4();
-    let email = format!("user-{}@test.com", user_id);
-    let password_hash = bcrypt::hash("Test123!@#", 4).unwrap();
-
-    sqlx::query(
-        r#"
-        INSERT INTO users (id, email, password_hash, display_name, slug, active)
-        VALUES ($1, $2, $3, $4, $5, true)
-        "#
-    )
-    .bind(user_id)
-    .bind(&email)
-    .bind(&password_hash)
-    .bind("Test User")
-    .bind(format!("user-{}", user_id))
-    .execute(pool)
-    .await
-    .unwrap();
-
-    // Add user role
-    sqlx::query("INSERT INTO user_roles (user_id, role_id) SELECT $1, id FROM roles WHERE name = 'user'")
-        .bind(user_id)
-        .execute(pool)
+    UserBuilder::new()
+        .with_id(user_id)
+        .with_email(&format!("user-{}@test.com", user_id))
+        .with_password("Test123!@#")
+        .with_display_name("Test User")
+        .with_slug(&format!("user-{}", user_id))
+        .persist(pool)
         .await
-        .unwrap();
-
-    sqlx::query_as::<_, User>("SELECT * FROM users WHERE id = $1")
-        .bind(user_id)
-        .fetch_one(pool)
-        .await
-        .unwrap()
+        .expect("Failed to create test user")
 }
 
 /// Generate admin JWT token
 fn generate_admin_jwt(admin_id: Uuid) -> String {
-    use fixtures::UserBuilder;
+    use backend::test_utils::UserBuilder;
 
     let jwt_service = JwtService::new("test_secret_key_that_is_at_least_256_bits_long_for_hs256".to_string());
 

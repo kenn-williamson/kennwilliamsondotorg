@@ -17,6 +17,33 @@ pub struct LoginRequest {
     pub password: String,
 }
 
+/// Nested profile data in API response
+#[derive(Debug, Serialize)]
+pub struct ProfileData {
+    pub real_name: Option<String>,
+    pub bio: Option<String>,
+    pub avatar_url: Option<String>,
+    pub location: Option<String>,
+    pub website: Option<String>,
+}
+
+/// Nested external account data in API response
+#[derive(Debug, Serialize)]
+pub struct ExternalAccount {
+    pub provider: String,
+    pub linked_at: DateTime<Utc>,
+}
+
+/// Nested preferences data in API response
+#[derive(Debug, Serialize)]
+pub struct PreferencesData {
+    pub timer_is_public: bool,
+    pub timer_show_in_list: bool,
+}
+
+/// User response with nested structure for modularity
+/// This structure hides the multi-table implementation from the frontend
+/// and makes it easy to add new OAuth providers or preferences without breaking changes
 #[derive(Debug, Serialize)]
 pub struct UserResponse {
     pub id: Uuid,
@@ -24,10 +51,11 @@ pub struct UserResponse {
     pub display_name: String,
     pub slug: String,
     pub roles: Vec<String>,
-    pub real_name: Option<String>,
-    pub google_user_id: Option<String>,
     pub email_verified: bool,
     pub created_at: DateTime<Utc>,
+    pub profile: Option<ProfileData>,
+    pub external_accounts: Vec<ExternalAccount>,
+    pub preferences: Option<PreferencesData>,
 }
 
 #[derive(Debug, Serialize)]
@@ -91,6 +119,9 @@ pub struct PasswordChangeRequest {
 }
 
 impl UserResponse {
+    /// Create UserResponse from core User and roles only (minimal data)
+    /// NOTE: This creates an empty response - use AuthService::build_user_response_with_details for populated data
+    #[allow(dead_code)]
     pub fn from_user_with_roles(user: User, roles: Vec<String>) -> Self {
         let email_verified = roles.contains(&"email-verified".to_string());
 
@@ -100,10 +131,11 @@ impl UserResponse {
             display_name: user.display_name,
             slug: user.slug,
             roles,
-            real_name: user.real_name,
-            google_user_id: user.google_user_id,
             email_verified,
             created_at: user.created_at,
+            profile: None,
+            external_accounts: vec![],
+            preferences: None,
         }
     }
 }

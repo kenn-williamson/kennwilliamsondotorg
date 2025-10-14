@@ -5,7 +5,7 @@ use sha2::{Digest, Sha256};
 use uuid::Uuid;
 
 use super::AuthService;
-use crate::models::api::{AuthResponse, RefreshTokenRequest, UserResponse};
+use crate::models::api::{AuthResponse, RefreshTokenRequest};
 use crate::models::db::refresh_token::CreateRefreshToken;
 
 impl AuthService {
@@ -73,24 +73,14 @@ impl AuthService {
             .create_token(&token_data)
             .await?;
 
-        // Check if email is verified
-        let email_verified = roles.contains(&"email-verified".to_string());
+        // Build fully populated user response
+        let user_response = self.build_user_response_with_details(user, roles).await?;
 
         // Return full AuthResponse with user data
         Ok(Some(AuthResponse {
             token: new_jwt,
             refresh_token: new_refresh_token,
-            user: UserResponse {
-                id: user.id,
-                email: user.email,
-                display_name: user.display_name,
-                slug: user.slug,
-                roles,
-                real_name: user.real_name,
-                google_user_id: user.google_user_id,
-                email_verified,
-                created_at: user.created_at,
-            },
+            user: user_response,
         }))
     }
 
@@ -146,14 +136,9 @@ mod tests {
         crate::models::db::User {
             id: Uuid::new_v4(),
             email: "test@example.com".to_string(),
-            password_hash: Some("hashed".to_string()),
             display_name: "Test User".to_string(),
             slug: "test-user".to_string(),
-            real_name: None,
-            google_user_id: None,
             active: true,
-            timer_is_public: false,
-            timer_show_in_list: false,
             created_at: Utc::now(),
             updated_at: Utc::now(),
         }

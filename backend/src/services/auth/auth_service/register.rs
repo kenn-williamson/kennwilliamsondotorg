@@ -3,7 +3,7 @@ use bcrypt::{hash, DEFAULT_COST};
 
 use super::slug::generate_slug;
 use super::AuthService;
-use crate::models::api::{AuthResponse, CreateUserRequest, UserResponse};
+use crate::models::api::{AuthResponse, CreateUserRequest};
 use crate::models::db::refresh_token::CreateRefreshToken;
 use crate::repositories::traits::refresh_token_repository::RefreshTokenRepository;
 use crate::repositories::traits::user_repository::CreateUserData;
@@ -78,10 +78,13 @@ impl AuthService {
         let refresh_token =
             create_refresh_token(user.id, device_info, &*self.refresh_token_repository).await?;
 
+        // Build fully populated user response
+        let user_response = self.build_user_response_with_details(user, roles).await?;
+
         Ok(AuthResponse {
             token,
             refresh_token,
-            user: UserResponse::from_user_with_roles(user, roles),
+            user: user_response,
         })
     }
 }
@@ -161,14 +164,9 @@ mod tests {
         crate::models::db::User {
             id: Uuid::new_v4(),
             email: "test@example.com".to_string(),
-            password_hash: Some("hashed".to_string()),
             display_name: "Test User".to_string(),
             slug: "test-user".to_string(),
-            real_name: None,
-            google_user_id: None,
             active: true,
-            timer_is_public: false,
-            timer_show_in_list: false,
             created_at: Utc::now(),
             updated_at: Utc::now(),
         }

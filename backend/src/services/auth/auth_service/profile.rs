@@ -17,7 +17,8 @@ impl AuthService {
         match user {
             Some(user) => {
                 let roles = self.user_repository.get_user_roles(user.id).await?;
-                Ok(Some(UserResponse::from_user_with_roles(user, roles)))
+                let user_response = self.build_user_response_with_details(user, roles).await?;
+                Ok(Some(user_response))
             }
             None => Ok(None),
         }
@@ -96,7 +97,8 @@ impl AuthService {
         let user = self.user_repository.update_user(user_id, &updates).await?;
         let roles = self.user_repository.get_user_roles(user.id).await?;
 
-        Ok(UserResponse::from_user_with_roles(user, roles))
+        let user_response = self.build_user_response_with_details(user, roles).await?;
+        Ok(user_response)
     }
 
     /// Update timer privacy settings
@@ -135,31 +137,14 @@ mod tests {
         mock_user_profile_repository::MockUserProfileRepository,
         mock_user_repository::MockUserRepository,
     };
-    use crate::models::db::{User, UserCore, UserPreferences, UserProfile};
+    use crate::models::db::{User, UserPreferences, UserProfile};
     use anyhow::Result;
     use chrono::Utc;
     use mockall::predicate::eq;
     use uuid::Uuid;
 
-    fn create_test_user() -> User {
+    fn create_test_user(user_id: Uuid) -> User {
         User {
-            id: Uuid::new_v4(),
-            email: "test@example.com".to_string(),
-            password_hash: Some("hashed".to_string()),
-            display_name: "Test User".to_string(),
-            slug: "test-user".to_string(),
-            active: true,
-            real_name: None,
-            google_user_id: None,
-            timer_is_public: false,
-            timer_show_in_list: false,
-            created_at: Utc::now(),
-            updated_at: Utc::now(),
-        }
-    }
-
-    fn create_test_user_core(user_id: Uuid) -> UserCore {
-        UserCore {
             id: user_id,
             email: "test@example.com".to_string(),
             display_name: "Test User".to_string(),
@@ -196,8 +181,8 @@ mod tests {
     #[tokio::test]
     async fn get_current_user_successful() -> Result<()> {
         let mut user_repo = MockUserRepository::new();
-        let user = create_test_user();
-        let user_id = user.id;
+        let user_id = Uuid::new_v4();
+        let user = create_test_user(user_id);
 
         // Setup mock expectations
         user_repo
@@ -383,7 +368,7 @@ mod tests {
     async fn update_profile_successful() -> Result<()> {
         let mut user_repo = MockUserRepository::new();
         let user_id = Uuid::new_v4();
-        let updated_user = create_test_user();
+        let updated_user = create_test_user(user_id);
 
         // Setup mock expectations - only need slug_exists_excluding_user now
         user_repo

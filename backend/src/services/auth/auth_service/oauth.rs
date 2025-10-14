@@ -2,7 +2,7 @@ use super::AuthService;
 use anyhow::{anyhow, Result};
 use oauth2::{CsrfToken, PkceCodeVerifier};
 
-use crate::models::api::user::{AuthResponse, UserResponse};
+use crate::models::api::user::AuthResponse;
 use crate::models::db::refresh_token::CreateRefreshToken;
 use crate::models::db::user::User;
 use crate::repositories::traits::user_repository::CreateOAuthUserData;
@@ -344,9 +344,6 @@ impl AuthService {
         // Get user roles
         let roles = self.user_repository.get_user_roles(user.id).await?;
 
-        // Check if email is verified
-        let email_verified = roles.contains(&"email-verified".to_string());
-
         // Generate access token
         let token = self.jwt_service.generate_token(&user, &roles)?;
 
@@ -366,20 +363,13 @@ impl AuthService {
             .create_token(&token_data)
             .await?;
 
+        // Build fully populated user response
+        let user_response = self.build_user_response_with_details(user, roles).await?;
+
         Ok(AuthResponse {
             token,
             refresh_token: refresh_token_string,
-            user: UserResponse {
-                id: user.id,
-                email: user.email,
-                display_name: user.display_name,
-                slug: user.slug,
-                roles,
-                real_name: user.real_name,
-                google_user_id: user.google_user_id,
-                email_verified,
-                created_at: user.created_at,
-            },
+            user: user_response,
         })
     }
 }
@@ -493,12 +483,7 @@ mod tests {
                     email: "mock@example.com".to_string(),
                     display_name: "Mock User".to_string(),
                     slug: "mock-user".to_string(),
-                    password_hash: None,
                     active: true,
-                    real_name: None,
-                    google_user_id: Some(google_id.clone()),
-                    timer_is_public: false,
-                    timer_show_in_list: false,
                     created_at: chrono::Utc::now(),
                     updated_at: chrono::Utc::now(),
                 })
@@ -853,12 +838,7 @@ mod tests {
                     email: "existing@example.com".to_string(),
                     display_name: "Existing User".to_string(),
                     slug: "existing-user".to_string(),
-                    password_hash: None,
                     active: true,
-                    real_name: Some("Old Name".to_string()),
-                    google_user_id: Some(existing_google_id.clone()),
-                    timer_is_public: false,
-                    timer_show_in_list: false,
                     created_at: chrono::Utc::now(),
                     updated_at: chrono::Utc::now(),
                 }))
@@ -910,12 +890,7 @@ mod tests {
                     email: "verified@example.com".to_string(),
                     display_name: "Email User".to_string(),
                     slug: "email-user".to_string(),
-                    password_hash: Some("hash".to_string()),
                     active: true,
-                    real_name: None,
-                    google_user_id: None,
-                    timer_is_public: false,
-                    timer_show_in_list: false,
                     created_at: chrono::Utc::now(),
                     updated_at: chrono::Utc::now(),
                 }))
@@ -934,12 +909,7 @@ mod tests {
                     email: "verified@example.com".to_string(),
                     display_name: "Email User".to_string(),
                     slug: "email-user".to_string(),
-                    password_hash: Some("hash".to_string()),
                     active: true,
-                    real_name: Some("Link User".to_string()),
-                    google_user_id: Some("linking_google_id".to_string()),
-                    timer_is_public: false,
-                    timer_show_in_list: false,
                     created_at: chrono::Utc::now(),
                     updated_at: chrono::Utc::now(),
                 }))
@@ -990,12 +960,7 @@ mod tests {
                     email: "unverified@example.com".to_string(),
                     display_name: "Unverified User".to_string(),
                     slug: "unverified-user".to_string(),
-                    password_hash: Some("hash".to_string()),
                     active: true,
-                    real_name: None,
-                    google_user_id: None,
-                    timer_is_public: false,
-                    timer_show_in_list: false,
                     created_at: chrono::Utc::now(),
                     updated_at: chrono::Utc::now(),
                 }))
@@ -1017,12 +982,7 @@ mod tests {
                     email: "unverified@example.com".to_string(),
                     display_name: "Unverified User".to_string(),
                     slug: "unverified-user".to_string(),
-                    password_hash: Some("hash".to_string()),
                     active: true,
-                    real_name: Some("Link Test".to_string()),
-                    google_user_id: Some("link_unverified_id".to_string()),
-                    timer_is_public: false,
-                    timer_show_in_list: false,
                     created_at: chrono::Utc::now(),
                     updated_at: chrono::Utc::now(),
                 }))
@@ -1122,12 +1082,7 @@ mod tests {
                     email: "update@example.com".to_string(),
                     display_name: "Update User".to_string(),
                     slug: "update-user".to_string(),
-                    password_hash: None,
                     active: true,
-                    real_name: Some("Old Name".to_string()),
-                    google_user_id: Some(update_google_id.clone()),
-                    timer_is_public: false,
-                    timer_show_in_list: false,
                     created_at: chrono::Utc::now(),
                     updated_at: chrono::Utc::now(),
                 }))
@@ -1184,12 +1139,23 @@ mod tests {
             Ok(UserExternalLogin {
                 id: Uuid::new_v4(),
                 user_id: data.user_id,
-                provider: data.provider,
-                provider_user_id: data.provider_user_id,
+                provider: data.provider.clone(),
+                provider_user_id: data.provider_user_id.clone(),
                 linked_at: chrono::Utc::now(),
                 created_at: chrono::Utc::now(),
                 updated_at: chrono::Utc::now(),
             })
+        });
+        external_login_repo.expect_find_by_user_id().returning(|user_id| {
+            Ok(vec![UserExternalLogin {
+                id: Uuid::new_v4(),
+                user_id,
+                provider: "google".to_string(),
+                provider_user_id: "new_oauth_123".to_string(),
+                linked_at: chrono::Utc::now(),
+                created_at: chrono::Utc::now(),
+                updated_at: chrono::Utc::now(),
+            }])
         });
 
         // Mock user repository - no existing user
@@ -1204,12 +1170,7 @@ mod tests {
                 email: data.email.clone(),
                 display_name: data.display_name.clone(),
                 slug: data.slug.clone(),
-                password_hash: None,
                 active: true,
-                real_name: None,
-                google_user_id: None,
-                timer_is_public: false,
-                timer_show_in_list: false,
                 created_at: chrono::Utc::now(),
                 updated_at: chrono::Utc::now(),
             })
@@ -1247,6 +1208,18 @@ mod tests {
                 updated_at: chrono::Utc::now(),
             })
         });
+        profile_repo.expect_find_by_user_id().returning(|user_id| {
+            Ok(Some(UserProfile {
+                user_id,
+                real_name: Some("New OAuth User".to_string()),
+                bio: None,
+                avatar_url: Some("https://example.com/avatar.jpg".to_string()),
+                location: None,
+                website: None,
+                created_at: chrono::Utc::now(),
+                updated_at: chrono::Utc::now(),
+            }))
+        });
 
         // Mock preferences repository
         let mut prefs_repo = MockUserPreferencesRepository::new();
@@ -1258,6 +1231,15 @@ mod tests {
                 created_at: chrono::Utc::now(),
                 updated_at: chrono::Utc::now(),
             })
+        });
+        prefs_repo.expect_find_by_user_id().returning(|user_id| {
+            Ok(Some(UserPreferences {
+                user_id,
+                timer_is_public: false,
+                timer_show_in_list: false,
+                created_at: chrono::Utc::now(),
+                updated_at: chrono::Utc::now(),
+            }))
         });
 
         let token_repo = mock_token_repo();
@@ -1321,6 +1303,17 @@ mod tests {
                     updated_at: chrono::Utc::now(),
                 }))
             });
+        external_login_repo.expect_find_by_user_id().returning(move |_| {
+            Ok(vec![UserExternalLogin {
+                id: Uuid::new_v4(),
+                user_id,
+                provider: "google".to_string(),
+                provider_user_id: "existing_oauth_123".to_string(),
+                linked_at: chrono::Utc::now(),
+                created_at: chrono::Utc::now(),
+                updated_at: chrono::Utc::now(),
+            }])
+        });
 
         // Mock user repository - return user by ID
         let mut user_repo = MockUserRepository::new();
@@ -1330,12 +1323,7 @@ mod tests {
                 email: "existing@example.com".to_string(),
                 display_name: "Existing User".to_string(),
                 slug: "existing-user".to_string(),
-                password_hash: None,
                 active: true,
-                real_name: Some("Existing User".to_string()),
-                google_user_id: None,
-                timer_is_public: false,
-                timer_show_in_list: false,
                 created_at: chrono::Utc::now(),
                 updated_at: chrono::Utc::now(),
             }))
@@ -1400,12 +1388,23 @@ mod tests {
             Ok(UserExternalLogin {
                 id: Uuid::new_v4(),
                 user_id: data.user_id,
-                provider: data.provider,
-                provider_user_id: data.provider_user_id,
+                provider: data.provider.clone(),
+                provider_user_id: data.provider_user_id.clone(),
                 linked_at: chrono::Utc::now(),
                 created_at: chrono::Utc::now(),
                 updated_at: chrono::Utc::now(),
             })
+        });
+        external_login_repo.expect_find_by_user_id().returning(move |_| {
+            Ok(vec![UserExternalLogin {
+                id: Uuid::new_v4(),
+                user_id,
+                provider: "google".to_string(),
+                provider_user_id: "link_oauth_123".to_string(),
+                linked_at: chrono::Utc::now(),
+                created_at: chrono::Utc::now(),
+                updated_at: chrono::Utc::now(),
+            }])
         });
 
         // Existing user with email (may or may not be verified)
@@ -1416,12 +1415,7 @@ mod tests {
                 email: "anyaccount@example.com".to_string(),
                 display_name: "Email User".to_string(),
                 slug: "email-user".to_string(),
-                password_hash: Some("hash".to_string()),
                 active: true,
-                real_name: None,
-                google_user_id: None,
-                timer_is_public: false,
-                timer_show_in_list: false,
                 created_at: chrono::Utc::now(),
                 updated_at: chrono::Utc::now(),
             }))
@@ -1449,6 +1443,18 @@ mod tests {
                 created_at: chrono::Utc::now(),
                 updated_at: chrono::Utc::now(),
             })
+        });
+        profile_repo.expect_find_by_user_id().returning(move |uid| {
+            Ok(Some(UserProfile {
+                user_id: uid,
+                real_name: Some("Link User".to_string()),
+                bio: None,
+                avatar_url: Some("https://example.com/pic.jpg".to_string()),
+                location: None,
+                website: None,
+                created_at: chrono::Utc::now(),
+                updated_at: chrono::Utc::now(),
+            }))
         });
 
         let token_repo = mock_token_repo();

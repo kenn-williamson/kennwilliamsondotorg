@@ -3,6 +3,27 @@
  * Consolidated from scattered locations for better organization
  */
 
+// Nested profile data structure (matches backend UserResponse)
+export interface ProfileData {
+  real_name?: string
+  bio?: string
+  avatar_url?: string
+  location?: string
+  website?: string
+}
+
+// External account data structure (OAuth providers)
+export interface ExternalAccount {
+  provider: string
+  linked_at: string
+}
+
+// User preferences structure
+export interface PreferencesData {
+  timer_is_public: boolean
+  timer_show_in_list: boolean
+}
+
 // User types (from shared/types/auth.d.ts)
 export interface AuthenticatedUser {
   id: string
@@ -11,9 +32,10 @@ export interface AuthenticatedUser {
   slug: string
   roles: string[]
   created_at: string
-  email_verified?: boolean
-  real_name?: string
-  google_user_id?: string
+  email_verified: boolean
+  profile?: ProfileData
+  external_accounts: ExternalAccount[]
+  preferences?: PreferencesData
 }
 
 export interface User {
@@ -24,6 +46,10 @@ export interface User {
   roles: string[]
   created_at: string
   active: boolean
+  email_verified: boolean
+  profile?: ProfileData
+  external_accounts: ExternalAccount[]
+  preferences?: PreferencesData
 }
 
 export interface UserSession {
