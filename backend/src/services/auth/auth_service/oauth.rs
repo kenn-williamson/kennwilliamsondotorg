@@ -461,10 +461,9 @@ mod tests {
     }
 
     // Helper to create mock user repo that expects new OAuth user creation
-    fn mock_user_repo_for_new_oauth_user(google_user_id: &str) -> MockUserRepository {
+    fn mock_user_repo_for_new_oauth_user(_google_user_id: &str) -> MockUserRepository {
         use uuid::Uuid;
 
-        let google_id = google_user_id.to_string();
         let mut user_repo = MockUserRepository::new();
         user_repo
             .expect_find_by_google_user_id()
@@ -496,23 +495,16 @@ mod tests {
 
     // Helper to create mock token repo
     fn mock_token_repo() -> MockRefreshTokenRepository {
-        use crate::models::db::refresh_token::RefreshToken;
-        use uuid::Uuid;
-
         let mut token_repo = MockRefreshTokenRepository::new();
         token_repo
             .expect_create_token()
             .returning(|_| {
-                Ok(RefreshToken {
-                    id: Uuid::new_v4(),
-                    user_id: Uuid::new_v4(),
-                    token_hash: "hash".to_string(),
-                    device_info: None,
-                    expires_at: chrono::Utc::now() + chrono::Duration::days(7),
-                    created_at: chrono::Utc::now(),
-                    updated_at: chrono::Utc::now(),
-                    last_used_at: None,
-                })
+                Ok(crate::test_utils::RefreshTokenBuilder::new()
+                    .with_token_hash("hash")
+                    .without_device_info()
+                    .expires_at(chrono::Utc::now() + chrono::Duration::days(7))
+                    .never_used()
+                    .build())
             });
         token_repo
     }
@@ -828,7 +820,6 @@ mod tests {
         let mock_oauth = MockGoogleOAuthService::new().with_user_info(user_info);
 
         // Mock repository to return existing user with google_user_id
-        let existing_google_id = "existing_google_id".to_string();
         let mut user_repo = MockUserRepository::new();
         user_repo
             .expect_find_by_google_user_id()
@@ -1072,7 +1063,6 @@ mod tests {
         let mock_oauth = MockGoogleOAuthService::new().with_user_info(user_info);
 
         // Mock repository to return existing user with old real_name
-        let update_google_id = "update_name_id".to_string();
         let mut user_repo = MockUserRepository::new();
         user_repo
             .expect_find_by_google_user_id()

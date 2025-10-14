@@ -65,19 +65,6 @@ impl UserCredentialsRepository for PostgresUserCredentialsRepository {
         Ok(())
     }
 
-    async fn delete(&self, user_id: Uuid) -> Result<()> {
-        sqlx::query(
-            r#"
-            DELETE FROM user_credentials
-            WHERE user_id = $1
-            "#,
-        )
-        .bind(user_id)
-        .execute(&self.pool)
-        .await?;
-
-        Ok(())
-    }
 
     async fn has_password(&self, user_id: Uuid) -> Result<bool> {
         let result: Option<bool> = sqlx::query_scalar(

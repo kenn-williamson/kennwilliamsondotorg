@@ -147,6 +147,7 @@ pub async fn assign_email_verified_role(pool: &sqlx::PgPool, user_id_str: &str) 
 // ============================================================================
 
 /// Creates a test refresh token in the database
+/// Uses RefreshTokenBuilder pattern for resilient test fixtures
 #[allow(dead_code)]
 pub async fn create_test_refresh_token_in_db(
     pool: &PgPool,
@@ -154,35 +155,15 @@ pub async fn create_test_refresh_token_in_db(
     token_hash: &str,
     expires_at: chrono::DateTime<chrono::Utc>,
 ) -> Result<backend::models::db::refresh_token::RefreshToken, sqlx::Error> {
-    use backend::models::db::refresh_token::RefreshToken;
+    use backend::test_utils::RefreshTokenBuilder;
 
-    let refresh_token = RefreshToken {
-        id: uuid::Uuid::new_v4(),
-        user_id,
-        token_hash: token_hash.to_string(),
-        device_info: None,
-        expires_at,
-        created_at: chrono::Utc::now(),
-        updated_at: chrono::Utc::now(),
-        last_used_at: None,
-    };
-
-    sqlx::query(
-        "INSERT INTO refresh_tokens (id, user_id, token_hash, device_info, expires_at, created_at, updated_at, last_used_at)
-         VALUES ($1, $2, $3, $4, $5, $6, $7, $8)"
-    )
-    .bind(refresh_token.id)
-    .bind(refresh_token.user_id)
-    .bind(&refresh_token.token_hash)
-    .bind(&refresh_token.device_info)
-    .bind(refresh_token.expires_at)
-    .bind(refresh_token.created_at)
-    .bind(refresh_token.updated_at)
-    .bind(refresh_token.last_used_at)
-    .execute(pool)
-    .await?;
-
-    Ok(refresh_token)
+    RefreshTokenBuilder::new()
+        .with_user_id(user_id)
+        .with_token_hash(token_hash)
+        .expires_at(expires_at)
+        .persist(pool)
+        .await
+        .map_err(|e| sqlx::Error::Protocol(e.to_string()))
 }
 
 // ============================================================================

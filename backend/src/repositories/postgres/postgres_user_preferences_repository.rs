@@ -71,18 +71,4 @@ impl UserPreferencesRepository for PostgresUserPreferencesRepository {
 
         Ok(())
     }
-
-    async fn delete(&self, user_id: Uuid) -> Result<()> {
-        sqlx::query(
-            r#"
-            DELETE FROM user_preferences
-            WHERE user_id = $1
-            "#,
-        )
-        .bind(user_id)
-        .execute(&self.pool)
-        .await?;
-
-        Ok(())
-    }
 }

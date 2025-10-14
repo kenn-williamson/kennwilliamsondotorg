@@ -88,20 +88,6 @@ impl UserExternalLoginRepository for PostgresUserExternalLoginRepository {
         Ok(())
     }
 
-    async fn delete(&self, id: Uuid) -> Result<()> {
-        sqlx::query(
-            r#"
-            DELETE FROM user_external_logins
-            WHERE id = $1
-            "#,
-        )
-        .bind(id)
-        .execute(&self.pool)
-        .await?;
-
-        Ok(())
-    }
-
     async fn is_provider_linked(&self, user_id: Uuid, provider: &str) -> Result<bool> {
         let result: Option<bool> = sqlx::query_scalar(
             r#"

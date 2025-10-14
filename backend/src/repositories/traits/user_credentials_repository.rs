@@ -8,6 +8,9 @@ use crate::models::db::user_credentials::UserCredentials;
 #[async_trait]
 pub trait UserCredentialsRepository: Send + Sync {
     /// Create credentials for a user (during registration or password set)
+    /// TODO: Implement feature for OAuth users to add password authentication (low priority - see ROADMAP.md)
+    /// Note: Currently handled by UserRepository transactions during initial registration
+    #[allow(dead_code)]
     async fn create(&self, user_id: Uuid, password_hash: String) -> Result<UserCredentials>;
 
     /// Find credentials by user ID
@@ -15,9 +18,6 @@ pub trait UserCredentialsRepository: Send + Sync {
 
     /// Update password hash (during password change)
     async fn update_password(&self, user_id: Uuid, new_password_hash: String) -> Result<()>;
-
-    /// Delete credentials (during account deletion or password removal)
-    async fn delete(&self, user_id: Uuid) -> Result<()>;
 
     /// Check if user has password credentials
     async fn has_password(&self, user_id: Uuid) -> Result<bool>;

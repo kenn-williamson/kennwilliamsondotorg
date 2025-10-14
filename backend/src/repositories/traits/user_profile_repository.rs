@@ -25,7 +25,4 @@ pub trait UserProfileRepository: Send + Sync {
 
     /// Update profile fields (only updates provided fields)
     async fn update(&self, user_id: Uuid, data: UpdateProfile) -> Result<UserProfile>;
-
-    /// Delete profile (during account deletion)
-    async fn delete(&self, user_id: Uuid) -> Result<()>;
 }

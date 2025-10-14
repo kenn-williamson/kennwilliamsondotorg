@@ -170,23 +170,5 @@ async fn test_update_profile_partial() {
     assert_eq!(updated.location, Some("New York".to_string()));
 }
 
-#[tokio::test]
-async fn test_delete_profile() {
-    let test_container = crate::fixtures::TestContainer::builder()
-        .build()
-        .await
-        .expect("Failed to create test container");
-    let repo = PostgresUserProfileRepository::new(test_container.pool.clone());
-
-    let user = create_test_user(&test_container.pool).await;
-
-    // Create profile
-    repo.create(user.id).await.unwrap();
-
-    // Delete profile
-    repo.delete(user.id).await.unwrap();
-
-    // Verify deletion
-    let found = repo.find_by_user_id(user.id).await.unwrap();
-    assert!(found.is_none());
-}
+// Note: delete() method removed - CASCADE handles deletion when user is deleted
+// Test removed: test_delete_profile

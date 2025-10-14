@@ -28,11 +28,12 @@ pub trait UserExternalLoginRepository: Send + Sync {
     async fn find_by_user_id(&self, user_id: Uuid) -> Result<Vec<UserExternalLogin>>;
 
     /// Unlink a provider from a user
+    /// Planned feature for account settings page
+    #[allow(dead_code)]
     async fn unlink_provider(&self, user_id: Uuid, provider: &str) -> Result<()>;
 
-    /// Delete external login by ID
-    async fn delete(&self, id: Uuid) -> Result<()>;
-
     /// Check if provider is linked to user
+    /// Planned feature for multi-provider OAuth UI
+    #[allow(dead_code)]
     async fn is_provider_linked(&self, user_id: Uuid, provider: &str) -> Result<bool>;
 }

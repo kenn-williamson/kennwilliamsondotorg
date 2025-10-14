@@ -18,7 +18,6 @@ mock! {
         async fn find_by_provider(&self, provider: &str, provider_user_id: &str) -> Result<Option<UserExternalLogin>>;
         async fn find_by_user_id(&self, user_id: Uuid) -> Result<Vec<UserExternalLogin>>;
         async fn unlink_provider(&self, user_id: Uuid, provider: &str) -> Result<()>;
-        async fn delete(&self, id: Uuid) -> Result<()>;
         async fn is_provider_linked(&self, user_id: Uuid, provider: &str) -> Result<bool>;
     }
 }

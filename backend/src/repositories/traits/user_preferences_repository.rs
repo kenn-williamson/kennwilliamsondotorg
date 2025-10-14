@@ -14,13 +14,12 @@ pub trait UserPreferencesRepository: Send + Sync {
     async fn find_by_user_id(&self, user_id: Uuid) -> Result<Option<UserPreferences>>;
 
     /// Update timer visibility settings
+    /// Planned feature for timer privacy controls
+    #[allow(dead_code)]
     async fn update_timer_settings(
         &self,
         user_id: Uuid,
         is_public: bool,
         show_in_list: bool,
     ) -> Result<()>;
-
-    /// Delete preferences (during account deletion)
-    async fn delete(&self, user_id: Uuid) -> Result<()>;
 }

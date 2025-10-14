@@ -173,16 +173,11 @@ mod tests {
     }
 
     fn create_test_refresh_token() -> RefreshToken {
-        RefreshToken {
-            id: Uuid::new_v4(),
-            user_id: Uuid::new_v4(),
-            token_hash: "test_token_hash".to_string(),
-            device_info: None,
-            expires_at: Utc::now() + chrono::Duration::days(7),
-            created_at: Utc::now(),
-            updated_at: Utc::now(),
-            last_used_at: None,
-        }
+        crate::test_utils::RefreshTokenBuilder::new()
+            .with_token_hash("test_token_hash".to_string())
+            .without_device_info()
+            .expires_in_days(7)
+            .build()
     }
 
     #[tokio::test]

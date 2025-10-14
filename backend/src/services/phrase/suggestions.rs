@@ -58,8 +58,8 @@ mod tests {
     use super::*;
     use crate::models::db::PhraseSuggestion;
     use crate::repositories::traits::PhraseRepository;
+    use crate::test_utils::PhraseSuggestionBuilder;
     use async_trait::async_trait;
-    use chrono::Utc;
     use mockall::mock;
     use std::sync::Arc;
 
@@ -89,16 +89,10 @@ mod tests {
     }
 
     fn create_test_suggestion() -> PhraseSuggestion {
-        PhraseSuggestion {
-            id: Uuid::new_v4(),
-            user_id: Uuid::new_v4(),
-            phrase_text: "Test suggestion".to_string(),
-            status: "pending".to_string(),
-            admin_id: None,
-            admin_reason: None,
-            created_at: Utc::now(),
-            updated_at: Utc::now(),
-        }
+        PhraseSuggestionBuilder::new()
+            .with_text("Test suggestion")
+            .pending()
+            .build()
     }
 
     #[tokio::test]

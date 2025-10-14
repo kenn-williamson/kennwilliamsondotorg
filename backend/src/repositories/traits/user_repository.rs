@@ -8,6 +8,8 @@ use crate::models::db::user::{User, UserWithTimer};
 #[derive(Debug, Clone)]
 pub struct CreateUserData {
     pub email: String,
+    /// Password hash field - replaced by create_user_with_auth_data transaction
+    #[allow(dead_code)]
     pub password_hash: String,
     pub display_name: String,
     pub slug: String,
@@ -95,6 +97,8 @@ pub trait UserRepository: Send + Sync {
 
     /// Update timer privacy settings for a user
     /// Returns error if show_in_list=true but is_public=false
+    /// Planned feature for timer privacy controls (moved to user_preferences table)
+    #[allow(dead_code)]
     async fn update_timer_privacy(
         &self,
         user_id: Uuid,
@@ -104,6 +108,8 @@ pub trait UserRepository: Send + Sync {
 
     /// Get users with public timers for the list page
     /// Only returns users where both flags are true
+    /// Planned feature for public timer discovery
+    #[allow(dead_code)]
     async fn get_users_with_public_timers(
         &self,
         limit: i64,
@@ -111,5 +117,7 @@ pub trait UserRepository: Send + Sync {
     ) -> Result<Vec<UserWithTimer>>;
 
     /// Get user by slug (for public pages)
+    /// Planned feature for public profile pages
+    #[allow(dead_code)]
     async fn get_by_slug(&self, slug: &str) -> Result<User>;
 }

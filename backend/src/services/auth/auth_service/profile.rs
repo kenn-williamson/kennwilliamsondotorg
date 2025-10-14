@@ -102,6 +102,8 @@ impl AuthService {
     }
 
     /// Update timer privacy settings
+    /// Planned feature for timer privacy controls
+    #[allow(dead_code)]
     pub async fn update_timer_privacy(
         &self,
         user_id: Uuid,
@@ -129,15 +131,10 @@ impl AuthService {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::repositories::mocks::{
-        mock_refresh_token_repository::MockRefreshTokenRepository,
-        mock_user_credentials_repository::MockUserCredentialsRepository,
-        mock_user_external_login_repository::MockUserExternalLoginRepository,
-        mock_user_preferences_repository::MockUserPreferencesRepository,
-        mock_user_profile_repository::MockUserProfileRepository,
-        mock_user_repository::MockUserRepository,
-    };
-    use crate::models::db::{User, UserPreferences, UserProfile};
+    use crate::repositories::mocks::mock_refresh_token_repository::MockRefreshTokenRepository;
+    use crate::repositories::mocks::mock_user_preferences_repository::MockUserPreferencesRepository;
+    use crate::repositories::mocks::mock_user_repository::MockUserRepository;
+    use crate::models::db::User;
     use anyhow::Result;
     use chrono::Utc;
     use mockall::predicate::eq;
@@ -150,29 +147,6 @@ mod tests {
             display_name: "Test User".to_string(),
             slug: "test-user".to_string(),
             active: true,
-            created_at: Utc::now(),
-            updated_at: Utc::now(),
-        }
-    }
-
-    fn create_test_profile(user_id: Uuid) -> UserProfile {
-        UserProfile {
-            user_id,
-            real_name: Some("John Doe".to_string()),
-            bio: None,
-            avatar_url: None,
-            location: None,
-            website: None,
-            created_at: Utc::now(),
-            updated_at: Utc::now(),
-        }
-    }
-
-    fn create_test_preferences(user_id: Uuid) -> UserPreferences {
-        UserPreferences {
-            user_id,
-            timer_is_public: false,
-            timer_show_in_list: false,
             created_at: Utc::now(),
             updated_at: Utc::now(),
         }

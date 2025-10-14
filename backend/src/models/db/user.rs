@@ -4,6 +4,7 @@ use sqlx::FromRow;
 use uuid::Uuid;
 
 /// User with timer data for public timer list
+#[allow(dead_code)] // Planned feature for public timer list
 #[derive(Debug, Clone, FromRow, Serialize)]
 pub struct UserWithTimer {
     pub id: Uuid,

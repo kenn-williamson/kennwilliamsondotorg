@@ -39,7 +39,6 @@ fn validate_timestamp(timestamp: &chrono::DateTime<chrono::Utc>) -> Result<()> {
 mod tests {
     use super::*;
     use crate::models::api::CreateIncidentTimer;
-    use crate::models::db::IncidentTimer;
     use crate::repositories::traits::incident_timer_repository::CreateTimerData;
     use mockall::predicate::*;
     use uuid::Uuid;
@@ -55,14 +54,13 @@ mod tests {
             notes: Some("Test notes".to_string()),
         };
 
-        let expected_timer = IncidentTimer {
-            id: Uuid::new_v4(),
-            user_id,
-            reset_timestamp: now,
-            notes: Some("Test notes".to_string()),
-            created_at: now,
-            updated_at: now,
-        };
+        let expected_timer = crate::test_utils::IncidentTimerBuilder::new()
+            .with_user_id(user_id)
+            .with_reset_timestamp(now)
+            .with_notes("Test notes")
+            .created_at(now)
+            .updated_at(now)
+            .build();
 
         mock_repo
             .expect_create_timer()
@@ -96,14 +94,10 @@ mod tests {
             notes: None,
         };
 
-        let expected_timer = IncidentTimer {
-            id: Uuid::new_v4(),
-            user_id,
-            reset_timestamp: chrono::Utc::now(),
-            notes: None,
-            created_at: chrono::Utc::now(),
-            updated_at: chrono::Utc::now(),
-        };
+        let expected_timer = crate::test_utils::IncidentTimerBuilder::new()
+            .with_user_id(user_id)
+            .without_notes()
+            .build();
 
         mock_repo
             .expect_create_timer()

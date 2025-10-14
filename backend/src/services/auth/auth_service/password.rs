@@ -74,15 +74,6 @@ mod tests {
         }
     }
 
-    fn create_test_credential() -> crate::models::db::UserCredentials {
-        crate::models::db::UserCredentials {
-            user_id: Uuid::new_v4(),
-            password_hash: hash("current_password", DEFAULT_COST).unwrap(),
-            password_updated_at: Utc::now(),
-            created_at: Utc::now(),
-        }
-    }
-
     #[tokio::test]
     async fn change_password_successful() -> Result<()> {
         let mut user_repo = MockUserRepository::new();

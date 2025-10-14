@@ -249,6 +249,7 @@ mod tests {
         MockUserRepository, MockVerificationTokenRepository,
     };
     use crate::services::auth::auth_service::AuthServiceBuilder;
+    use crate::test_utils::{IncidentTimerBuilder, PhraseSuggestionBuilder, RefreshTokenBuilder};
     use chrono::Utc;
     use uuid::Uuid;
 
@@ -265,40 +266,28 @@ mod tests {
     }
 
     fn create_test_incident_timer(user_id: Uuid) -> IncidentTimer {
-        IncidentTimer {
-            id: Uuid::new_v4(),
-            user_id,
-            reset_timestamp: Utc::now(),
-            notes: Some("Test notes".to_string()),
-            created_at: Utc::now(),
-            updated_at: Utc::now(),
-        }
+        IncidentTimerBuilder::new()
+            .with_user_id(user_id)
+            .with_notes("Test notes")
+            .build()
     }
 
     fn create_test_phrase_suggestion(user_id: Uuid) -> PhraseSuggestion {
-        PhraseSuggestion {
-            id: Uuid::new_v4(),
-            user_id,
-            phrase_text: "test phrase".to_string(),
-            status: "pending".to_string(),
-            admin_id: None,
-            admin_reason: None,
-            created_at: Utc::now(),
-            updated_at: Utc::now(),
-        }
+        PhraseSuggestionBuilder::new()
+            .with_user_id(user_id)
+            .with_text("test phrase")
+            .pending()
+            .build()
     }
 
     fn create_test_refresh_token(user_id: Uuid) -> RefreshToken {
-        RefreshToken {
-            id: Uuid::new_v4(),
-            user_id,
-            token_hash: "hashed_token".to_string(),
-            device_info: Some(serde_json::json!({"device": "test"})),
-            created_at: Utc::now(),
-            updated_at: Utc::now(),
-            last_used_at: Some(Utc::now()),
-            expires_at: Utc::now() + chrono::Duration::days(30),
-        }
+        RefreshTokenBuilder::new()
+            .with_user_id(user_id)
+            .with_token_hash("hashed_token")
+            .with_device_info(serde_json::json!({"device": "test"}))
+            .last_used_at(Utc::now())
+            .expires_in_days(30)
+            .build()
     }
 
     fn create_test_verification_token(user_id: Uuid) -> VerificationToken {

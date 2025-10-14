@@ -59,7 +59,6 @@ async fn validate_ownership(
 mod tests {
     use super::*;
     use crate::models::api::UpdateIncidentTimer;
-    use crate::models::db::IncidentTimer;
     use crate::repositories::traits::incident_timer_repository::TimerUpdates;
     use mockall::predicate::*;
     use uuid::Uuid;
@@ -76,14 +75,14 @@ mod tests {
             notes: Some("Updated notes".to_string()),
         };
 
-        let expected_timer = IncidentTimer {
-            id: timer_id,
-            user_id,
-            reset_timestamp: now,
-            notes: Some("Updated notes".to_string()),
-            created_at: now - chrono::Duration::hours(1),
-            updated_at: now,
-        };
+        let expected_timer = crate::test_utils::IncidentTimerBuilder::new()
+            .with_id(timer_id)
+            .with_user_id(user_id)
+            .with_reset_timestamp(now)
+            .with_notes("Updated notes")
+            .created_at(now - chrono::Duration::hours(1))
+            .updated_at(now)
+            .build();
 
         mock_repo
             .expect_timer_belongs_to_user()

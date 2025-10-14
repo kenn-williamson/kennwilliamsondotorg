@@ -337,14 +337,16 @@ fn create_test_jwt(_ctx: &TestContext, user_id: Uuid) -> String {
 
 /// Create basic test data for a user
 async fn create_test_user_data(ctx: &TestContext, user_id: Uuid) {
+    use backend::test_utils::{IncidentTimerBuilder, RefreshTokenBuilder};
+
     // Create incident timer
-    sqlx::query("INSERT INTO incident_timers (user_id, notes) VALUES ($1, $2)")
-        .bind(user_id)
-        .bind("Test timer")
-        .execute(&ctx.pool)
+    IncidentTimerBuilder::new()
+        .with_user_id(user_id)
+        .with_notes("Test timer")
+        .persist(&ctx.pool)
         .await
         .unwrap();
-    
+
     // Create phrase exclusion
     let phrase_id = create_test_phrase(&ctx).await;
     sqlx::query("INSERT INTO user_excluded_phrases (user_id, phrase_id) VALUES ($1, $2)")
@@ -353,29 +355,31 @@ async fn create_test_user_data(ctx: &TestContext, user_id: Uuid) {
         .execute(&ctx.pool)
         .await
         .unwrap();
-    
+
     // Create refresh token
-    sqlx::query("INSERT INTO refresh_tokens (user_id, token_hash, expires_at) VALUES ($1, $2, $3)")
-        .bind(user_id)
-        .bind("test_token_hash")
-        .bind(chrono::Utc::now() + chrono::Duration::days(30))
-        .execute(&ctx.pool)
+    RefreshTokenBuilder::new()
+        .with_user_id(user_id)
+        .with_token_hash("test_token_hash")
+        .expires_in_days(30)
+        .persist(&ctx.pool)
         .await
         .unwrap();
 }
 
 /// Create comprehensive test data for a user
 async fn create_comprehensive_test_data(ctx: &TestContext, user_id: Uuid) {
+    use backend::test_utils::{IncidentTimerBuilder, RefreshTokenBuilder};
+
     // Create multiple incident timers
     for i in 1..=3 {
-        sqlx::query("INSERT INTO incident_timers (user_id, notes) VALUES ($1, $2)")
-            .bind(user_id)
-            .bind(format!("Test timer {}", i))
-            .execute(&ctx.pool)
+        IncidentTimerBuilder::new()
+            .with_user_id(user_id)
+            .with_notes(&format!("Test timer {}", i))
+            .persist(&ctx.pool)
             .await
             .unwrap();
     }
-    
+
     // Create multiple phrase exclusions
     for _i in 1..=2 {
         let phrase_id = create_test_phrase(&ctx).await;
@@ -386,14 +390,14 @@ async fn create_comprehensive_test_data(ctx: &TestContext, user_id: Uuid) {
             .await
             .unwrap();
     }
-    
+
     // Create multiple refresh tokens
     for i in 1..=2 {
-        sqlx::query("INSERT INTO refresh_tokens (user_id, token_hash, expires_at) VALUES ($1, $2, $3)")
-            .bind(user_id)
-            .bind(format!("test_token_hash_{}", i))
-            .bind(chrono::Utc::now() + chrono::Duration::days(30))
-            .execute(&ctx.pool)
+        RefreshTokenBuilder::new()
+            .with_user_id(user_id)
+            .with_token_hash(&format!("test_token_hash_{}", i))
+            .expires_in_days(30)
+            .persist(&ctx.pool)
             .await
             .unwrap();
     }
@@ -401,11 +405,13 @@ async fn create_comprehensive_test_data(ctx: &TestContext, user_id: Uuid) {
 
 /// Create phrases owned by a user
 async fn create_user_phrases(ctx: &TestContext, user_id: Uuid) {
+    use backend::test_utils::PhraseBuilder;
+
     for i in 1..=3 {
-        sqlx::query("INSERT INTO phrases (phrase_text, created_by) VALUES ($1, $2)")
-            .bind(format!("User phrase {}", i))
-            .bind(user_id)
-            .execute(&ctx.pool)
+        PhraseBuilder::new()
+            .with_text(&format!("User phrase {}", i))
+            .with_created_by(user_id)
+            .persist(&ctx.pool)
             .await
             .unwrap();
     }
@@ -413,12 +419,14 @@ async fn create_user_phrases(ctx: &TestContext, user_id: Uuid) {
 
 /// Create phrase suggestions for a user
 async fn create_phrase_suggestions(ctx: &TestContext, user_id: Uuid) {
+    use backend::test_utils::PhraseSuggestionBuilder;
+
     for i in 1..=2 {
-        sqlx::query("INSERT INTO phrase_suggestions (phrase_text, user_id, status) VALUES ($1, $2, $3)")
-            .bind(format!("Suggested phrase {}", i))
-            .bind(user_id)
-            .bind("pending")
-            .execute(&ctx.pool)
+        PhraseSuggestionBuilder::new()
+            .with_text(&format!("Suggested phrase {}", i))
+            .with_user_id(user_id)
+            .pending()
+            .persist(&ctx.pool)
             .await
             .unwrap();
     }
@@ -426,18 +434,18 @@ async fn create_phrase_suggestions(ctx: &TestContext, user_id: Uuid) {
 
 /// Create a test phrase and return its ID
 async fn create_test_phrase(ctx: &TestContext) -> Uuid {
+    use backend::test_utils::PhraseBuilder;
+
     let system_user_id = get_system_user_id(&ctx).await;
-    
-    let result = sqlx::query_scalar::<_, Uuid>(
-        "INSERT INTO phrases (phrase_text, created_by) VALUES ($1, $2) RETURNING id"
-    )
-    .bind("Test phrase for exclusion")
-    .bind(system_user_id)
-    .fetch_one(&ctx.pool)
-    .await
-    .unwrap();
-    
-    result
+
+    let phrase = PhraseBuilder::new()
+        .with_text("Test phrase for exclusion")
+        .with_created_by(system_user_id)
+        .persist(&ctx.pool)
+        .await
+        .unwrap();
+
+    phrase.id
 }
 
 /// Get system user ID

@@ -28,7 +28,8 @@ pub trait PasswordResetTokenRepository: Send + Sync {
     /// Mark a token as used (sets used_at timestamp)
     async fn mark_token_used(&self, token_hash: &str) -> Result<bool>;
 
-    /// Delete all tokens for a user
+    /// Delete all tokens for a user (planned admin feature)
+    #[allow(dead_code)]
     async fn delete_all_user_tokens(&self, user_id: Uuid) -> Result<u64>;
 
     /// Find all password reset tokens for a user (for data export)

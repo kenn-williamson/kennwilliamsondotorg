@@ -1,14 +1,10 @@
 use actix_cors::Cors;
 use actix_web::{web, App, HttpServer};
+use backend::routes;
+use backend::services;
 use dotenv::dotenv;
 use sqlx::PgPool;
 use std::env;
-
-mod middleware;
-mod models;
-mod repositories;
-mod routes;
-mod services;
 
 async fn request_logging_middleware(
     req: actix_web::dev::ServiceRequest,

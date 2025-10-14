@@ -171,33 +171,8 @@ async fn test_is_provider_linked() {
     assert_eq!(is_linked, true);
 }
 
-#[tokio::test]
-async fn test_delete_external_login() {
-    let test_container = crate::fixtures::TestContainer::builder()
-        .build()
-        .await
-        .expect("Failed to create test container");
-    let repo = PostgresUserExternalLoginRepository::new(test_container.pool.clone());
-
-    let user = create_test_user(&test_container.pool).await;
-
-    // Create login
-    let login = repo
-        .create(CreateExternalLogin {
-            user_id: user.id,
-            provider: "google".to_string(),
-            provider_user_id: "google_123".to_string(),
-        })
-        .await
-        .unwrap();
-
-    // Delete by ID
-    repo.delete(login.id).await.unwrap();
-
-    // Verify deleted
-    let found = repo.find_by_provider("google", "google_123").await.unwrap();
-    assert!(found.is_none());
-}
+// Note: delete() method removed - CASCADE handles deletion when user is deleted
+// Test removed: test_delete_external_login
 
 #[tokio::test]
 async fn test_unique_provider_constraint() {

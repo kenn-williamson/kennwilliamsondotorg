@@ -25,7 +25,6 @@ impl IncidentTimerService {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::models::db::IncidentTimer;
     use mockall::predicate::*;
     use uuid::Uuid;
 
@@ -35,14 +34,12 @@ mod tests {
         let mut mock_repo = crate::repositories::mocks::MockIncidentTimerRepository::new();
         let user_slug = "test-user";
         let now = chrono::Utc::now();
-        let timer = IncidentTimer {
-            id: Uuid::new_v4(),
-            user_id: Uuid::new_v4(),
-            reset_timestamp: now,
-            notes: Some("Test notes".to_string()),
-            created_at: now,
-            updated_at: now,
-        };
+        let timer = crate::test_utils::IncidentTimerBuilder::new()
+            .with_reset_timestamp(now)
+            .with_notes("Test notes")
+            .created_at(now)
+            .updated_at(now)
+            .build();
         let display_name = "Test User".to_string();
 
         mock_repo
@@ -92,22 +89,20 @@ mod tests {
         let user_id = Uuid::new_v4();
         let now = chrono::Utc::now();
         let timers = vec![
-            IncidentTimer {
-                id: Uuid::new_v4(),
-                user_id,
-                reset_timestamp: now,
-                notes: Some("Timer 1".to_string()),
-                created_at: now,
-                updated_at: now,
-            },
-            IncidentTimer {
-                id: Uuid::new_v4(),
-                user_id,
-                reset_timestamp: now - chrono::Duration::hours(1),
-                notes: Some("Timer 2".to_string()),
-                created_at: now - chrono::Duration::hours(1),
-                updated_at: now - chrono::Duration::hours(1),
-            },
+            crate::test_utils::IncidentTimerBuilder::new()
+                .with_user_id(user_id)
+                .with_reset_timestamp(now)
+                .with_notes("Timer 1")
+                .created_at(now)
+                .updated_at(now)
+                .build(),
+            crate::test_utils::IncidentTimerBuilder::new()
+                .with_user_id(user_id)
+                .with_reset_timestamp(now - chrono::Duration::hours(1))
+                .with_notes("Timer 2")
+                .created_at(now - chrono::Duration::hours(1))
+                .updated_at(now - chrono::Duration::hours(1))
+                .build(),
         ];
 
         mock_repo

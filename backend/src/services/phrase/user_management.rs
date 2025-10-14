@@ -117,7 +117,6 @@ mod tests {
     use crate::models::db::{Phrase, PhraseSearchResultWithUserExclusionView};
     use crate::repositories::traits::PhraseRepository;
     use async_trait::async_trait;
-    use chrono::Utc;
     use mockall::mock;
     use std::sync::Arc;
 
@@ -147,14 +146,9 @@ mod tests {
     }
 
     fn create_test_phrase() -> Phrase {
-        Phrase {
-            id: Uuid::new_v4(),
-            phrase_text: "Test phrase".to_string(),
-            active: true,
-            created_by: Uuid::new_v4(),
-            created_at: Utc::now(),
-            updated_at: Utc::now(),
-        }
+        crate::test_utils::PhraseBuilder::new()
+            .with_text("Test phrase")
+            .build()
     }
 
     #[tokio::test]

@@ -47,8 +47,10 @@ impl CleanupService {
 mod tests {
     use super::*;
     use crate::models::db::refresh_token::{CreateRefreshToken, RefreshToken};
-    use crate::models::db::user::VerificationToken;
-    use crate::repositories::traits::{RefreshTokenRepository, VerificationTokenRepository};
+    use crate::models::db::user::{PasswordResetToken, VerificationToken};
+    use crate::repositories::traits::{
+        PasswordResetTokenRepository, RefreshTokenRepository, VerificationTokenRepository,
+    };
     use async_trait::async_trait;
     use uuid::Uuid;
 
@@ -127,36 +129,206 @@ mod tests {
         }
     }
 
-    // Note: Cleanup service tests are skipped for now as they need password reset token repository
-    // The service itself is tested through integration tests
+    // Mock PasswordResetTokenRepository for testing
+    struct MockPasswordResetTokenRepository {
+        cleanup_count: u64,
+        should_fail: bool,
+    }
+
+    #[async_trait]
+    impl PasswordResetTokenRepository for MockPasswordResetTokenRepository {
+        async fn create_token(
+            &self,
+            _token_data: &crate::repositories::traits::password_reset_token_repository::CreatePasswordResetTokenData,
+        ) -> Result<PasswordResetToken> {
+            unimplemented!()
+        }
+
+        async fn find_by_token_hash(&self, _token_hash: &str) -> Result<Option<PasswordResetToken>> {
+            unimplemented!()
+        }
+
+        async fn mark_token_used(&self, _token_hash: &str) -> Result<bool> {
+            unimplemented!()
+        }
+
+        async fn delete_all_user_tokens(&self, _user_id: Uuid) -> Result<u64> {
+            unimplemented!()
+        }
+
+        async fn find_by_user_id(&self, _user_id: Uuid) -> Result<Vec<PasswordResetToken>> {
+            unimplemented!()
+        }
+
+        async fn delete_expired_tokens(&self) -> Result<u64> {
+            if self.should_fail {
+                anyhow::bail!("Mock password reset token cleanup failed");
+            }
+            Ok(self.cleanup_count)
+        }
+    }
+
     #[tokio::test]
-    #[ignore]
     async fn test_cleanup_service_creation() {
-        // This test is skipped until we add MockPasswordResetTokenRepository here
-        // The service is tested in integration tests
+        let refresh_repo = MockRefreshTokenRepository {
+            cleanup_count: 0,
+            should_fail: false,
+        };
+        let verification_repo = MockVerificationTokenRepository {
+            cleanup_count: 0,
+            should_fail: false,
+        };
+        let password_reset_repo = MockPasswordResetTokenRepository {
+            cleanup_count: 0,
+            should_fail: false,
+        };
+
+        let service = CleanupService::new(
+            Box::new(refresh_repo),
+            Box::new(verification_repo),
+            Box::new(password_reset_repo),
+        );
+
+        // Service should be created successfully
+        assert!(service.refresh_token_repository.cleanup_expired_tokens().await.is_ok());
     }
 
     #[tokio::test]
-    #[ignore]
-    async fn test_cleanup_calls_both_repositories() {
-        // Test skipped - needs password reset token repository
+    async fn test_cleanup_calls_all_three_repositories() {
+        let refresh_repo = MockRefreshTokenRepository {
+            cleanup_count: 5,
+            should_fail: false,
+        };
+        let verification_repo = MockVerificationTokenRepository {
+            cleanup_count: 3,
+            should_fail: false,
+        };
+        let password_reset_repo = MockPasswordResetTokenRepository {
+            cleanup_count: 2,
+            should_fail: false,
+        };
+
+        let service = CleanupService::new(
+            Box::new(refresh_repo),
+            Box::new(verification_repo),
+            Box::new(password_reset_repo),
+        );
+
+        let result = service.cleanup_expired_tokens().await;
+        assert!(result.is_ok());
+        assert_eq!(result.unwrap(), 10); // 5 + 3 + 2
     }
 
     #[tokio::test]
-    #[ignore]
     async fn test_cleanup_returns_zero_when_no_tokens() {
-        // Test skipped - needs password reset token repository
+        let refresh_repo = MockRefreshTokenRepository {
+            cleanup_count: 0,
+            should_fail: false,
+        };
+        let verification_repo = MockVerificationTokenRepository {
+            cleanup_count: 0,
+            should_fail: false,
+        };
+        let password_reset_repo = MockPasswordResetTokenRepository {
+            cleanup_count: 0,
+            should_fail: false,
+        };
+
+        let service = CleanupService::new(
+            Box::new(refresh_repo),
+            Box::new(verification_repo),
+            Box::new(password_reset_repo),
+        );
+
+        let result = service.cleanup_expired_tokens().await;
+        assert!(result.is_ok());
+        assert_eq!(result.unwrap(), 0);
     }
 
     #[tokio::test]
-    #[ignore]
     async fn test_cleanup_handles_refresh_token_error() {
-        // Test skipped - needs password reset token repository
+        let refresh_repo = MockRefreshTokenRepository {
+            cleanup_count: 0,
+            should_fail: true, // Will cause error
+        };
+        let verification_repo = MockVerificationTokenRepository {
+            cleanup_count: 0,
+            should_fail: false,
+        };
+        let password_reset_repo = MockPasswordResetTokenRepository {
+            cleanup_count: 0,
+            should_fail: false,
+        };
+
+        let service = CleanupService::new(
+            Box::new(refresh_repo),
+            Box::new(verification_repo),
+            Box::new(password_reset_repo),
+        );
+
+        let result = service.cleanup_expired_tokens().await;
+        assert!(result.is_err());
+        assert!(result
+            .unwrap_err()
+            .to_string()
+            .contains("Mock refresh token cleanup failed"));
     }
 
     #[tokio::test]
-    #[ignore]
     async fn test_cleanup_handles_verification_token_error() {
-        // Test skipped - needs password reset token repository
+        let refresh_repo = MockRefreshTokenRepository {
+            cleanup_count: 5,
+            should_fail: false,
+        };
+        let verification_repo = MockVerificationTokenRepository {
+            cleanup_count: 0,
+            should_fail: true, // Will cause error
+        };
+        let password_reset_repo = MockPasswordResetTokenRepository {
+            cleanup_count: 0,
+            should_fail: false,
+        };
+
+        let service = CleanupService::new(
+            Box::new(refresh_repo),
+            Box::new(verification_repo),
+            Box::new(password_reset_repo),
+        );
+
+        let result = service.cleanup_expired_tokens().await;
+        assert!(result.is_err());
+        assert!(result
+            .unwrap_err()
+            .to_string()
+            .contains("Mock verification token cleanup failed"));
+    }
+
+    #[tokio::test]
+    async fn test_cleanup_handles_password_reset_token_error() {
+        let refresh_repo = MockRefreshTokenRepository {
+            cleanup_count: 5,
+            should_fail: false,
+        };
+        let verification_repo = MockVerificationTokenRepository {
+            cleanup_count: 3,
+            should_fail: false,
+        };
+        let password_reset_repo = MockPasswordResetTokenRepository {
+            cleanup_count: 0,
+            should_fail: true, // Will cause error
+        };
+
+        let service = CleanupService::new(
+            Box::new(refresh_repo),
+            Box::new(verification_repo),
+            Box::new(password_reset_repo),
+        );
+
+        let result = service.cleanup_expired_tokens().await;
+        assert!(result.is_err());
+        assert!(result
+            .unwrap_err()
+            .to_string()
+            .contains("Mock password reset token cleanup failed"));
     }
 }

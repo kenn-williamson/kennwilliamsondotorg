@@ -74,18 +74,4 @@ impl UserProfileRepository for PostgresUserProfileRepository {
 
         Ok(profile)
     }
-
-    async fn delete(&self, user_id: Uuid) -> Result<()> {
-        sqlx::query(
-            r#"
-            DELETE FROM user_profiles
-            WHERE user_id = $1
-            "#,
-        )
-        .bind(user_id)
-        .execute(&self.pool)
-        .await?;
-
-        Ok(())
-    }
 }

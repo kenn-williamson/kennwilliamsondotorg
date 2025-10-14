@@ -32,14 +32,9 @@ mod tests {
 
     // Helper function to create a test incident timer
     fn create_test_incident_timer() -> IncidentTimer {
-        IncidentTimer {
-            id: Uuid::new_v4(),
-            user_id: Uuid::new_v4(),
-            reset_timestamp: Utc::now(),
-            notes: Some("Test incident".to_string()),
-            created_at: Utc::now(),
-            updated_at: Utc::now(),
-        }
+        crate::test_utils::IncidentTimerBuilder::new()
+            .with_notes("Test incident")
+            .build()
     }
 
     // Helper function to create test data

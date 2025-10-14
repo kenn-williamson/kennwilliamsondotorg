@@ -5,9 +5,6 @@ pub mod routes;
 pub mod services;
 
 // Test utilities - Available to both unit tests (in src/) and integration tests (in tests/)
-//
-// Not behind #[cfg(test)] so integration tests can use it.
-// This is idiomatic Rust - test utilities can be regular modules.
-// They don't affect production if not imported.
-#[doc(hidden)]  // Hide from public docs but allow use in tests
+// Gated behind the mocks feature to prevent compilation in production
+#[cfg(any(test, feature = "mocks"))]
 pub mod test_utils;

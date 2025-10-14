@@ -14,6 +14,10 @@ use crate::repositories::postgres::{
     postgres_password_reset_token_repository::PostgresPasswordResetTokenRepository,
     postgres_phrase_repository::PostgresPhraseRepository,
     postgres_refresh_token_repository::PostgresRefreshTokenRepository,
+    postgres_user_credentials_repository::PostgresUserCredentialsRepository,
+    postgres_user_external_login_repository::PostgresUserExternalLoginRepository,
+    postgres_user_preferences_repository::PostgresUserPreferencesRepository,
+    postgres_user_profile_repository::PostgresUserProfileRepository,
     postgres_user_repository::PostgresUserRepository,
     postgres_verification_token_repository::PostgresVerificationTokenRepository,
 };
@@ -70,6 +74,10 @@ impl ServiceContainer {
         // Create services with repository dependencies using builder pattern
         let mut auth_builder = AuthService::builder()
             .user_repository(Box::new(PostgresUserRepository::new(pool.clone())))
+            .credentials_repository(Box::new(PostgresUserCredentialsRepository::new(pool.clone())))
+            .external_login_repository(Box::new(PostgresUserExternalLoginRepository::new(pool.clone())))
+            .profile_repository(Box::new(PostgresUserProfileRepository::new(pool.clone())))
+            .preferences_repository(Box::new(PostgresUserPreferencesRepository::new(pool.clone())))
             .refresh_token_repository(Box::new(PostgresRefreshTokenRepository::new(
                 pool.clone(),
             )))

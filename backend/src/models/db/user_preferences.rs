@@ -15,7 +15,8 @@ pub struct UserPreferences {
 }
 
 impl UserPreferences {
-    /// Create default preferences for a new user
+    /// Create default preferences for a new user (primarily for testing)
+    #[cfg(test)]
     pub fn default_for_user(user_id: Uuid) -> Self {
         let now = Utc::now();
         Self {

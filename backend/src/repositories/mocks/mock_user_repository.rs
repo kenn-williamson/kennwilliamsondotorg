@@ -41,7 +41,6 @@ mod tests {
     use super::*;
     use crate::models::db::user::test_helpers::*;
     use mockall::predicate::eq;
-    use uuid::Uuid;
 
     // Helper function to create test data
     fn create_test_user_data() -> CreateUserData {
