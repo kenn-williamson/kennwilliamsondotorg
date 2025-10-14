@@ -577,6 +577,42 @@
 - **Maintainable**: Role-based system easily extensible for future access levels
 - **Secure**: Role validation prevents unauthorized role assignments
 
+### Authentication Schema Normalization Refactor
+**Achievement**: Complete migration from monolithic users table to normalized multi-table architecture following TDD approach across 9 implementation phases.
+
+**Key Deliverables**:
+- **Normalized Schema**: Split users table into 5 dedicated tables (`users`, `user_credentials`, `user_external_logins`, `user_profiles`, `user_preferences`)
+- **Multi-Provider OAuth**: Architecture now supports multiple OAuth providers (Google implemented, ready for GitHub, Microsoft, LinkedIn)
+- **Repository Layer**: 4 new repository traits with PostgreSQL and mock implementations
+- **Zero Data Loss**: Safe migration with data backfill and reversible down migrations
+- **Test Infrastructure**: Builder pattern implementation with comprehensive test coverage
+- **GDPR/CCPA Compliance**: Data export updated to v2.0 including all new tables
+
+**Technical Implementation**:
+- **Phase 0-1**: Database schema design and migration implementation with proper constraints
+- **Phase 2A-2B**: Core user models refactored and new table models created
+- **Phase 3A-3B**: Repository traits and implementations for all new tables
+- **Phase 4A-4D**: Service layer updates for registration, login, OAuth, and profile management
+- **Phase 5**: Critical GDPR/CCPA data export updates to include all new tables
+- **Phase 6**: Test infrastructure refactor with builder pattern
+- **Phase 7**: Data migration script with dual-write implementation
+- **Phase 8**: Integration testing and comprehensive test suite fixes
+- **Phase 9**: Cutover with old column removal and documentation updates
+
+**Architecture Benefits**:
+- **Maintainability**: Normalized structure eliminates test brittleness when adding preference fields
+- **Scalability**: Multi-provider OAuth support ready for future providers
+- **GDPR/CCPA**: Comprehensive data export across all user-related tables
+- **Performance**: Optimized queries with proper indexing on new tables
+- **Testing**: Builder pattern simplifies test data creation
+- **Reversibility**: Complete rollback capability with down migrations
+
+**Migration Results**:
+- All 620 tests passing (445 backend + 175 frontend)
+- Zero data loss during migration
+- Old columns successfully dropped from users table
+- UserBuilder moved to `src/test_utils/` for broader usage
+
 ### GDPR/CCPA Compliance Implementation - Account Deletion & Data Export
 **Achievement**: Complete implementation of self-service account deletion and data export/portability features fulfilling critical GDPR/CCPA compliance requirements.
 
@@ -632,15 +668,16 @@
 
 ## Current Status
 - **Application**: Live at kennwilliamson.org with full production infrastructure
-- **Testing**: 220 total backend tests + 175 frontend tests with comprehensive coverage across all architectural layers
+- **Testing**: 620 total tests (445 backend + 175 frontend) with comprehensive coverage across all architectural layers
 - **Development Environment**: Complete hot reload with production-like routing
 - **Documentation**: Comprehensive implementation and workflow documentation with hybrid API architecture
 - **Architecture**: Clean 3-layer architecture with repository pattern, dependency injection, and comprehensive testing infrastructure
-- **Authentication**: Complete JWT refresh token system with Google OAuth PKCE and email verification
-- **OAuth**: Google OAuth integration with PKCE flow and Redis state storage
+- **Database Schema**: Normalized multi-table user authentication (users, user_credentials, user_external_logins, user_profiles, user_preferences)
+- **Authentication**: Complete JWT refresh token system with multi-provider OAuth architecture (Google implemented)
+- **OAuth**: Multi-provider OAuth support with PKCE flow and Redis state storage (Google active, ready for additional providers)
 - **Email Verification**: AWS SES integration with token-based verification system
 - **Legal Infrastructure**: Privacy Policy and Terms of Service with compliance gaps analysis
-- **Data Privacy**: Self-service account deletion and data export (GDPR/CCPA compliant)
+- **Data Privacy**: Self-service account deletion and data export (GDPR/CCPA compliant with all normalized tables)
 - **Deployment**: Production deployment complete with SSL and monitoring
 - **User Experience**: Critical timer bugs resolved with proper focus/visibility handling
 - **Phrases System**: Complete dynamic phrase system with 5-tab user interface and admin backend endpoints
