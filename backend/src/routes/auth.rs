@@ -3,7 +3,7 @@ use serde_json::json;
 use uuid::Uuid;
 
 use crate::models::api::{
-    CreateUserRequest, LoginRequest, PasswordChangeRequest, ProfileUpdateRequest,
+    CreateUserRequest, LoginRequest, PasswordChangeRequest, SetPasswordRequest, ProfileUpdateRequest,
     RefreshTokenRequest, RevokeTokenRequest, SlugPreviewRequest, SlugValidationRequest,
     VerifyEmailRequest,
 };
@@ -249,6 +249,39 @@ pub async fn change_password(
                 })))
             } else {
                 log::error!("Password change error: {}", err);
+                Ok(HttpResponse::InternalServerError().json(serde_json::json!({
+                    "error": "Internal server error"
+                })))
+            }
+        }
+    }
+}
+
+pub async fn set_password(
+    req: HttpRequest,
+    data: web::Json<SetPasswordRequest>,
+    auth_service: web::Data<AuthService>,
+) -> ActixResult<HttpResponse> {
+    let user_id = req.extensions().get::<Uuid>().cloned().unwrap();
+
+    match auth_service
+        .set_password(user_id, data.into_inner())
+        .await
+    {
+        Ok(()) => Ok(HttpResponse::Ok().json(serde_json::json!({
+            "message": "Password set successfully"
+        }))),
+        Err(err) => {
+            if err.to_string().contains("already has password credentials") {
+                Ok(HttpResponse::BadRequest().json(serde_json::json!({
+                    "error": "User already has password credentials. Use change-password endpoint instead."
+                })))
+            } else if err.to_string().contains("User not found") {
+                Ok(HttpResponse::NotFound().json(serde_json::json!({
+                    "error": "User not found"
+                })))
+            } else {
+                log::error!("Password set error: {}", err);
                 Ok(HttpResponse::InternalServerError().json(serde_json::json!({
                     "error": "Internal server error"
                 })))

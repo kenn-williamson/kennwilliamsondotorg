@@ -2,7 +2,7 @@
  * Centralized Admin Store - State management with actions
  */
 
-import type { User, AdminStats, AdminResetPasswordResponse } from '#shared/types'
+import type { User, AdminStats, AdminResetPasswordResponse, AccessRequestWithUser } from '#shared/types'
 import type { PhraseSuggestion } from '#shared/types/phrases'
 import { adminService } from '~/services/adminService'
 import { useSmartFetch } from '~/composables/useSmartFetch'
@@ -12,6 +12,7 @@ import { useDebounceFn } from '@vueuse/core'
 export const useAdminStore = defineStore('admin', () => {
   const users = ref<User[]>([])
   const suggestions = ref<PhraseSuggestion[]>([])
+  const accessRequests = ref<AccessRequestWithUser[]>([])
   const stats = ref<AdminStats | null>(null)
   const searchQuery = ref('')
   const selectedUser = ref<User | null>(null)
@@ -26,6 +27,10 @@ export const useAdminStore = defineStore('admin', () => {
   
   const pendingSuggestions = computed((): PhraseSuggestion[] => {
     return suggestions.value
+  })
+
+  const pendingAccessRequests = computed((): AccessRequestWithUser[] => {
+    return accessRequests.value.filter(req => req.status === 'pending')
   })
 
   // Service instance
@@ -121,6 +126,14 @@ export const useAdminStore = defineStore('admin', () => {
     return data
   }
 
+  const fetchAccessRequests = async () => {
+    const data = await _handleAction(() => adminServiceInstance.getAccessRequests(), 'fetchAccessRequests')
+    if (data) {
+      accessRequests.value = data.requests
+    }
+    return data
+  }
+
   const deactivateUser = async (userId: string) => {
     await _handleAction(() => adminServiceInstance.deactivateUser(userId), 'deactivateUser')
     _handleSuccess('User deactivated successfully')
@@ -203,9 +216,25 @@ export const useAdminStore = defineStore('admin', () => {
   const rejectSuggestion = async (suggestionId: string, adminReason: string) => {
     await _handleAction(() => adminServiceInstance.rejectSuggestion(suggestionId, adminReason), 'rejectSuggestion')
     _handleSuccess('Suggestion rejected successfully')
-    
+
     // Remove from local state
     suggestions.value = suggestions.value.filter(s => s.id !== suggestionId)
+  }
+
+  const approveAccessRequest = async (requestId: string, adminReason: string) => {
+    await _handleAction(() => adminServiceInstance.approveAccessRequest(requestId, adminReason), 'approveAccessRequest')
+    _handleSuccess('Access request approved successfully')
+
+    // Remove from local state
+    accessRequests.value = accessRequests.value.filter(r => r.id !== requestId)
+  }
+
+  const rejectAccessRequest = async (requestId: string, adminReason: string) => {
+    await _handleAction(() => adminServiceInstance.rejectAccessRequest(requestId, adminReason), 'rejectAccessRequest')
+    _handleSuccess('Access request rejected successfully')
+
+    // Remove from local state
+    accessRequests.value = accessRequests.value.filter(r => r.id !== requestId)
   }
 
   // Pure state management functions
@@ -215,6 +244,10 @@ export const useAdminStore = defineStore('admin', () => {
 
   const setSuggestions = (suggestionsList: PhraseSuggestion[]) => {
     suggestions.value = suggestionsList
+  }
+
+  const setAccessRequests = (requestsList: AccessRequestWithUser[]) => {
+    accessRequests.value = requestsList
   }
 
   const setStats = (statsData: AdminStats) => {
@@ -255,6 +288,10 @@ export const useAdminStore = defineStore('admin', () => {
     suggestions.value = suggestions.value.filter(s => s.id !== suggestionId)
   }
 
+  const removeAccessRequest = (requestId: string) => {
+    accessRequests.value = accessRequests.value.filter(r => r.id !== requestId)
+  }
+
   const clearNewPassword = () => {
     newPassword.value = null
   }
@@ -262,6 +299,7 @@ export const useAdminStore = defineStore('admin', () => {
   const clearState = () => {
     users.value = []
     suggestions.value = []
+    accessRequests.value = []
     stats.value = null
     searchQuery.value = ''
     selectedUser.value = null
@@ -273,6 +311,7 @@ export const useAdminStore = defineStore('admin', () => {
   const clearAllData = () => {
     users.value = []
     suggestions.value = []
+    accessRequests.value = []
     stats.value = null
     searchQuery.value = ''
     selectedUser.value = null
@@ -280,7 +319,7 @@ export const useAdminStore = defineStore('admin', () => {
     activeTab.value = 'overview'
     isLoading.value = false
     error.value = null
-    
+
     console.log('🧹 [AdminStore] All data cleared')
   }
 
@@ -295,6 +334,7 @@ export const useAdminStore = defineStore('admin', () => {
   return {
     users: readonly(users),
     suggestions: readonly(suggestions),
+    accessRequests: readonly(accessRequests),
     stats: readonly(stats),
     searchQuery: readonly(searchQuery),
     selectedUser: readonly(selectedUser),
@@ -302,14 +342,16 @@ export const useAdminStore = defineStore('admin', () => {
     activeTab: readonly(activeTab),
     isLoading: readonly(isLoading),
     error: readonly(error),
-    
+
     pendingSuggestions,
+    pendingAccessRequests,
     hasError,
-    
+
     fetchStats,
     fetchStatsSSR,
     fetchUsers,
     fetchSuggestions,
+    fetchAccessRequests,
     searchUsers,
     deactivateUser,
     activateUser,
@@ -319,9 +361,12 @@ export const useAdminStore = defineStore('admin', () => {
     removeUserRole,
     approveSuggestion,
     rejectSuggestion,
-    
+    approveAccessRequest,
+    rejectAccessRequest,
+
     setUsers,
     setSuggestions,
+    setAccessRequests,
     setStats,
     setSearchQuery,
     setSelectedUser,
@@ -330,6 +375,7 @@ export const useAdminStore = defineStore('admin', () => {
     updateUserActiveStatus,
     updateUserRoles,
     removeSuggestion,
+    removeAccessRequest,
     clearNewPassword,
     clearState,
     clearAllData,

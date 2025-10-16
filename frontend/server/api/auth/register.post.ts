@@ -4,6 +4,7 @@ import { useRuntimeConfig } from '#imports'
 import { getClientInfo } from '../../utils/client-ip'
 import { API_ROUTES } from '#shared/config/api-routes'
 import { rateLimitMiddleware } from '../../utils/rate-limiter'
+import type { AuthResponse } from '#shared/types'
 
 const bodySchema = z.object({
   email: z.string().email(),
@@ -31,18 +32,7 @@ export default defineEventHandler(async (event: any) => {
     
     console.log(`🔍 [Register API] Client IP: ${clientInfo.ip}, User-Agent: ${clientInfo.userAgent}`)
     
-    const response = await $fetch<{
-      token: string
-      refresh_token: string
-      user: {
-        id: string
-        email: string
-        display_name: string
-        slug: string
-        roles: string[]
-        created_at: string
-      }
-    }>(`${config.apiBase}${API_ROUTES.PUBLIC.AUTH.REGISTER}`, {
+    const response = await $fetch<AuthResponse>(`${config.apiBase}${API_ROUTES.PUBLIC.AUTH.REGISTER}`, {
       method: 'POST',
       body: { email, display_name, password },
       headers: {
@@ -53,16 +43,9 @@ export default defineEventHandler(async (event: any) => {
         'User-Agent': clientInfo.userAgent
       }
     })
-    
+
     await setUserSession(event, {
-      user: {
-        id: response.user.id,
-        email: response.user.email,
-        display_name: response.user.display_name,
-        slug: response.user.slug,
-        roles: response.user.roles,
-        created_at: response.user.created_at
-      },
+      user: response.user,
       secure: {
         // Store the JWT token and refresh token for backend API calls
         jwtToken: response.token,

@@ -1,5 +1,6 @@
 #![cfg(feature = "mocks")]
 
+pub mod mock_access_request_repository;
 pub mod mock_admin_repository;
 pub mod mock_email_suppression_repository;
 pub mod mock_incident_timer_repository;
@@ -14,6 +15,7 @@ pub mod mock_user_profile_repository;
 pub mod mock_user_repository;
 pub mod mock_verification_token_repository;
 
+pub use mock_access_request_repository::MockAccessRequestRepository;
 pub use mock_admin_repository::MockAdminRepository;
 #[allow(unused_imports)]
 pub use mock_email_suppression_repository::MockEmailSuppressionRepository;

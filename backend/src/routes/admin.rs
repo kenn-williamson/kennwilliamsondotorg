@@ -5,7 +5,9 @@ use crate::models::api::{
     AdminActionRequest, CreatePhraseRequest, PasswordResetResponse, PhraseListResponse,
     UpdatePhraseRequest, UserSearchQuery,
 };
-use crate::services::admin::{PhraseModerationService, StatsService, UserManagementService};
+use crate::services::admin::{
+    AccessRequestModerationService, PhraseModerationService, StatsService, UserManagementService,
+};
 use crate::services::phrase::PhraseService;
 
 /// Get phrases (admin only)
@@ -368,6 +370,79 @@ pub async fn reject_suggestion(
             log::error!("Failed to reject suggestion: {}", e);
             Ok(HttpResponse::InternalServerError().json(serde_json::json!({
                 "error": "Failed to reject suggestion"
+            })))
+        }
+    }
+}
+
+/// Get pending access requests (admin only)
+pub async fn get_pending_access_requests(
+    access_request_moderation_service: web::Data<AccessRequestModerationService>,
+    _req: HttpRequest,
+) -> Result<HttpResponse> {
+    match access_request_moderation_service
+        .get_pending_requests()
+        .await
+    {
+        Ok(response) => Ok(HttpResponse::Ok().json(response)),
+        Err(e) => {
+            log::error!("Failed to get pending access requests: {}", e);
+            Ok(HttpResponse::InternalServerError().json(serde_json::json!({
+                "error": "Failed to get pending access requests"
+            })))
+        }
+    }
+}
+
+/// Approve access request (admin only)
+pub async fn approve_access_request(
+    access_request_moderation_service: web::Data<AccessRequestModerationService>,
+    req: HttpRequest,
+    path: web::Path<Uuid>,
+    request: Option<web::Json<AdminActionRequest>>,
+) -> Result<HttpResponse> {
+    let admin_id = req.extensions().get::<Uuid>().cloned().unwrap();
+    let request_id = path.into_inner();
+    let admin_reason = request.and_then(|r| r.admin_reason.clone());
+
+    match access_request_moderation_service
+        .approve_request(request_id, admin_id, admin_reason)
+        .await
+    {
+        Ok(_) => Ok(HttpResponse::Ok().json(serde_json::json!({
+            "message": "Access request approved successfully"
+        }))),
+        Err(e) => {
+            log::error!("Failed to approve access request: {}", e);
+            Ok(HttpResponse::InternalServerError().json(serde_json::json!({
+                "error": "Failed to approve access request"
+            })))
+        }
+    }
+}
+
+/// Reject access request (admin only)
+pub async fn reject_access_request(
+    access_request_moderation_service: web::Data<AccessRequestModerationService>,
+    req: HttpRequest,
+    path: web::Path<Uuid>,
+    request: Option<web::Json<AdminActionRequest>>,
+) -> Result<HttpResponse> {
+    let admin_id = req.extensions().get::<Uuid>().cloned().unwrap();
+    let request_id = path.into_inner();
+    let admin_reason = request.and_then(|r| r.admin_reason.clone());
+
+    match access_request_moderation_service
+        .reject_request(request_id, admin_id, admin_reason)
+        .await
+    {
+        Ok(_) => Ok(HttpResponse::Ok().json(serde_json::json!({
+            "message": "Access request rejected successfully"
+        }))),
+        Err(e) => {
+            log::error!("Failed to reject access request: {}", e);
+            Ok(HttpResponse::InternalServerError().json(serde_json::json!({
+                "error": "Failed to reject access request"
             })))
         }
     }

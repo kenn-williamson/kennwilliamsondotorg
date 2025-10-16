@@ -1,0 +1,16 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "\n            UPDATE access_requests\n            SET status = 'approved', admin_id = $1, admin_reason = $2, updated_at = NOW()\n            WHERE id = $3 AND status = 'pending'\n            ",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Left": [
+        "Uuid",
+        "Text",
+        "Uuid"
+      ]
+    },
+    "nullable": []
+  },
+  "hash": "7b8031860220be42dccf02437e24bcc081888f9d2b72c4b8b950549ecdaa5d6b"
+}

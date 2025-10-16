@@ -6,7 +6,7 @@
 import { authProfileService } from '~/services/authProfileService'
 import { useBaseService } from '~/composables/useBaseService'
 import { useSmartFetch } from '~/composables/useSmartFetch'
-import type { ProfileUpdateRequest, PasswordChangeRequest, SlugPreviewResponse } from '#shared/types'
+import type { ProfileUpdateRequest, PasswordChangeRequest, SetPasswordRequest, SlugPreviewResponse } from '#shared/types'
 
 export const useAuthProfileActions = () => {
   // Destructure base service utilities
@@ -21,6 +21,7 @@ export const useAuthProfileActions = () => {
   const {
     updateProfile: updateProfileService,
     changePassword: changePasswordService,
+    setPassword: setPasswordService,
     previewSlug: previewSlugService,
     validateSlug: validateSlugService,
     deleteAccount: deleteAccountService,
@@ -48,6 +49,14 @@ export const useAuthProfileActions = () => {
       () => changePasswordService(data),
       'Password changed successfully',
       'changePassword'
+    )
+  }
+
+  const setPassword = async (data: SetPasswordRequest): Promise<{ message: string }> => {
+    return executeRequestWithSuccess(
+      () => setPasswordService(data),
+      'Password set successfully',
+      'setPassword'
     )
   }
 
@@ -91,6 +100,7 @@ export const useAuthProfileActions = () => {
   return {
     updateProfile,
     changePassword,
+    setPassword,
     previewSlug,
     validateSlug,
     deleteAccount,

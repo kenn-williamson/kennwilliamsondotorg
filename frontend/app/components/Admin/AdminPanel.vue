@@ -25,6 +25,11 @@
       <div v-else-if="adminStore.activeTab === 'suggestions'" class="tab-panel">
         <PhraseSuggestionApprovalTab />
       </div>
+
+      <!-- Access Requests Tab -->
+      <div v-else-if="adminStore.activeTab === 'access-requests'" class="tab-panel">
+        <AccessRequestsTab />
+      </div>
     </div>
   </div>
 </template>

@@ -35,6 +35,16 @@
                         {{ section.title }}
                       </NuxtLink>
                     </li>
+                    <!-- Request Access item when content is restricted -->
+                    <li v-if="hasRestrictedContent && !hasTrustedContactAccess">
+                      <NuxtLink
+                        to="/about/request-access"
+                        class="block px-3 py-2 rounded transition-colors bg-gradient-to-r from-purple-100 to-indigo-100 border-2 border-purple-400 text-purple-900 hover:from-purple-200 hover:to-indigo-200 font-semibold text-center"
+                        @click="mobileMenuOpen = false"
+                      >
+                        🔑 Request Access
+                      </NuxtLink>
+                    </li>
                   </ul>
                 </nav>
               </Transition>
@@ -57,6 +67,15 @@
                     ]"
                   >
                     {{ section.title }}
+                  </NuxtLink>
+                </li>
+                <!-- Request Access item when content is restricted -->
+                <li v-if="hasRestrictedContent && !hasTrustedContactAccess" class="pt-2 mt-2 border-t-2 border-amber-300">
+                  <NuxtLink
+                    to="/about/request-access"
+                    class="block px-3 py-2 rounded transition-all duration-200 bg-gradient-to-r from-purple-100 to-indigo-100 border-2 border-purple-400 text-purple-900 hover:from-purple-200 hover:to-indigo-200 font-semibold text-center hover:shadow-md"
+                  >
+                    🔑 Request Access
                   </NuxtLink>
                 </li>
               </ul>
@@ -137,6 +156,11 @@ const { hasTrustedContactAccess } = useUserRoles()
 // Filter sections based on access - only show restricted sections if user has access
 const sections = computed(() => {
   return allSections.filter(section => !section.restricted || hasTrustedContactAccess.value)
+})
+
+// Check if there are any restricted sections in the full list
+const hasRestrictedContent = computed(() => {
+  return allSections.some(section => section.restricted)
 })
 
 // Check if current page

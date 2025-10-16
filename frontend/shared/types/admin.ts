@@ -11,6 +11,8 @@ export interface AdminStats {
   active_users: number
   pending_suggestions: number
   total_phrases: number
+  pending_access_requests: number
+  total_access_requests: number
 }
 
 // User management response types - now returns array directly

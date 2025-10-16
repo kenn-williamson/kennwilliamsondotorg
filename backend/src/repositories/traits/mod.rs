@@ -1,3 +1,4 @@
+pub mod access_request_repository;
 pub mod admin_repository;
 pub mod email_suppression_repository;
 pub mod incident_timer_repository;
@@ -12,6 +13,7 @@ pub mod user_profile_repository;
 pub mod user_repository;
 pub mod verification_token_repository;
 
+pub use access_request_repository::AccessRequestRepository;
 pub use admin_repository::AdminRepository;
 pub use incident_timer_repository::IncidentTimerRepository;
 pub use password_reset_token_repository::PasswordResetTokenRepository;

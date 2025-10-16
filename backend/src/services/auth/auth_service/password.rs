@@ -3,7 +3,7 @@ use bcrypt::{hash, verify, DEFAULT_COST};
 use uuid::Uuid;
 
 use super::AuthService;
-use crate::models::api::PasswordChangeRequest;
+use crate::models::api::{PasswordChangeRequest, SetPasswordRequest};
 
 impl AuthService {
     /// Change user password
@@ -44,6 +44,44 @@ impl AuthService {
         // Update password in credentials table
         credentials_repo
             .update_password(user_id, new_password_hash)
+            .await?;
+
+        Ok(())
+    }
+
+    /// Set password for users who don't have credentials (e.g., OAuth-only users)
+    /// This allows them to add password authentication to their account
+    pub async fn set_password(
+        &self,
+        user_id: Uuid,
+        request: SetPasswordRequest,
+    ) -> Result<()> {
+        // Get current user to verify they exist
+        let user = self.user_repository.find_by_id(user_id).await?;
+        if user.is_none() {
+            return Err(anyhow::anyhow!("User not found"));
+        }
+
+        // Get credentials repository
+        let credentials_repo = self
+            .credentials_repository
+            .as_ref()
+            .ok_or_else(|| anyhow::anyhow!("Credentials repository not configured"))?;
+
+        // Check if user already has credentials
+        let existing_credential = credentials_repo.find_by_user_id(user_id).await?;
+        if existing_credential.is_some() {
+            return Err(anyhow::anyhow!(
+                "User already has password credentials. Use change-password endpoint instead."
+            ));
+        }
+
+        // Hash new password
+        let password_hash = hash(&request.new_password, DEFAULT_COST)?;
+
+        // Create credentials for the user
+        credentials_repo
+            .create(user_id, password_hash)
             .await?;
 
         Ok(())

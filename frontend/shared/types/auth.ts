@@ -33,6 +33,7 @@ export interface AuthenticatedUser {
   roles: string[]
   created_at: string
   email_verified: boolean
+  has_credentials: boolean
   profile?: ProfileData
   external_accounts: ExternalAccount[]
   preferences?: PreferencesData
@@ -47,6 +48,7 @@ export interface User {
   created_at: string
   active: boolean
   email_verified: boolean
+  has_credentials: boolean
   profile?: ProfileData
   external_accounts: ExternalAccount[]
   preferences?: PreferencesData
@@ -123,6 +125,10 @@ export interface ProfileUpdateRequest {
 
 export interface PasswordChangeRequest {
   current_password: string
+  new_password: string
+}
+
+export interface SetPasswordRequest {
   new_password: string
 }
 

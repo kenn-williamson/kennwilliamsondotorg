@@ -49,6 +49,7 @@ export const API_ROUTES = {
       REVOKE_ALL: '/protected/auth/revoke-all',
       PROFILE: '/protected/auth/profile',
       CHANGE_PASSWORD: '/protected/auth/change-password',
+      SET_PASSWORD: '/protected/auth/set-password',
       VALIDATE_SLUG: '/protected/auth/validate-slug',
       SEND_VERIFICATION: '/protected/auth/send-verification',
       DELETE_ACCOUNT: '/protected/auth/delete-account',
@@ -67,6 +68,9 @@ export const API_ROUTES = {
       EXCLUDED: '/protected/phrases/excluded',
       EXCLUDE: (id: string) => `/protected/phrases/exclude/${id}`,
       SUGGESTIONS: '/protected/phrases/suggestions',
+    },
+    ACCESS_REQUESTS: {
+      CREATE: '/protected/access-requests',
     },
     ADMIN: {
       STATS: '/protected/admin/stats',
@@ -87,6 +91,11 @@ export const API_ROUTES = {
         LIST: '/protected/admin/suggestions',
         APPROVE: (id: string) => `/protected/admin/suggestions/${id}/approve`,
         REJECT: (id: string) => `/protected/admin/suggestions/${id}/reject`,
+      },
+      ACCESS_REQUESTS: {
+        LIST: '/protected/admin/access-requests',
+        APPROVE: (id: string) => `/protected/admin/access-requests/${id}/approve`,
+        REJECT: (id: string) => `/protected/admin/access-requests/${id}/reject`,
       },
     },
   },

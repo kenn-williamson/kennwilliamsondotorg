@@ -85,6 +85,28 @@ pub async fn get_users_by_email(pool: &PgPool, email: &str) -> Vec<backend::mode
     .unwrap()
 }
 
+/// Create a basic test user with password credentials
+#[allow(dead_code)]
+pub async fn create_test_user(
+    pool: &PgPool,
+    email: &str,
+    password: &str,
+    is_admin: bool,
+) -> backend::models::db::User {
+    let user = UserBuilder::new()
+        .with_email(email)
+        .with_password(password)
+        .persist(pool)
+        .await
+        .expect("Failed to create test user");
+
+    if is_admin {
+        assign_admin_role(pool, user.id).await;
+    }
+
+    user
+}
+
 // ============================================================================
 // ROLE MANAGEMENT
 // ============================================================================
@@ -140,6 +162,23 @@ pub async fn assign_email_verified_role(pool: &sqlx::PgPool, user_id_str: &str) 
     .execute(pool)
     .await
     .expect("Failed to assign email-verified role");
+}
+
+/// Get all roles for a specific user
+#[allow(dead_code)]
+pub async fn get_user_roles(pool: &PgPool, user_id: uuid::Uuid) -> Vec<String> {
+    sqlx::query_scalar::<_, String>(
+        r#"
+        SELECT r.name
+        FROM user_roles ur
+        JOIN roles r ON ur.role_id = r.id
+        WHERE ur.user_id = $1
+        "#
+    )
+    .bind(user_id)
+    .fetch_all(pool)
+    .await
+    .expect("Failed to fetch user roles")
 }
 
 // ============================================================================

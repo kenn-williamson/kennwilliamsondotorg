@@ -73,19 +73,64 @@ fi
 echo "✅ Password hash generated successfully"
 
 docker compose --env-file "$ENV_FILE" $COMPOSE_FILES exec -T postgres psql -U postgres -d kennwilliamson <<EOF
--- Insert test user
-INSERT INTO users (email, password_hash, display_name, slug)
-VALUES ('kenn@seqtek.com', '$TEST_PASSWORD_HASH', 'Kenn', 'kenn')
+-- Insert test user into users table (normalized schema)
+INSERT INTO users (email, display_name, slug)
+VALUES ('kenn@seqtek.com', 'Kenn', 'kenn')
 ON CONFLICT (email) DO NOTHING;
+
+-- Insert password credentials into user_credentials table
+INSERT INTO user_credentials (user_id, password_hash)
+SELECT u.id, '$TEST_PASSWORD_HASH'
+FROM users u
+WHERE u.email = 'kenn@seqtek.com'
+ON CONFLICT (user_id) DO UPDATE SET password_hash = EXCLUDED.password_hash;
+
+-- Insert default user preferences
+INSERT INTO user_preferences (user_id)
+SELECT u.id
+FROM users u
+WHERE u.email = 'kenn@seqtek.com'
+ON CONFLICT (user_id) DO NOTHING;
+
+-- Insert default user profile
+INSERT INTO user_profiles (user_id)
+SELECT u.id
+FROM users u
+WHERE u.email = 'kenn@seqtek.com'
+ON CONFLICT (user_id) DO NOTHING;
 
 -- Assign user role
 INSERT INTO user_roles (user_id, role_id)
-SELECT u.id, r.id FROM users u, roles r 
+SELECT u.id, r.id FROM users u, roles r
 WHERE u.email = 'kenn@seqtek.com' AND r.name = 'user'
 ON CONFLICT (user_id, role_id) DO NOTHING;
 
+-- Assign admin role
+INSERT INTO user_roles (user_id, role_id)
+SELECT u.id, r.id FROM users u, roles r
+WHERE u.email = 'kenn@seqtek.com' AND r.name = 'admin'
+ON CONFLICT (user_id, role_id) DO NOTHING;
+
+-- Assign email-verified role
+INSERT INTO user_roles (user_id, role_id)
+SELECT u.id, r.id FROM users u, roles r
+WHERE u.email = 'kenn@seqtek.com' AND r.name = 'email-verified'
+ON CONFLICT (user_id, role_id) DO NOTHING;
+
+-- Assign trusted-contact role
+INSERT INTO user_roles (user_id, role_id)
+SELECT u.id, r.id FROM users u, roles r
+WHERE u.email = 'kenn@seqtek.com' AND r.name = 'trusted-contact'
+ON CONFLICT (user_id, role_id) DO NOTHING;
+
 -- Verify test user creation
-SELECT email, display_name, slug FROM users WHERE email = 'kenn@seqtek.com';
+SELECT u.email, u.display_name, u.slug, u.active,
+       ARRAY_AGG(r.name) as roles
+FROM users u
+LEFT JOIN user_roles ur ON u.id = ur.user_id
+LEFT JOIN roles r ON ur.role_id = r.id
+WHERE u.email = 'kenn@seqtek.com'
+GROUP BY u.id, u.email, u.display_name, u.slug, u.active;
 EOF
 
 echo ""

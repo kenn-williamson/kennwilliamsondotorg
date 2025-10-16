@@ -17,7 +17,8 @@
     </div>
 
     <!-- Stats Display -->
-    <div v-else-if="displayStats" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+    <div v-else-if="displayStats" class="space-y-6">
+      <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
       <!-- Total Users -->
       <div class="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
         <div class="flex items-center">
@@ -77,6 +78,40 @@
           </div>
         </div>
       </div>
+      </div>
+
+      <!-- Access Requests Section -->
+      <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+        <!-- Pending Access Requests -->
+        <div class="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
+          <div class="flex items-center">
+            <div class="flex-shrink-0">
+              <div class="w-8 h-8 bg-orange-100 rounded-md flex items-center justify-center">
+                <span class="text-orange-600 text-lg">🔑</span>
+              </div>
+            </div>
+            <div class="ml-4">
+              <p class="text-sm font-medium text-gray-500">Pending Access Requests</p>
+              <p class="text-2xl font-semibold text-gray-900">{{ displayStats?.pending_access_requests || 0 }}</p>
+            </div>
+          </div>
+        </div>
+
+        <!-- Total Access Requests -->
+        <div class="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
+          <div class="flex items-center">
+            <div class="flex-shrink-0">
+              <div class="w-8 h-8 bg-indigo-100 rounded-md flex items-center justify-center">
+                <span class="text-indigo-600 text-lg">🔐</span>
+              </div>
+            </div>
+            <div class="ml-4">
+              <p class="text-sm font-medium text-gray-500">Total Access Requests</p>
+              <p class="text-2xl font-semibold text-gray-900">{{ displayStats?.total_access_requests || 0 }}</p>
+            </div>
+          </div>
+        </div>
+      </div>
     </div>
 
     <!-- Empty State -->
@@ -103,6 +138,8 @@ interface AdminStats {
   active_users: number
   pending_suggestions: number
   total_phrases: number
+  pending_access_requests: number
+  total_access_requests: number
 }
 
 const adminStore = useAdminStore()

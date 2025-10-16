@@ -166,7 +166,7 @@ mod tests {
 
         creds_repo
             .expect_find_by_user_id()
-            .times(1)
+            .times(2) // Called once for password check, once for has_credentials in response
             .returning(move |_| Ok(Some(create_test_credentials(user_id, "password123"))));
 
         user_repo
@@ -391,7 +391,7 @@ mod tests {
         // User has credentials in credentials table
         creds_repo
             .expect_find_by_user_id()
-            .times(1)
+            .times(2) // Called once for password check, once for has_credentials in response
             .returning(move |_| Ok(Some(create_test_credentials(user_id, "password123"))));
 
         user_repo
@@ -488,7 +488,7 @@ mod tests {
 
         creds_repo
             .expect_find_by_user_id()
-            .times(1)
+            .times(2) // Called once for password check, once for has_credentials in response
             .returning(move |_| Ok(Some(create_test_credentials(user_id, "password123"))));
 
         user_repo

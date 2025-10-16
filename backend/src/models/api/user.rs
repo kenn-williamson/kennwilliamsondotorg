@@ -52,6 +52,7 @@ pub struct UserResponse {
     pub slug: String,
     pub roles: Vec<String>,
     pub email_verified: bool,
+    pub has_credentials: bool,
     pub created_at: DateTime<Utc>,
     pub profile: Option<ProfileData>,
     pub external_accounts: Vec<ExternalAccount>,
@@ -118,6 +119,11 @@ pub struct PasswordChangeRequest {
     pub new_password: String,
 }
 
+#[derive(Debug, Deserialize)]
+pub struct SetPasswordRequest {
+    pub new_password: String,
+}
+
 impl UserResponse {
     /// Create UserResponse from core User and roles only (minimal data)
     /// NOTE: This creates an empty response - use AuthService::build_user_response_with_details for populated data
@@ -132,6 +138,7 @@ impl UserResponse {
             slug: user.slug,
             roles,
             email_verified,
+            has_credentials: false, // Minimal response doesn't check credentials
             created_at: user.created_at,
             profile: None,
             external_accounts: vec![],

@@ -242,11 +242,12 @@ impl TestContextBuilder {
         use backend::repositories::postgres::postgres_user_profile_repository::PostgresUserProfileRepository;
         use backend::repositories::postgres::postgres_user_preferences_repository::PostgresUserPreferencesRepository;
         use backend::repositories::postgres::postgres_password_reset_token_repository::PostgresPasswordResetTokenRepository;
+        use backend::repositories::postgres::postgres_access_request_repository::PostgresAccessRequestRepository;
         use backend::services::auth::AuthService;
         use backend::services::email::MockEmailService;
         use backend::services::incident_timer::IncidentTimerService;
         use backend::services::phrase::PhraseService;
-        use backend::services::admin::{UserManagementService, PhraseModerationService, StatsService};
+        use backend::services::admin::{AccessRequestModerationService, UserManagementService, PhraseModerationService, StatsService};
 
         let test_container = TestContainer::builder().build().await.expect("Failed to create test container");
         let jwt_secret = "test-jwt-secret-for-api-tests".to_string();
@@ -293,9 +294,14 @@ impl TestContextBuilder {
             Box::new(PostgresPhraseRepository::new(test_container.pool.clone()))
         ));
 
+        let access_request_moderation_service = Arc::new(AccessRequestModerationService::new(
+            Box::new(PostgresAccessRequestRepository::new(test_container.pool.clone()))
+        ));
+
         let stats_service = Arc::new(StatsService::new(
             Box::new(PostgresPhraseRepository::new(test_container.pool.clone())),
             Box::new(PostgresAdminRepository::new(test_container.pool.clone())),
+            Box::new(PostgresAccessRequestRepository::new(test_container.pool.clone())),
         ));
 
         // Use Redis or mock rate limiter depending on configuration
@@ -318,6 +324,7 @@ impl TestContextBuilder {
             phrase_service,
             admin_service,
             phrase_moderation_service,
+            access_request_moderation_service,
             stats_service,
             rate_limit_service,
             cleanup_service,
@@ -333,6 +340,7 @@ impl TestContextBuilder {
                 .app_data(web::Data::from(container.phrase_service.clone()))
                 .app_data(web::Data::from(container.admin_service.clone()))
                 .app_data(web::Data::from(container.phrase_moderation_service.clone()))
+                .app_data(web::Data::from(container.access_request_moderation_service.clone()))
                 .app_data(web::Data::from(container.stats_service.clone()))
                 .app_data(web::Data::from(container.rate_limit_service.clone()))
                 .configure(routes::configure_app_routes)

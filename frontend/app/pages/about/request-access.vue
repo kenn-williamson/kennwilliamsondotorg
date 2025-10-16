@@ -59,10 +59,10 @@
             <div class="flex gap-4">
               <button
                 type="submit"
-                :disabled="isSubmitting"
+                :disabled="isLoading"
                 class="flex-1 bg-amber-700 hover:bg-amber-800 disabled:bg-gray-400 text-white font-semibold py-3 px-6 rounded-md transition duration-200"
               >
-                {{ isSubmitting ? 'Submitting...' : 'Submit Request' }}
+                {{ isLoading ? 'Submitting...' : 'Submit Request' }}
               </button>
               <NuxtLink
                 to="/about"
@@ -72,7 +72,10 @@
               </NuxtLink>
             </div>
 
-            <p v-if="error" class="text-red-600 text-sm text-center">
+            <p v-if="validationError" class="text-red-600 text-sm text-center">
+              {{ validationError }}
+            </p>
+            <p v-if="hasError && error" class="text-red-600 text-sm text-center">
               {{ error }}
             </p>
           </form>
@@ -109,43 +112,32 @@ const formData = ref({
 })
 
 const submitted = ref(false)
-const isSubmitting = ref(false)
-const error = ref('')
+const validationError = ref('')
 
 const { user } = useUserSession()
+const { createAccessRequest, isLoading, error, hasError } = useAccessRequestActions()
 
 async function handleSubmit() {
+  // Clear previous validation errors
+  validationError.value = ''
+
+  // Client-side validation
   if (!formData.value.message.trim()) {
-    error.value = 'Please tell us how you know Kenn'
+    validationError.value = 'Please tell us how you know Kenn'
     return
   }
 
   if (!formData.value.understand) {
-    error.value = 'Please confirm that you understand the approval process'
+    validationError.value = 'Please confirm that you understand the approval process'
     return
   }
 
-  isSubmitting.value = true
-  error.value = ''
+  // Call the composable action
+  const result = await createAccessRequest(formData.value.message)
 
-  try {
-    // TODO: Replace with actual API call to backend
-    // For now, just simulate a request with a delay
-    await new Promise(resolve => setTimeout(resolve, 1000))
-
-    // Placeholder: Send email notification or create request record
-    console.log('Access request submitted:', {
-      userId: user.value?.id,
-      userEmail: user.value?.email,
-      message: formData.value.message
-    })
-
+  // If successful, show success state
+  if (result) {
     submitted.value = true
-  } catch (err) {
-    error.value = 'Failed to submit request. Please try again.'
-    console.error('Request submission error:', err)
-  } finally {
-    isSubmitting.value = false
   }
 }
 

@@ -127,6 +127,13 @@ impl AuthService {
             None
         };
 
+        // Check if user has password credentials
+        let has_credentials = if let Some(creds_repo) = &self.credentials_repository {
+            creds_repo.find_by_user_id(user.id).await?.is_some()
+        } else {
+            false
+        };
+
         Ok(UserResponse {
             id: user.id,
             email: user.email,
@@ -134,6 +141,7 @@ impl AuthService {
             slug: user.slug,
             roles,
             email_verified,
+            has_credentials,
             created_at: user.created_at,
             profile,
             external_accounts,

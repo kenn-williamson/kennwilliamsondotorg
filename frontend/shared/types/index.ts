@@ -21,6 +21,9 @@ export * from './common'
 // Admin types
 export * from './admin'
 
+// Access Request types
+export * from './access-requests'
+
 // API Routes types
 export * from './api-routes'
 

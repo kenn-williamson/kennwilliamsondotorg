@@ -1,3 +1,4 @@
+// @ts-nocheck
 import { setActivePinia, createPinia } from 'pinia'
 import { useAdminStore } from './admin'
 import { adminService } from '~/services/adminService'

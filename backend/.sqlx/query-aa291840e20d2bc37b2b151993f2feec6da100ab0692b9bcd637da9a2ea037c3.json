@@ -1,0 +1,56 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "\n            SELECT\n                ar.id,\n                ar.user_id,\n                u.email as user_email,\n                u.display_name as user_display_name,\n                ar.message,\n                ar.requested_role,\n                ar.created_at\n            FROM access_requests ar\n            JOIN users u ON ar.user_id = u.id\n            WHERE ar.status = 'pending'\n            ORDER BY ar.created_at ASC\n            ",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "id",
+        "type_info": "Uuid"
+      },
+      {
+        "ordinal": 1,
+        "name": "user_id",
+        "type_info": "Uuid"
+      },
+      {
+        "ordinal": 2,
+        "name": "user_email",
+        "type_info": "Varchar"
+      },
+      {
+        "ordinal": 3,
+        "name": "user_display_name",
+        "type_info": "Varchar"
+      },
+      {
+        "ordinal": 4,
+        "name": "message",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 5,
+        "name": "requested_role",
+        "type_info": "Varchar"
+      },
+      {
+        "ordinal": 6,
+        "name": "created_at",
+        "type_info": "Timestamptz"
+      }
+    ],
+    "parameters": {
+      "Left": []
+    },
+    "nullable": [
+      false,
+      false,
+      false,
+      false,
+      false,
+      false,
+      false
+    ]
+  },
+  "hash": "aa291840e20d2bc37b2b151993f2feec6da100ab0692b9bcd637da9a2ea037c3"
+}

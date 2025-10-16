@@ -74,3 +74,36 @@ CREATE TABLE user_preferences (
 COMMENT ON TABLE user_preferences IS 'User application preferences (can grow without breaking auth)';
 COMMENT ON COLUMN user_preferences.timer_is_public IS 'Whether timer is publicly viewable';
 COMMENT ON COLUMN user_preferences.timer_show_in_list IS 'Whether timer appears in public list';
+
+-- ============================================================================
+-- access_requests: Request trusted-contact role access
+-- ============================================================================
+CREATE TABLE access_requests (
+    id UUID PRIMARY KEY DEFAULT uuid_generate_v7(),
+    user_id UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+    message TEXT NOT NULL,
+    requested_role VARCHAR(50) NOT NULL DEFAULT 'trusted-contact',
+    status VARCHAR(20) NOT NULL DEFAULT 'pending' CHECK (status IN ('pending', 'approved', 'rejected')),
+    admin_id UUID REFERENCES users(id) ON DELETE SET NULL,
+    admin_reason TEXT,
+    created_at TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT NOW(),
+    updated_at TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT NOW()
+);
+
+COMMENT ON TABLE access_requests IS 'User requests for trusted-contact role with admin approval workflow';
+COMMENT ON COLUMN access_requests.user_id IS 'User requesting access';
+COMMENT ON COLUMN access_requests.requested_role IS 'Role being requested (default: trusted-contact)';
+COMMENT ON COLUMN access_requests.status IS 'Request status: pending, approved, or rejected';
+COMMENT ON COLUMN access_requests.admin_id IS 'Admin who processed the request';
+
+-- Indexes for performance
+CREATE INDEX idx_access_requests_user_id ON access_requests(user_id);
+CREATE INDEX idx_access_requests_status ON access_requests(status);
+CREATE INDEX idx_access_requests_admin_id ON access_requests(admin_id);
+CREATE INDEX idx_access_requests_requested_role ON access_requests(requested_role);
+
+-- Updated timestamp trigger
+CREATE TRIGGER update_access_requests_updated_at
+    BEFORE UPDATE ON access_requests
+    FOR EACH ROW
+    EXECUTE FUNCTION update_updated_at_column();

@@ -109,6 +109,7 @@ async fn main() -> std::io::Result<()> {
             .app_data(web::Data::from(container.phrase_service.clone()))
             .app_data(web::Data::from(container.admin_service.clone()))
             .app_data(web::Data::from(container.phrase_moderation_service.clone()))
+            .app_data(web::Data::from(container.access_request_moderation_service.clone()))
             .app_data(web::Data::from(container.stats_service.clone()))
             .app_data(web::Data::from(container.rate_limit_service.clone()))
             .configure(routes::configure_app_routes)

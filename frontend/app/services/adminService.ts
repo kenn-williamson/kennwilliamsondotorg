@@ -10,6 +10,7 @@ import type {
   SuggestionsResponse,
   AdminResetPasswordResponse,
   AdminActionResponse,
+  AccessRequestsResponse,
   Fetcher
 } from '#shared/types'
 
@@ -81,6 +82,24 @@ export const adminService = (fetcher: Fetcher) => ({
 
   rejectSuggestion: async (suggestionId: string, adminReason: string): Promise<AdminActionResponse> => {
     return fetcher<AdminActionResponse>(API_ROUTES.PROTECTED.ADMIN.SUGGESTIONS.REJECT(suggestionId), {
+      method: 'POST',
+      body: { admin_reason: adminReason }
+    })
+  },
+
+  getAccessRequests: async (): Promise<AccessRequestsResponse> => {
+    return fetcher<AccessRequestsResponse>(API_ROUTES.PROTECTED.ADMIN.ACCESS_REQUESTS.LIST)
+  },
+
+  approveAccessRequest: async (requestId: string, adminReason: string): Promise<AdminActionResponse> => {
+    return fetcher<AdminActionResponse>(API_ROUTES.PROTECTED.ADMIN.ACCESS_REQUESTS.APPROVE(requestId), {
+      method: 'POST',
+      body: { admin_reason: adminReason }
+    })
+  },
+
+  rejectAccessRequest: async (requestId: string, adminReason: string): Promise<AdminActionResponse> => {
+    return fetcher<AdminActionResponse>(API_ROUTES.PROTECTED.ADMIN.ACCESS_REQUESTS.REJECT(requestId), {
       method: 'POST',
       body: { admin_reason: adminReason }
     })

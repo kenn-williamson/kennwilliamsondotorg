@@ -1,3 +1,4 @@
+pub mod access_request;
 pub mod admin;
 pub mod auth;
 pub mod health;
@@ -57,6 +58,7 @@ pub fn configure_app_routes(cfg: &mut web::ServiceConfig) {
                                 .route("/revoke-all", web::post().to(auth::revoke_all))
                                 .route("/profile", web::put().to(auth::update_profile))
                                 .route("/change-password", web::put().to(auth::change_password))
+                                .route("/set-password", web::put().to(auth::set_password))
                                 .route("/validate-slug", web::get().to(auth::validate_slug))
                                 .route("/delete-account", web::delete().to(auth::delete_account))
                                 .route("/export-data", web::get().to(auth::export_data))
@@ -91,6 +93,10 @@ pub fn configure_app_routes(cfg: &mut web::ServiceConfig) {
                                 .route("/excluded", web::get().to(phrases::get_excluded_phrases))
                                 .route("/suggestions", web::get().to(phrases::get_user_suggestions))
                                 .route("/suggestions", web::post().to(phrases::submit_suggestion)),
+                        )
+                        .service(
+                            web::scope("/access-requests")
+                                .route("", web::post().to(access_request::create_access_request)),
                         )
                         // Admin routes (with admin middleware - requires JWT first)
                         .service(
@@ -143,6 +149,18 @@ pub fn configure_app_routes(cfg: &mut web::ServiceConfig) {
                                 .service(
                                     web::resource("/suggestions/{id}/reject")
                                         .route(web::post().to(admin::reject_suggestion)),
+                                )
+                                .route(
+                                    "/access-requests",
+                                    web::get().to(admin::get_pending_access_requests),
+                                )
+                                .service(
+                                    web::resource("/access-requests/{id}/approve")
+                                        .route(web::post().to(admin::approve_access_request)),
+                                )
+                                .service(
+                                    web::resource("/access-requests/{id}/reject")
+                                        .route(web::post().to(admin::reject_access_request)),
                                 ),
                         ),
                 ),

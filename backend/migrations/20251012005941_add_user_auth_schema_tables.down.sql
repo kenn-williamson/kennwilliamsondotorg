@@ -4,6 +4,7 @@
 -- ============================================================================
 
 -- Drop tables in reverse order (respects foreign keys)
+DROP TABLE IF EXISTS access_requests CASCADE;
 DROP TABLE IF EXISTS user_preferences CASCADE;
 DROP TABLE IF EXISTS user_profiles CASCADE;
 DROP TABLE IF EXISTS user_external_logins CASCADE;

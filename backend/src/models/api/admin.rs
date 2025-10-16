@@ -38,6 +38,8 @@ pub struct SystemStatsResponse {
     pub active_users: i64,
     pub pending_suggestions: i64,
     pub total_phrases: i64,
+    pub pending_access_requests: i64,
+    pub total_access_requests: i64,
 }
 
 /// Pending suggestion response

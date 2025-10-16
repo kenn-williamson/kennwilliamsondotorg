@@ -3,11 +3,12 @@ use std::sync::Arc;
 
 #[cfg(feature = "mocks")]
 use crate::repositories::mocks::{
-    MockAdminRepository, MockIncidentTimerRepository, MockPasswordResetTokenRepository,
-    MockPhraseRepository, MockPkceStorage, MockRefreshTokenRepository, MockUserRepository,
-    MockVerificationTokenRepository,
+    MockAccessRequestRepository, MockAdminRepository, MockIncidentTimerRepository,
+    MockPasswordResetTokenRepository, MockPhraseRepository, MockPkceStorage,
+    MockRefreshTokenRepository, MockUserRepository, MockVerificationTokenRepository,
 };
 use crate::repositories::postgres::{
+    postgres_access_request_repository::PostgresAccessRequestRepository,
     postgres_admin_repository::PostgresAdminRepository,
     postgres_email_suppression_repository::PostgresEmailSuppressionRepository,
     postgres_incident_timer_repository::PostgresIncidentTimerRepository,
@@ -23,7 +24,9 @@ use crate::repositories::postgres::{
 };
 use crate::repositories::redis::RedisPkceStorage;
 
-use super::admin::{PhraseModerationService, StatsService, UserManagementService};
+use super::admin::{
+    AccessRequestModerationService, PhraseModerationService, StatsService, UserManagementService,
+};
 use super::auth::AuthService;
 use super::cleanup::CleanupService;
 #[cfg(feature = "mocks")]
@@ -43,6 +46,7 @@ pub struct ServiceContainer {
     pub phrase_service: Arc<PhraseService>,
     pub admin_service: Arc<UserManagementService>,
     pub phrase_moderation_service: Arc<PhraseModerationService>,
+    pub access_request_moderation_service: Arc<AccessRequestModerationService>,
     pub stats_service: Arc<StatsService>,
     pub rate_limit_service: Arc<dyn RateLimitServiceTrait>,
     pub cleanup_service: Arc<CleanupService>,
@@ -120,9 +124,14 @@ impl ServiceContainer {
             PostgresPhraseRepository::new(pool.clone()),
         )));
 
+        let access_request_moderation_service = Arc::new(AccessRequestModerationService::new(
+            Box::new(PostgresAccessRequestRepository::new(pool.clone())),
+        ));
+
         let stats_service = Arc::new(StatsService::new(
             Box::new(PostgresPhraseRepository::new(pool.clone())),
             Box::new(PostgresAdminRepository::new(pool.clone())),
+            Box::new(PostgresAccessRequestRepository::new(pool.clone())),
         ));
 
         // Create rate limiting service
@@ -143,6 +152,7 @@ impl ServiceContainer {
             phrase_service,
             admin_service,
             phrase_moderation_service,
+            access_request_moderation_service,
             stats_service,
             rate_limit_service,
             cleanup_service,
@@ -182,9 +192,14 @@ impl ServiceContainer {
             MockPhraseRepository::new(),
         )));
 
+        let access_request_moderation_service = Arc::new(AccessRequestModerationService::new(
+            Box::new(MockAccessRequestRepository::new()),
+        ));
+
         let stats_service = Arc::new(StatsService::new(
             Box::new(MockPhraseRepository::new()),
             Box::new(MockAdminRepository::new()),
+            Box::new(MockAccessRequestRepository::new()),
         ));
 
         // For testing, use mock rate limiting service
@@ -204,6 +219,7 @@ impl ServiceContainer {
             phrase_service,
             admin_service,
             phrase_moderation_service,
+            access_request_moderation_service,
             stats_service,
             rate_limit_service,
             cleanup_service,

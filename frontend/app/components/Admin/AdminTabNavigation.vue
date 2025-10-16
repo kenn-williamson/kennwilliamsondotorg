@@ -38,6 +38,11 @@ const tabs: Tab[] = [
     id: 'suggestions',
     label: 'Phrase Suggestions',
     icon: '✍️'
+  },
+  {
+    id: 'access-requests',
+    label: 'Access Requests',
+    icon: '🔑'
   }
 ]
 

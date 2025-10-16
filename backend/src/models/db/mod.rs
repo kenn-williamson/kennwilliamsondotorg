@@ -1,3 +1,4 @@
+pub mod access_request;
 pub mod email_suppression;
 pub mod incident_timer;
 pub mod phrase;
@@ -8,6 +9,7 @@ pub mod user_external_login;
 pub mod user_profile;
 pub mod user_preferences;
 
+pub use access_request::*;
 pub use email_suppression::*;
 pub use incident_timer::*;
 pub use phrase::*;

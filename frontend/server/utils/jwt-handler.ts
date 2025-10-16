@@ -1,12 +1,13 @@
 /**
  * JWT Handler Utility
- * 
+ *
  * Centralized JWT token management for all Nuxt API routes.
  * Handles JWT retrieval, validation, and automatic refresh.
  */
 
 import { isJwtExpired } from '#shared/utils/jwt'
 import { API_ROUTES } from '#shared/config/api-routes'
+import type { AuthResponse } from '#shared/types'
 
 // Refresh lock to prevent multiple simultaneous refresh operations
 const refreshLocks = new Map<string, Promise<string | null>>()
@@ -94,21 +95,7 @@ export async function getValidJwtToken(event: any): Promise<string | null> {
 export async function performRefresh(event: any, session: any, refreshToken: string): Promise<string | null> {
   try {
     const config = useRuntimeConfig()
-    const refreshResponse = await $fetch<{
-      token: string
-      refresh_token: string
-      user: {
-        id: string
-        email: string
-        display_name: string
-        slug: string
-        roles: string[]
-        real_name?: string
-        google_user_id?: string
-        email_verified: boolean
-        created_at: string
-      }
-    }>(`${config.apiBase}${API_ROUTES.PUBLIC.AUTH.REFRESH}`, {
+    const refreshResponse = await $fetch<AuthResponse>(`${config.apiBase}${API_ROUTES.PUBLIC.AUTH.REFRESH}`, {
       method: 'POST',
       body: { refresh_token: refreshToken }
     })

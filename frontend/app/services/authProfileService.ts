@@ -4,7 +4,7 @@
  */
 
 import { API_ROUTES } from '#shared/config/api-routes'
-import type { ProfileUpdateRequest, PasswordChangeRequest, SlugPreviewResponse, Fetcher } from '#shared/types'
+import type { ProfileUpdateRequest, PasswordChangeRequest, SetPasswordRequest, SlugPreviewResponse, Fetcher } from '#shared/types'
 
 export const authProfileService = (fetcher: Fetcher) => ({
   updateProfile: async (data: ProfileUpdateRequest): Promise<{ message: string }> => {
@@ -16,6 +16,13 @@ export const authProfileService = (fetcher: Fetcher) => ({
 
   changePassword: async (data: PasswordChangeRequest): Promise<{ message: string }> => {
     return fetcher<{ message: string }>(API_ROUTES.PROTECTED.AUTH.CHANGE_PASSWORD, {
+      method: 'PUT',
+      body: data
+    })
+  },
+
+  setPassword: async (data: SetPasswordRequest): Promise<{ message: string }> => {
+    return fetcher<{ message: string }>(API_ROUTES.PROTECTED.AUTH.SET_PASSWORD, {
       method: 'PUT',
       body: data
     })
