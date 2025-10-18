@@ -3,7 +3,7 @@
  */
 
 import type { IncidentTimer, PublicTimerResponse, CreateTimerRequest, UpdateTimerRequest } from '#shared/types/timers'
-import type { PublicTimerListItem, UpdatePreferencesRequest, User } from '#shared/types'
+import type { PublicTimerListItem, UpdatePreferencesRequest } from '#shared/types'
 import { incidentTimerService } from '~/services/incidentTimerService'
 import { userPreferencesService } from '~/services/userPreferencesService'
 import { useSmartFetch } from '~/composables/useSmartFetch'
@@ -442,7 +442,7 @@ export const useIncidentTimerStore = defineStore('incident-timers', () => {
   }
 
   // User preferences actions
-  const updateUserPreferences = async (preferences: UpdatePreferencesRequest): Promise<User | undefined> => {
+  const updateUserPreferences = async (preferences: UpdatePreferencesRequest): Promise<{ message: string } | undefined> => {
     const data = await _handleAction(
       () => userPreferencesServiceInstance.updatePreferences(preferences),
       'updateUserPreferences'

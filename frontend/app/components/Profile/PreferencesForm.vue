@@ -162,7 +162,7 @@ const toggleIsPublic = async () => {
       timer_show_in_list: newShowInList
     })
 
-    // Refresh session to get updated user data
+    // Refresh client-side reactive refs from updated server cookie
     await refreshSession()
 
     // Update local state
@@ -190,7 +190,7 @@ const toggleShowInList = async () => {
       timer_show_in_list: newShowInList
     })
 
-    // Refresh session to get updated user data
+    // Refresh client-side reactive refs from updated server cookie
     await refreshSession()
 
     // Update local state

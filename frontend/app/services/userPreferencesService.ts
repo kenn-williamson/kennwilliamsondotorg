@@ -7,16 +7,16 @@ import { API_ROUTES } from '#shared/config/api-routes'
 import type {
   Fetcher,
   UpdatePreferencesRequest,
-  PublicTimerListItem,
-  User
+  PublicTimerListItem
 } from '#shared/types'
 
 export const userPreferencesService = (fetcher: Fetcher) => ({
   /**
    * Update user preferences (timer privacy settings)
+   * Uses pass-through route that updates session automatically
    */
-  updatePreferences: async (data: UpdatePreferencesRequest): Promise<User> => {
-    return fetcher<User>(API_ROUTES.PROTECTED.AUTH.PREFERENCES, {
+  updatePreferences: async (data: UpdatePreferencesRequest): Promise<{ message: string }> => {
+    return fetcher<{ message: string }>('/api/user/preferences', {
       method: 'PUT',
       body: data
     })

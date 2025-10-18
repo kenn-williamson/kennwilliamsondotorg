@@ -31,12 +31,12 @@ export const useAuthProfileActions = () => {
   const updateProfile = async (data: ProfileUpdateRequest): Promise<{ message: string }> => {
     return executeRequestWithSuccess(
       async () => {
-        // Call service
+        // Pass-through updates server-side session cookie
         const result = await updateProfileService(data)
-        
-        // Refresh session to get updated user data
+
+        // Refresh client-side reactive refs from updated cookie
         await refreshSession()
-        
+
         return result
       },
       'Profile updated successfully',

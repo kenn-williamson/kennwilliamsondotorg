@@ -3,6 +3,7 @@ import { useRuntimeConfig } from '#imports'
 import { getClientInfo } from '../../utils/client-ip'
 import { API_ROUTES } from '#shared/config/api-routes'
 import { requireValidJwtToken } from '../../utils/jwt-handler'
+import type { User } from '#shared/types'
 
 export default defineEventHandler(async (event) => {
   try {
@@ -20,14 +21,7 @@ export default defineEventHandler(async (event) => {
     
     console.log(`🔍 [Profile API] Client IP: ${clientInfo.ip}, User-Agent: ${clientInfo.userAgent}`)
     
-    const response = await $fetch<{
-      id: string
-      email: string
-      display_name: string
-      slug: string
-      roles: string[]
-      created_at: string
-    }>(`${config.apiBase}${API_ROUTES.PROTECTED.AUTH.PROFILE}`, {
+    const response = await $fetch<User>(`${config.apiBase}${API_ROUTES.PROTECTED.AUTH.PROFILE}`, {
       method: 'PUT',
       headers: {
         'Authorization': `Bearer ${jwtToken}`,
@@ -46,14 +40,7 @@ export default defineEventHandler(async (event) => {
     const session = await getUserSession(event)
     await setUserSession(event, {
       ...session,
-      user: {
-        id: response.id,
-        email: response.email,
-        display_name: response.display_name,
-        slug: response.slug,
-        roles: response.roles,
-        created_at: response.created_at
-      }
+      user: response
     })
 
     console.log('✅ [Profile API] Updated session with fresh user data')

@@ -1,14 +1,32 @@
 <template>
   <div class="min-h-screen">
     <!-- Hero Section with Cathedral Background -->
-    <section class="relative h-screen flex items-center justify-center">
-      <!-- Background Image with Overlay -->
+    <section class="relative h-[calc(100vh-4rem)] flex items-center justify-center">
+      <!-- Background Video/Image with Overlay -->
       <div class="absolute inset-0">
+        <!-- Static background image (shows after video or if video fails) -->
         <img
-          src="~/assets/images/Cathedral1.png"
-          alt="Steampunk Cathedral with Glowing Clock"
+          src="~/assets/images/cathedral2.jpg"
+          alt="Steampunk Cathedral with Tree of Life"
           class="w-full h-full object-cover"
         />
+
+        <!-- Video overlay (plays on load, then fades out) -->
+        <video
+          ref="heroVideo"
+          autoplay
+          muted
+          playsinline
+          @ended="onVideoEnded"
+          @error="onVideoError"
+          :class="['absolute inset-0 w-full h-full object-cover transition-opacity duration-1000', videoPlaying ? 'opacity-100' : 'opacity-0']"
+        >
+          <!-- High-quality video for desktop (768px and up) -->
+          <source src="~/assets/images/cathedralinmotion2.mp4" type="video/mp4" media="(min-width: 768px)" />
+          <!-- Lower-quality video for mobile (below 768px) -->
+          <source src="~/assets/images/cathedralinmotion.mp4" type="video/mp4" />
+        </video>
+
         <!-- Dark overlay for text readability -->
         <div class="absolute inset-0 bg-gradient-to-b from-slate-900/70 via-slate-900/60 to-slate-900/80"></div>
       </div>
@@ -40,13 +58,13 @@
             View Projects
           </NuxtLink>
         </div>
+      </div>
 
-        <!-- Scroll Indicator -->
-        <div class="absolute bottom-8 left-1/2 transform -translate-x-1/2 animate-bounce">
-          <svg class="w-6 h-6 text-amber-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 14l-7 7m0 0l-7-7m7 7V3"/>
-          </svg>
-        </div>
+      <!-- Scroll Indicator -->
+      <div class="absolute bottom-16 left-1/2 transform -translate-x-1/2 animate-bounce z-20">
+        <svg class="w-6 h-6 text-amber-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 14l-7 7m0 0l-7-7m7 7V3"/>
+        </svg>
       </div>
     </section>
 
@@ -243,6 +261,33 @@
 </template>
 
 <script setup>
+import { ref, onMounted } from 'vue'
+
+// Video state management
+const heroVideo = ref(null)
+const videoPlaying = ref(true)
+
+// Handle video ended - fade out to reveal static image
+const onVideoEnded = () => {
+  videoPlaying.value = false
+}
+
+// Handle video error - show static image immediately
+const onVideoError = () => {
+  console.warn('Hero video failed to load, showing static image')
+  videoPlaying.value = false
+}
+
+// Attempt to play video on mount (in case autoplay is blocked)
+onMounted(() => {
+  if (heroVideo.value) {
+    heroVideo.value.play().catch(() => {
+      // Autoplay was blocked, fall back to static image
+      videoPlaying.value = false
+    })
+  }
+})
+
 // Page meta
 useHead({
   title: 'Home - Kenn Williamson',
