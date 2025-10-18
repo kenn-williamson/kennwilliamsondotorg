@@ -62,13 +62,15 @@ impl IncidentTimerRepository for PostgresIncidentTimerRepository {
         &self,
         slug: &str,
     ) -> Result<Option<(IncidentTimer, String)>> {
-        // Query to get both timer and user display name
+        // Query to get both timer and user display name, respecting privacy settings
+        // Only returns timers for users with timer_is_public = true (or no preferences set, which defaults to true)
         let result = sqlx::query!(
             r#"
             SELECT it.id, it.user_id, it.reset_timestamp, it.notes, it.created_at, it.updated_at, u.display_name
             FROM incident_timers it
             JOIN users u ON it.user_id = u.id
-            WHERE u.slug = $1
+            LEFT JOIN user_preferences up ON u.id = up.user_id
+            WHERE u.slug = $1 AND COALESCE(up.timer_is_public, true) = true
             ORDER BY it.reset_timestamp DESC
             LIMIT 1
             "#,

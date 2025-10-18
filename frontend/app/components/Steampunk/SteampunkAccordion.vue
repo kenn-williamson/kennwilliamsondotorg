@@ -79,7 +79,7 @@ const headerClasses = computed(() => {
 
 // Steampunk-themed panel classes
 const panelClasses = computed(() => {
-  const base = 'steampunk-accordion-panel'
+  const base = 'steampunk-accordion-panel px-6 py-5 rounded-b-lg'
 
   const variants = {
     brass: 'bg-gradient-to-br from-amber-50 to-yellow-50 border-2 border-t-0 border-amber-600 text-gray-800',
@@ -113,11 +113,6 @@ const panelClasses = computed(() => {
 .accordion-arrow {
   @apply transition-transform duration-300;
   @apply flex-shrink-0 text-sm;
-}
-
-/* Panel styling */
-.steampunk-accordion-panel {
-  @apply px-4 py-3 rounded-b-lg;
 }
 
 /* Add subtle texture to panel */

@@ -1,6 +1,6 @@
 {
   "db_name": "PostgreSQL",
-  "query": "\n            SELECT\n                u.id,\n                u.display_name,\n                u.slug,\n                u.created_at,\n                it.reset_timestamp,\n                it.notes\n            FROM users u\n            INNER JOIN incident_timers it ON u.id = it.user_id\n            INNER JOIN user_preferences up ON u.id = up.user_id\n            WHERE up.timer_is_public = true\n              AND up.timer_show_in_list = true\n            ORDER BY it.reset_timestamp DESC\n            LIMIT $1 OFFSET $2\n            ",
+  "query": "\n            SELECT\n                u.id,\n                u.display_name,\n                u.slug,\n                u.created_at,\n                it.reset_timestamp,\n                it.notes\n            FROM users u\n            INNER JOIN incident_timers it ON u.id = it.user_id\n            INNER JOIN user_preferences up ON u.id = up.user_id\n            WHERE up.timer_is_public = true\n              AND up.timer_show_in_list = true\n              AND ($3::text IS NULL OR u.display_name ILIKE $3)\n            ORDER BY it.reset_timestamp ASC\n            LIMIT $1 OFFSET $2\n            ",
   "describe": {
     "columns": [
       {
@@ -37,7 +37,8 @@
     "parameters": {
       "Left": [
         "Int8",
-        "Int8"
+        "Int8",
+        "Text"
       ]
     },
     "nullable": [
@@ -49,5 +50,5 @@
       true
     ]
   },
-  "hash": "0263fad0203333f036366ef5cb46e17880a9957f8647d17530139632bcc2a105"
+  "hash": "40b2a5161661def02b38287073a75b7f02eebd4ca6c74e07ad9d692ab50b28ff"
 }

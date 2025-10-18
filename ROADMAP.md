@@ -32,20 +32,10 @@
 **Goal**: Replace construction pages with actual content
 
 **Tasks**:
-- Landing page content and design
+- ✅ Landing page content and design (completed with Cathedral hero and feature showcase)
 - ✅ About page content and design (completed with 9 biography pages)
 - ✅ Role-based access control for personal content (trusted-contact role)
 - Professional presentation for portfolio project
-
-### Public Timer List Feature
-**Priority**: High
-**Goal**: Make public incidents page functional and interesting
-
-**Tasks**:
-- Display actual user timers on public page
-- Implement privacy controls (hide from list vs hide completely)
-- User interface for privacy settings
-- Public timer browsing experience
 
 ### Steampunk Asset Integration
 **Priority**: High (Contingent on receiving assets)

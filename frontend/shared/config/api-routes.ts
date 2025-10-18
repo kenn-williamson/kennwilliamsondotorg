@@ -36,6 +36,7 @@ export const API_ROUTES = {
     PHRASES: {
       BY_USER_SLUG: (userSlug: string) => `/public/${userSlug}/phrase`,
     },
+    PUBLIC_TIMER_LIST: '/public/public-timers',
   },
 
   /**
@@ -54,6 +55,7 @@ export const API_ROUTES = {
       SEND_VERIFICATION: '/protected/auth/send-verification',
       DELETE_ACCOUNT: '/protected/auth/delete-account',
       EXPORT_DATA: '/protected/auth/export-data',
+      PREFERENCES: '/protected/auth/preferences',
     },
     TIMERS: {
       LIST: '/protected/incident-timers',

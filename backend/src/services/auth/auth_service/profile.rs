@@ -102,18 +102,16 @@ impl AuthService {
     }
 
     /// Update timer privacy settings
-    /// Planned feature for timer privacy controls
-    #[allow(dead_code)]
     pub async fn update_timer_privacy(
         &self,
         user_id: Uuid,
         is_public: bool,
         show_in_list: bool,
-    ) -> Result<()> {
+    ) -> Result<UserResponse> {
         // Validate business rule: show_in_list requires is_public
         if show_in_list && !is_public {
             return Err(anyhow::anyhow!(
-                "Timer must be public to show in list"
+                "Cannot enable 'Show in List' when timer is not public"
             ));
         }
 
@@ -124,7 +122,25 @@ impl AuthService {
                 .await?;
         }
 
-        Ok(())
+        // Get updated user and build response
+        let user = self.user_repository.find_by_id(user_id).await?
+            .ok_or_else(|| anyhow::anyhow!("User not found"))?;
+        let roles = self.user_repository.get_user_roles(user.id).await?;
+        let user_response = self.build_user_response_with_details(user, roles).await?;
+
+        Ok(user_response)
+    }
+
+    /// Get list of users with public timers
+    pub async fn get_users_with_public_timers(
+        &self,
+        limit: i64,
+        offset: i64,
+        search: Option<String>,
+    ) -> Result<Vec<crate::models::db::user::UserWithTimer>> {
+        self.user_repository
+            .get_users_with_public_timers(limit, offset, search)
+            .await
     }
 }
 
@@ -617,15 +633,35 @@ mod tests {
 
     #[tokio::test]
     async fn test_update_timer_privacy_successful() -> Result<()> {
-        let user_repo = MockUserRepository::new();
+        let mut user_repo = MockUserRepository::new();
         let mut prefs_repo = MockUserPreferencesRepository::new();
         let user_id = Uuid::new_v4();
+        let user = create_test_user(user_id);
 
         prefs_repo
             .expect_update_timer_settings()
             .times(1)
             .with(eq(user_id), eq(true), eq(true))
             .returning(|_, _, _| Ok(()));
+
+        // build_user_response_with_details will call find_by_user_id
+        prefs_repo
+            .expect_find_by_user_id()
+            .times(1)
+            .with(eq(user_id))
+            .returning(|_| Ok(None)); // No preferences yet
+
+        user_repo
+            .expect_find_by_id()
+            .times(1)
+            .with(eq(user_id))
+            .returning(move |_| Ok(Some(user.clone())));
+
+        user_repo
+            .expect_get_user_roles()
+            .times(1)
+            .with(eq(user_id))
+            .returning(|_| Ok(vec!["user".to_string()]));
 
         let auth_service = AuthService::builder()
             .user_repository(Box::new(user_repo))
@@ -636,6 +672,8 @@ mod tests {
 
         let result = auth_service.update_timer_privacy(user_id, true, true).await;
         assert!(result.is_ok());
+        let user_response = result.unwrap();
+        assert_eq!(user_response.id, user_id);
 
         Ok(())
     }
@@ -660,22 +698,42 @@ mod tests {
         assert!(result
             .unwrap_err()
             .to_string()
-            .contains("must be public"));
+            .contains("not public"));
 
         Ok(())
     }
 
     #[tokio::test]
     async fn test_update_timer_privacy_allows_both_false() -> Result<()> {
-        let user_repo = MockUserRepository::new();
+        let mut user_repo = MockUserRepository::new();
         let mut prefs_repo = MockUserPreferencesRepository::new();
         let user_id = Uuid::new_v4();
+        let user = create_test_user(user_id);
 
         prefs_repo
             .expect_update_timer_settings()
             .times(1)
             .with(eq(user_id), eq(false), eq(false))
             .returning(|_, _, _| Ok(()));
+
+        // build_user_response_with_details will call find_by_user_id
+        prefs_repo
+            .expect_find_by_user_id()
+            .times(1)
+            .with(eq(user_id))
+            .returning(|_| Ok(None)); // No preferences yet
+
+        user_repo
+            .expect_find_by_id()
+            .times(1)
+            .with(eq(user_id))
+            .returning(move |_| Ok(Some(user.clone())));
+
+        user_repo
+            .expect_get_user_roles()
+            .times(1)
+            .with(eq(user_id))
+            .returning(|_| Ok(vec!["user".to_string()]));
 
         let auth_service = AuthService::builder()
             .user_repository(Box::new(user_repo))
@@ -692,15 +750,35 @@ mod tests {
 
     #[tokio::test]
     async fn test_update_timer_privacy_allows_public_without_list() -> Result<()> {
-        let user_repo = MockUserRepository::new();
+        let mut user_repo = MockUserRepository::new();
         let mut prefs_repo = MockUserPreferencesRepository::new();
         let user_id = Uuid::new_v4();
+        let user = create_test_user(user_id);
 
         prefs_repo
             .expect_update_timer_settings()
             .times(1)
             .with(eq(user_id), eq(true), eq(false))
             .returning(|_, _, _| Ok(()));
+
+        // build_user_response_with_details will call find_by_user_id
+        prefs_repo
+            .expect_find_by_user_id()
+            .times(1)
+            .with(eq(user_id))
+            .returning(|_| Ok(None)); // No preferences yet
+
+        user_repo
+            .expect_find_by_id()
+            .times(1)
+            .with(eq(user_id))
+            .returning(move |_| Ok(Some(user.clone())));
+
+        user_repo
+            .expect_get_user_roles()
+            .times(1)
+            .with(eq(user_id))
+            .returning(|_| Ok(vec!["user".to_string()]));
 
         let auth_service = AuthService::builder()
             .user_repository(Box::new(user_repo))

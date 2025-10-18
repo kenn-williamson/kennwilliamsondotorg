@@ -2,9 +2,11 @@
   <AboutLayout>
     <h1>Finding Faith</h1>
 
-    <div class="photo-placeholder">
-      Photo: Something contemplative, maybe a cross, church, or open Bible
-    </div>
+    <img
+      src="~/assets/images/finding-faith.png"
+      alt="Finding faith"
+      class="w-full max-w-2xl mx-auto rounded-lg shadow-lg my-6"
+    />
 
     <p>
       My spiritual journey hasn't been a straight line. I've gone from childhood faith
@@ -172,7 +174,7 @@
 
     <p>
       It was Pageau's endorsement of Orthodoxy that prompted me to actually start
-      attending church again. I found an Orthodox parish and loved it immediately—the
+      attending church again. I found an Orthodox parish and loved it immediately. The
       liturgy, the tradition, the theological depth. Everything resonated with what I'd
       been reading and discovering.
     </p>
@@ -278,8 +280,8 @@
     </p>
 
     <p>
-      The intellectual framework that emerged from all this reading—the theological
-      understanding that makes sense of Scripture and human nature—that's what I want to
+      The intellectual framework that emerged from all this reading (the theological
+      understanding that makes sense of Scripture and human nature) is what I want to
       share in the next section. But it's important to understand that it came from a
       journey, not from adopting someone else's system wholesale.
     </p>

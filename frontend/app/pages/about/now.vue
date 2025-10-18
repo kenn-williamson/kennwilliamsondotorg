@@ -99,8 +99,31 @@
       together.
     </p>
 
-    <div class="photo-placeholder">
-      Photo: Individual photos of Rory, Charlie, Teddy (or grid of the three)
+    <div class="grid grid-cols-1 md:grid-cols-3 gap-6 my-8">
+      <div class="text-center">
+        <img
+          src="~/assets/images/rory-portrait.png"
+          alt="Rory"
+          class="w-full rounded-lg shadow-lg mb-2"
+        />
+        <p class="text-sm font-semibold text-amber-800">Rory (10)</p>
+      </div>
+      <div class="text-center">
+        <img
+          src="~/assets/images/charlie-portrait.jpg"
+          alt="Charlie"
+          class="w-full rounded-lg shadow-lg mb-2"
+        />
+        <p class="text-sm font-semibold text-amber-800">Charlie (9)</p>
+      </div>
+      <div class="text-center">
+        <img
+          src="~/assets/images/teddyfinger.jpg"
+          alt="Teddy"
+          class="w-full rounded-lg shadow-lg mb-2"
+        />
+        <p class="text-sm font-semibold text-amber-800">Teddy (almost 5)</p>
+      </div>
     </div>
 
     <h2>Daily Life: The Rhythms and Chaos</h2>
@@ -258,6 +281,12 @@
     <div class="photo-placeholder">Photo: Hiking or fitness activity</div>
 
     <h2>The Website Project</h2>
+
+    <img
+      src="~/assets/images/steampunk-doc-holiday.jpg"
+      alt="Steampunk aesthetic - the theme of this website"
+      class="w-full max-w-2xl mx-auto rounded-lg shadow-lg my-6"
+    />
 
     <p>
       This personal website is a big passion project right now. I'm using it to learn
@@ -422,7 +451,7 @@
     </p>
 
     <p>
-      These daily realities—the struggles and the small joys—are where faith and work
+      These daily realities (the struggles and the small joys) are where faith and work
       meet life. They're also what shape my broader vision for what I'm building toward.
     </p>
   </AboutLayout>

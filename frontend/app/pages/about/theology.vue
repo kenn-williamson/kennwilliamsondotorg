@@ -2,9 +2,11 @@
   <AboutLayout>
     <h1>Theology & Practice</h1>
 
-    <div class="photo-placeholder">
-      Photo: Open books, theological texts, or contemplative study scene
-    </div>
+    <img
+      src="~/assets/images/monastic-study.jpg"
+      alt="Contemplative study"
+      class="w-full max-w-2xl mx-auto rounded-lg shadow-lg my-6"
+    />
 
     <p>
       This section explains the theological framework that emerged from my reading
@@ -30,7 +32,7 @@
         placement="top"
       >
         <span>theosis</span> </SteampunkTooltip
-      >—that God became man so that man might become god. This isn't about humans
+      >: that God became man so that man might become god. This isn't about humans
       literally becoming divine. It's about participating in God's nature, being
       transformed into His likeness. The Incarnation isn't just about fixing a legal
       problem (satisfying divine justice). It's about God entering into creation to
@@ -53,7 +55,7 @@
       Ephrem brought a poetic, symbolic approach to theology. He understood that
       biblical language works through imagery and types, not just propositional
       statements. Scripture reveals truth through patterns, metaphors, and recurring
-      symbols. You can't just extract doctrines like mining data—you have to see how the
+      symbols. You can't just extract doctrines like mining data. You have to see how the
       whole thing fits together as a coherent vision.
     </p>
 
@@ -63,7 +65,7 @@
       Maximus completed this foundation with his cosmic theology. Christ doesn't just
       save individual souls; He recapitulates all of creation, bringing everything back
       into right relationship with God. The Incarnation has cosmic implications. God
-      isn't extracting believers from a doomed world—He's redeeming the world itself.
+      isn't extracting believers from a doomed world. He's redeeming the world itself.
     </p>
 
     <p>
@@ -76,7 +78,7 @@
 
     <p>
       After the Church Fathers, I encountered René Girard's work, and suddenly
-      everything clicked into place. Girard didn't give me my understanding—he gave me
+      everything clicked into place. Girard didn't give me my understanding. He gave me
       the language and systematic framework for what I'd already been discovering
       through Scripture and the Fathers.
     </p>
@@ -151,7 +153,7 @@
       the victim.
     </p>
 
-    <SteampunkAccordion title="Learn More About Mimetic Theory" variant="parchment">
+    <SteampunkAccordion title="Learn More About Mimetic Theory" variant="mahogany">
       <p class="mb-3">
         For deeper exploration of mimetic theory and René Girard's work, check out these
         resources:
@@ -406,8 +408,8 @@
     </p>
 
     <p>
-      The fruits of the Spirit—love, joy, peace, patience, kindness, goodness,
-      faithfulness, gentleness, self-control—these are what I'm aiming for. I struggle
+      The fruits of the Spirit (love, joy, peace, patience, kindness, goodness,
+      faithfulness, gentleness, self-control) are what I'm aiming for. I struggle
       with all of them. But the framework gives me a way to understand why I struggle
       and what transformation actually looks like.
     </p>

@@ -120,6 +120,17 @@
         </div>
       </div>
 
+      <!-- Preferences -->
+      <div v-if="user" class="bg-white shadow rounded-lg mb-8">
+        <div class="px-6 py-4 border-b border-gray-200">
+          <h2 class="text-lg font-medium text-gray-900">Preferences</h2>
+          <p class="mt-1 text-sm text-gray-500">Manage your account preferences and privacy settings.</p>
+        </div>
+        <div class="px-6 py-4">
+          <PreferencesForm :user="user" />
+        </div>
+      </div>
+
       <!-- Data Export Section -->
       <DataExport class="mb-8" />
 

@@ -158,7 +158,7 @@
 
     <SteampunkAccordion
       title="Understanding Neurodivergence and Labels"
-      variant="parchment"
+      variant="mahogany"
     >
       <div class="space-y-3">
         <p>
@@ -449,7 +449,7 @@
     </p>
 
     <p>
-      But the foundation my grandparents and schools built—however imperfect—would be
+      But the foundation my grandparents and schools built (however imperfect) would be
       tested in ways I never imagined.
     </p>
   </AboutLayout>

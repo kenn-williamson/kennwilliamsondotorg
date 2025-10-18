@@ -99,11 +99,12 @@
   </form>
 </template>
 
-<script setup>
+<script setup lang="ts">
 import { ref, computed, watch } from 'vue'
 import { useForm, Field, ErrorMessage } from 'vee-validate'
 import { profileUpdateSchema, generateSlug } from '#shared/schemas/auth'
 import { useAuthProfileActions } from '~/composables/useAuthProfileActions'
+import { useDebounce } from '~/composables/useDebounce'
 
 // Props
 const props = defineProps({
@@ -118,8 +119,39 @@ const user = computed(() => props.user)
 
 // No emits needed - parent will refresh via session update
 
+// Types
+interface SlugPreview {
+  slug: string
+  available: boolean
+  valid: boolean
+}
+
+// Slug preview state
+const slugPreview = ref<SlugPreview | null>(null)
+const isCheckingSlug = ref(false)
+
 // Composables
 const { updateProfile, validateSlug, isLoading, error, hasError } = useAuthProfileActions()
+const { debounced: debouncedSlugCheck } = useDebounce(async (slug: string) => {
+  if (slug && slug.trim()) {
+    isCheckingSlug.value = true
+    try {
+      const response = await validateSlug(slug)
+      slugPreview.value = {
+        slug: slug,
+        available: response.available,
+        valid: true // Assume valid if we got a response
+      }
+    } catch (error) {
+      console.error('Error checking slug validation:', error)
+      slugPreview.value = null
+    } finally {
+      isCheckingSlug.value = false
+    }
+  } else {
+    slugPreview.value = null
+  }
+}, 500)
 
 // Form setup
 const { handleSubmit, errors, isSubmitting, setFieldValue, values } = useForm({
@@ -136,10 +168,6 @@ const form = ref({
   slug: user.value?.slug || ''
 })
 
-// Slug preview state
-const slugPreview = ref(null)
-const isCheckingSlug = ref(false)
-
 // Base URL for preview
 const baseUrl = computed(() => {
   if (process.client) {
@@ -153,48 +181,21 @@ const isFormValid = computed(() => {
   return form.value.display_name && form.value.slug && !errors.value.displayName && !errors.value.slug
 })
 
-// Debounced slug validation and uniqueness check
-let slugCheckTimeout = null
-const checkSlugValidation = async (slug) => {
-  if (slugCheckTimeout) {
-    clearTimeout(slugCheckTimeout)
-  }
-  
-  slugCheckTimeout = setTimeout(async () => {
-    if (slug && slug.trim()) {
-      isCheckingSlug.value = true
-      try {
-        const response = await validateSlug(slug)
-        slugPreview.value = {
-          slug: slug,
-          available: response.available,
-          valid: true // Assume valid if we got a response
-        }
-      } catch (error) {
-        console.error('Error checking slug validation:', error)
-        slugPreview.value = null
-      } finally {
-        isCheckingSlug.value = false
-      }
-    } else {
-      slugPreview.value = null
-    }
-  }, 500)
-}
-
 // Event handlers
-const onDisplayNameChange = (event) => {
-  form.value.display_name = event.target.value
-  setFieldValue('displayName', event.target.value)
+const onDisplayNameChange = (event: Event) => {
+  const target = event.target as HTMLInputElement
+  form.value.display_name = target.value
+  setFieldValue('displayName', target.value)
 }
 
-const onSlugChange = (event) => {
-  const value = event.target.value
+const onSlugChange = (event: Event) => {
+  const target = event.target as HTMLInputElement
+  const value = target.value
   form.value.slug = value
   setFieldValue('slug', value)
-  
-  // Check slug validation and uniqueness
-  checkSlugValidation(value)
+
+  // Check slug validation and uniqueness with debounce
+  debouncedSlugCheck(value)
 }
 
 // Form submission

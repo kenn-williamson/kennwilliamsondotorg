@@ -2,9 +2,11 @@
   <AboutLayout>
     <h1>Professional Path</h1>
 
-    <div class="photo-placeholder">
-      Photo: You at work, or at a whiteboard, or professional headshot
-    </div>
+    <img
+      src="~/assets/images/headshot.png"
+      alt="Kenn Williamson professional headshot"
+      class="w-full max-w-md mx-auto rounded-lg shadow-lg my-6"
+    />
 
     <p>
       I was sitting in a cubicle designing compressor stations when I realized I'd spent
@@ -140,7 +142,7 @@
     <p>
       <strong>Pipeline Measurement System</strong> (First project): Embedded C/C++ work
       upgrading legacy field applications to modern architecture. This was completely
-      outside my boot camp training—I had to learn systems programming from scratch.
+      outside my boot camp training. I had to learn systems programming from scratch.
       Without AI available at the time, I researched C/C++ through articles and blogs,
       traced execution paths manually through the codebase, and learned through trial
       and error. My tech lead had the overall approach; I filled in details and
@@ -165,7 +167,7 @@
       entirely new screens with the client and developed all new calculations using
       industry best practices rather than trying to reverse-engineer the old system. The
       biggest technical challenge was implementing offline functionality using Service
-      Workers—brand new technology at the time. We had to store requests and responses
+      Workers, brand new technology at the time. We had to store requests and responses
       in IndexedDB, generate IDs in the UI to maintain foreign key relationships, and
       handle sync ordering to prevent duplicates. Because the offline feature wasn't
       used frequently and development was moving fast, bugs would go undetected for
@@ -181,7 +183,7 @@
       company in the credit space. The project involved establishing API connections
       with credit bureaus, implementing custom-built decision matrices, and creating a
       highly customizable form builder. I approached the unfamiliar domain by
-      compartmentalizing—I didn't need to understand all of credit to connect APIs, just
+      compartmentalizing. I didn't need to understand all of credit to connect APIs, just
       the data mapping: what the bureau needed to identify a person, what we'd get back,
       and which specific pieces we needed. This was my first exposure to high-compliance
       industries with PII considerations, where certain data could be stored or logged
@@ -190,7 +192,7 @@
       we're doing serving or hindering that goal? We triaged problems into easy fixes
       and hard fixes, knocked out all the easy ones, then tackled the harder ones like
       their brittle DocuSign integration. They claimed they only changed documents once
-      a year, but we'd already done it three times since I started—reality was bursts of
+      a year, but we'd already done it three times since I started. Reality was bursts of
       2-3 versions before going untouched for a year. We re-engineered it to be robust:
       change the document as many times as you want, as long as you generate it with the
       right metadata DocuSign needs. This pattern of fixing fundamentals rather than
@@ -213,7 +215,7 @@
       My general methodology when facing unfamiliar territory: I don't wait until I
       fully understand everything before starting. Problem-solving has always been my
       core strength, and I walk in assuming I can deliver. There's a political aspect to
-      consulting—clients have often been burned by contractors who made big promises,
+      consulting. Clients have often been burned by contractors who made big promises,
       planted stakes, and left a mess. You have to build trust quickly by delivering
       value immediately.
     </p>
@@ -229,7 +231,7 @@
 
     <p>
       I learn about the domain along the way. I never feel the need to become the
-      expert—I rely on subject matter experts to guide me. My expertise is in
+      expert. I rely on subject matter experts to guide me. My expertise is in
       problem-solving and architecting good software solutions. I apply my skills to
       their domain using their knowledge. I have a good memory and learn quickly, so I
       become decently familiar with the domain, but it isn't necessary to get started.

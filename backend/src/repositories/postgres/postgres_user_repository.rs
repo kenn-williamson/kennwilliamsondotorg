@@ -98,10 +98,11 @@ impl UserRepository for PostgresUserRepository {
         .await?;
 
         // 4. Create preferences in user_preferences table with defaults
+        // Default to public (true, true) to maintain backward compatibility
         sqlx::query!(
             r#"
             INSERT INTO user_preferences (user_id, timer_is_public, timer_show_in_list)
-            VALUES ($1, false, false)
+            VALUES ($1, true, true)
             "#,
             user.id
         )
@@ -181,10 +182,11 @@ impl UserRepository for PostgresUserRepository {
         }
 
         // 5. Create preferences in user_preferences table with defaults
+        // Default to public (true, true) to maintain backward compatibility
         sqlx::query!(
             r#"
             INSERT INTO user_preferences (user_id, timer_is_public, timer_show_in_list)
-            VALUES ($1, false, false)
+            VALUES ($1, true, true)
             "#,
             user.id
         )
@@ -309,10 +311,11 @@ impl UserRepository for PostgresUserRepository {
         .await?;
 
         // 3. Ensure user_preferences entry exists
+        // Default to public (true, true) to maintain backward compatibility
         sqlx::query!(
             r#"
             INSERT INTO user_preferences (user_id, timer_is_public, timer_show_in_list)
-            VALUES ($1, false, false)
+            VALUES ($1, true, true)
             ON CONFLICT (user_id) DO NOTHING
             "#,
             user_id
@@ -521,7 +524,10 @@ impl UserRepository for PostgresUserRepository {
         &self,
         limit: i64,
         offset: i64,
+        search: Option<String>,
     ) -> Result<Vec<UserWithTimer>> {
+        let search_pattern = search.map(|s| format!("%{}%", s));
+
         let users = sqlx::query_as!(
             UserWithTimer,
             r#"
@@ -537,11 +543,13 @@ impl UserRepository for PostgresUserRepository {
             INNER JOIN user_preferences up ON u.id = up.user_id
             WHERE up.timer_is_public = true
               AND up.timer_show_in_list = true
-            ORDER BY it.reset_timestamp DESC
+              AND ($3::text IS NULL OR u.display_name ILIKE $3)
+            ORDER BY it.reset_timestamp ASC
             LIMIT $1 OFFSET $2
             "#,
             limit,
-            offset
+            offset,
+            search_pattern.as_deref()
         )
         .fetch_all(&self.pool)
         .await?;

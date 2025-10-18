@@ -31,7 +31,7 @@ mock! {
         async fn has_role(&self, user_id: Uuid, role_name: &str) -> Result<bool>;
         async fn delete_user(&self, user_id: Uuid) -> Result<()>;
         async fn update_timer_privacy(&self, user_id: Uuid, is_public: bool, show_in_list: bool) -> Result<User>;
-        async fn get_users_with_public_timers(&self, limit: i64, offset: i64) -> Result<Vec<UserWithTimer>>;
+        async fn get_users_with_public_timers(&self, limit: i64, offset: i64, search: Option<String>) -> Result<Vec<UserWithTimer>>;
         async fn get_by_slug(&self, slug: &str) -> Result<User>;
     }
 }

@@ -3,7 +3,9 @@
  */
 
 import type { IncidentTimer, PublicTimerResponse, CreateTimerRequest, UpdateTimerRequest } from '#shared/types/timers'
+import type { PublicTimerListItem, UpdatePreferencesRequest, User } from '#shared/types'
 import { incidentTimerService } from '~/services/incidentTimerService'
+import { userPreferencesService } from '~/services/userPreferencesService'
 import { useSmartFetch } from '~/composables/useSmartFetch'
 import { useSessionWatcher } from '~/composables/useSessionWatcher'
 import { TimerManager, type TimerUpdateCallback } from '~/utils/timer-manager'
@@ -14,10 +16,16 @@ export const useIncidentTimerStore = defineStore('incident-timers', () => {
   const publicTimer = ref<PublicTimerResponse | null>(null)
   const publicTimerUserSlug = ref<string | null>(null)
   const activeTimerBreakdown = ref({ years: 0, months: 0, weeks: 0, days: 0, hours: 0, minutes: 0, seconds: 0 })
-  
+
+  // Public timer list state
+  const publicTimersList = ref<PublicTimerListItem[]>([])
+  const publicTimersPage = ref(1)
+  const publicTimersPageSize = ref(20)
+  const publicTimersLoading = ref(false)
+
   // Tab state for SSR consistency
   const activeTab = ref('timer-display')
-  
+
   const isLoading = ref(false)
   const error = ref<string | null>(null)
 
@@ -83,9 +91,9 @@ export const useIncidentTimerStore = defineStore('incident-timers', () => {
 
   // Tab state management functions
   const setActiveTab = (tabId: string) => {
-    if (['timer-display', 'timer-controls', 'phrase-suggestions', 'phrase-filter', 'suggestion-history'].includes(tabId)) {
+    if (['timer-display', 'timer-controls', 'phrase-suggestions', 'phrase-filter', 'suggestion-history', 'public-timers'].includes(tabId)) {
       activeTab.value = tabId
-      
+
       // Update URL without page reload (client-side only)
       if (import.meta.client) {
         const url = new URL(window.location.href)
@@ -99,7 +107,7 @@ export const useIncidentTimerStore = defineStore('incident-timers', () => {
     if (import.meta.client) {
       const urlParams = new URLSearchParams(window.location.search)
       const tabParam = urlParams.get('tab')
-      if (tabParam && ['timer-display', 'timer-controls', 'phrase-suggestions', 'phrase-filter', 'suggestion-history'].includes(tabParam)) {
+      if (tabParam && ['timer-display', 'timer-controls', 'phrase-suggestions', 'phrase-filter', 'suggestion-history', 'public-timers'].includes(tabParam)) {
         activeTab.value = tabParam
       }
     }
@@ -227,9 +235,10 @@ export const useIncidentTimerStore = defineStore('incident-timers', () => {
 
   const hasError = computed(() => !!error.value)
 
-  // Service instance - uses useSmartFetch for automatic routing
+  // Service instances - uses useSmartFetch for automatic routing
   const smartFetch = useSmartFetch()
   const incidentTimerServiceInstance = incidentTimerService(smartFetch)
+  const userPreferencesServiceInstance = userPreferencesService(smartFetch)
 
   // Private action handler (replaces useBaseService logic)
   const _handleAction = async <T>(
@@ -400,18 +409,46 @@ export const useIncidentTimerStore = defineStore('incident-timers', () => {
   const quickReset = async (timerId: string) => {
     const data = await _handleAction(() => incidentTimerServiceInstance.quickReset(timerId), 'quickReset')
     _handleSuccess('Timer reset successfully')
-    
+
     if (data) {
       const index = timers.value.findIndex(t => t.id === timerId)
       if (index !== -1) {
         timers.value[index] = data
       }
-      
+
       // Update current timer if it's the same one
       if (currentTimer.value?.id === timerId) {
         currentTimer.value = data
       }
     }
+    return data
+  }
+
+  // Public timer list actions
+  const loadPublicTimerList = async (page: number = 1, pageSize: number = 20, search?: string) => {
+    publicTimersLoading.value = true
+    const data = await _handleAction(
+      () => userPreferencesServiceInstance.getPublicTimerList(page, pageSize, search),
+      'loadPublicTimerList'
+    )
+    publicTimersLoading.value = false
+
+    if (data) {
+      publicTimersList.value = data
+      publicTimersPage.value = page
+      publicTimersPageSize.value = pageSize
+    }
+    return data
+  }
+
+  // User preferences actions
+  const updateUserPreferences = async (preferences: UpdatePreferencesRequest): Promise<User | undefined> => {
+    const data = await _handleAction(
+      () => userPreferencesServiceInstance.updatePreferences(preferences),
+      'updateUserPreferences'
+    )
+    _handleSuccess('Preferences updated successfully')
+
     return data
   }
 
@@ -423,21 +460,27 @@ export const useIncidentTimerStore = defineStore('incident-timers', () => {
     currentTimer,
     publicTimer,
     publicTimerUserSlug,
+    publicTimersList,
+    publicTimersPage,
+    publicTimersPageSize,
+    publicTimersLoading,
     activeTab,
     isLoading,
     error,
-    
+
     activeTimerBreakdown,
     latestTimer,
     hasError,
-    
+
     loadUserTimers,
     loadPublicTimer,
+    loadPublicTimerList,
     createTimer,
     updateTimer,
     deleteTimer,
     quickReset,
-    
+    updateUserPreferences,
+
     setTimers,
     setCurrentTimer,
     setPublicTimer,
@@ -447,15 +490,15 @@ export const useIncidentTimerStore = defineStore('incident-timers', () => {
     clearTimers,
     clearPublicTimer,
     clearAllData,
-    
+
     setActiveTab,
     initializeTabFromUrl,
-    
+
     startLiveTimerUpdates,
     stopLiveTimerUpdates,
     cleanupGlobalEventListeners,
     clearPublicTimerOnNavigation,
-    
+
     getElapsedTimeBreakdown,
     getElapsedSeconds,
     formatElapsedTime,

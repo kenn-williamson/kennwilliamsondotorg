@@ -2,12 +2,12 @@
   <AboutLayout>
     <h1>About Kenn Williamson</h1>
 
-    <!-- Photo Placeholder -->
-    <div class="photo-placeholder">
-      Photo: Current photo of Kenn with the three kids
-    </div>
-
-    <div class="photo-placeholder">Photo: Professional headshot</div>
+    <!-- Professional headshot -->
+    <img
+      src="~/assets/images/headshot.png"
+      alt="Kenn Williamson professional headshot"
+      class="w-full max-w-md mx-auto rounded-lg shadow-lg my-6"
+    />
 
     <h2>Present Tense</h2>
 
@@ -182,8 +182,7 @@
           class="font-semibold text-amber-700 hover:text-amber-900"
         >
           Origins
-        </NuxtLink>
-        — Family background, the grandparents who shaped me, education struggles, and
+        </NuxtLink>: Family background, the grandparents who shaped me, education struggles, and
         the military school year that changed everything (for better and worse)
       </li>
       <li v-if="hasTrustedContactAccess">
@@ -192,8 +191,7 @@
           class="font-semibold text-amber-700 hover:text-amber-900"
         >
           The Wilderness
-        </NuxtLink>
-        — College failures, my mother's death, the lost years, becoming a father while
+        </NuxtLink>: College failures, my mother's death, the lost years, becoming a father while
         barely functional
       </li>
       <li v-if="hasTrustedContactAccess">
@@ -202,8 +200,7 @@
           class="font-semibold text-amber-700 hover:text-amber-900"
         >
           Finding Faith
-        </NuxtLink>
-        — From childhood religion through atheism to discovering the Church Fathers, and
+        </NuxtLink>: From childhood religion through atheism to discovering the Church Fathers, and
         the journey back to faith
       </li>
       <li v-if="hasTrustedContactAccess">
@@ -212,8 +209,7 @@
           class="font-semibold text-amber-700 hover:text-amber-900"
         >
           Theology & Practice
-        </NuxtLink>
-        — Mimetic theory, the non-sacrificial reading of the Gospel, and what Christian
+        </NuxtLink>: Mimetic theory, the non-sacrificial reading of the Gospel, and what Christian
         anarchism actually means
       </li>
       <li>
@@ -222,8 +218,7 @@
           class="font-semibold text-amber-700 hover:text-amber-900"
         >
           Professional Path
-        </NuxtLink>
-        — Engineering to software, the SEQTEK story, and my problem-solving approach
+        </NuxtLink>: Engineering to software, the SEQTEK story, and my problem-solving approach
       </li>
       <li>
         <NuxtLink
@@ -231,8 +226,7 @@
           class="font-semibold text-amber-700 hover:text-amber-900"
         >
           AI & The Future of Work
-        </NuxtLink>
-        — My philosophy on AI realism and why human judgment still matters
+        </NuxtLink>: My philosophy on AI realism and why human judgment still matters
       </li>
       <li v-if="hasTrustedContactAccess">
         <NuxtLink
@@ -240,8 +234,7 @@
           class="font-semibold text-amber-700 hover:text-amber-900"
         >
           Life Now
-        </NuxtLink>
-        — Single dad reality, three kids with very different needs, church community,
+        </NuxtLink>: Single dad reality, three kids with very different needs, church community,
         hobbies, and yes, the dating question
       </li>
       <li v-if="hasTrustedContactAccess">
@@ -250,8 +243,7 @@
           class="font-semibold text-amber-700 hover:text-amber-900"
         >
           Philosophy & Vision
-        </NuxtLink>
-        — Core values, political-economic views, legacy hopes, and advice I wish I'd
+        </NuxtLink>: Core values, political-economic views, legacy hopes, and advice I wish I'd
         received earlier
       </li>
     </ul>
@@ -265,7 +257,7 @@
       too open. This is the forum for that openness. You'll find vulnerability here, but
       not oversharing. Honesty about struggles, but not glorification of them.
       Self-criticism balanced with recognition of growth. And throughout it all, an
-      attempt to point toward something bigger than myself—toward the Kingdom, toward
+      attempt to point toward something bigger than myself: toward the Kingdom, toward
       love, toward truth.
     </p>
 

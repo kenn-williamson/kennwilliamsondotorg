@@ -1,0 +1,14 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "\n            INSERT INTO user_preferences (user_id, timer_is_public, timer_show_in_list)\n            VALUES ($1, true, true)\n            ",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Left": [
+        "Uuid"
+      ]
+    },
+    "nullable": []
+  },
+  "hash": "613106435813ffeb409fa0a8ccf498cbd7828cce9f2cdaafb475ff403f940b92"
+}

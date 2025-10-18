@@ -3,9 +3,9 @@ use serde_json::json;
 use uuid::Uuid;
 
 use crate::models::api::{
-    CreateUserRequest, LoginRequest, PasswordChangeRequest, SetPasswordRequest, ProfileUpdateRequest,
-    RefreshTokenRequest, RevokeTokenRequest, SlugPreviewRequest, SlugValidationRequest,
-    VerifyEmailRequest,
+    CreateUserRequest, LoginRequest, PaginationQuery, PasswordChangeRequest, PublicTimerListItem,
+    SetPasswordRequest, ProfileUpdateRequest, RefreshTokenRequest, RevokeTokenRequest,
+    SlugPreviewRequest, SlugValidationRequest, UpdatePreferencesRequest, VerifyEmailRequest,
 };
 use crate::services::auth::AuthService;
 
@@ -503,6 +503,90 @@ pub async fn export_data(
     }
 }
 
+// ============================================================================
+// USER PREFERENCES ROUTES
+// ============================================================================
+
+/// PUT /backend/protected/auth/preferences
+/// Update user preferences for authenticated user
+pub async fn update_preferences(
+    req: HttpRequest,
+    data: web::Json<UpdatePreferencesRequest>,
+    auth_service: web::Data<AuthService>,
+) -> ActixResult<HttpResponse> {
+    let user_id = req.extensions().get::<Uuid>().cloned().unwrap();
+
+    match auth_service
+        .update_timer_privacy(user_id, data.timer_is_public, data.timer_show_in_list)
+        .await
+    {
+        Ok(user) => Ok(HttpResponse::Ok().json(user)),
+        Err(err) => {
+            let error_msg = err.to_string();
+            if error_msg.contains("not public") || error_msg.contains("Show in List") {
+                Ok(HttpResponse::BadRequest().json(serde_json::json!({
+                    "error": error_msg
+                })))
+            } else {
+                log::error!("User preferences update error for user {}: {}", user_id, err);
+                Ok(HttpResponse::InternalServerError().json(serde_json::json!({
+                    "error": "Internal server error"
+                })))
+            }
+        }
+    }
+}
+
+/// GET /backend/public/public-timers
+/// Get list of users with public timers (public endpoint, no auth required)
+pub async fn get_public_timer_list(
+    query: web::Query<PaginationQuery>,
+    auth_service: web::Data<AuthService>,
+) -> ActixResult<HttpResponse> {
+    // Extract pagination params with defaults
+    let page = query.page.unwrap_or(1).max(1);
+    let page_size = query.page_size.unwrap_or(20).min(100).max(1); // Max 100, min 1
+    let offset = (page - 1) * page_size;
+
+    // Extract search parameter (optional)
+    let search = query.search.clone().and_then(|s| {
+        let trimmed = s.trim();
+        if trimmed.is_empty() {
+            None
+        } else {
+            Some(trimmed.to_string())
+        }
+    });
+
+    match auth_service
+        .get_users_with_public_timers(page_size, offset, search)
+        .await
+    {
+        Ok(users) => {
+            // Map UserWithTimer to PublicTimerListItem
+            let response: Vec<PublicTimerListItem> = users
+                .into_iter()
+                .map(|u| PublicTimerListItem {
+                    id: u.id,
+                    display_name: u.display_name,
+                    slug: u.slug,
+                    created_at: u.created_at,
+                    reset_timestamp: u.reset_timestamp,
+                    notes: u.notes,
+                })
+                .collect();
+
+            Ok(HttpResponse::Ok().json(response))
+        }
+        Err(err) => {
+            log::error!("Failed to get public timer list: {}", err);
+            Ok(HttpResponse::InternalServerError().json(serde_json::json!({
+                "error": "Internal server error"
+            })))
+        }
+    }
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -803,5 +887,135 @@ mod tests {
         
         // Note: Full rate limiting testing would require middleware integration
         // This test verifies the endpoint works correctly
+    }
+
+    // Note: Timer privacy route tests are covered by service layer tests
+    // Route-level tests would require extensive mocking of preferences_repository
+    // The critical business logic is validated in auth_service::profile::tests
+
+    #[actix_web::test]
+    async fn test_get_public_timer_list_success() {
+        // Test successful retrieval of public timer list
+        // Should return 200 with list of public timers
+
+        use crate::models::db::user::UserWithTimer;
+
+        // Create mock user repository
+        let mut user_repo = MockUserRepository::new();
+
+        // Create test timer data
+        let now = Utc::now();
+        let timers = vec![
+            UserWithTimer {
+                id: Uuid::new_v4(),
+                display_name: "User One".to_string(),
+                slug: "user-one".to_string(),
+                created_at: now,
+                reset_timestamp: now,
+                notes: Some("Test notes".to_string()),
+            },
+            UserWithTimer {
+                id: Uuid::new_v4(),
+                display_name: "User Two".to_string(),
+                slug: "user-two".to_string(),
+                created_at: now,
+                reset_timestamp: now - chrono::Duration::hours(1),
+                notes: None,
+            },
+        ];
+
+        // Mock the get_users_with_public_timers call
+        user_repo.expect_get_users_with_public_timers()
+            .with(
+                mockall::predicate::eq(20), // page_size
+                mockall::predicate::eq(0)   // offset
+            )
+            .times(1)
+            .returning(move |_, _| Ok(timers.clone()));
+
+        let refresh_token_repo = MockRefreshTokenRepository::new();
+
+        // Create AuthService with mock
+        let auth_service = AuthServiceBuilder::new()
+            .user_repository(Box::new(user_repo))
+            .refresh_token_repository(Box::new(refresh_token_repo))
+            .jwt_secret("test_secret".to_string())
+            .build();
+
+        // Create test app
+        let app = test::init_service(
+            App::new()
+                .app_data(web::Data::new(auth_service))
+                .service(web::resource("/public-timers").route(web::get().to(super::get_public_timer_list)))
+        ).await;
+
+        // Make request
+        let req = test::TestRequest::get()
+            .uri("/public-timers")
+            .to_request();
+
+        let resp = test::call_service(&app, req).await;
+
+        // Should return 200 OK
+        assert_eq!(resp.status(), 200);
+
+        // Verify response contains timer list
+        let body = test::read_body(resp).await;
+        let body_str = String::from_utf8(body.to_vec()).unwrap();
+        let timer_list: serde_json::Value = serde_json::from_str(&body_str).unwrap();
+        assert!(timer_list.is_array());
+        assert_eq!(timer_list.as_array().unwrap().len(), 2);
+    }
+
+    #[actix_web::test]
+    async fn test_get_public_timer_list_empty() {
+        // Test empty list returns 200 with empty array
+
+        use crate::models::db::user::UserWithTimer;
+
+        // Create mock user repository
+        let mut user_repo = MockUserRepository::new();
+
+        // Mock empty result
+        user_repo.expect_get_users_with_public_timers()
+            .with(
+                mockall::predicate::eq(20),
+                mockall::predicate::eq(0)
+            )
+            .times(1)
+            .returning(|_, _| Ok(vec![]));
+
+        let refresh_token_repo = MockRefreshTokenRepository::new();
+
+        // Create AuthService with mock
+        let auth_service = AuthServiceBuilder::new()
+            .user_repository(Box::new(user_repo))
+            .refresh_token_repository(Box::new(refresh_token_repo))
+            .jwt_secret("test_secret".to_string())
+            .build();
+
+        // Create test app
+        let app = test::init_service(
+            App::new()
+                .app_data(web::Data::new(auth_service))
+                .service(web::resource("/public-timers").route(web::get().to(super::get_public_timer_list)))
+        ).await;
+
+        // Make request
+        let req = test::TestRequest::get()
+            .uri("/public-timers")
+            .to_request();
+
+        let resp = test::call_service(&app, req).await;
+
+        // Should return 200 OK
+        assert_eq!(resp.status(), 200);
+
+        // Verify response is empty array
+        let body = test::read_body(resp).await;
+        let body_str = String::from_utf8(body.to_vec()).unwrap();
+        let timer_list: serde_json::Value = serde_json::from_str(&body_str).unwrap();
+        assert!(timer_list.is_array());
+        assert_eq!(timer_list.as_array().unwrap().len(), 0);
     }
 }

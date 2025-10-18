@@ -124,6 +124,30 @@ pub struct SetPasswordRequest {
     pub new_password: String,
 }
 
+// User preferences request/response types
+#[derive(Debug, Deserialize)]
+pub struct UpdatePreferencesRequest {
+    pub timer_is_public: bool,
+    pub timer_show_in_list: bool,
+}
+
+#[derive(Debug, Deserialize)]
+pub struct PaginationQuery {
+    pub page: Option<i64>,
+    pub page_size: Option<i64>,
+    pub search: Option<String>,
+}
+
+#[derive(Debug, Serialize)]
+pub struct PublicTimerListItem {
+    pub id: Uuid,
+    pub display_name: String,
+    pub slug: String,
+    pub created_at: DateTime<Utc>,
+    pub reset_timestamp: DateTime<Utc>,
+    pub notes: Option<String>,
+}
+
 impl UserResponse {
     /// Create UserResponse from core User and roles only (minimal data)
     /// NOTE: This creates an empty response - use AuthService::build_user_response_with_details for populated data

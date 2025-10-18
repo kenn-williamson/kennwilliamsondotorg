@@ -48,6 +48,11 @@ const tabs: Tab[] = [
     id: 'suggestion-history',
     label: 'My Suggestions',
     icon: '📋'
+  },
+  {
+    id: 'public-timers',
+    label: 'Public Timers',
+    icon: '🌐'
   }
 ]
 

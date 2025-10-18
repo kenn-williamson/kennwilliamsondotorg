@@ -68,16 +68,28 @@ const route = useRoute()
 const incidentTimerStore = useIncidentTimerStore()
 
 // Get user slug from route params
-const userSlug = String(route.params.user_slug);
+const userSlug = computed(() => String(route.params.user_slug))
+
+// Use Nuxt's useAsyncData for proper SSR and navigation handling
+// This automatically refetches when userSlug changes
+const { data: timerData, error: fetchError } = await useAsyncData(
+  `public-timer-${userSlug.value}`,
+  () => incidentTimerStore.loadPublicTimer(userSlug.value),
+  {
+    watch: [userSlug], // Refetch when slug changes
+    server: true,
+    lazy: false
+  }
+)
 
 // Computed meta for dynamic updates
 const pageTitle = computed(() => {
-  const displayName = incidentTimerStore.publicTimer?.user_display_name || userSlug
+  const displayName = incidentTimerStore.publicTimer?.user_display_name || userSlug.value
   return `${displayName}'s Incident Timer`
 })
 
 const pageDescription = computed(() => {
-  const displayName = incidentTimerStore.publicTimer?.user_display_name || userSlug
+  const displayName = incidentTimerStore.publicTimer?.user_display_name || userSlug.value
   return `Live incident-free timer for ${displayName}. Real-time tracking of incident-free periods.`
 })
 
@@ -95,11 +107,6 @@ useHead(() => ({
 // Reactive time breakdown from store - automatically updates every second
 const { activeTimerBreakdown } = storeToRefs(incidentTimerStore)
 const timeBreakdown = computed(() => activeTimerBreakdown.value)
-
-// Load public timer data directly in setup. This runs ON THE SERVER.
-// Nuxt will wait for this to complete before sending the page.
-console.log('🔄 Loading public timer for user:', userSlug)
-await callOnce('public-timer', () => incidentTimerStore.loadPublicTimer(userSlug))
 
 // Start timers after hydration (client-side only)
 onMounted(() => {

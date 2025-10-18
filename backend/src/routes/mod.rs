@@ -42,7 +42,8 @@ pub fn configure_app_routes(cfg: &mut web::ServiceConfig) {
                         .route(
                             "/{user_slug}/phrase",
                             web::get().to(phrases::get_random_phrase_for_user),
-                        ),
+                        )
+                        .route("/public-timers", web::get().to(auth::get_public_timer_list)),
                 )
                 // Protected routes (with auth and rate limiting middleware)
                 .service(
@@ -62,6 +63,7 @@ pub fn configure_app_routes(cfg: &mut web::ServiceConfig) {
                                 .route("/validate-slug", web::get().to(auth::validate_slug))
                                 .route("/delete-account", web::delete().to(auth::delete_account))
                                 .route("/export-data", web::get().to(auth::export_data))
+                                .route("/preferences", web::put().to(auth::update_preferences))
                                 .route(
                                     "/send-verification",
                                     web::post().to(auth::send_verification_email_handler),

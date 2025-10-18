@@ -114,6 +114,7 @@ pub trait UserRepository: Send + Sync {
         &self,
         limit: i64,
         offset: i64,
+        search: Option<String>,
     ) -> Result<Vec<UserWithTimer>>;
 
     /// Get user by slug (for public pages)

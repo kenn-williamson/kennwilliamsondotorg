@@ -2,12 +2,14 @@
   <AboutLayout>
     <h1>Philosophy & Vision</h1>
 
-    <div class="photo-placeholder">
-      Photo: Something contemplative or forward-looking
-    </div>
+    <img
+      src="~/assets/images/vision-future.png"
+      alt="Vision for the future"
+      class="w-full max-w-2xl mx-auto rounded-lg shadow-lg my-6"
+    />
 
     <p>
-      The question isn't just what you believe—it's whether you're willing to live like
+      The question isn't just what you believe. It's whether you're willing to live like
       it's actually true. If you've read this far, you have a sense of who I am and
       where I've been. This final section is about what I believe, what I'm working
       toward, and what I hope to leave behind.
@@ -199,7 +201,7 @@
     <p>
       <strong>Professionally</strong>: I want to continue growing with SEQTEK as the
       company expands. I'd love to help us break into the AI space and become a trusted
-      voice for Midwestern industries—oil and gas, manufacturing, healthcare—helping
+      voice for Midwestern industries (oil and gas, manufacturing, healthcare), helping
       them identify and adopt what AI can actually do for them. There's a lot of
       misinformation out there, and I want to be an honest, realistic voice in that
       conversation.
@@ -213,7 +215,7 @@
     </p>
 
     <p>
-      <strong>Personally</strong>: Be much more fit—climb three mountains and make
+      <strong>Personally</strong>: Be much more fit. Climb three mountains and make
       strength training part of my daily routine. Read many more books. Have the website
       well-established with features people are using, functioning as my personal social
       media hub and maybe even something that could be adapted for others to use.
@@ -233,8 +235,8 @@
       working <em>toward</em> specific outcomes for them in the sense of imposing my
       vision on their lives. I'm trying to facilitate their growth in the way they want
       to grow and help them discover God's purpose for them. I'm not a helicopter
-      parent. My role is to provide framework—there are rules and expectations at my
-      house, especially for behavior that reflects on our family—but setting specific
+      parent. My role is to provide framework (there are rules and expectations at my
+      house, especially for behavior that reflects on our family), but setting specific
       "goals" for them feels wrong.
     </p>
 
@@ -262,8 +264,8 @@
     </p>
 
     <p>
-      <strong>Teddy</strong> is a special case. There's no way to know what he's capable
-      of—the doctors don't know, and I don't know. Only the Lord knows. We're going to
+      <strong>Teddy</strong> is a special case. There's no way to know how he's capable
+      is. The doctors don't know, and I don't know. Only the Lord knows. We're going to
       continue working with him through therapy, putting him in more social situations,
       and supporting his development in every way we can.
     </p>

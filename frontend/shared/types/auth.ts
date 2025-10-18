@@ -176,3 +176,24 @@ export interface VerifyEmailRequest {
 export interface VerifyEmailResponse {
   message: string
 }
+
+// User preferences management types
+export interface UpdatePreferencesRequest {
+  timer_is_public: boolean
+  timer_show_in_list: boolean
+}
+
+// Public timer list types
+export interface PublicTimerListItem {
+  id: string
+  display_name: string
+  slug: string
+  created_at: string
+  reset_timestamp: string
+  notes: string | null
+}
+
+export interface PaginationQuery {
+  page?: number
+  page_size?: number
+}

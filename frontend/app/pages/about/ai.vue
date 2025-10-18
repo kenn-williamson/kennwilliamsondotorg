@@ -2,16 +2,17 @@
   <AboutLayout>
     <h1>AI & The Future of Work</h1>
 
-    <div class="photo-placeholder">
-      Photo: Something representing human-AI collaboration, maybe a developer at work
-      with AI tools
-    </div>
+    <img
+      src="~/assets/images/working-with-ai.png"
+      alt="Working with AI"
+      class="w-full max-w-2xl mx-auto rounded-lg shadow-lg my-6"
+    />
 
     <p>
       There are two camps when it comes to AI in software development, and I think
       they're both missing the real story. The evangelists promise AI will replace
       programmers tomorrow. The skeptics dismiss it as worthless hype. The truth is more
-      nuanced—and more interesting. I call my position "AI realism"—the middle path that
+      nuanced, and more interesting. I call my position "AI realism": the middle path that
       actually helps people navigate what's happening.
     </p>
 
@@ -161,8 +162,8 @@
     </p>
 
     <p>
-      But if you understand data structures, algorithms, architecture, and trade-offs—if
-      you can communicate effectively and make sound judgments—then AI makes you more
+      But if you understand data structures, algorithms, architecture, and trade-offs, if
+      you can communicate effectively and make sound judgments, then AI makes you more
       valuable, not less.
     </p>
 
@@ -175,8 +176,8 @@
 
     <p>
       If all you can do is what AI can do, you're in trouble. But if you can do what AI
-      can't—understand context, make nuanced judgments, identify bad assumptions,
-      communicate with stakeholders, think architecturally—then you're incredibly
+      can't (understand context, make nuanced judgments, identify bad assumptions,
+      communicate with stakeholders, think architecturally), then you're incredibly
       valuable.
     </p>
 
@@ -232,7 +233,7 @@
     <p>
       If you're early in your career, focus on fundamentals. Learn data structures,
       algorithms, systems design, architecture. Don't just learn enough to be
-      productive—understand how things actually work.
+      productive. Understand how things actually work.
     </p>
 
     <p>

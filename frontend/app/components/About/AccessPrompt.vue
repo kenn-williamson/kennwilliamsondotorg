@@ -1,5 +1,5 @@
 <template>
-  <div class="mt-12 pt-8 border-t-2 border-amber-300">
+  <div v-if="!loggedIn || !hasTrustedContactAccess" class="mt-12 pt-8 border-t-2 border-amber-300">
     <div class="bg-gradient-to-br from-amber-50 to-orange-50 border-2 border-amber-400 rounded-lg p-8 text-center">
       <!-- Not logged in -->
       <div v-if="!loggedIn" class="space-y-4">

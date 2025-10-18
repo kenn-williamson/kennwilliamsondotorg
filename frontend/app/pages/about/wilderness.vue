@@ -2,10 +2,11 @@
   <AboutLayout>
     <h1>The Wilderness</h1>
 
-    <div class="photo-placeholder">
-      Photo: Something contemplative, maybe a photo from the wastewater plant era or
-      early college
-    </div>
+    <img
+      src="~/assets/images/wastewater.jpg"
+      alt="Wastewater treatment plant"
+      class="w-full max-w-2xl mx-auto rounded-lg shadow-lg my-6"
+    />
 
     <p>
       Military school had given me straight A's and a scholarship to the University of
@@ -65,7 +66,11 @@
 
     <p>Eventually, I just left school entirely. I'd failed at this too.</p>
 
-    <div class="photo-placeholder">Photo: OSU campus or something from this era</div>
+    <img
+      src="~/assets/images/institutions-stillwater.jpg"
+      alt="Oklahoma State University campus in Stillwater"
+      class="w-full max-w-2xl mx-auto rounded-lg shadow-lg my-6"
+    />
 
     <h2>The Wake-Up Call: A Future I Didn't Want</h2>
 
@@ -225,9 +230,11 @@
       person. I don't wish her any ill will. I hope she finds peace.
     </p>
 
-    <div class="photo-placeholder">
-      Photo: The three kids, maybe from when they were younger
-    </div>
+    <img
+      src="~/assets/images/wilderness-family.jpg"
+      alt="Rory, Charlie, and Teddy when they were younger"
+      class="w-full max-w-2xl mx-auto rounded-lg shadow-lg my-6"
+    />
 
     <h2>The Slow Climb Back</h2>
 

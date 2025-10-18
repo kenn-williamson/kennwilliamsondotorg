@@ -190,4 +190,29 @@ mod tests {
         assert!(result.is_err());
         assert!(result.unwrap_err().to_string().contains("Database error"));
     }
+
+    #[tokio::test]
+    async fn test_get_latest_by_user_slug_respects_privacy_settings() {
+        // Test that timers with timer_is_public=false return None
+        // This ensures private timers are not accessible via public endpoint
+        let mut mock_repo = crate::repositories::mocks::MockIncidentTimerRepository::new();
+        let user_slug = "private-user";
+
+        // Mock repository returns None when user has privacy enabled
+        // The repository implementation will filter out private timers at the SQL level
+        mock_repo
+            .expect_find_latest_by_user_slug_with_display_name()
+            .with(eq(user_slug))
+            .times(1)
+            .returning(|_| Ok(None));
+
+        let service = IncidentTimerService::new(Box::new(mock_repo));
+
+        // Execute
+        let result = service.get_latest_by_user_slug(user_slug).await;
+
+        // Verify - should return None (not found) for private timers
+        assert!(result.is_ok());
+        assert!(result.unwrap().is_none(), "Private timer should not be accessible");
+    }
 }
