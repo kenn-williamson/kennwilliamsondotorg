@@ -163,8 +163,8 @@ export const usePhrasesStore = defineStore('phrases', () => {
     return data
   }
 
-  // SSR-compatible random phrase fetching
-  const fetchRandomPhraseSSR = async (userSlug?: string): Promise<string | null> => {
+  // Smart random phrase fetching - chooses auth or public endpoint based on userSlug
+  const fetchRandomPhrase = async (userSlug?: string): Promise<string | null> => {
     if (userSlug) {
       // Public endpoint - use existing service method
       const response = await phraseServiceInstance.fetchRandomPhraseClient(userSlug)
@@ -263,7 +263,7 @@ export const usePhrasesStore = defineStore('phrases', () => {
     searchPhrases,
     fetchRandomPhraseAuth,
     fetchRandomPhraseClient,
-    fetchRandomPhraseSSR,
+    fetchRandomPhrase,
     
     setUserPhrases,
     setAdminPhrases,

@@ -391,4 +391,10 @@ useHead({
     },
   ],
 });
+
+// Social media sharing
+useSocialShare({
+  title: "Professional Path - Kenn Williamson",
+  imageKey: "professional"
+});
 </script>

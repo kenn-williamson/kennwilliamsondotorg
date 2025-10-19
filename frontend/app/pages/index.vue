@@ -76,12 +76,12 @@
         </h2>
         <p class="text-lg sm:text-xl text-gray-700 leading-relaxed">
           I'm a single dad to three kids, an Enterprise Architect helping companies navigate AI
-          realistically, and a disciple of Christ exploring what it means to love enemies in practice.
-          I read Church Fathers, build software in Rust, and believe
+          realistically, learning what it means to be a disciple of Christ, and trying to walk in love.
+          I read Church Fathers, design and build software systems, and believe
           <span class="font-semibold text-amber-700">truth</span>,
           <span class="font-semibold text-amber-700">beauty</span>, and
           <span class="font-semibold text-amber-700">love</span>
-          aren't just ideals—they're a way of life.
+          aren't just ideals but a way of life.
         </p>
       </div>
     </section>
@@ -297,6 +297,12 @@ useHead({
       content: 'Kenn Williamson: Enterprise Architect, single dad, and disciple of Christ. Exploring the intersection of ancient wisdom and modern technology, building software in Rust, and pursuing truth, beauty, and love.'
     }
   ]
+})
+
+// Social media sharing
+useSocialShare({
+  title: 'Kenn Williamson',
+  imageKey: 'homepage'
 })
 </script>
 

@@ -23,9 +23,6 @@ export const useIncidentTimerStore = defineStore('incident-timers', () => {
   const publicTimersPageSize = ref(20)
   const publicTimersLoading = ref(false)
 
-  // Tab state for SSR consistency
-  const activeTab = ref('timer-display')
-
   const isLoading = ref(false)
   const error = ref<string | null>(null)
 
@@ -78,39 +75,14 @@ export const useIncidentTimerStore = defineStore('incident-timers', () => {
     publicTimer.value = null
     publicTimerUserSlug.value = null
     activeTimerBreakdown.value = { years: 0, months: 0, weeks: 0, days: 0, hours: 0, minutes: 0, seconds: 0 }
-    activeTab.value = 'timer-display'
     isLoading.value = false
     error.value = null
-    
+
     // Stop any running timers
     stopLiveTimerUpdates()
     cleanupGlobalEventListeners()
-    
+
     console.log('🧹 [IncidentTimerStore] All data cleared')
-  }
-
-  // Tab state management functions
-  const setActiveTab = (tabId: string) => {
-    if (['timer-display', 'timer-controls', 'phrase-suggestions', 'phrase-filter', 'suggestion-history', 'public-timers'].includes(tabId)) {
-      activeTab.value = tabId
-
-      // Update URL without page reload (client-side only)
-      if (import.meta.client) {
-        const url = new URL(window.location.href)
-        url.searchParams.set('tab', tabId)
-        window.history.pushState({}, '', url.toString())
-      }
-    }
-  }
-
-  const initializeTabFromUrl = () => {
-    if (import.meta.client) {
-      const urlParams = new URLSearchParams(window.location.search)
-      const tabParam = urlParams.get('tab')
-      if (tabParam && ['timer-display', 'timer-controls', 'phrase-suggestions', 'phrase-filter', 'suggestion-history', 'public-timers'].includes(tabParam)) {
-        activeTab.value = tabParam
-      }
-    }
   }
 
   // Utility functions for timer calculations (pure functions)
@@ -464,7 +436,6 @@ export const useIncidentTimerStore = defineStore('incident-timers', () => {
     publicTimersPage,
     publicTimersPageSize,
     publicTimersLoading,
-    activeTab,
     isLoading,
     error,
 
@@ -490,9 +461,6 @@ export const useIncidentTimerStore = defineStore('incident-timers', () => {
     clearTimers,
     clearPublicTimer,
     clearAllData,
-
-    setActiveTab,
-    initializeTabFromUrl,
 
     startLiveTimerUpdates,
     stopLiveTimerUpdates,

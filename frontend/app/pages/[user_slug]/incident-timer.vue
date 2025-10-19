@@ -93,16 +93,17 @@ const pageDescription = computed(() => {
   return `Live incident-free timer for ${displayName}. Real-time tracking of incident-free periods.`
 })
 
-// Page meta with computed values
-useHead(() => ({
-  title: pageTitle.value,
-  meta: [
-    { name: 'description', content: pageDescription.value },
-    { property: 'og:title', content: pageTitle.value },
-    { property: 'og:description', content: 'Real-time incident tracking timer' },
-    { property: 'og:type', content: 'website' },
-  ]
-}))
+const ogDescription = computed(() => {
+  const displayName = incidentTimerStore.publicTimer?.user_display_name || userSlug.value
+  return `Watch ${displayName}'s incident-free time count up in real-time. Steampunk-themed timer with live updates and historical tracking. See how long since the last reset.`
+})
+
+// Use social share composable for complete meta tags
+useSocialShare({
+  title: pageTitle,
+  description: ogDescription,
+  imageKey: 'timer',
+})
 
 // Reactive time breakdown from store - automatically updates every second
 const { activeTimerBreakdown } = storeToRefs(incidentTimerStore)

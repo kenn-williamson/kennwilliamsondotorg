@@ -531,7 +531,7 @@ impl UserRepository for PostgresUserRepository {
         let users = sqlx::query_as!(
             UserWithTimer,
             r#"
-            SELECT
+            SELECT DISTINCT ON (u.id)
                 u.id,
                 u.display_name,
                 u.slug,
@@ -544,7 +544,7 @@ impl UserRepository for PostgresUserRepository {
             WHERE up.timer_is_public = true
               AND up.timer_show_in_list = true
               AND ($3::text IS NULL OR u.display_name ILIKE $3)
-            ORDER BY it.reset_timestamp ASC
+            ORDER BY u.id, it.reset_timestamp DESC
             LIMIT $1 OFFSET $2
             "#,
             limit,

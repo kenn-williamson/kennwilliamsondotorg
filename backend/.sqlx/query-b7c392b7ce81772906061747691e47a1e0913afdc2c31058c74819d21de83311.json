@@ -1,6 +1,6 @@
 {
   "db_name": "PostgreSQL",
-  "query": "\n            SELECT\n                u.id,\n                u.display_name,\n                u.slug,\n                u.created_at,\n                it.reset_timestamp,\n                it.notes\n            FROM users u\n            INNER JOIN incident_timers it ON u.id = it.user_id\n            INNER JOIN user_preferences up ON u.id = up.user_id\n            WHERE up.timer_is_public = true\n              AND up.timer_show_in_list = true\n              AND ($3::text IS NULL OR u.display_name ILIKE $3)\n            ORDER BY it.reset_timestamp ASC\n            LIMIT $1 OFFSET $2\n            ",
+  "query": "\n            SELECT DISTINCT ON (u.id)\n                u.id,\n                u.display_name,\n                u.slug,\n                u.created_at,\n                it.reset_timestamp,\n                it.notes\n            FROM users u\n            INNER JOIN incident_timers it ON u.id = it.user_id\n            INNER JOIN user_preferences up ON u.id = up.user_id\n            WHERE up.timer_is_public = true\n              AND up.timer_show_in_list = true\n              AND ($3::text IS NULL OR u.display_name ILIKE $3)\n            ORDER BY u.id, it.reset_timestamp DESC\n            LIMIT $1 OFFSET $2\n            ",
   "describe": {
     "columns": [
       {
@@ -50,5 +50,5 @@
       true
     ]
   },
-  "hash": "40b2a5161661def02b38287073a75b7f02eebd4ca6c74e07ad9d692ab50b28ff"
+  "hash": "b7c392b7ce81772906061747691e47a1e0913afdc2c31058c74819d21de83311"
 }

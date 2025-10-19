@@ -25,17 +25,9 @@ useHead({
 // Store for hydration
 const adminStore = useAdminStore()
 
-// SSR: Get route query parameters
-const route = useRoute()
-const tabParam = route.query.tab
-
-// SSR: Set active tab from query parameter
-if (tabParam && typeof tabParam === 'string' && ['overview', 'users', 'suggestions'].includes(tabParam)) {
-  adminStore.setActiveTab(tabParam)
-}
-
-// SSR: Fetch admin stats using store
-const stats = await adminStore.fetchStatsSSR()
+// Fetch admin stats using store
+// Note: Tab state is now managed by useTabs composable in child components
+const stats = await adminStore.fetchStats()
 
 onMounted(() => {
   console.log('Admin page mounted with stats:', stats)

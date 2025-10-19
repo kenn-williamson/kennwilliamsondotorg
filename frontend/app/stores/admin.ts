@@ -17,8 +17,7 @@ export const useAdminStore = defineStore('admin', () => {
   const searchQuery = ref('')
   const selectedUser = ref<User | null>(null)
   const newPassword = ref<string | null>(null)
-  const activeTab = ref('overview')
-  
+
   const isLoading = ref(false)
   const error = ref<string | null>(null)
   
@@ -82,18 +81,6 @@ export const useAdminStore = defineStore('admin', () => {
       stats.value = data
     }
     return data
-  }
-
-  // SSR-compatible stats fetching
-  const fetchStatsSSR = async (): Promise<AdminStats | null> => {
-    const result = await _handleAction(async () => {
-      // Use existing service method with useSmartFetch
-      const response = await adminServiceInstance.getStats()
-      stats.value = response
-      return response
-    }, 'fetchStatsSSR')
-    
-    return result || null
   }
 
   const fetchUsers = async (searchQueryParam?: string) => {
@@ -262,10 +249,6 @@ export const useAdminStore = defineStore('admin', () => {
     selectedUser.value = user
   }
 
-  const setActiveTab = (tab: string) => {
-    activeTab.value = tab
-  }
-
   const setNewPassword = (password: string | null) => {
     newPassword.value = password
   }
@@ -304,7 +287,6 @@ export const useAdminStore = defineStore('admin', () => {
     searchQuery.value = ''
     selectedUser.value = null
     newPassword.value = null
-    activeTab.value = 'overview'
     error.value = null
   }
 
@@ -316,7 +298,6 @@ export const useAdminStore = defineStore('admin', () => {
     searchQuery.value = ''
     selectedUser.value = null
     newPassword.value = null
-    activeTab.value = 'overview'
     isLoading.value = false
     error.value = null
 
@@ -339,7 +320,6 @@ export const useAdminStore = defineStore('admin', () => {
     searchQuery: readonly(searchQuery),
     selectedUser: readonly(selectedUser),
     newPassword: readonly(newPassword),
-    activeTab: readonly(activeTab),
     isLoading: readonly(isLoading),
     error: readonly(error),
 
@@ -348,7 +328,6 @@ export const useAdminStore = defineStore('admin', () => {
     hasError,
 
     fetchStats,
-    fetchStatsSSR,
     fetchUsers,
     fetchSuggestions,
     fetchAccessRequests,
@@ -370,7 +349,6 @@ export const useAdminStore = defineStore('admin', () => {
     setStats,
     setSearchQuery,
     setSelectedUser,
-    setActiveTab,
     setNewPassword,
     updateUserActiveStatus,
     updateUserRoles,

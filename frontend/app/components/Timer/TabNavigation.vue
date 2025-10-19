@@ -4,8 +4,8 @@
       <button
         v-for="tab in tabs"
         :key="tab.id"
-        :class="['tab-button', { active: incidentTimerStore.activeTab === tab.id }]"
-        :aria-selected="incidentTimerStore.activeTab === tab.id"
+        :class="['tab-button', { active: activeTab === tab.id }]"
+        :aria-selected="activeTab === tab.id"
         :aria-controls="`tab-panel-${tab.id}`"
         role="tab"
         @click="setActiveTab(tab.id)"
@@ -18,47 +18,16 @@
 </template>
 
 <script setup lang="ts">
-import type { Tab } from '#shared/types'
-import { useIncidentTimerStore } from '~/stores/incident-timers'
+import { INCIDENT_TABS, type IncidentTabId } from '~/constants/tabs'
 
-const incidentTimerStore = useIncidentTimerStore()
+// Get tab state from composable (reactive via route.query)
+const { activeTab, setActiveTab } = useTabs<IncidentTabId>(
+  INCIDENT_TABS.ids as readonly IncidentTabId[],
+  INCIDENT_TABS.default
+)
 
-const tabs: Tab[] = [
-  {
-    id: 'timer-display',
-    label: 'Timer Display',
-    icon: '⏰'
-  },
-  {
-    id: 'timer-controls',
-    label: 'Timer Controls',
-    icon: '⚙️'
-  },
-  {
-    id: 'phrase-suggestions',
-    label: 'Suggest Phrases',
-    icon: '✍️'
-  },
-  {
-    id: 'phrase-filter',
-    label: 'Filter Phrases',
-    icon: '🔧'
-  },
-  {
-    id: 'suggestion-history',
-    label: 'My Suggestions',
-    icon: '📋'
-  },
-  {
-    id: 'public-timers',
-    label: 'Public Timers',
-    icon: '🌐'
-  }
-]
-
-const setActiveTab = (tabId: string) => {
-  incidentTimerStore.setActiveTab(tabId)
-}
+// Use tab definitions from constants
+const tabs = INCIDENT_TABS.tabs
 </script>
 
 <style scoped>

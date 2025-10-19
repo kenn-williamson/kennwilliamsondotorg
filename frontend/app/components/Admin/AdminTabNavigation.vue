@@ -4,8 +4,8 @@
       <button
         v-for="tab in tabs"
         :key="tab.id"
-        :class="['tab-button', { active: adminStore.activeTab === tab.id }]"
-        :aria-selected="adminStore.activeTab === tab.id"
+        :class="['tab-button', { active: activeTab === tab.id }]"
+        :aria-selected="activeTab === tab.id"
         :aria-controls="`tab-panel-${tab.id}`"
         role="tab"
         @click="setActiveTab(tab.id)"
@@ -18,41 +18,16 @@
 </template>
 
 <script setup lang="ts">
-import { useAdminStore } from '~/stores/admin'
-import type { Tab } from '#shared/types'
+import { ADMIN_TABS, type AdminTabId } from '~/constants/tabs'
 
-const adminStore = useAdminStore()
+// Get tab state from composable (reactive via route.query)
+const { activeTab, setActiveTab } = useTabs<AdminTabId>(
+  ADMIN_TABS.ids as readonly AdminTabId[],
+  ADMIN_TABS.default
+)
 
-const tabs: Tab[] = [
-  {
-    id: 'overview',
-    label: 'Overview',
-    icon: '📊'
-  },
-  {
-    id: 'users',
-    label: 'Users',
-    icon: '👥'
-  },
-  {
-    id: 'suggestions',
-    label: 'Phrase Suggestions',
-    icon: '✍️'
-  },
-  {
-    id: 'access-requests',
-    label: 'Access Requests',
-    icon: '🔑'
-  }
-]
-
-const setActiveTab = (tabId: string) => {
-  adminStore.setActiveTab(tabId)
-  // Update URL without page reload
-  const url = new URL(window.location.href)
-  url.searchParams.set('tab', tabId)
-  window.history.pushState({}, '', url.toString())
-}
+// Use tab definitions from constants
+const tabs = ADMIN_TABS.tabs
 </script>
 
 <style scoped>

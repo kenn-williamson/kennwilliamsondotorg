@@ -66,22 +66,18 @@
           
           <!-- Clockwork Gears - Only Tick -->
           <div class="gear gear-left">
-            <div class="gear-teeth" :style="{ transform: `rotate(${tickAngle}deg)` }"></div>
-            <div class="gear-center"></div>
+            <img src="~/assets/images/gear1.png" alt="" class="gear-image" :style="{ transform: `rotate(${tickAngle}deg)` }" />
           </div>
           <div class="gear gear-right">
-            <div class="gear-teeth" :style="{ transform: `rotate(${tickAngle + 45}deg)` }"></div>
-            <div class="gear-center"></div>
+            <img src="~/assets/images/gear1.png" alt="" class="gear-image" :style="{ transform: `rotate(${tickAngle + 45}deg)` }" />
           </div>
-          
+
           <!-- Minute Gears - Only Spin on Minute Changes -->
           <div class="minute-gear minute-gear-top">
-            <div class="gear-teeth" :style="{ transform: `rotate(${spinAngle}deg)` }"></div>
-            <div class="gear-center"></div>
+            <img src="~/assets/images/gear2.png" alt="" class="gear-image" :style="{ transform: `rotate(${spinAngle}deg)` }" />
           </div>
           <div class="minute-gear minute-gear-bottom">
-            <div class="gear-teeth" :style="{ transform: `rotate(${-spinAngle}deg)` }"></div>
-            <div class="gear-center"></div>
+            <img src="~/assets/images/gear2.png" alt="" class="gear-image" :style="{ transform: `rotate(${-spinAngle}deg)` }" />
           </div>
         </div>
       </div>
@@ -236,73 +232,33 @@ const spinAngle = computed(() => {
 /* Clockwork Gears */
 .gear {
   position: absolute;
-  width: 50px;
-  height: 50px;
+  width: 100px;
+  height: 100px;
   top: 50%;
   transform: translateY(-50%);
-  
+
   display: flex;
   align-items: center;
   justify-content: center;
 }
 
-.gear-left { left: -25px; }
-.gear-right { right: -25px; }
+.gear-left { left: -50px; }
+.gear-right { right: -50px; }
 
-.gear-teeth {
+.gear-image {
   position: absolute;
-  width: 50px;
-  height: 50px;
-  border: 3px solid #8B4513;
-  border-radius: 50%;
-  background: 
-    radial-gradient(circle at center, #2a2a2a 0%, #1a1a1a 100%);
+  width: 100px;
+  height: 100px;
   transition: transform 1s ease-in-out;
-  
-  /* Create gear teeth */
-  box-shadow: 
-    /* Top teeth */
-    0 -25px 0 -20px #8B4513,
-    0 -25px 0 -18px #2a2a2a,
-    /* Bottom teeth */
-    0 25px 0 -20px #8B4513,
-    0 25px 0 -18px #2a2a2a,
-    /* Left teeth */
-    -25px 0 0 -20px #8B4513,
-    -25px 0 0 -18px #2a2a2a,
-    /* Right teeth */
-    25px 0 0 -20px #8B4513,
-    25px 0 0 -18px #2a2a2a,
-    /* Diagonal teeth */
-    -18px -18px 0 -20px #8B4513,
-    -18px -18px 0 -18px #2a2a2a,
-    18px -18px 0 -20px #8B4513,
-    18px -18px 0 -18px #2a2a2a,
-    -18px 18px 0 -20px #8B4513,
-    -18px 18px 0 -18px #2a2a2a,
-    18px 18px 0 -20px #8B4513,
-    18px 18px 0 -18px #2a2a2a;
-}
-
-.gear-center {
-  position: absolute;
-  width: 12px;
-  height: 12px;
-  background: #FFD700;
-  border: 2px solid #8B4513;
-  border-radius: 50%;
-  z-index: 2;
-  box-shadow: 
-    inset 0 1px 2px rgba(255, 255, 255, 0.3),
-    0 0 4px rgba(255, 215, 0, 0.5);
+  filter: drop-shadow(0 6px 12px rgba(0, 0, 0, 0.4));
 }
 
 /* Minute Gears */
 .minute-gear {
   position: absolute;
-  width: 50px;
-  height: 50px;
-  
+  width: 100px;
+  height: 100px;
+
   display: flex;
   align-items: center;
   justify-content: center;
@@ -320,52 +276,6 @@ const spinAngle = computed(() => {
   transform: translateX(-50%);
 }
 
-.minute-gear .gear-teeth {
-  position: absolute;
-  width: 50px;
-  height: 50px;
-  border: 3px solid #8B4513;
-  border-radius: 50%;
-  background: 
-    radial-gradient(circle at center, #2a2a2a 0%, #1a1a1a 100%);
-  transition: transform 1s ease-in-out;
-  
-  /* Create gear teeth */
-  box-shadow: 
-    /* Top teeth */
-    0 -25px 0 -20px #8B4513,
-    0 -25px 0 -18px #2a2a2a,
-    /* Bottom teeth */
-    0 25px 0 -20px #8B4513,
-    0 25px 0 -18px #2a2a2a,
-    /* Left teeth */
-    -25px 0 0 -20px #8B4513,
-    -25px 0 0 -18px #2a2a2a,
-    /* Right teeth */
-    25px 0 0 -20px #8B4513,
-    25px 0 0 -18px #2a2a2a,
-    /* Diagonal teeth */
-    -18px -18px 0 -20px #8B4513,
-    -18px -18px 0 -18px #2a2a2a,
-    18px -18px 0 -20px #8B4513,
-    18px -18px 0 -18px #2a2a2a,
-    -18px 18px 0 -20px #8B4513,
-    -18px 18px 0 -18px #2a2a2a,
-    18px 18px 0 -20px #8B4513,
-    18px 18px 0 -18px #2a2a2a;
-}
-
-.minute-gear .gear-center {
-  width: 12px;
-  height: 12px;
-  background: #FFD700;
-  border: 2px solid #8B4513;
-  border-radius: 50%;
-  z-index: 2;
-  box-shadow: 
-    inset 0 1px 2px rgba(255, 255, 255, 0.3),
-    0 0 4px rgba(255, 215, 0, 0.5);
-}
 
 
 

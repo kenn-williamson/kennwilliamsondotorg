@@ -12,22 +12,22 @@
     <!-- Tab Content -->
     <div class="tab-content">
       <!-- Overview Tab -->
-      <div v-if="adminStore.activeTab === 'overview'" class="tab-panel">
+      <div v-if="activeTab === 'overview'" class="tab-panel">
         <OverviewTab />
       </div>
 
       <!-- Users Tab -->
-      <div v-else-if="adminStore.activeTab === 'users'" class="tab-panel">
+      <div v-else-if="activeTab === 'users'" class="tab-panel">
         <UsersTab />
       </div>
 
       <!-- Suggestions Tab -->
-      <div v-else-if="adminStore.activeTab === 'suggestions'" class="tab-panel">
+      <div v-else-if="activeTab === 'suggestions'" class="tab-panel">
         <PhraseSuggestionApprovalTab />
       </div>
 
       <!-- Access Requests Tab -->
-      <div v-else-if="adminStore.activeTab === 'access-requests'" class="tab-panel">
+      <div v-else-if="activeTab === 'access-requests'" class="tab-panel">
         <AccessRequestsTab />
       </div>
     </div>
@@ -35,16 +35,14 @@
 </template>
 
 <script setup lang="ts">
-import { useAdminStore } from '~/stores/admin'
+import { ADMIN_TABS, type AdminTabId } from '~/constants/tabs'
 
-const adminStore = useAdminStore()
-
-// Watch for tab changes and update URL
-watch(() => adminStore.activeTab, (newTab) => {
-  const url = new URL(window.location.href)
-  url.searchParams.set('tab', newTab)
-  window.history.pushState({}, '', url.toString())
-})
+// Get tab state from composable (reactive via route.query)
+// URL updates are handled automatically by the composable
+const { activeTab } = useTabs<AdminTabId>(
+  ADMIN_TABS.ids as readonly AdminTabId[],
+  ADMIN_TABS.default
+)
 </script>
 
 <style scoped>

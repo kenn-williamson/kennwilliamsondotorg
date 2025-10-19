@@ -418,4 +418,10 @@ useHead({
     },
   ],
 });
+
+// Social media sharing (same professional image as /about/professional)
+useSocialShare({
+  title: "AI & The Future of Work - Kenn Williamson",
+  imageKey: "professional"
+});
 </script>

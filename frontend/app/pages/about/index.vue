@@ -292,4 +292,10 @@ useHead({
     },
   ],
 });
+
+// Social media sharing
+useSocialShare({
+  title: "About Kenn Williamson",
+  imageKey: "personal"
+});
 </script>

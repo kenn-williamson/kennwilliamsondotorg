@@ -268,15 +268,6 @@ describe('Admin Store', () => {
       expect(store.selectedUser).toEqual(mockUser)
     })
 
-    it('should set active tab', () => {
-      const store = useAdminStore()
-      expect(store.activeTab).toBe('overview') // default
-      store.setActiveTab('users')
-      expect(store.activeTab).toBe('users')
-      store.setActiveTab('suggestions')
-      expect(store.activeTab).toBe('suggestions')
-    })
-
     it('should clear new password', () => {
       const store = useAdminStore()
       store.setNewPassword('test password')

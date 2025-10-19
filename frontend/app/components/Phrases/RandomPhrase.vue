@@ -39,12 +39,12 @@ const props = withDefaults(defineProps<RandomPhraseProps>(), {
 const phrasesStore = usePhrasesStore()
 
 // Smart phrase fetching - uses public endpoint if userSlug provided, auth endpoint otherwise
-await callOnce('random-phrase', async () => await phrasesStore.fetchRandomPhraseSSR(props.userSlug))
+await callOnce('random-phrase', async () => await phrasesStore.fetchRandomPhrase(props.userSlug))
 
 // Reactive references for template compatibility
 const pending = computed(() => phrasesStore.isLoading)
 const error = computed(() => phrasesStore.error)
-const refresh = () => phrasesStore.fetchRandomPhraseSSR(props.userSlug)
+const refresh = () => phrasesStore.fetchRandomPhrase(props.userSlug)
 
 // Auto-refresh functionality
 let refreshTimer: NodeJS.Timeout | null = null

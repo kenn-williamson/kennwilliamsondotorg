@@ -63,28 +63,28 @@
 
         <!-- Tab Content -->
         <div class="bg-white/80 backdrop-blur-sm rounded-lg shadow-lg border border-blue-200">
-          <TimerDisplayTab 
-            v-if="incidentTimerStore.activeTab === 'timer-display'"
+          <TimerDisplayTab
+            v-if="activeTab === 'timer-display'"
           />
-          
-          <TimerControlsTab 
-            v-else-if="incidentTimerStore.activeTab === 'timer-controls'"
+
+          <TimerControlsTab
+            v-else-if="activeTab === 'timer-controls'"
           />
-          
-          <PhraseSuggestionsTab 
-            v-else-if="incidentTimerStore.activeTab === 'phrase-suggestions'"
+
+          <PhraseSuggestionsTab
+            v-else-if="activeTab === 'phrase-suggestions'"
           />
-          
-          <PhraseFilterTab 
-            v-else-if="incidentTimerStore.activeTab === 'phrase-filter'"
+
+          <PhraseFilterTab
+            v-else-if="activeTab === 'phrase-filter'"
           />
-          
+
           <SuggestionHistoryTab
-            v-else-if="incidentTimerStore.activeTab === 'suggestion-history'"
+            v-else-if="activeTab === 'suggestion-history'"
           />
 
           <PublicTimersTab
-            v-else-if="incidentTimerStore.activeTab === 'public-timers'"
+            v-else-if="activeTab === 'public-timers'"
           />
         </div>
       </div>
@@ -92,7 +92,9 @@
   </div>
 </template>
 
-<script setup>
+<script setup lang="ts">
+import { INCIDENT_TABS, type IncidentTabId } from '~/constants/tabs'
+
 // Page meta - No middleware, accessible to both authenticated and unauthenticated users
 useHead({
   title: 'Incidents',
@@ -101,13 +103,24 @@ useHead({
   ]
 })
 
+// Social media sharing
+useSocialShare({
+  title: 'Incident Timers - KennWilliamson.org',
+  imageKey: 'timer'
+})
+
 // Stores
 const { user } = useUserSession()
 const incidentTimerStore = useIncidentTimerStore()
 
-// Initialize tab from URL query parameter and clear public timer
+// Tab state using composable (SSR-compatible, reactive to route.query)
+const { activeTab, setActiveTab } = useTabs<IncidentTabId>(
+  INCIDENT_TABS.ids as readonly IncidentTabId[],
+  INCIDENT_TABS.default
+)
+
+// Clear public timer when navigating away (client-side only)
 onMounted(() => {
-  incidentTimerStore.initializeTabFromUrl()
   incidentTimerStore.clearPublicTimerOnNavigation()
 })
 </script>
