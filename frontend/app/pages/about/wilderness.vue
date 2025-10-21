@@ -117,9 +117,11 @@
       valuable lesson.
     </p>
 
-    <div class="photo-placeholder">
-      Photo: Graduation or something symbolizing completion
-    </div>
+    <img
+      src="~/assets/images/graduation.jpg"
+      alt="Graduation cap symbolizing completion of academic journey"
+      class="w-full max-w-2xl mx-auto rounded-lg shadow-lg my-6"
+    />
 
     <h2>When Everything Fell Apart</h2>
 

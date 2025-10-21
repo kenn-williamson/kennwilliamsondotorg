@@ -3,7 +3,7 @@
     <h1>Professional Path</h1>
 
     <img
-      src="~/assets/images/headshot.png"
+      src="~/assets/images/headshot.jpg"
       alt="Kenn Williamson professional headshot"
       class="w-full max-w-md mx-auto rounded-lg shadow-lg my-6"
     />
@@ -59,7 +59,11 @@
       of myself as an engineer who happened to be good with spreadsheets.
     </p>
 
-    <div class="photo-placeholder">Photo: Early career era or engineering work</div>
+    <img
+      src="~/assets/images/early-career.jpg"
+      alt="Early career engineering work - desk with blueprints, models, and code"
+      class="w-full max-w-2xl mx-auto rounded-lg shadow-lg my-6"
+    />
 
     <h2>The Crisis and the Pivot</h2>
 
@@ -143,7 +147,7 @@
       <strong>Pipeline Measurement System</strong> (First project): Embedded C/C++ work
       upgrading legacy field applications to modern architecture. This was completely
       outside my boot camp training. I had to learn systems programming from scratch.
-      Without AI available at the time, I researched C/C++ through articles and blogs,
+      Without generative models available at the time, I researched C/C++ through articles and blogs,
       traced execution paths manually through the codebase, and learned through trial
       and error. My tech lead had the overall approach; I filled in details and
       problem-solved. One breakthrough was getting the code to compile locally,
@@ -254,7 +258,11 @@
       where I'm spending most of my energy these days.
     </p>
 
-    <div class="photo-placeholder">Photo: Team photo or presenting at a conference</div>
+    <img
+      src="~/assets/images/tab-panel.jpg"
+      alt="Kenn speaking on a panel at The Alternative Board"
+      class="w-full max-w-2xl mx-auto rounded-lg shadow-lg my-6"
+    />
 
     <h2>The Mentors Who Shaped My Professional Growth</h2>
 
@@ -328,10 +336,10 @@
     </p>
 
     <p>
-      <strong>AI evangelism</strong>: I'm giving talks to various industries (oil and
-      gas, manufacturing, healthcare) about AI realism and how to actually leverage
-      these technologies effectively. (See my full thoughts on AI in the AI & The Future
-      of Work section.)
+      <strong>IA evangelism</strong>: I'm giving talks to various industries (oil and
+      gas, manufacturing, healthcare) about Intelligence Augmentation (IA) and how to
+      actually leverage these technologies effectively. (See my full thoughts on this in
+      the From AI to IA section.)
     </p>
 
     <p>

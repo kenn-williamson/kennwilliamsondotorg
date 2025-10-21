@@ -2,9 +2,11 @@
   <AboutLayout>
     <h1>Origins</h1>
 
-    <div class="photo-placeholder">
-      Photo: Childhood photo or family photo with grandparents
-    </div>
+    <img
+      src="~/assets/images/young_mom_dad.jpeg"
+      alt="With my parents in early childhood"
+      class="w-full max-w-2xl mx-auto rounded-lg shadow-lg my-6"
+    />
 
     <h2>Family Foundation</h2>
 
@@ -61,9 +63,11 @@
       stayed wealthy because they understood the value of money.
     </p>
 
-    <div class="photo-placeholder">
-      Photo: Papa at the lake house or with his engineering work
-    </div>
+    <img
+      src="~/assets/images/nanny_and_papa.jpg"
+      alt="With Nanny and Papa (maternal grandparents) at the lake"
+      class="w-full max-w-2xl mx-auto rounded-lg shadow-lg my-6"
+    />
 
     <h3>Grandpa and Grammy (Paternal Grandparents)</h3>
 
@@ -88,7 +92,18 @@
       someone else, the value of building something yourself even if it's not glamorous.
     </p>
 
-    <div class="photo-placeholder">Photo: Grandpa and Grammy</div>
+    <div class="flex flex-col md:flex-row gap-6 my-6 max-w-4xl mx-auto">
+      <img
+        src="~/assets/images/grammie_grandpa.jpeg"
+        alt="Grandpa and Grammy (paternal grandparents)"
+        class="w-full md:w-1/2 rounded-lg shadow-lg"
+      />
+      <img
+        src="~/assets/images/grammie_holding_me.jpeg"
+        alt="Grammy holding me as a baby"
+        class="w-full md:w-1/2 rounded-lg shadow-lg"
+      />
+    </div>
 
     <p>
       The contrast between my two sets of grandparents taught me something important:
@@ -125,8 +140,37 @@
 
     <p>
       Here's the paradox that defined my entire educational experience: I was genuinely
-      intelligent. High IQ scores, gifted and talented programs, fourth place in the
-      state for
+      intelligent. High IQ scores, gifted and talented programs, recognition from the
+      <SteampunkTooltip :clickable="true" placement="top">
+        <template #default>
+          <a
+            href="https://tip.duke.edu/"
+            target="_blank"
+            rel="noopener"
+            class="text-amber-700 hover:text-amber-900"
+            >Duke University Talent Identification Program</a
+          >
+        </template>
+        <template #content>
+          <div>
+            <p class="mb-2">
+              Duke TIP was a prestigious 40-year program (1980-2020+) that identified
+              academically gifted students through above-level testing. Seventh graders took
+              the SAT or ACT to identify exceptional talent.
+            </p>
+            <p class="mb-2">
+              <strong>Selectivity:</strong> While over 100,000 students applied annually,
+              only a small percentage received recognition for outstanding performance in
+              both mathematics and verbal sections.
+            </p>
+            <p>
+              The program provided educational opportunities and summer programs to help
+              gifted students reach their full potential.
+            </p>
+          </div>
+        </template>
+      </SteampunkTooltip>
+      in seventh grade, fourth place in the state for
       <a
         href="https://www.mathcounts.org/"
         target="_blank"
@@ -308,9 +352,11 @@
       These relationships mattered, even if the overall experience was difficult.
     </p>
 
-    <div class="photo-placeholder">
-      Photo: Math Counts team or competition certificate
-    </div>
+    <img
+      src="~/assets/images/duke_certificate.jpeg"
+      alt="Duke University Talent Identification Program recognition for mathematics and verbal achievement, 7th grade (1994-1995)"
+      class="w-full max-w-2xl mx-auto rounded-lg shadow-lg my-6"
+    />
 
     <p>
       <strong>Union Public Schools (10th and 11th grade):</strong> I returned to public
@@ -336,9 +382,11 @@
 
     <h2>Military School: The Crucible</h2>
 
-    <div class="photo-placeholder">
-      Photo: Wentworth Military Academy yearbook or uniform photo
-    </div>
+    <img
+      src="~/assets/images/wentworth_quizbowl.jpeg"
+      alt="Wentworth Military Academy Quiz Bowl team (2000)"
+      class="w-full max-w-2xl mx-auto rounded-lg shadow-lg my-6"
+    />
 
     <p>
       My parents sent me to Wentworth Military Academy for my senior year. It was a
@@ -374,6 +422,12 @@
       I got to college, I could make friends more easily. But it also taught me to
       perform rather than to be authentic, and that's taken years to unlearn.
     </p>
+
+    <img
+      src="~/assets/images/military_ball.jpeg"
+      alt="Military ball at Wentworth - an example of the formal social expectations"
+      class="w-full max-w-2xl mx-auto rounded-lg shadow-lg my-6"
+    />
 
     <h2>Early Memories and Formation</h2>
 

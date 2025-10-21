@@ -12,7 +12,7 @@
     <template #trigger>
       <!-- ALWAYS wrap slot content with styled span and icon -->
       <span class="steampunk-tooltip-trigger">
-        <slot>{{ triggerText }}</slot><sup class="tooltip-icon">ℹ</sup>
+        <slot>{{ triggerText }}</slot><sup v-if="showIcon" class="tooltip-icon">ℹ</sup>
       </span>
     </template>
 
@@ -56,6 +56,10 @@ const props = defineProps({
   clickable: {
     type: Boolean,
     default: false
+  },
+  showIcon: {
+    type: Boolean,
+    default: true
   },
   variant: {
     type: String,

@@ -145,7 +145,7 @@ const allSections = [
   { title: 'Finding Faith', path: '/about/faith', restricted: true },
   { title: 'Theology & Practice', path: '/about/theology', restricted: true },
   { title: 'Professional Path', path: '/about/professional', restricted: false },
-  { title: 'AI & Future of Work', path: '/about/ai', restricted: false },
+  { title: 'AI → IA', path: '/about/ai', restricted: false },
   { title: 'Life Now', path: '/about/now', restricted: true },
   { title: 'Philosophy & Vision', path: '/about/vision', restricted: true }
 ]

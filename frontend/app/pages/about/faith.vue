@@ -3,7 +3,7 @@
     <h1>Finding Faith</h1>
 
     <img
-      src="~/assets/images/finding-faith.png"
+      src="~/assets/images/finding-faith.jpg"
       alt="Finding faith"
       class="w-full max-w-2xl mx-auto rounded-lg shadow-lg my-6"
     />

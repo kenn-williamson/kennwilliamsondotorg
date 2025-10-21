@@ -2,8 +2,17 @@
   <AboutLayout>
     <h1>Life Now</h1>
 
-    <div class="photo-placeholder">
-      Photo: Recent photo with all three kids, or a candid family moment
+    <div class="flex flex-col md:flex-row gap-6 my-6 max-w-4xl mx-auto">
+      <img
+        src="~/assets/images/family-candid-1.jpg"
+        alt="Family selfie at Christmas light show"
+        class="w-full md:w-1/2 rounded-lg shadow-lg"
+      />
+      <img
+        src="~/assets/images/family-park-candid.jpg"
+        alt="Family candid at the park"
+        class="w-full md:w-1/2 rounded-lg shadow-lg"
+      />
     </div>
 
     <p>
@@ -44,7 +53,7 @@
       tools she needs to succeed.
     </p>
 
-    <h3>Charlotte Anne (Charlie)</h3>
+    <h3>Charlotte Ann (Charlie)</h3>
 
     <p>
       Charlie is 9 and is so much like my mom. She's an amazing social butterfly, loves
@@ -102,7 +111,7 @@
     <div class="grid grid-cols-1 md:grid-cols-3 gap-6 my-8">
       <div class="text-center">
         <img
-          src="~/assets/images/rory-portrait.png"
+          src="~/assets/images/rory-portrait.jpg"
           alt="Rory"
           class="w-full rounded-lg shadow-lg mb-2"
         />
@@ -246,9 +255,9 @@
 
     <p>
       I play guitar and write songs. My recent pattern is: I write the lyrics and the
-      overall vision for the music, use AI to generate a version that gets close to what
+      overall vision for the music, use a generative model to create a version that gets close to what
       I'm hearing in my head, then practice it on guitar and perform it myself. So it's
-      my lyrics and vision, music written by AI, performed by me.
+      my lyrics and vision, music written by a generative model, performed by me.
     </p>
 
     <p>
@@ -278,7 +287,11 @@
       trying to practice purity, the pool is kind of a dangerous place for me.
     </p>
 
-    <div class="photo-placeholder">Photo: Hiking or fitness activity</div>
+    <img
+      src="~/assets/images/on_the_mountain.jpg"
+      alt="On the mountain - hiking adventure"
+      class="w-full max-w-2xl mx-auto rounded-lg shadow-lg my-6"
+    />
 
     <h2>The Website Project</h2>
 
@@ -297,8 +310,8 @@
     <p>
       I love that I can work on this and pause whenever the kids need me. It's
       intellectually engaging, lets me stay sharp on emerging technologies, and gives me
-      something to show for the time I spend on it. Plus, I'm using AI heavily in the
-      development process, which lets me practice what I preach about AI augmentation.
+      something to show for the time I spend on it. Plus, I'm using generative models heavily in the
+      development process, which lets me practice what I preach about Intelligence Augmentation.
     </p>
 
     <p>

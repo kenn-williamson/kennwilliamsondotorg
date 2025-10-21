@@ -54,7 +54,7 @@ const formattedDate = computed(() => {
 <style scoped>
 .vintage-note-card {
   position: relative;
-  max-width: 800px;
+  max-width: 1800px;
   margin: 0 auto 40px auto;
   transform: rotate(-1deg);
   transition: transform 0.3s ease;
@@ -66,17 +66,17 @@ const formattedDate = computed(() => {
 
 .card-body {
   position: relative;
-  background-image: url('~/assets/images/scroll.png');
+  background-image: url('~/assets/images/worn-scroll-horizontal.png');
   background-size: contain;
   background-position: center;
   background-repeat: no-repeat;
-  
+
   border: none;
   border-radius: 0;
-  padding: 50px 40px 40px 40px;
+  padding: 60px 120px;
   box-shadow: none;
   min-height: 300px;
-  aspect-ratio: 4/3;
+  aspect-ratio: 1024/650;
 }
 
 .paper-texture {
@@ -181,19 +181,8 @@ const formattedDate = computed(() => {
   font-family: 'Brush Script MT', 'Lucida Handwriting', cursive;
   font-size: 42px;
   font-weight: normal;
-  color: #000000;
-  text-shadow: 
-    /* Engraved effect like the bracelet */
-    /* Top-left highlight (light catching the upper lip) */
-    -1px -1px 0px rgba(255, 255, 255, 0.3),
-    -0.5px -0.5px 0px rgba(255, 255, 255, 0.2),
-    
-    /* Bottom-right shadow (depth of the cut) */
-    1px 1px 0px rgba(0, 0, 0, 0.4),
-    0.5px 0.5px 0px rgba(0, 0, 0, 0.3),
-    
-    /* Subtle depth shadow */
-    0px 1px 1px rgba(0, 0, 0, 0.2);
+  color: #2b1810;
+  text-shadow: 0px 0px 1px rgba(0, 0, 0, 0.1);
   letter-spacing: 1px;
 }
 
@@ -207,32 +196,24 @@ const formattedDate = computed(() => {
 
 .note-text {
   font-family: 'Brush Script MT', 'Lucida Handwriting', cursive;
-  font-size: 32px;
-  line-height: 1.6;
-  color: #000000;
-  text-align: center;
+  font-size: 28px;
+  line-height: 1.3;
+  color: #2b1810;
   font-style: italic;
   font-weight: normal;
-  margin: 15px 0;
-  padding: 0 12px;
+  margin: 15px 0 15px 0;
+  padding: 0 60px;
   max-width: 100%;
+
+  /* Limit to ~6 lines at this font size */
+  display: -webkit-box;
+  -webkit-line-clamp: 6;
+  line-clamp: 6;
+  -webkit-box-orient: vertical;
   overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-  
-  /* Engraved effect */
-  text-shadow: 
-    /* Engraved effect like the bracelet */
-    /* Top-left highlight (light catching the upper lip) */
-    -1px -1px 0px rgba(255, 255, 255, 0.3),
-    -0.5px -0.5px 0px rgba(255, 255, 255, 0.2),
-    
-    /* Bottom-right shadow (depth of the cut) */
-    1px 1px 0px rgba(0, 0, 0, 0.4),
-    0.5px 0.5px 0px rgba(0, 0, 0, 0.3),
-    
-    /* Subtle depth shadow */
-    0px 1px 1px rgba(0, 0, 0, 0.2);
+
+  /* Subtle ink effect */
+  text-shadow: 0px 0px 1px rgba(0, 0, 0, 0.1);
 }
 
 .note-footer {
@@ -244,50 +225,44 @@ const formattedDate = computed(() => {
 
 .timestamp {
   font-family: 'Brush Script MT', 'Lucida Handwriting', cursive;
-  font-size: 26px;
-  color: #000000;
+  font-size: 22px;
+  color: #2b1810;
   font-style: italic;
   font-weight: normal;
-  text-shadow: 
-    /* Engraved effect like the bracelet */
-    /* Top-left highlight (light catching the upper lip) */
-    -1px -1px 0px rgba(255, 255, 255, 0.3),
-    -0.5px -0.5px 0px rgba(255, 255, 255, 0.2),
-    
-    /* Bottom-right shadow (depth of the cut) */
-    1px 1px 0px rgba(0, 0, 0, 0.4),
-    0.5px 0.5px 0px rgba(0, 0, 0, 0.3),
-    
-    /* Subtle depth shadow */
-    0px 1px 1px rgba(0, 0, 0, 0.2);
+  text-shadow: 0px 0px 1px rgba(0, 0, 0, 0.1);
 }
 
 /* Responsive design */
 @media (max-width: 768px) {
   .card-body {
-    padding: 28px 24px 20px 24px;
+    padding: 40px 60px;
   }
-  
+
   .note-title {
-    font-size: 20px;
+    font-size: 36px;
   }
-  
+
   .note-text {
-    font-size: 16px;
-    padding: 0 8px;
+    font-size: 24px;
+    padding: 0 40px;
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    line-clamp: 2;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
   }
-  
+
   .wax-seal {
     width: 32px;
     height: 32px;
     right: 16px;
   }
-  
+
   .seal-inner {
     width: 20px;
     height: 20px;
   }
-  
+
   .seal-icon {
     width: 14px;
     height: 14px;
@@ -298,29 +273,35 @@ const formattedDate = computed(() => {
   .vintage-note-card {
     transform: rotate(-0.5deg);
   }
-  
+
   .card-body {
-    padding: 24px 20px 16px 20px;
+    padding: 30px 40px;
   }
-  
+
   .note-title {
+    font-size: 32px;
+  }
+
+  .note-text {
+    font-size: 20px;
+    padding: 0 30px;
+    margin: 16px 0;
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    line-clamp: 2;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+  }
+
+  .timestamp {
     font-size: 18px;
   }
-  
-  .note-text {
-    font-size: 14px;
-    margin: 16px 0;
-  }
-  
-  .timestamp {
-    font-size: 12px;
-  }
-  
+
   .corner-decoration {
     width: 12px;
     height: 12px;
   }
-  
+
   .corner-decoration::before {
     width: 4px;
     height: 4px;

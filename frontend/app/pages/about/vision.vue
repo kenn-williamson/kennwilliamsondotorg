@@ -3,7 +3,7 @@
     <h1>Philosophy & Vision</h1>
 
     <img
-      src="~/assets/images/vision-future.png"
+      src="~/assets/images/vision-future.jpg"
       alt="Vision for the future"
       class="w-full max-w-2xl mx-auto rounded-lg shadow-lg my-6"
     />
@@ -186,9 +186,9 @@
     <p>
       <strong>Professional growth</strong>: Get deeper into AI work. I'm hoping for a
       promotion to a specific title related to AI. I want to deliver more talks and
-      workshops to evangelize AI realism and help companies see practical applications.
-      We have an AI-assisted job estimator and contract bid application in the works
-      that's pretty interesting.
+      workshops to evangelize Intelligence Augmentation (IA) and help companies see
+      practical applications. We have a GM-assisted job estimator and contract bid
+      application in the works that's pretty interesting.
     </p>
 
     <p>
@@ -202,7 +202,7 @@
       <strong>Professionally</strong>: I want to continue growing with SEQTEK as the
       company expands. I'd love to help us break into the AI space and become a trusted
       voice for Midwestern industries (oil and gas, manufacturing, healthcare), helping
-      them identify and adopt what AI can actually do for them. There's a lot of
+      them identify and adopt what IA can actually do for them. There's a lot of
       misinformation out there, and I want to be an honest, realistic voice in that
       conversation.
     </p>
@@ -287,8 +287,8 @@
       For people entering software development, focus on fundamentals. Data structures,
       algorithms, systems thinking, architecture. Don't just learn enough to be
       productive. Understand how things actually work. The bar is rising with AI. If all
-      you can do is what AI can do, you're in trouble. But if you have strong
-      fundamentals and good communication skills, AI makes you incredibly valuable.
+      you can do is what GMs can do, you're in trouble. But if you have strong
+      fundamentals and good communication skills, IA makes you incredibly valuable.
     </p>
 
     <p>

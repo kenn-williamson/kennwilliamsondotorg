@@ -4,7 +4,7 @@
 
     <!-- Professional headshot -->
     <img
-      src="~/assets/images/headshot.png"
+      src="~/assets/images/headshot.jpg"
       alt="Kenn Williamson professional headshot"
       class="w-full max-w-md mx-auto rounded-lg shadow-lg my-6"
     />
@@ -153,8 +153,8 @@
       through a coding boot camp in 2017. I've been at SEQTEK for almost seven and a
       half years now, moving from mid-level developer to Enterprise Architect. I've led
       successful projects, helped companies get acquired, and found my niche
-      evangelizing what I call "AI realism." It's the middle path between "AI will do
-      everything" and "AI is worthless."
+      evangelizing Intelligence Augmentation (IA)—helping companies understand that
+      the goal is amplifying human capabilities, not replacing human judgment.
     </p>
 
     <p>
@@ -225,8 +225,8 @@
           to="/about/ai"
           class="font-semibold text-amber-700 hover:text-amber-900"
         >
-          AI & The Future of Work
-        </NuxtLink>: My philosophy on AI realism and why human judgment still matters
+          From AI to IA
+        </NuxtLink>: Why both AI hype and skepticism miss the point—Intelligence Augmentation amplifies human capabilities rather than replacing them
       </li>
       <li v-if="hasTrustedContactAccess">
         <NuxtLink

@@ -22,9 +22,23 @@
       understanding.
     </p>
 
-    <h3>Saint Athanasius: Theosis</h3>
+    <h3>
+      <SteampunkTooltip variant="parchment" :clickable="true">
+        <template #content>
+          Saint Athanasius the Great (c. 297-373) was Archbishop of Alexandria and a pillar of Orthodoxy. He defended the Nicene faith against Arianism and wrote extensively on the Incarnation and theosis.
+          <br><br>
+          <a href="https://www.oca.org/saints/lives/2007/05/02/101269-saint-athanasius-the-great-patriarch-of-alexandria" target="_blank" rel="noopener" class="text-amber-700 underline">Read more about Saint Athanasius →</a>
+        </template>
+        Saint Athanasius
+      </SteampunkTooltip>: Theosis
+    </h3>
 
     <p>
+      <img
+        src="~/assets/images/saint-athanasius-icon.jpg"
+        alt="Icon of Saint Athanasius of Alexandria"
+        class="w-48 rounded-lg shadow-md float-right ml-4 mb-4"
+      />
       Athanasius, particularly in <em>On the Incarnation</em>, introduced me to the
       concept of
       <SteampunkTooltip
@@ -39,9 +53,23 @@
       transform it from within.
     </p>
 
-    <h3>Saint Gregory of Nyssa: Universal Reconciliation</h3>
+    <h3 class="clear-both">
+      <SteampunkTooltip variant="parchment" :clickable="true">
+        <template #content>
+          Saint Gregory of Nyssa (c. 335-395) was a Cappadocian Father, brother of Saint Basil the Great, and one of the most profound Christian thinkers of the fourth century. He taught about universal reconciliation and spiritual transformation.
+          <br><br>
+          <a href="https://www.oca.org/saints/lives/2025/01/10/100140-saint-gregory-bishop-of-nyssa" target="_blank" rel="noopener" class="text-amber-700 underline">Read more about Saint Gregory →</a>
+        </template>
+        Saint Gregory of Nyssa
+      </SteampunkTooltip>: Universal Reconciliation
+    </h3>
 
     <p>
+      <img
+        src="~/assets/images/saint-gregory-nyssa-icon.jpg"
+        alt="Icon of Saint Gregory of Nyssa"
+        class="w-48 rounded-lg shadow-md float-left mr-4 mb-4"
+      />
       Gregory's understanding of universal reconciliation and the transformation of
       desire resonated deeply. He saw salvation not as escape from punishment but as
       healing and restoration. Sin isn't primarily about breaking rules; it's about
@@ -49,9 +77,23 @@
       is God reordering those desires, healing us into wholeness.
     </p>
 
-    <h3>Saint Ephrem the Syrian: Symbolic Reading</h3>
+    <h3 class="clear-both">
+      <SteampunkTooltip variant="parchment" :clickable="true">
+        <template #content>
+          Saint Ephrem the Syrian (c. 306-373) was an Aramean theologian, hymnographer, and teacher of repentance. Known for his poetic hymns and symbolic theology, he is one of the most notable Church Fathers of Eastern Christianity.
+          <br><br>
+          <a href="https://www.oca.org/saints/lives/2016/01/28/100328-venerable-ephraim-the-syrian" target="_blank" rel="noopener" class="text-amber-700 underline">Read more about Saint Ephrem →</a>
+        </template>
+        Saint Ephrem the Syrian
+      </SteampunkTooltip>: Symbolic Reading
+    </h3>
 
     <p>
+      <img
+        src="~/assets/images/saint-ephrem-syrian-icon.jpg"
+        alt="Icon of Saint Ephrem the Syrian"
+        class="w-48 rounded-lg shadow-md float-right ml-4 mb-4"
+      />
       Ephrem brought a poetic, symbolic approach to theology. He understood that
       biblical language works through imagery and types, not just propositional
       statements. Scripture reveals truth through patterns, metaphors, and recurring
@@ -59,22 +101,36 @@
       whole thing fits together as a coherent vision.
     </p>
 
-    <h3>Saint Maximus the Confessor: Cosmic Theology</h3>
+    <h3 class="clear-both">
+      <SteampunkTooltip variant="parchment":clickable="true">
+        <template #content>
+          Saint Maximus the Confessor (c. 580-662) was a Christian monk, theologian, and scholar. He was persecuted for his Christological positions, had his tongue and right hand mutilated, and died in exile. He developed a profound cosmic theology of Christ's redemption of all creation.
+          <br><br>
+          <a href="https://www.oca.org/saints/lives/2024/01/21/100249-venerable-maximus-the-confessor" target="_blank" rel="noopener" class="text-amber-700 underline">Read more about Saint Maximus →</a>
+        </template>
+        Saint Maximus the Confessor
+      </SteampunkTooltip>: Cosmic Theology
+    </h3>
 
     <p>
+      <img
+        src="~/assets/images/saint-maximus-confessor-icon.jpg"
+        alt="Icon of Saint Maximus the Confessor"
+        class="w-48 rounded-lg shadow-md float-left mr-4 mb-4"
+      />
       Maximus completed this foundation with his cosmic theology. Christ doesn't just
       save individual souls; He recapitulates all of creation, bringing everything back
       into right relationship with God. The Incarnation has cosmic implications. God
       isn't extracting believers from a doomed world. He's redeeming the world itself.
     </p>
 
-    <p>
+    <p class="clear-both">
       These Fathers showed me that early Christianity had a much richer, more holistic
       understanding of salvation than I'd been taught. They were working with categories
       that made sense of things I'd been struggling with.
     </p>
 
-    <h2>Discovering René Girard: The Framework That Connected Everything</h2>
+    <h2 class="clear-both">Discovering René Girard: The Framework That Connected Everything</h2>
 
     <p>
       After the Church Fathers, I encountered René Girard's work, and suddenly
@@ -87,18 +143,46 @@
 
     <ol class="list-decimal list-inside mb-4 space-y-2">
       <li>
-        <em>I See Satan Fall Like Lightning</em> - Introduction to mimetic theory and
+        <SteampunkTooltip variant="parchment" :clickable="true">
+          <template #content>
+            Girard's most accessible introduction to mimetic theory, exploring how human desire leads to rivalry and violence, and how Christ's crucifixion exposes and defeats the scapegoat mechanism.
+            <br><br>
+            <a href="https://www.amazon.com/See-Satan-Fall-Like-Lightning/dp/1570753199" target="_blank" rel="noopener" class="text-amber-700 underline">View on Amazon →</a>
+          </template>
+          <em>I See Satan Fall Like Lightning</em>
+        </SteampunkTooltip> - Introduction to mimetic theory and
         the scapegoat mechanism
       </li>
       <li>
-        <em>The Scapegoat</em> - How this pattern runs through history and culture
+        <SteampunkTooltip variant="parchment" :clickable="true">
+          <template #content>
+            Girard demonstrates how the scapegoat mechanism has structured human culture and religion throughout history, and how the biblical text uniquely reveals and subverts this pattern.
+            <br><br>
+            <a href="https://www.amazon.com/Scapegoat-Ren%C3%A9-Girard/dp/0801839173" target="_blank" rel="noopener" class="text-amber-700 underline">View on Amazon →</a>
+          </template>
+          <em>The Scapegoat</em>
+        </SteampunkTooltip> - How this pattern runs through history and culture
       </li>
       <li>
-        <em>Things Hidden Since the Foundation of the World</em> - Full theological
+        <SteampunkTooltip variant="parchment" :clickable="true">
+          <template #content>
+            Girard's magnum opus, a comprehensive exploration of mimetic theory's theological implications, including extensive dialogue format discussions about Christianity, sacrifice, and redemption.
+            <br><br>
+            <a href="https://www.amazon.com/Things-Hidden-Since-Foundation-World/dp/0804722153" target="_blank" rel="noopener" class="text-amber-700 underline">View on Amazon →</a>
+          </template>
+          <em>Things Hidden Since the Foundation of the World</em>
+        </SteampunkTooltip> - Full theological
         implications
       </li>
       <li>
-        <em>Violence and the Sacred</em> (currently reading) - Anthropological
+        <SteampunkTooltip variant="parchment" :clickable="true">
+          <template #content>
+            Girard's groundbreaking anthropological study examining the relationship between violence and the sacred in primitive religions, establishing the foundations of mimetic theory.
+            <br><br>
+            <a href="https://www.amazon.com/Violence-Sacred-Ren%C3%A9-Girard/dp/0801822181" target="_blank" rel="noopener" class="text-amber-700 underline">View on Amazon →</a>
+          </template>
+          <em>Violence and the Sacred</em>
+        </SteampunkTooltip> (currently reading) - Anthropological
         foundations
       </li>
     </ol>
@@ -321,11 +405,11 @@
           Theological exploration of how Christian anarchism differs from political
           anarchism and why Christianity and the state are incompatible.
           <a
-            href="https://www.google.com/search?q=anarchy+and+christianity+jacques+ellul"
+            href="https://theanarchistlibrary.org/library/jacques-ellul-anarchy-christianity-en"
             target="_blank"
             rel="noopener"
             class="text-amber-800 hover:text-amber-900 underline ml-1 block mt-1"
-            >Find this book →</a
+            >Read online →</a
           >
         </p>
       </div>
