@@ -27,7 +27,7 @@
         <template #content>
           Saint Athanasius the Great (c. 297-373) was Archbishop of Alexandria and a pillar of Orthodoxy. He defended the Nicene faith against Arianism and wrote extensively on the Incarnation and theosis.
           <br><br>
-          <a href="https://www.oca.org/saints/lives/2007/05/02/101269-saint-athanasius-the-great-patriarch-of-alexandria" target="_blank" rel="noopener" class="text-amber-700 underline">Read more about Saint Athanasius →</a>
+          <a href="https://www.oca.org/saints/lives/2007/05/02/101269-saint-athanasius-the-great-patriarch-of-alexandria" target="_blank" rel="noopener" >Read more about Saint Athanasius →</a>
         </template>
         Saint Athanasius
       </SteampunkTooltip>: Theosis
@@ -58,7 +58,7 @@
         <template #content>
           Saint Gregory of Nyssa (c. 335-395) was a Cappadocian Father, brother of Saint Basil the Great, and one of the most profound Christian thinkers of the fourth century. He taught about universal reconciliation and spiritual transformation.
           <br><br>
-          <a href="https://www.oca.org/saints/lives/2025/01/10/100140-saint-gregory-bishop-of-nyssa" target="_blank" rel="noopener" class="text-amber-700 underline">Read more about Saint Gregory →</a>
+          <a href="https://www.oca.org/saints/lives/2025/01/10/100140-saint-gregory-bishop-of-nyssa" target="_blank" rel="noopener" >Read more about Saint Gregory →</a>
         </template>
         Saint Gregory of Nyssa
       </SteampunkTooltip>: Universal Reconciliation
@@ -82,7 +82,7 @@
         <template #content>
           Saint Ephrem the Syrian (c. 306-373) was an Aramean theologian, hymnographer, and teacher of repentance. Known for his poetic hymns and symbolic theology, he is one of the most notable Church Fathers of Eastern Christianity.
           <br><br>
-          <a href="https://www.oca.org/saints/lives/2016/01/28/100328-venerable-ephraim-the-syrian" target="_blank" rel="noopener" class="text-amber-700 underline">Read more about Saint Ephrem →</a>
+          <a href="https://www.oca.org/saints/lives/2016/01/28/100328-venerable-ephraim-the-syrian" target="_blank" rel="noopener" >Read more about Saint Ephrem →</a>
         </template>
         Saint Ephrem the Syrian
       </SteampunkTooltip>: Symbolic Reading
@@ -106,7 +106,7 @@
         <template #content>
           Saint Maximus the Confessor (c. 580-662) was a Christian monk, theologian, and scholar. He was persecuted for his Christological positions, had his tongue and right hand mutilated, and died in exile. He developed a profound cosmic theology of Christ's redemption of all creation.
           <br><br>
-          <a href="https://www.oca.org/saints/lives/2024/01/21/100249-venerable-maximus-the-confessor" target="_blank" rel="noopener" class="text-amber-700 underline">Read more about Saint Maximus →</a>
+          <a href="https://www.oca.org/saints/lives/2024/01/21/100249-venerable-maximus-the-confessor" target="_blank" rel="noopener" >Read more about Saint Maximus →</a>
         </template>
         Saint Maximus the Confessor
       </SteampunkTooltip>: Cosmic Theology
@@ -147,7 +147,7 @@
           <template #content>
             Girard's most accessible introduction to mimetic theory, exploring how human desire leads to rivalry and violence, and how Christ's crucifixion exposes and defeats the scapegoat mechanism.
             <br><br>
-            <a href="https://www.amazon.com/See-Satan-Fall-Like-Lightning/dp/1570753199" target="_blank" rel="noopener" class="text-amber-700 underline">View on Amazon →</a>
+            <a href="https://www.amazon.com/See-Satan-Fall-Like-Lightning/dp/1570753199" target="_blank" rel="noopener" >View on Amazon →</a>
           </template>
           <em>I See Satan Fall Like Lightning</em>
         </SteampunkTooltip> - Introduction to mimetic theory and
@@ -158,7 +158,7 @@
           <template #content>
             Girard demonstrates how the scapegoat mechanism has structured human culture and religion throughout history, and how the biblical text uniquely reveals and subverts this pattern.
             <br><br>
-            <a href="https://www.amazon.com/Scapegoat-Ren%C3%A9-Girard/dp/0801839173" target="_blank" rel="noopener" class="text-amber-700 underline">View on Amazon →</a>
+            <a href="https://www.amazon.com/Scapegoat-Ren%C3%A9-Girard/dp/0801839173" target="_blank" rel="noopener" >View on Amazon →</a>
           </template>
           <em>The Scapegoat</em>
         </SteampunkTooltip> - How this pattern runs through history and culture
@@ -168,7 +168,7 @@
           <template #content>
             Girard's magnum opus, a comprehensive exploration of mimetic theory's theological implications, including extensive dialogue format discussions about Christianity, sacrifice, and redemption.
             <br><br>
-            <a href="https://www.amazon.com/Things-Hidden-Since-Foundation-World/dp/0804722153" target="_blank" rel="noopener" class="text-amber-700 underline">View on Amazon →</a>
+            <a href="https://www.amazon.com/Things-Hidden-Since-Foundation-World/dp/0804722153" target="_blank" rel="noopener" >View on Amazon →</a>
           </template>
           <em>Things Hidden Since the Foundation of the World</em>
         </SteampunkTooltip> - Full theological
@@ -179,7 +179,7 @@
           <template #content>
             Girard's groundbreaking anthropological study examining the relationship between violence and the sacred in primitive religions, establishing the foundations of mimetic theory.
             <br><br>
-            <a href="https://www.amazon.com/Violence-Sacred-Ren%C3%A9-Girard/dp/0801822181" target="_blank" rel="noopener" class="text-amber-700 underline">View on Amazon →</a>
+            <a href="https://www.amazon.com/Violence-Sacred-Ren%C3%A9-Girard/dp/0801822181" target="_blank" rel="noopener" >View on Amazon →</a>
           </template>
           <em>Violence and the Sacred</em>
         </SteampunkTooltip> (currently reading) - Anthropological
@@ -271,35 +271,60 @@
 
     <p>
       Traditional Christian theology often presents Jesus's death as a sacrifice
-      demanded by God to satisfy divine justice. God is angry about human sin, and only
-      the blood of His perfect son can appease that anger. This is called
-      <SteampunkTooltip
-        text="Penal substitutionary atonement is a theory of the atonement in Protestant theology which declares that Christ was punished (penalized) in the place of sinners (substitution), thus satisfying the demands of justice so God can justly forgive sins. It's the dominant view in American evangelical Christianity, beginning with Martin Luther and developed in Calvinist tradition."
-        placement="top"
-      >
+      demanded by God to satisfy divine justice. God's holy and just nature requires
+      that sin be dealt with. His righteousness demands satisfaction, and only Christ's
+      substitutionary death can satisfy the demands of divine justice, allowing God to
+      be both just and the justifier of believers. This is called
+      <SteampunkTooltip variant="steel" :clickable="true">
+        <template #content>
+          Penal substitutionary atonement is the dominant theory in American evangelical Christianity, beginning with Martin Luther and developed in the Reformed tradition. It holds that Christ was punished (penalized) in the place of sinners (substitution) to satisfy God's justice. Proponents argue that God's holiness and justice are essential to His nature, and sin, as rebellion against God's character, requires atonement. On the cross, God takes upon Himself His own righteous demands, demonstrating how divine justice and divine love work together (Romans 3:25-26).
+          <br><br>
+          <a href="https://www.thegospelcoalition.org/essay/substitutionary-atonement/" target="_blank" rel="noopener">Read a fuller explanation from proponents →</a>
+        </template>
         <span>"penal substitutionary atonement,"</span>
       </SteampunkTooltip>
       and it's the dominant view in American evangelical Christianity.
     </p>
 
     <p>
-      The non-sacrificial reading says: that's backwards. God doesn't demand sacrifice.
-      Humans demand sacrifice. The crucifixion exposes humanity's scapegoating
-      mechanism, it doesn't participate in sacrificial logic.
+      The
+      <SteampunkTooltip variant="steel" :clickable="true">
+        <template #content>
+          The non-sacrificial reading, developed through René Girard's mimetic theory, argues that the Gospels expose rather than participate in the scapegoat logic of archaic religion. Christ is both murdered by the mob (revealing the mechanism) and voluntarily gives himself in love (true self-sacrifice). The resurrection vindicates the victim, breaking the cycle and making future scapegoating increasingly difficult. Girard distinguishes between "bad sacrifice" (scapegoat murder disguised as divine requirement) and "good sacrifice" (voluntary self-giving that ends violence).
+          <br><br>
+          <strong>Further Reading:</strong><br>
+          <a href="https://girardianlectionary.net/learn/atonement-and-mimetic-theory/" target="_blank" rel="noopener">Atonement and Mimetic Theory →</a><br>
+          <a href="https://voegelinview.com/two-kinds-of-sacrifice-rene-girards-analysis-of-scapegoating/" target="_blank" rel="noopener">Two Kinds of Sacrifice: Girard's Analysis →</a><br>
+          <a href="https://jamesalison.com/an-atonement-update/" target="_blank" rel="noopener">James Alison on Atonement →</a><br>
+          <a href="https://violenceandreligion.com/mimetic-theory-2/" target="_blank" rel="noopener">Colloquium on Violence & Religion →</a>
+        </template>
+        <span>non-sacrificial reading</span>
+      </SteampunkTooltip>
+      says: that's backwards. God doesn't demand sacrifice. Humans demand sacrifice.
+      The crucifixion exposes humanity's scapegoating mechanism rather than
+      participating in its logic.
     </p>
 
     <p>
-      Jesus doesn't die because God needs blood to forgive. Jesus dies because humans,
-      caught in mimetic rivalry and scapegoating, always kill the innocent and call it
-      justice. The Passion reveals the innocence of the victim and the guilt of the mob.
-      Jesus's words from the cross, "Father, forgive them, for they know not what they
-      do," are the key: they don't know. They think they're doing the right thing.
-      That's how scapegoating always works.
+      Jesus dies not because God needs blood to forgive, but because humans, caught in
+      mimetic rivalry and scapegoating, always kill the innocent and call it justice.
+      But there's a crucial difference from all other scapegoats in history: Jesus
+      voluntarily enters this pattern to break it from within, and the resurrection
+      vindicates him, preventing the mob's version of events from standing unchallenged.
+    </p>
+
+    <p>
+      The Passion reveals the innocence of the victim and the guilt of the mob. Jesus's
+      words from the cross, "Father, forgive them, for they know not what they do," are
+      the key: they don't know. They think they're doing the right thing. That's how
+      scapegoating always works.
     </p>
 
     <p>
       God isn't demanding the sacrifice. God is the victim of the sacrifice, revealing
-      once and for all that this mechanism is built on a lie.
+      once and for all that this mechanism is built on a lie. And once revealed, the
+      mechanism loses its power. Humanity can no longer scapegoat with unconscious
+      innocence.
     </p>
 
     <h3>Why This Matters</h3>

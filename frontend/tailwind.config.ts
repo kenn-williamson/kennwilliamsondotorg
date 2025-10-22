@@ -55,9 +55,13 @@ export default {
           50: '#fefce8',      // yellow-50 - subtle gold tint
           100: '#fef9c3',     // yellow-100 - light gold
           200: '#fef08a',     // yellow-200 - medium gold
+          300: '#fde047',     // yellow-300 - bright gold
           400: '#fbbf24',     // amber-400 - gold accent
           500: '#f59e0b',     // amber-500 - strong gold
           600: '#ca8a04',     // yellow-600 - dark gold
+          700: '#a16207',     // yellow-700 - darker gold
+          800: '#854d0e',     // yellow-800 - deep gold
+          900: '#713f12',     // yellow-900 - darkest gold
         },
       },
     },

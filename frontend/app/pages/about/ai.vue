@@ -125,8 +125,8 @@
           Even with larger training sets, structural hallucinations cannot be eliminated.
           <br><br>
           Sources:<br>
-          • <a href="https://arxiv.org/abs/2401.11817" target="_blank" class="text-amber-700 underline">Hallucination is Inevitable (arXiv 2401.11817)</a><br>
-          • <a href="https://arxiv.org/html/2409.05746v1" target="_blank" class="text-amber-700 underline">LLMs Will Always Hallucinate (arXiv 2024)</a>
+          • <a href="https://arxiv.org/abs/2401.11817" target="_blank" >Hallucination is Inevitable (arXiv 2401.11817)</a><br>
+          • <a href="https://arxiv.org/html/2409.05746v1" target="_blank" >LLMs Will Always Hallucinate (arXiv 2024)</a>
         </template>
         It's fundamental to how these systems work.
       </SteampunkTooltip>
@@ -144,7 +144,7 @@
           clear evidence that large language models will give reasons for what they do that do not
           necessarily reflect what they actually did."
           <br><br>
-          Source: <a href="https://www.anthropic.com/research/tracing-thoughts-language-model" target="_blank" class="text-amber-700 underline">Anthropic: Tracing Thoughts of a Language Model</a>
+          Source: <a href="https://www.anthropic.com/research/tracing-thoughts-language-model" target="_blank" >Anthropic: Tracing Thoughts of a Language Model</a>
         </template>
         the companies building these systems admit they don't fully understand how they work.
       </SteampunkTooltip>

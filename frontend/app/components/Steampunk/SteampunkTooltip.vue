@@ -192,4 +192,9 @@ const tooltipClasses = computed(() => {
 .metallic-tooltip p:last-child {
   margin-bottom: 0;
 }
+
+/* Style links within metallic tooltips for readability on dark backgrounds */
+.metallic-tooltip a {
+  @apply text-accent-300 hover:text-accent-200 underline transition-colors;
+}
 </style>
