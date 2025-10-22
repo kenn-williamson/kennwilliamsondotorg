@@ -2,7 +2,7 @@
   <form @submit.prevent="onSubmit" class="space-y-6">
     <!-- Display Name Field -->
     <div>
-      <label for="display_name" class="block text-sm font-medium text-gray-700 mb-2">
+      <label for="display_name" class="block text-sm font-medium text-nautical-700 mb-2">
         Display Name
       </label>
       <Field
@@ -11,7 +11,7 @@
         v-model="form.display_name"
         :class="[
           'w-full px-4 py-3 border rounded-md focus:ring-2 focus:ring-sky-500 focus:border-transparent transition-colors duration-200',
-          errors.displayName ? 'border-red-300 bg-red-50' : 'border-gray-300'
+          errors.displayName ? 'border-red-300 bg-red-50' : 'border-nautical-300'
         ]"
         placeholder="John Doe"
         @input="onDisplayNameChange"
@@ -21,9 +21,9 @@
 
     <!-- URL Slug Field -->
     <div>
-      <label for="slug" class="block text-sm font-medium text-gray-700 mb-2">
+      <label for="slug" class="block text-sm font-medium text-nautical-700 mb-2">
         URL Slug
-        <span class="text-xs text-gray-500 ml-1">(your public URL)</span>
+        <span class="text-xs text-nautical-500 ml-1">(your public URL)</span>
       </label>
       <Field
         name="slug"
@@ -31,13 +31,13 @@
         v-model="form.slug"
         :class="[
           'w-full px-4 py-3 border rounded-md focus:ring-2 focus:ring-sky-500 focus:border-transparent transition-colors duration-200',
-          errors.slug ? 'border-red-300 bg-red-50' : 'border-gray-300'
+          errors.slug ? 'border-red-300 bg-red-50' : 'border-nautical-300'
         ]"
         placeholder="my-custom-slug"
         @input="onSlugChange"
       />
       <ErrorMessage name="slug" class="text-red-600 text-sm mt-1" />
-      <p class="text-xs text-gray-500 mt-1">Only lowercase letters, numbers, and hyphens are allowed. No spaces or special characters.</p>
+      <p class="text-xs text-nautical-500 mt-1">Only lowercase letters, numbers, and hyphens are allowed. No spaces or special characters.</p>
       
       <!-- Slug Preview -->
       <div v-if="slugPreview" class="mt-2 p-3 border rounded-md" :class="slugPreview.valid ? 'bg-sky-50 border-sky-200' : 'bg-red-50 border-red-200'">
@@ -45,11 +45,11 @@
           ❌ Invalid slug format. Only lowercase letters, numbers, and hyphens are allowed.
         </div>
         <div v-else>
-          <p class="text-xs text-gray-600 mb-2">Your public incident timer will be available at:</p>
+          <p class="text-xs text-nautical-600 mb-2">Your public incident timer will be available at:</p>
           <p class="text-sm font-mono text-sky-700">
             {{ baseUrl }}/{{ slugPreview.slug }}/incident-timer
           </p>
-          <div v-if="slugPreview.available === false" class="mt-2 text-xs text-amber-600">
+          <div v-if="slugPreview.available === false" class="mt-2 text-xs text-gold-600">
             ⚠️ This username is already taken. Please choose a different one.
           </div>
           <div v-else-if="slugPreview.available === true" class="mt-2 text-xs text-green-600">
@@ -61,17 +61,17 @@
 
     <!-- Email Field (Read-only) -->
     <div>
-      <label for="email" class="block text-sm font-medium text-gray-700 mb-2">
+      <label for="email" class="block text-sm font-medium text-nautical-700 mb-2">
         Email Address
-        <span class="text-xs text-gray-500 ml-1">(cannot be changed)</span>
+        <span class="text-xs text-nautical-500 ml-1">(cannot be changed)</span>
       </label>
       <input
         type="email"
         :value="user?.email || ''"
         disabled
-        class="w-full px-4 py-3 border border-gray-300 rounded-md bg-gray-50 text-gray-500 cursor-not-allowed"
+        class="w-full px-4 py-3 border border-nautical-300 rounded-md bg-nautical-50 text-nautical-500 cursor-not-allowed"
       />
-      <p class="text-xs text-gray-500 mt-1">Contact support if you need to change your email address.</p>
+      <p class="text-xs text-nautical-500 mt-1">Contact support if you need to change your email address.</p>
     </div>
 
     <!-- Submit Button -->
@@ -82,7 +82,7 @@
         :class="[
           'px-6 py-3 rounded-md font-medium transition-colors duration-200',
           isSubmitting || !isFormValid
-            ? 'bg-gray-300 text-gray-500 cursor-not-allowed'
+            ? 'bg-nautical-300 text-nautical-500 cursor-not-allowed'
             : 'bg-sky-600 text-white hover:bg-sky-700'
         ]"
       >

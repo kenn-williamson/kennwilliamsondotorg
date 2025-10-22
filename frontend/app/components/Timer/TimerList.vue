@@ -9,8 +9,8 @@
       </div>
       
       <div v-else-if="timers.length === 0" class="empty-state">
-        <p class="text-gray-500">No timers found</p>
-        <p class="text-sm text-gray-400">Create your first timer using the reset button above</p>
+        <p class="text-nautical-500">No timers found</p>
+        <p class="text-sm text-nautical-400">Create your first timer using the reset button above</p>
       </div>
       
       <div v-else class="timer-list">

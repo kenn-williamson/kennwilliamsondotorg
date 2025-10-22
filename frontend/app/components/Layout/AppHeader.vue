@@ -56,26 +56,26 @@
             <!-- User Dropdown Menu -->
             <div 
               v-if="showUserMenu"
-              class="absolute right-0 mt-2 w-48 bg-white rounded-md shadow-lg border border-gray-200 py-1 z-50"
+              class="absolute right-0 mt-2 w-48 bg-white rounded-md shadow-lg border border-nautical-200 py-1 z-50"
               @click.stop
             >
               <button 
                 @click="goToAccountSettings"
-                class="block w-full px-4 py-2 text-sm text-gray-700 hover:bg-gray-50 text-left transition-colors duration-200"
+                class="block w-full px-4 py-2 text-sm text-nautical-700 hover:bg-nautical-50 text-left transition-colors duration-200"
               >
                 Account Settings
               </button>
               <button 
                 v-if="isAdmin"
                 @click="goToAdminPanel"
-                class="block w-full px-4 py-2 text-sm text-gray-700 hover:bg-gray-50 text-left transition-colors duration-200"
+                class="block w-full px-4 py-2 text-sm text-nautical-700 hover:bg-nautical-50 text-left transition-colors duration-200"
               >
                 Admin Panel
               </button>
-              <hr class="my-1 border-gray-100">
+              <hr class="my-1 border-nautical-100">
               <button 
                 @click="handleLogout"
-                class="block w-full px-4 py-2 text-sm text-gray-700 hover:bg-gray-50 text-left transition-colors duration-200"
+                class="block w-full px-4 py-2 text-sm text-nautical-700 hover:bg-nautical-50 text-left transition-colors duration-200"
               >
                 Sign Out
               </button>
@@ -151,7 +151,7 @@
 
           <!-- Authentication Links -->
           <div v-if="loggedIn" class="flex flex-col space-y-3">
-            <div class="px-3 py-2 text-sm text-slate-300">
+            <div class="px-3 py-2 text-sm text-nautical-300">
               Signed in as <span class="font-medium text-accent-300">{{ user?.email }}</span>
             </div>
             <button 

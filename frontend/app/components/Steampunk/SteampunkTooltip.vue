@@ -70,7 +70,7 @@ const tooltipClasses = computed(() => {
     steel: 'border-nautical-700 text-white',
     'naval-brass': 'border-accent-700 text-white',
     bronze: 'border-primary-800 text-white',
-    gold: 'border-gold-700 text-amber-950'
+    gold: 'border-gold-700 text-gold-900'
   }
 
   return `${base} ${variants[props.variant]}`

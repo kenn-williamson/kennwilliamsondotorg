@@ -147,7 +147,7 @@
             href="https://tip.duke.edu/"
             target="_blank"
             rel="noopener"
-            class="text-amber-700 hover:text-amber-900"
+            class="text-gold-700 hover:text-gold-900"
             >Duke University Talent Identification Program</a
           >
         </template>
@@ -175,7 +175,7 @@
         href="https://www.mathcounts.org/"
         target="_blank"
         rel="noopener"
-        class="text-amber-700 hover:text-amber-900"
+        class="text-gold-700 hover:text-gold-900"
         >Math Counts</a
       >
       in middle school. I found schoolwork easy and boring. But I couldn't turn in
@@ -187,6 +187,12 @@
       frustration for everyone, especially my parents. They knew I was smart. Teachers
       knew I was smart. I knew I was smart. So why couldn't I do the work?
     </p>
+
+    <img
+      src="~/assets/images/duke_certificate.jpeg"
+      alt="Duke University Talent Identification Program recognition for mathematics and verbal achievement, 7th grade (1994-1995)"
+      class="w-full max-w-2xl mx-auto rounded-lg shadow-lg my-6"
+    />
 
     <p>
       Looking back now, I can see the factors: childhood trauma from the divorce,
@@ -214,7 +220,7 @@
             href="https://add.org/is-adhd-neurodivergent/"
             target="_blank"
             rel="noopener"
-            class="text-amber-700 hover:text-amber-900 underline ml-1"
+            class="text-gold-700 hover:text-gold-900 underline ml-1"
             >Learn more from ADDA →</a
           >
         </p>
@@ -227,7 +233,7 @@
             href="https://www.disabled-world.com/health/neurology/audhd.php"
             target="_blank"
             rel="noopener"
-            class="text-amber-700 hover:text-amber-900 underline ml-1"
+            class="text-gold-700 hover:text-gold-900 underline ml-1"
             >Read about AuDHD →</a
           >
         </p>
@@ -242,7 +248,7 @@
             href="https://pmc.ncbi.nlm.nih.gov/articles/PMC11745029/"
             target="_blank"
             rel="noopener"
-            class="text-amber-700 hover:text-amber-900 underline ml-1"
+            class="text-gold-700 hover:text-gold-900 underline ml-1"
             >Research on neurodiversity →</a
           >
         </p>
@@ -257,14 +263,14 @@
             href="https://pmc.ncbi.nlm.nih.gov/articles/PMC9306602/"
             target="_blank"
             rel="noopener"
-            class="text-amber-700 hover:text-amber-900 underline ml-1"
+            class="text-gold-700 hover:text-gold-900 underline ml-1"
             >Research on label harms →</a
           >
           <a
             href="https://theconversation.com/are-labels-like-autism-and-adhd-more-constraining-than-liberating-a-clinician-argues-diagnosis-has-gone-too-far-247138"
             target="_blank"
             rel="noopener"
-            class="text-amber-700 hover:text-amber-900 underline ml-1"
+            class="text-gold-700 hover:text-gold-900 underline ml-1"
             >Clinician's critique →</a
           >
         </p>
@@ -279,7 +285,7 @@
             href="https://www.health.harvard.edu/blog/what-is-neurodiversity-202111232645"
             target="_blank"
             rel="noopener"
-            class="text-amber-700 hover:text-amber-900 underline ml-1"
+            class="text-gold-700 hover:text-gold-900 underline ml-1"
             >Harvard on balanced approach →</a
           >
         </p>
@@ -351,12 +357,6 @@
       of empathy and tough love. There was a Bible teacher who was genuinely empathetic.
       These relationships mattered, even if the overall experience was difficult.
     </p>
-
-    <img
-      src="~/assets/images/duke_certificate.jpeg"
-      alt="Duke University Talent Identification Program recognition for mathematics and verbal achievement, 7th grade (1994-1995)"
-      class="w-full max-w-2xl mx-auto rounded-lg shadow-lg my-6"
-    />
 
     <p>
       <strong>Union Public Schools (10th and 11th grade):</strong> I returned to public

@@ -248,7 +248,7 @@
             href="https://violenceandreligion.com/mimetic-theory-2/"
             target="_blank"
             rel="noopener"
-            class="text-amber-700 hover:text-amber-900"
+            class="text-gold-700 hover:text-gold-900"
           >
             Colloquium on Violence & Religion
           </a>
@@ -407,7 +407,7 @@
             href="https://theanarchistlibrary.org/library/leo-tolstoy-the-kingdom-of-god-is-within-you"
             target="_blank"
             rel="noopener"
-            class="text-amber-800 hover:text-amber-900 underline ml-1 block mt-1"
+            class="text-gold-800 hover:text-gold-900 underline ml-1 block mt-1"
             >Read free at The Anarchist Library →</a
           >
         </p>
@@ -420,7 +420,7 @@
             href="https://www.catholicworker.org/dorothyday/"
             target="_blank"
             rel="noopener"
-            class="text-amber-800 hover:text-amber-900 underline ml-1 block mt-1"
+            class="text-gold-800 hover:text-gold-900 underline ml-1 block mt-1"
             >Catholic Worker archives →</a
           >
         </p>
@@ -433,7 +433,7 @@
             href="https://theanarchistlibrary.org/library/jacques-ellul-anarchy-christianity-en"
             target="_blank"
             rel="noopener"
-            class="text-amber-800 hover:text-amber-900 underline ml-1 block mt-1"
+            class="text-gold-800 hover:text-gold-900 underline ml-1 block mt-1"
             >Read online →</a
           >
         </p>

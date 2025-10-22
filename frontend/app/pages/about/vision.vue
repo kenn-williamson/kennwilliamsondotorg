@@ -45,7 +45,7 @@
         href="https://www.biblegateway.com/passage/?search=Galatians%205:22-23&version=NIV"
         target="_blank"
         rel="noopener"
-        class="text-amber-700 hover:text-amber-900 underline"
+        class="text-gold-700 hover:text-gold-900 underline"
         >Galatians 5:22-23</a
       >
       spell it out: love, joy, peace, patience, kindness, goodness, faithfulness,

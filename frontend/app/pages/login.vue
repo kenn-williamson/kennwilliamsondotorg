@@ -3,8 +3,8 @@
     <div class="max-w-md w-full">
       <!-- Header -->
       <div class="text-center mb-8">
-        <h1 class="text-3xl font-bold text-gray-900 mb-2">Sign In</h1>
-        <p class="text-gray-600">Welcome back to your digital sanctuary</p>
+        <h1 class="text-3xl font-bold text-nautical-900 mb-2">Sign In</h1>
+        <p class="text-nautical-600">Welcome back to your digital sanctuary</p>
       </div>
 
       <!-- Login Form -->
@@ -15,17 +15,17 @@
         <!-- Divider -->
         <div class="relative my-6">
           <div class="absolute inset-0 flex items-center">
-            <div class="w-full border-t border-gray-300"></div>
+            <div class="w-full border-t border-nautical-300"></div>
           </div>
           <div class="relative flex justify-center text-sm">
-            <span class="px-2 bg-white text-gray-500">Or continue with email</span>
+            <span class="px-2 bg-white text-nautical-500">Or continue with email</span>
           </div>
         </div>
 
         <form @submit="onSubmit" class="space-y-6">
           <!-- Email Field -->
           <div>
-            <label for="email" class="block text-sm font-medium text-gray-700 mb-2">
+            <label for="email" class="block text-sm font-medium text-nautical-700 mb-2">
               Email Address
             </label>
             <Field
@@ -34,7 +34,7 @@
               v-model="form.email"
               :class="[
                 'w-full px-4 py-3 border rounded-md focus:ring-2 focus:ring-sky-500 focus:border-transparent transition-colors duration-200',
-                errors.email ? 'border-red-300 bg-red-50' : 'border-gray-300'
+                errors.email ? 'border-red-300 bg-red-50' : 'border-nautical-300'
               ]"
               placeholder="your@email.com"
             />
@@ -44,7 +44,7 @@
           <!-- Password Field -->
           <div>
             <div class="flex items-center justify-between mb-2">
-              <label for="password" class="block text-sm font-medium text-gray-700">
+              <label for="password" class="block text-sm font-medium text-nautical-700">
                 Password
               </label>
               <NuxtLink
@@ -60,7 +60,7 @@
               v-model="form.password"
               :class="[
                 'w-full px-4 py-3 border rounded-md focus:ring-2 focus:ring-sky-500 focus:border-transparent transition-colors duration-200',
-                errors.password ? 'border-red-300 bg-red-50' : 'border-gray-300'
+                errors.password ? 'border-red-300 bg-red-50' : 'border-nautical-300'
               ]"
               placeholder="Enter your password"
             />
@@ -88,7 +88,7 @@
 
         <!-- Register Link -->
         <div class="mt-6 text-center">
-          <p class="text-sm text-gray-600">
+          <p class="text-sm text-nautical-600">
             Don't have an account?
             <NuxtLink 
               to="/register" 

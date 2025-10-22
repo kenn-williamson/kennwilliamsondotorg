@@ -72,7 +72,7 @@ const headerClasses = computed(() => {
     steel: 'border-nautical-700 text-nautical-50',
     'naval-brass': 'border-accent-700 text-accent-50',
     bronze: 'border-primary-800 text-primary-50',
-    gold: 'border-gold-700 text-amber-950'
+    gold: 'border-gold-700 text-gold-900'
   }
 
   return `${base} ${variants[props.variant]}`
@@ -86,20 +86,15 @@ const panelClasses = computed(() => {
     steel: 'bg-gradient-to-br from-nautical-50 via-slate-50 to-nautical-100 border-2 border-t-0 border-nautical-700 text-nautical-900',
     'naval-brass': 'bg-gradient-to-br from-accent-50 via-cyan-50 to-accent-100 border-2 border-t-0 border-accent-700 text-accent-900',
     bronze: 'bg-gradient-to-br from-primary-50 via-blue-50 to-primary-100 border-2 border-t-0 border-primary-800 text-primary-900',
-    gold: 'bg-gradient-to-br from-amber-50 via-yellow-50 to-amber-100 border-2 border-t-0 border-gold-700 text-amber-950'
+    gold: 'bg-gradient-to-br from-amber-50 via-yellow-50 to-amber-100 border-2 border-t-0 border-gold-700 text-gold-900'
   }
 
   return `${base} ${variants[props.variant]}`
 })
 </script>
 
-<style scoped>
-/* Header styling */
-.steampunk-accordion-header-base {
-  @apply px-4 py-3 rounded-t-lg border-2;
-}
-
-/* Metallic plaque effect with inset shadows */
+<style>
+/* Metallic plaque effect with inset shadows - unscoped so it applies across components */
 .metallic-plaque {
   box-shadow:
     inset 0 4px 8px rgba(255, 255, 255, 0.2),
@@ -122,6 +117,21 @@ const panelClasses = computed(() => {
 
 .metallic-plaque.border-gold-700 {
   background: linear-gradient(145deg, #ca8a04 0%, #eab308 50%, #ca8a04 100%);
+}
+
+/* Hover effect - enhance the top highlight */
+.metallic-plaque:hover {
+  box-shadow:
+    inset 0 4px 8px rgba(255, 255, 255, 0.3),
+    inset 0 -4px 8px rgba(0, 0, 0, 0.4),
+    0 10px 40px rgba(0, 0, 0, 0.4);
+}
+</style>
+
+<style scoped>
+/* Header styling */
+.steampunk-accordion-header-base {
+  @apply px-4 py-3 rounded-t-lg border-2;
 }
 
 .steampunk-accordion-header {
@@ -152,14 +162,6 @@ const panelClasses = computed(() => {
       rgba(0, 0, 0, 0.02) 10px,
       rgba(0, 0, 0, 0.02) 20px
     );
-}
-
-/* Hover effect - enhance the top highlight */
-.metallic-plaque:hover {
-  box-shadow:
-    inset 0 4px 8px rgba(255, 255, 255, 0.3),
-    inset 0 -4px 8px rgba(0, 0, 0, 0.4),
-    0 10px 40px rgba(0, 0, 0, 0.4);
 }
 
 /* Focus styles for accessibility */

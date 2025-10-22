@@ -1,11 +1,11 @@
 <template>
-  <div class="min-h-screen flex items-center justify-center bg-gray-50 px-4">
+  <div class="min-h-screen flex items-center justify-center bg-nautical-50 px-4">
     <div class="max-w-md w-full">
       <!-- Loading State -->
       <div v-if="isLoading" class="text-center">
         <div class="inline-block animate-spin rounded-full h-12 w-12 border-b-2 border-sky-600 mb-4"></div>
-        <h2 class="text-xl font-semibold text-gray-900">Completing sign in...</h2>
-        <p class="text-gray-600 mt-2">Please wait while we verify your Google account</p>
+        <h2 class="text-xl font-semibold text-nautical-900">Completing sign in...</h2>
+        <p class="text-nautical-600 mt-2">Please wait while we verify your Google account</p>
       </div>
 
       <!-- Error State -->
@@ -15,8 +15,8 @@
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
           </svg>
         </div>
-        <h2 class="text-xl font-semibold text-gray-900 mb-2">Authentication Failed</h2>
-        <p class="text-gray-600 mb-6">{{ error }}</p>
+        <h2 class="text-xl font-semibold text-nautical-900 mb-2">Authentication Failed</h2>
+        <p class="text-nautical-600 mb-6">{{ error }}</p>
         <NuxtLink
           to="/login"
           class="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md text-white bg-sky-600 hover:bg-sky-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-sky-500"

@@ -41,13 +41,13 @@
       </div>
 
       <div v-else-if="filteredSuggestions.length === 0" class="empty-state">
-        <p v-if="searchQuery || statusFilter" class="text-gray-500">
+        <p v-if="searchQuery || statusFilter" class="text-nautical-500">
           No suggestions match your filters
         </p>
-        <p v-else class="text-gray-500">
+        <p v-else class="text-nautical-500">
           You haven't submitted any phrase suggestions yet
         </p>
-        <p class="text-sm text-gray-400 mt-2">
+        <p class="text-sm text-nautical-400 mt-2">
           Go to the "Suggest Phrases" tab to submit your first suggestion
         </p>
       </div>
@@ -322,7 +322,7 @@ const formatDate = (dateString: string) => {
 }
 
 .status-pending {
-  @apply bg-yellow-100 text-yellow-800;
+  @apply bg-gold-100 text-gold-800;
 }
 
 .status-approved {
@@ -376,11 +376,11 @@ const formatDate = (dateString: string) => {
 }
 
 .action-button.edit {
-  @apply bg-blue-100 text-blue-700;
+  @apply bg-primary-100 text-primary-700;
 }
 
 .action-button.edit:hover:not(:disabled) {
-  @apply bg-blue-200;
+  @apply bg-primary-200;
 }
 
 .action-button.delete {

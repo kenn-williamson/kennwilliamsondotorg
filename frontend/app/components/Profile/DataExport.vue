@@ -1,23 +1,23 @@
 <template>
   <div class="bg-white shadow rounded-lg">
-    <div class="px-6 py-4 border-b border-gray-200">
-      <h2 class="text-lg font-medium text-gray-900">Data Export</h2>
-      <p class="mt-1 text-sm text-gray-500">Download all your data in JSON format for GDPR/CCPA compliance.</p>
+    <div class="px-6 py-4 border-b border-nautical-200">
+      <h2 class="text-lg font-medium text-nautical-900">Data Export</h2>
+      <p class="mt-1 text-sm text-nautical-500">Download all your data in JSON format for GDPR/CCPA compliance.</p>
     </div>
     <div class="px-6 py-4">
       <div class="flex items-start justify-between">
         <div class="flex-1">
-          <p class="text-sm text-gray-700">
+          <p class="text-sm text-nautical-700">
             You can download a complete copy of your data including:
           </p>
-          <ul class="mt-2 text-sm text-gray-600 list-disc list-inside space-y-1">
+          <ul class="mt-2 text-sm text-nautical-600 list-disc list-inside space-y-1">
             <li>Profile information</li>
             <li>Incident timers</li>
             <li>Phrase suggestions and exclusions</li>
             <li>Active sessions</li>
             <li>Account metadata</li>
           </ul>
-          <p class="mt-3 text-sm text-gray-500">
+          <p class="mt-3 text-sm text-nautical-500">
             Data will be exported in machine-readable JSON format.
           </p>
         </div>

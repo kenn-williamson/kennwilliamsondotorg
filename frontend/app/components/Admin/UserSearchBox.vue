@@ -2,7 +2,7 @@
   <div class="user-search-box">
     <div class="relative">
       <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-        <svg class="h-5 w-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <svg class="h-5 w-5 text-nautical-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
           <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
         </svg>
       </div>
@@ -10,13 +10,13 @@
         v-model="searchQuery"
         type="text"
         placeholder="Search users by name or email..."
-        class="block w-full pl-10 pr-3 py-2 border border-gray-300 rounded-md leading-5 bg-white placeholder-gray-500 focus:outline-none focus:placeholder-gray-400 focus:ring-1 focus:ring-gray-900 focus:border-gray-900 sm:text-sm"
+        class="block w-full pl-10 pr-3 py-2 border border-nautical-300 rounded-md leading-5 bg-white placeholder-gray-500 focus:outline-none focus:placeholder-gray-400 focus:ring-1 focus:ring-gray-900 focus:border-nautical-900 sm:text-sm"
         @input="onSearchInput"
       />
       <div v-if="searchQuery" class="absolute inset-y-0 right-0 pr-3 flex items-center">
         <button
           @click="clearSearch"
-          class="text-gray-400 hover:text-gray-600"
+          class="text-nautical-400 hover:text-nautical-600"
         >
           <svg class="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />

@@ -39,7 +39,7 @@
                     <li v-if="hasRestrictedContent && !hasTrustedContactAccess">
                       <NuxtLink
                         to="/about/request-access"
-                        class="block px-3 py-2 rounded transition-colors bg-gradient-to-r from-yellow-100 to-amber-100 border-2 border-yellow-600 text-amber-900 hover:from-yellow-200 hover:to-amber-200 font-semibold text-center"
+                        class="block px-3 py-2 rounded transition-colors bg-gradient-to-r from-primary-600 to-accent-600 border-2 border-primary-700 text-white hover:from-primary-700 hover:to-accent-700 font-semibold text-center shadow-md"
                         @click="mobileMenuOpen = false"
                       >
                         🔑 Request Access
@@ -73,7 +73,7 @@
                 <li v-if="hasRestrictedContent && !hasTrustedContactAccess" class="pt-2 mt-2 border-t-2 border-accent-400">
                   <NuxtLink
                     to="/about/request-access"
-                    class="block px-3 py-2 rounded transition-all duration-200 bg-gradient-to-r from-yellow-100 to-amber-100 border-2 border-yellow-600 text-amber-900 hover:from-yellow-200 hover:to-amber-200 font-semibold text-center hover:shadow-md"
+                    class="block px-3 py-2 rounded transition-all duration-200 bg-gradient-to-r from-primary-600 to-accent-600 border-2 border-primary-700 text-white hover:from-primary-700 hover:to-accent-700 font-semibold text-center shadow-md hover:shadow-lg"
                   >
                     🔑 Request Access
                   </NuxtLink>
@@ -212,7 +212,7 @@ const prevNext = computed(() => {
 
 /* Prose styling for markdown-like content */
 :deep(.prose) {
-  @apply text-gray-800;
+  @apply text-nautical-800;
 }
 
 :deep(.prose h1) {
@@ -244,7 +244,7 @@ const prevNext = computed(() => {
 }
 
 :deep(.prose blockquote) {
-  @apply border-l-4 border-primary-400 pl-4 italic text-gray-700 my-4;
+  @apply border-l-4 border-primary-400 pl-4 italic text-nautical-700 my-4;
 }
 
 :deep(.prose code) {
@@ -257,6 +257,6 @@ const prevNext = computed(() => {
 
 /* Photo placeholder styling */
 :deep(.photo-placeholder) {
-  @apply bg-primary-100 border-2 border-primary-400 rounded-lg p-8 text-center text-gray-600 italic my-6;
+  @apply bg-primary-100 border-2 border-primary-400 rounded-lg p-8 text-center text-nautical-600 italic my-6;
 }
 </style>

@@ -39,7 +39,7 @@
         <p class="text-xl sm:text-2xl lg:text-3xl text-accent-300 font-semibold mb-4">
           Enterprise Architect, Disciple, Builder
         </p>
-        <p class="text-lg sm:text-xl text-gray-200 mb-8 max-w-2xl mx-auto">
+        <p class="text-lg sm:text-xl text-nautical-200 mb-8 max-w-2xl mx-auto">
           Exploring the intersection of ancient wisdom and modern technology
         </p>
 
@@ -71,10 +71,10 @@
     <!-- Quick Bio Section -->
     <section class="py-16 px-4 sm:px-6 lg:px-8 bg-gradient-to-br from-nautical-50 to-gray-100">
       <div class="max-w-4xl mx-auto text-center">
-        <h2 class="text-3xl sm:text-4xl font-bold text-gray-900 mb-6">
+        <h2 class="text-3xl sm:text-4xl font-bold text-nautical-900 mb-6">
           Who I Am
         </h2>
-        <p class="text-lg sm:text-xl text-gray-700 leading-relaxed">
+        <p class="text-lg sm:text-xl text-nautical-700 leading-relaxed">
           I'm a single dad to three kids, an Enterprise Architect helping companies navigate AI
           realistically, learning what it means to be a disciple of Christ, and trying to walk in love.
           I read Church Fathers, design and build software systems, and believe
@@ -89,7 +89,7 @@
     <!-- Feature Grid -->
     <section class="py-16 px-4 sm:px-6 lg:px-8 bg-white">
       <div class="max-w-6xl mx-auto">
-        <h2 class="text-3xl sm:text-4xl font-bold text-gray-900 text-center mb-12">
+        <h2 class="text-3xl sm:text-4xl font-bold text-nautical-900 text-center mb-12">
           Explore
         </h2>
 
@@ -101,11 +101,11 @@
               <svg class="w-12 h-12 text-primary-600 mr-4" fill="currentColor" viewBox="0 0 20 20">
                 <path fill-rule="evenodd" d="M11.49 3.17c-.38-1.56-2.6-1.56-2.98 0a1.532 1.532 0 01-2.286.948c-1.372-.836-2.942.734-2.106 2.106.54.886.061 2.042-.947 2.287-1.561.379-1.561 2.6 0 2.978a1.532 1.532 0 01.947 2.287c-.836 1.372.734 2.942 2.106 2.106a1.532 1.532 0 012.287.947c.379 1.561 2.6 1.561 2.978 0a1.533 1.533 0 012.287-.947c1.372.836 2.942-.734 2.106-2.106a1.533 1.533 0 01.947-2.287c1.561-.379 1.561-2.6 0-2.978a1.532 1.532 0 01-.947-2.287c.836-1.372-.734-2.942-2.106-2.106a1.532 1.532 0 01-2.287-.947zM10 13a3 3 0 100-6 3 3 0 000 6z" clip-rule="evenodd"/>
               </svg>
-              <h3 class="text-2xl font-bold text-gray-900">
+              <h3 class="text-2xl font-bold text-nautical-900">
                 AI Realism & Software Architecture
               </h3>
             </div>
-            <p class="text-gray-700 mb-6">
+            <p class="text-nautical-700 mb-6">
               Enterprise Architect at SEQTEK, specializing in practical AI integration and helping
               companies navigate the AI revolution with realistic expectations.
             </p>
@@ -132,11 +132,11 @@
               <svg class="w-12 h-12 text-primary-600 mr-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 21v-4m0 0V5a2 2 0 012-2h6.5l1 1H21l-3 6 3 6h-8.5l-1-1H5a2 2 0 00-2 2zm9-13.5V9"/>
               </svg>
-              <h3 class="text-2xl font-bold text-gray-900">
+              <h3 class="text-2xl font-bold text-nautical-900">
                 From Wilderness to Kingdom
               </h3>
             </div>
-            <p class="text-gray-700 mb-6">
+            <p class="text-nautical-700 mb-6">
               A story of transformation through faith, family, and finding purpose. From lost years
               and broken places to becoming a disciple, father, and builder.
             </p>
@@ -155,11 +155,11 @@
               <svg class="w-12 h-12 text-primary-600 mr-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/>
               </svg>
-              <h3 class="text-2xl font-bold text-gray-900">
+              <h3 class="text-2xl font-bold text-nautical-900">
                 Incident Timer
               </h3>
             </div>
-            <p class="text-gray-700 mb-6">
+            <p class="text-nautical-700 mb-6">
               Track time since last incidents with a steampunk-themed UI. A practical tool with
               full CRUD operations, public sharing, and beautiful design. Proof that I build things.
             </p>
@@ -178,11 +178,11 @@
               <svg class="w-12 h-12 text-primary-600 mr-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253"/>
               </svg>
-              <h3 class="text-2xl font-bold text-gray-900">
+              <h3 class="text-2xl font-bold text-nautical-900">
                 Faith, Mimetic Theory, & Christian Anarchism
               </h3>
             </div>
-            <p class="text-gray-700 mb-6">
+            <p class="text-nautical-700 mb-6">
               Exploring non-sacrificial Gospel readings, René Girard's mimetic theory, and what
               it means to take Jesus' words about loving enemies literally.
             </p>
@@ -208,10 +208,10 @@
     <!-- Connect Section -->
     <section class="py-12 px-4 sm:px-6 lg:px-8 bg-nautical-100">
       <div class="max-w-4xl mx-auto text-center">
-        <h2 class="text-2xl sm:text-3xl font-bold text-gray-900 mb-4">
+        <h2 class="text-2xl sm:text-3xl font-bold text-nautical-900 mb-4">
           Let's Connect
         </h2>
-        <p class="text-gray-700 mb-6">
+        <p class="text-nautical-700 mb-6">
           Find me on LinkedIn
         </p>
         <div class="flex justify-center">
@@ -238,7 +238,7 @@
         <h2 class="text-3xl sm:text-4xl font-bold mb-6">
           Welcome to the Story
         </h2>
-        <p class="text-lg sm:text-xl text-gray-300 mb-8">
+        <p class="text-lg sm:text-xl text-nautical-300 mb-8">
           It's still being written.
         </p>
         <div class="flex flex-col sm:flex-row gap-4 justify-center">

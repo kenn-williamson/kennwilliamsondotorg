@@ -1,10 +1,10 @@
 <template>
-  <div class="min-h-screen bg-gray-50 py-8">
+  <div class="min-h-screen bg-nautical-50 py-8">
     <div class="max-w-2xl mx-auto px-4 sm:px-6 lg:px-8">
       <!-- Header -->
       <div class="mb-8">
-        <h1 class="text-3xl font-bold text-gray-900">Profile Settings</h1>
-        <p class="mt-2 text-gray-600">Manage your account information and security settings.</p>
+        <h1 class="text-3xl font-bold text-nautical-900">Profile Settings</h1>
+        <p class="mt-2 text-nautical-600">Manage your account information and security settings.</p>
       </div>
 
       <!-- Email Verification Banner -->
@@ -12,20 +12,20 @@
 
       <!-- Email Verification Status -->
       <div v-if="user && !user.roles?.includes('email-verified')" class="bg-white shadow rounded-lg mb-8">
-        <div class="px-6 py-4 border-b border-gray-200">
-          <h2 class="text-lg font-medium text-gray-900">Email Verification</h2>
-          <p class="mt-1 text-sm text-gray-500">Verify your email to access all features.</p>
+        <div class="px-6 py-4 border-b border-nautical-200">
+          <h2 class="text-lg font-medium text-nautical-900">Email Verification</h2>
+          <p class="mt-1 text-sm text-nautical-500">Verify your email to access all features.</p>
         </div>
         <div class="px-6 py-4">
           <div class="flex items-center justify-between">
             <div>
-              <p class="text-sm text-gray-700">
+              <p class="text-sm text-nautical-700">
                 <span class="font-medium">Status:</span>
-                <span class="ml-2 inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-yellow-100 text-yellow-800">
+                <span class="ml-2 inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-gold-100 text-gold-800">
                   Not Verified
                 </span>
               </p>
-              <p class="mt-2 text-sm text-gray-600">
+              <p class="mt-2 text-sm text-nautical-600">
                 A verification email has been sent to <span class="font-medium">{{ user.email }}</span>
               </p>
             </div>
@@ -49,9 +49,9 @@
 
       <!-- OAuth Accounts Section -->
       <div v-if="user" class="bg-white shadow rounded-lg mb-8">
-        <div class="px-6 py-4 border-b border-gray-200">
-          <h2 class="text-lg font-medium text-gray-900">Connected Accounts</h2>
-          <p class="mt-1 text-sm text-gray-500">Link your account with Google for easier sign-in.</p>
+        <div class="px-6 py-4 border-b border-nautical-200">
+          <h2 class="text-lg font-medium text-nautical-900">Connected Accounts</h2>
+          <p class="mt-1 text-sm text-nautical-500">Link your account with Google for easier sign-in.</p>
         </div>
         <div class="px-6 py-4">
           <!-- Google Account -->
@@ -64,10 +64,10 @@
                 <path d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z" fill="#EA4335"/>
               </svg>
               <div class="ml-3">
-                <p class="text-sm font-medium text-gray-900">Google</p>
-                <p v-if="hasGoogleAccount && user.profile?.real_name" class="text-sm text-gray-500">{{ user.profile.real_name }}</p>
-                <p v-else-if="hasGoogleAccount" class="text-sm text-gray-500">Connected</p>
-                <p v-else class="text-sm text-gray-500">Not connected</p>
+                <p class="text-sm font-medium text-nautical-900">Google</p>
+                <p v-if="hasGoogleAccount && user.profile?.real_name" class="text-sm text-nautical-500">{{ user.profile.real_name }}</p>
+                <p v-else-if="hasGoogleAccount" class="text-sm text-nautical-500">Connected</p>
+                <p v-else class="text-sm text-nautical-500">Not connected</p>
               </div>
             </div>
             <div v-if="hasGoogleAccount">
@@ -87,14 +87,14 @@
 
       <!-- Account Information Form -->
       <div class="bg-white shadow rounded-lg mb-8">
-        <div class="px-6 py-4 border-b border-gray-200">
-          <h2 class="text-lg font-medium text-gray-900">Account Information</h2>
-          <p class="mt-1 text-sm text-gray-500">Update your display name and username.</p>
+        <div class="px-6 py-4 border-b border-nautical-200">
+          <h2 class="text-lg font-medium text-nautical-900">Account Information</h2>
+          <p class="mt-1 text-sm text-nautical-500">Update your display name and username.</p>
         </div>
         <div class="px-6 py-4">
           <div v-if="userPending" class="flex items-center justify-center py-8">
             <div class="animate-spin rounded-full h-8 w-8 border-b-2 border-sky-600"></div>
-            <span class="ml-3 text-gray-600">Loading profile...</span>
+            <span class="ml-3 text-nautical-600">Loading profile...</span>
           </div>
           <AccountInformationForm 
             v-else-if="user"
@@ -111,9 +111,9 @@
 
       <!-- Security Form -->
       <div class="bg-white shadow rounded-lg mb-8">
-        <div class="px-6 py-4 border-b border-gray-200">
-          <h2 class="text-lg font-medium text-gray-900">Security</h2>
-          <p class="mt-1 text-sm text-gray-500">Change your password to keep your account secure.</p>
+        <div class="px-6 py-4 border-b border-nautical-200">
+          <h2 class="text-lg font-medium text-nautical-900">Security</h2>
+          <p class="mt-1 text-sm text-nautical-500">Change your password to keep your account secure.</p>
         </div>
         <div class="px-6 py-4">
           <SecurityForm />
@@ -122,9 +122,9 @@
 
       <!-- Preferences -->
       <div v-if="user" class="bg-white shadow rounded-lg mb-8">
-        <div class="px-6 py-4 border-b border-gray-200">
-          <h2 class="text-lg font-medium text-gray-900">Preferences</h2>
-          <p class="mt-1 text-sm text-gray-500">Manage your account preferences and privacy settings.</p>
+        <div class="px-6 py-4 border-b border-nautical-200">
+          <h2 class="text-lg font-medium text-nautical-900">Preferences</h2>
+          <p class="mt-1 text-sm text-nautical-500">Manage your account preferences and privacy settings.</p>
         </div>
         <div class="px-6 py-4">
           <PreferencesForm :user="user" />

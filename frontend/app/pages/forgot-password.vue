@@ -8,11 +8,11 @@
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
           </svg>
         </div>
-        <h1 class="text-3xl font-bold text-gray-900 mb-2">Check Your Email</h1>
-        <p class="text-gray-600 mb-6">
+        <h1 class="text-3xl font-bold text-nautical-900 mb-2">Check Your Email</h1>
+        <p class="text-nautical-600 mb-6">
           If an account exists with that email address, you will receive a password reset link shortly.
         </p>
-        <p class="text-sm text-gray-500 mb-6">
+        <p class="text-sm text-nautical-500 mb-6">
           The link will expire in 1 hour for security reasons.
         </p>
         <NuxtLink
@@ -27,8 +27,8 @@
       <div v-else>
         <!-- Header -->
         <div class="text-center mb-8">
-          <h1 class="text-3xl font-bold text-gray-900 mb-2">Reset Password</h1>
-          <p class="text-gray-600">Enter your email address and we'll send you a password reset link.</p>
+          <h1 class="text-3xl font-bold text-nautical-900 mb-2">Reset Password</h1>
+          <p class="text-nautical-600">Enter your email address and we'll send you a password reset link.</p>
         </div>
 
         <!-- Reset Form -->
@@ -36,7 +36,7 @@
           <form @submit.prevent="onSubmit" class="space-y-6">
             <!-- Email Field -->
             <div>
-              <label for="email" class="block text-sm font-medium text-gray-700 mb-2">
+              <label for="email" class="block text-sm font-medium text-nautical-700 mb-2">
                 Email Address
               </label>
               <Field
@@ -45,7 +45,7 @@
                 v-model="form.email"
                 :class="[
                   'w-full px-4 py-3 border rounded-md focus:ring-2 focus:ring-sky-500 focus:border-transparent transition-colors duration-200',
-                  errors.email ? 'border-red-300 bg-red-50' : 'border-gray-300'
+                  errors.email ? 'border-red-300 bg-red-50' : 'border-nautical-300'
                 ]"
                 placeholder="your@email.com"
               />

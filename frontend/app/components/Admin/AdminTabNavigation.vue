@@ -36,17 +36,17 @@ const tabs = ADMIN_TABS.tabs
 }
 
 .tab-list {
-  @apply flex flex-wrap gap-1 border-b border-gray-200;
+  @apply flex flex-wrap gap-1 border-b border-nautical-200;
 }
 
 .tab-button {
-  @apply flex items-center gap-2 px-6 py-4 text-sm font-medium text-gray-600 
-         hover:text-gray-900 hover:bg-gray-50 transition-colors
+  @apply flex items-center gap-2 px-6 py-4 text-sm font-medium text-nautical-600 
+         hover:text-nautical-900 hover:bg-nautical-50 transition-colors
          border-b-2 border-transparent;
 }
 
 .tab-button.active {
-  @apply text-gray-900 border-gray-900 bg-gray-50;
+  @apply text-nautical-900 border-nautical-900 bg-nautical-50;
 }
 
 .tab-icon {

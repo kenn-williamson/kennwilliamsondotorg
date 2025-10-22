@@ -8,9 +8,9 @@
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
           </svg>
         </div>
-        <h1 class="text-3xl font-bold text-gray-900 mb-2">Password Reset!</h1>
-        <p class="text-gray-600 mb-6">Your password has been successfully reset.</p>
-        <p class="text-sm text-gray-500 mb-4">Redirecting to login page...</p>
+        <h1 class="text-3xl font-bold text-nautical-900 mb-2">Password Reset!</h1>
+        <p class="text-nautical-600 mb-6">Your password has been successfully reset.</p>
+        <p class="text-sm text-nautical-500 mb-4">Redirecting to login page...</p>
       </div>
 
       <!-- Error State -->
@@ -20,8 +20,8 @@
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
           </svg>
         </div>
-        <h1 class="text-3xl font-bold text-gray-900 mb-2">Reset Failed</h1>
-        <p class="text-gray-600 mb-6">{{ errorMessage }}</p>
+        <h1 class="text-3xl font-bold text-nautical-900 mb-2">Reset Failed</h1>
+        <p class="text-nautical-600 mb-6">{{ errorMessage }}</p>
 
         <div class="space-y-3">
           <NuxtLink
@@ -37,8 +37,8 @@
       <div v-else-if="resetStatus === 'form'">
         <!-- Header -->
         <div class="text-center mb-8">
-          <h1 class="text-3xl font-bold text-gray-900 mb-2">Create New Password</h1>
-          <p class="text-gray-600">Enter your new password below.</p>
+          <h1 class="text-3xl font-bold text-nautical-900 mb-2">Create New Password</h1>
+          <p class="text-nautical-600">Enter your new password below.</p>
         </div>
 
         <!-- Password Form -->
@@ -46,7 +46,7 @@
           <form @submit.prevent="onSubmit" class="space-y-6">
             <!-- Password Field -->
             <div>
-              <label for="password" class="block text-sm font-medium text-gray-700 mb-2">
+              <label for="password" class="block text-sm font-medium text-nautical-700 mb-2">
                 New Password
               </label>
               <Field
@@ -55,7 +55,7 @@
                 v-model="form.password"
                 :class="[
                   'w-full px-4 py-3 border rounded-md focus:ring-2 focus:ring-sky-500 focus:border-transparent transition-colors duration-200',
-                  errors.password ? 'border-red-300 bg-red-50' : 'border-gray-300'
+                  errors.password ? 'border-red-300 bg-red-50' : 'border-nautical-300'
                 ]"
                 placeholder="Enter new password"
               />
@@ -64,7 +64,7 @@
 
             <!-- Confirm Password Field -->
             <div>
-              <label for="confirmPassword" class="block text-sm font-medium text-gray-700 mb-2">
+              <label for="confirmPassword" class="block text-sm font-medium text-nautical-700 mb-2">
                 Confirm New Password
               </label>
               <Field
@@ -73,7 +73,7 @@
                 v-model="form.confirmPassword"
                 :class="[
                   'w-full px-4 py-3 border rounded-md focus:ring-2 focus:ring-sky-500 focus:border-transparent transition-colors duration-200',
-                  errors.confirmPassword ? 'border-red-300 bg-red-50' : 'border-gray-300'
+                  errors.confirmPassword ? 'border-red-300 bg-red-50' : 'border-nautical-300'
                 ]"
                 placeholder="Confirm new password"
               />
@@ -109,8 +109,8 @@
             <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"/>
           </svg>
         </div>
-        <h1 class="text-2xl font-bold text-gray-900 mb-2">Verifying Reset Link...</h1>
-        <p class="text-gray-600">Please wait while we verify your password reset link.</p>
+        <h1 class="text-2xl font-bold text-nautical-900 mb-2">Verifying Reset Link...</h1>
+        <p class="text-nautical-600">Please wait while we verify your password reset link.</p>
       </div>
 
       <!-- Decorative Elements -->

@@ -292,7 +292,7 @@ const formatDate = (dateString: string) => {
 }
 
 .status-pending {
-  @apply bg-yellow-100 text-yellow-800;
+  @apply bg-gold-100 text-gold-800;
 }
 
 .status-approved {

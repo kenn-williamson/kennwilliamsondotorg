@@ -2,7 +2,7 @@
   <form @submit.prevent="onSubmit" class="space-y-6">
     <!-- Current Password Field (only show if user has credentials) -->
     <div v-if="hasCredentials">
-      <label for="current_password" class="block text-sm font-medium text-gray-700 mb-2">
+      <label for="current_password" class="block text-sm font-medium text-nautical-700 mb-2">
         Current Password
       </label>
       <Field
@@ -11,7 +11,7 @@
         v-model="form.current_password"
         :class="[
           'w-full px-4 py-3 border rounded-md focus:ring-2 focus:ring-sky-500 focus:border-transparent transition-colors duration-200',
-          errors.currentPassword ? 'border-red-300 bg-red-50' : 'border-gray-300'
+          errors.currentPassword ? 'border-red-300 bg-red-50' : 'border-nautical-300'
         ]"
         placeholder="Enter your current password"
       />
@@ -19,18 +19,18 @@
     </div>
 
     <!-- Info message for OAuth-only users -->
-    <div v-if="!hasCredentials" class="bg-blue-50 border border-blue-200 rounded-md p-4 mb-4">
+    <div v-if="!hasCredentials" class="bg-primary-50 border border-primary-200 rounded-md p-4 mb-4">
       <div class="flex">
         <div class="flex-shrink-0">
-          <svg class="h-5 w-5 text-blue-400" viewBox="0 0 20 20" fill="currentColor">
+          <svg class="h-5 w-5 text-primary-400" viewBox="0 0 20 20" fill="currentColor">
             <path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z" clip-rule="evenodd" />
           </svg>
         </div>
         <div class="ml-3">
-          <h3 class="text-sm font-medium text-blue-800">
+          <h3 class="text-sm font-medium text-primary-800">
             Set up password authentication
           </h3>
-          <div class="mt-2 text-sm text-blue-700">
+          <div class="mt-2 text-sm text-primary-700">
             <p>You signed in with Google. Add a password to enable password-based login.</p>
           </div>
         </div>
@@ -39,7 +39,7 @@
 
     <!-- New Password Field -->
     <div>
-      <label for="new_password" class="block text-sm font-medium text-gray-700 mb-2">
+      <label for="new_password" class="block text-sm font-medium text-nautical-700 mb-2">
         {{ hasCredentials ? 'New Password' : 'Password' }}
       </label>
       <Field
@@ -48,26 +48,26 @@
         v-model="form.new_password"
         :class="[
           'w-full px-4 py-3 border rounded-md focus:ring-2 focus:ring-sky-500 focus:border-transparent transition-colors duration-200',
-          errors.newPassword ? 'border-red-300 bg-red-50' : 'border-gray-300'
+          errors.newPassword ? 'border-red-300 bg-red-50' : 'border-nautical-300'
         ]"
         :placeholder="hasCredentials ? 'Enter your new password' : 'Enter your password'"
       />
       <ErrorMessage name="newPassword" class="text-red-600 text-sm mt-1" />
 
       <!-- Password Requirements -->
-      <div class="mt-2 text-xs text-gray-600">
+      <div class="mt-2 text-xs text-nautical-600">
         <p class="mb-1">Password must contain:</p>
         <ul class="list-disc list-inside space-y-1">
-          <li :class="passwordChecks.length ? 'text-green-600' : 'text-gray-500'">
+          <li :class="passwordChecks.length ? 'text-green-600' : 'text-nautical-500'">
             At least 8 characters
           </li>
-          <li :class="passwordChecks.lowercase ? 'text-green-600' : 'text-gray-500'">
+          <li :class="passwordChecks.lowercase ? 'text-green-600' : 'text-nautical-500'">
             One lowercase letter
           </li>
-          <li :class="passwordChecks.uppercase ? 'text-green-600' : 'text-gray-500'">
+          <li :class="passwordChecks.uppercase ? 'text-green-600' : 'text-nautical-500'">
             One uppercase letter
           </li>
-          <li :class="passwordChecks.number ? 'text-green-600' : 'text-gray-500'">
+          <li :class="passwordChecks.number ? 'text-green-600' : 'text-nautical-500'">
             One number
           </li>
         </ul>
@@ -76,7 +76,7 @@
 
     <!-- Confirm New Password Field -->
     <div>
-      <label for="confirm_password" class="block text-sm font-medium text-gray-700 mb-2">
+      <label for="confirm_password" class="block text-sm font-medium text-nautical-700 mb-2">
         Confirm Password
       </label>
       <Field
@@ -85,7 +85,7 @@
         v-model="form.confirm_password"
         :class="[
           'w-full px-4 py-3 border rounded-md focus:ring-2 focus:ring-sky-500 focus:border-transparent transition-colors duration-200',
-          errors.confirmPassword ? 'border-red-300 bg-red-50' : 'border-gray-300'
+          errors.confirmPassword ? 'border-red-300 bg-red-50' : 'border-nautical-300'
         ]"
         :placeholder="hasCredentials ? 'Confirm your new password' : 'Confirm your password'"
       />
@@ -100,7 +100,7 @@
         :class="[
           'px-6 py-3 rounded-md font-medium transition-colors duration-200',
           isSubmitting || !isFormValid
-            ? 'bg-gray-300 text-gray-500 cursor-not-allowed'
+            ? 'bg-nautical-300 text-nautical-500 cursor-not-allowed'
             : 'bg-sky-600 text-white hover:bg-sky-700'
         ]"
       >

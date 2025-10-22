@@ -2,17 +2,17 @@
   <div class="space-y-8">
     <!-- Timer Privacy Section -->
     <div class="space-y-4">
-      <h3 class="text-base font-semibold text-gray-900 pb-2 border-b border-gray-200">
+      <h3 class="text-base font-semibold text-nautical-900 pb-2 border-b border-nautical-200">
         Timer Privacy
       </h3>
 
       <!-- Make Timer Public Toggle -->
       <div class="flex items-center justify-between py-4">
         <div class="flex-1 mr-4">
-          <h4 class="text-sm font-medium text-gray-900">
+          <h4 class="text-sm font-medium text-nautical-900">
             Make Timer Public
           </h4>
-          <p class="text-sm text-gray-500 mt-1">
+          <p class="text-sm text-nautical-500 mt-1">
             Allow others to view your timer at /{{ user?.slug }}/incident-timer
           </p>
         </div>
@@ -22,7 +22,7 @@
         :disabled="isLoading"
         :class="[
           'relative inline-flex h-6 w-11 flex-shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none focus:ring-2 focus:ring-sky-500 focus:ring-offset-2',
-          isPublic ? 'bg-sky-600' : 'bg-gray-200',
+          isPublic ? 'bg-sky-600' : 'bg-nautical-200',
           isLoading ? 'opacity-50 cursor-not-allowed' : ''
         ]"
         role="switch"
@@ -39,12 +39,12 @@
       </div>
 
       <!-- Show in Public List Toggle -->
-      <div class="flex items-center justify-between py-4 border-t border-gray-200">
+      <div class="flex items-center justify-between py-4 border-t border-nautical-200">
       <div class="flex-1 mr-4">
         <h4
           :class="[
             'text-sm font-medium',
-            !isPublic ? 'text-gray-400' : 'text-gray-900'
+            !isPublic ? 'text-nautical-400' : 'text-nautical-900'
           ]"
         >
           Show in Public List
@@ -52,7 +52,7 @@
         <p
           :class="[
             'text-sm mt-1',
-            !isPublic ? 'text-gray-400' : 'text-gray-500'
+            !isPublic ? 'text-nautical-400' : 'text-nautical-500'
           ]"
         >
           Display your timer in the public timers list on the incidents page
@@ -64,7 +64,7 @@
         :disabled="isLoading || !isPublic"
         :class="[
           'relative inline-flex h-6 w-11 flex-shrink-0 rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none focus:ring-2 focus:ring-sky-500 focus:ring-offset-2',
-          showInList && isPublic ? 'bg-sky-600' : 'bg-gray-200',
+          showInList && isPublic ? 'bg-sky-600' : 'bg-nautical-200',
           isLoading || !isPublic ? 'opacity-50 cursor-not-allowed' : 'cursor-pointer'
         ]"
         role="switch"
@@ -83,16 +83,16 @@
       <!-- Info message when not public -->
       <div
         v-if="!isPublic"
-        class="bg-blue-50 border border-blue-200 rounded-md p-4"
+        class="bg-primary-50 border border-primary-200 rounded-md p-4"
       >
       <div class="flex">
         <div class="flex-shrink-0">
-          <svg class="h-5 w-5 text-blue-400" viewBox="0 0 20 20" fill="currentColor">
+          <svg class="h-5 w-5 text-primary-400" viewBox="0 0 20 20" fill="currentColor">
             <path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z" clip-rule="evenodd" />
           </svg>
         </div>
         <div class="ml-3">
-          <p class="text-sm text-blue-700">
+          <p class="text-sm text-primary-700">
             Enable "Make Timer Public" first to show in the public list
           </p>
           </div>

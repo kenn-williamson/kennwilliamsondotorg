@@ -1,23 +1,23 @@
 <template>
-  <div class="min-h-screen bg-parchment-50 py-12 px-4 sm:px-6 lg:px-8">
+  <div class="min-h-screen bg-nautical-50 py-12 px-4 sm:px-6 lg:px-8">
     <div class="max-w-2xl mx-auto">
-      <div class="bg-white rounded-lg shadow-lg p-8 border-2 border-amber-200">
+      <div class="bg-white rounded-lg shadow-lg p-8 border-2 border-primary-200">
         <div class="text-center mb-8">
-          <h1 class="text-3xl font-bold text-amber-900 mb-2">
+          <h1 class="text-3xl font-bold text-primary-900 mb-2">
             Request Access to Personal Content
           </h1>
-          <p class="text-gray-600">
+          <p class="text-nautical-600">
             The page you're trying to access contains personal and family information that
             requires approval.
           </p>
         </div>
 
         <div v-if="!submitted" class="space-y-6">
-          <div class="bg-amber-50 border border-amber-200 rounded-md p-4">
-            <h2 class="text-lg font-semibold text-amber-900 mb-2">
+          <div class="bg-primary-50 border border-primary-200 rounded-md p-4">
+            <h2 class="text-lg font-semibold text-primary-900 mb-2">
               What you'll get access to:
             </h2>
-            <ul class="list-disc list-inside space-y-1 text-gray-700">
+            <ul class="list-disc list-inside space-y-1 text-nautical-700">
               <li>Origins - Family background and early life</li>
               <li>The Wilderness - Personal struggles and transformation</li>
               <li>Finding Faith - Spiritual journey</li>
@@ -29,7 +29,7 @@
 
           <form @submit.prevent="handleSubmit" class="space-y-6">
             <div>
-              <label for="message" class="block text-sm font-medium text-gray-700 mb-2">
+              <label for="message" class="block text-sm font-medium text-nautical-700 mb-2">
                 How do you know Kenn? <span class="text-red-600">*</span>
               </label>
               <textarea
@@ -37,7 +37,7 @@
                 v-model="formData.message"
                 rows="6"
                 required
-                class="w-full px-4 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-amber-500 focus:border-transparent"
+                class="w-full px-4 py-2 border border-nautical-300 rounded-md focus:ring-2 focus:ring-primary-500 focus:border-transparent"
                 placeholder="Please share how you know Kenn (e.g., friend, coworker, church, etc.) and why you'd like access to this content..."
               ></textarea>
             </div>
@@ -48,9 +48,9 @@
                 v-model="formData.understand"
                 type="checkbox"
                 required
-                class="mt-1 h-4 w-4 text-amber-600 focus:ring-amber-500 border-gray-300 rounded"
+                class="mt-1 h-4 w-4 text-primary-600 focus:ring-primary-500 border-nautical-300 rounded"
               />
-              <label for="understand" class="ml-2 text-sm text-gray-700">
+              <label for="understand" class="ml-2 text-sm text-nautical-700">
                 I understand that access must be manually approved by Kenn and may take some
                 time. <span class="text-red-600">*</span>
               </label>
@@ -60,13 +60,13 @@
               <button
                 type="submit"
                 :disabled="isLoading"
-                class="flex-1 bg-amber-700 hover:bg-amber-800 disabled:bg-gray-400 text-white font-semibold py-3 px-6 rounded-md transition duration-200"
+                class="flex-1 bg-primary-700 hover:bg-primary-800 disabled:bg-nautical-400 text-white font-semibold py-3 px-6 rounded-md transition duration-200"
               >
                 {{ isLoading ? 'Submitting...' : 'Submit Request' }}
               </button>
               <NuxtLink
                 to="/about"
-                class="flex-1 bg-gray-200 hover:bg-gray-300 text-gray-700 font-semibold py-3 px-6 rounded-md text-center transition duration-200"
+                class="flex-1 bg-nautical-200 hover:bg-nautical-300 text-nautical-700 font-semibold py-3 px-6 rounded-md text-center transition duration-200"
               >
                 Cancel
               </NuxtLink>
@@ -83,18 +83,18 @@
 
         <div v-else class="text-center space-y-4">
           <div class="text-green-600 text-5xl mb-4">✓</div>
-          <h2 class="text-2xl font-bold text-amber-900">Request Submitted!</h2>
-          <p class="text-gray-700">
+          <h2 class="text-2xl font-bold text-primary-900">Request Submitted!</h2>
+          <p class="text-nautical-700">
             Your request has been sent to Kenn for review. You'll receive an email notification
             once your request has been processed.
           </p>
-          <p class="text-gray-600 text-sm">
+          <p class="text-nautical-600 text-sm">
             This usually takes 1-2 business days, but may be longer depending on availability.
           </p>
           <div class="pt-6">
             <NuxtLink
               to="/about"
-              class="inline-block bg-amber-700 hover:bg-amber-800 text-white font-semibold py-3 px-8 rounded-md transition duration-200"
+              class="inline-block bg-primary-700 hover:bg-primary-800 text-white font-semibold py-3 px-8 rounded-md transition duration-200"
             >
               Return to About Page
             </NuxtLink>

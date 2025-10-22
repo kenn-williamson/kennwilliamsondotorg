@@ -33,10 +33,10 @@
       </div>
 
       <div v-else-if="phrasesStore.userPhrases.length === 0" class="empty-state">
-        <p v-if="searchQuery" class="text-gray-500">
+        <p v-if="searchQuery" class="text-nautical-500">
           No phrases match your search
         </p>
-        <p v-else class="text-gray-500">
+        <p v-else class="text-nautical-500">
           No phrases available
         </p>
       </div>

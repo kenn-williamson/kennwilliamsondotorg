@@ -2,8 +2,8 @@
   <div class="admin-panel">
     <!-- Header -->
     <div class="mb-8">
-      <h1 class="text-3xl font-bold text-gray-900 mb-2">Admin Panel</h1>
-      <p class="text-gray-600">Manage users, moderate content, and view system statistics</p>
+      <h1 class="text-3xl font-bold text-nautical-900 mb-2">Admin Panel</h1>
+      <p class="text-nautical-600">Manage users, moderate content, and view system statistics</p>
     </div>
 
     <!-- Tab Navigation -->

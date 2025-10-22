@@ -90,7 +90,7 @@
               href="https://www.autismspeaks.org/levels-of-autism"
               target="_blank"
               rel="noopener noreferrer"
-              class="text-amber-800 hover:text-amber-900 underline font-semibold"
+              class="text-gold-800 hover:text-gold-900 underline font-semibold"
             >
               Learn more at Autism Speaks →
             </a>
@@ -115,7 +115,7 @@
           alt="Rory"
           class="w-full rounded-lg shadow-lg mb-2"
         />
-        <p class="text-sm font-semibold text-amber-800">Rory (10)</p>
+        <p class="text-sm font-semibold text-gold-800">Rory (10)</p>
       </div>
       <div class="text-center">
         <img
@@ -123,7 +123,7 @@
           alt="Charlie"
           class="w-full rounded-lg shadow-lg mb-2"
         />
-        <p class="text-sm font-semibold text-amber-800">Charlie (9)</p>
+        <p class="text-sm font-semibold text-gold-800">Charlie (9)</p>
       </div>
       <div class="text-center">
         <img
@@ -131,7 +131,7 @@
           alt="Teddy"
           class="w-full rounded-lg shadow-lg mb-2"
         />
-        <p class="text-sm font-semibold text-amber-800">Teddy (almost 5)</p>
+        <p class="text-sm font-semibold text-gold-800">Teddy (almost 5)</p>
       </div>
     </div>
 
@@ -185,7 +185,11 @@
       more embedded in that world.
     </p>
 
-    <div class="photo-placeholder">Photo: Church or community gathering</div>
+    <img
+      src="~/assets/images/cotm-worship-desktop.jpg"
+      alt="Worship service at Church on the Move"
+      class="w-full max-w-3xl mx-auto rounded-lg shadow-lg my-6"
+    />
 
     <h2>Hobbies and Interests: The Nerdy Life</h2>
 

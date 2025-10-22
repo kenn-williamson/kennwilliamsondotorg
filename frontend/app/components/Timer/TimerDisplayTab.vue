@@ -11,8 +11,8 @@
             class="mb-4"
           />
           <div v-else class="no-timer">
-            <p class="text-gray-500">No active timer</p>
-            <p class="text-sm text-gray-400">Go to Timer Controls to create a new timer</p>
+            <p class="text-nautical-500">No active timer</p>
+            <p class="text-sm text-nautical-400">Go to Timer Controls to create a new timer</p>
           </div>
         </div>
       </div>

@@ -1,6 +1,6 @@
 <template>
   <div class="bg-white shadow rounded-lg border-l-4 border-red-500">
-    <div class="px-6 py-4 border-b border-gray-200 bg-red-50">
+    <div class="px-6 py-4 border-b border-nautical-200 bg-red-50">
       <div class="flex items-center">
         <svg class="w-6 h-6 text-red-600 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
           <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L3.732 16.5c-.77.833.192 2.5 1.732 2.5z" />
@@ -13,8 +13,8 @@
     <div class="px-6 py-4">
       <div class="flex items-center justify-between">
         <div class="flex-1">
-          <h3 class="text-base font-medium text-gray-900">Delete Account</h3>
-          <p class="mt-1 text-sm text-gray-600">
+          <h3 class="text-base font-medium text-nautical-900">Delete Account</h3>
+          <p class="mt-1 text-sm text-nautical-600">
             Permanently delete your account and all associated data. This action cannot be undone.
           </p>
           <div class="mt-2 text-sm text-red-600">
@@ -47,7 +47,7 @@
     </div>
 
     <!-- Delete Confirmation Modal -->
-    <div v-if="showDeleteModal" class="fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full z-50" @click="closeModal">
+    <div v-if="showDeleteModal" class="fixed inset-0 bg-nautical-600 bg-opacity-50 overflow-y-auto h-full w-full z-50" @click="closeModal">
       <div class="relative top-20 mx-auto p-5 border w-96 shadow-lg rounded-md bg-white" @click.stop>
         <!-- Modal Header with Warning -->
         <div class="text-center">
@@ -56,7 +56,7 @@
               <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L3.732 16.5c-.77.833.192 2.5 1.732 2.5z" />
             </svg>
           </div>
-          <h3 class="text-lg font-medium text-gray-900 mb-2">⚠️ Final Warning ⚠️</h3>
+          <h3 class="text-lg font-medium text-nautical-900 mb-2">⚠️ Final Warning ⚠️</h3>
           <div class="text-sm text-red-600 mb-4">
             <p class="font-bold">🚨 CAUTION TAPE 🚨</p>
             <p class="mt-2">You are about to permanently delete your account.</p>
@@ -67,7 +67,7 @@
 
         <!-- Email Confirmation -->
         <div class="mt-4">
-          <label for="email-confirmation" class="block text-sm font-medium text-gray-700 mb-2">
+          <label for="email-confirmation" class="block text-sm font-medium text-nautical-700 mb-2">
             To confirm, please type your email address:
           </label>
           <Field
@@ -75,7 +75,7 @@
             name="emailConfirmation"
             type="email"
             placeholder="Enter your email address"
-            class="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-red-500 focus:border-red-500"
+            class="w-full px-3 py-2 border border-nautical-300 rounded-md shadow-sm focus:outline-none focus:ring-red-500 focus:border-red-500"
             :class="{ 'border-red-500': errors.emailConfirmation }"
           />
           <ErrorMessage name="emailConfirmation" class="mt-1 text-sm text-red-600" />
@@ -89,7 +89,7 @@
           <button
             @click="closeModal"
             :disabled="isLoading"
-            class="px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-md hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-gray-500 disabled:opacity-50 disabled:cursor-not-allowed"
+            class="px-4 py-2 text-sm font-medium text-nautical-700 bg-white border border-nautical-300 rounded-md hover:bg-nautical-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-gray-500 disabled:opacity-50 disabled:cursor-not-allowed"
           >
             Cancel
           </button>

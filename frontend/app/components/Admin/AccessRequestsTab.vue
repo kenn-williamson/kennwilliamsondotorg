@@ -2,7 +2,7 @@
   <div class="access-requests-tab">
     <!-- Loading State -->
     <div v-if="adminStore.isLoading" class="flex justify-center items-center py-12">
-      <div class="animate-spin rounded-full h-8 w-8 border-b-2 border-gray-900"></div>
+      <div class="animate-spin rounded-full h-8 w-8 border-b-2 border-nautical-900"></div>
     </div>
 
     <!-- Error State -->
@@ -21,7 +21,7 @@
       <div
         v-for="request in adminStore.pendingAccessRequests"
         :key="request.id"
-        class="bg-white rounded-lg shadow-sm border border-gray-200 p-6 hover:shadow-md transition-shadow"
+        class="bg-white rounded-lg shadow-sm border border-nautical-200 p-6 hover:shadow-md transition-shadow"
       >
         <div class="flex items-start justify-between">
           <div class="flex-1">
@@ -32,20 +32,20 @@
                 </div>
               </div>
               <div class="flex-1">
-                <h3 class="text-sm font-medium text-gray-900">{{ request.user_display_name }}</h3>
-                <p class="text-xs text-gray-500">{{ request.user_email }} • {{ formatDate(request.created_at) }}</p>
+                <h3 class="text-sm font-medium text-nautical-900">{{ request.user_display_name }}</h3>
+                <p class="text-xs text-nautical-500">{{ request.user_email }} • {{ formatDate(request.created_at) }}</p>
               </div>
             </div>
 
-            <div class="bg-gray-50 rounded-md p-4 mb-4">
-              <p class="text-sm text-gray-600 mb-2"><strong>Requested Role:</strong> {{ request.requested_role }}</p>
-              <p class="text-sm text-gray-900 whitespace-pre-wrap">{{ request.message }}</p>
+            <div class="bg-nautical-50 rounded-md p-4 mb-4">
+              <p class="text-sm text-nautical-600 mb-2"><strong>Requested Role:</strong> {{ request.requested_role }}</p>
+              <p class="text-sm text-nautical-900 whitespace-pre-wrap">{{ request.message }}</p>
             </div>
           </div>
         </div>
 
         <!-- Actions -->
-        <div class="flex items-center justify-between pt-4 border-t border-gray-200">
+        <div class="flex items-center justify-between pt-4 border-t border-nautical-200">
           <div class="flex items-center space-x-3">
             <button
               @click="approveRequest(request)"
@@ -68,12 +68,12 @@
 
     <!-- Empty State -->
     <div v-else class="text-center py-12">
-      <div class="text-gray-400 text-6xl mb-4">🔑</div>
-      <h3 class="text-lg font-medium text-gray-900 mb-2">No Pending Access Requests</h3>
-      <p class="text-gray-500 mb-4">All access requests have been reviewed.</p>
+      <div class="text-nautical-400 text-6xl mb-4">🔑</div>
+      <h3 class="text-lg font-medium text-nautical-900 mb-2">No Pending Access Requests</h3>
+      <p class="text-nautical-500 mb-4">All access requests have been reviewed.</p>
       <button
         @click="refreshAccessRequests"
-        class="px-4 py-2 bg-gray-900 text-white rounded-md hover:bg-gray-800 transition-colors"
+        class="px-4 py-2 bg-nautical-900 text-white rounded-md hover:bg-nautical-800 transition-colors"
       >
         Refresh
       </button>
@@ -82,30 +82,30 @@
     <!-- Approval Modal -->
     <div v-if="showApprovalModal" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
       <div class="bg-white rounded-lg shadow-xl max-w-md w-full mx-4 p-6">
-        <h3 class="text-lg font-medium text-gray-900 mb-4">Approve Access Request</h3>
-        <p class="text-sm text-gray-600 mb-4">
+        <h3 class="text-lg font-medium text-nautical-900 mb-4">Approve Access Request</h3>
+        <p class="text-sm text-nautical-600 mb-4">
           Grant <strong>{{ selectedRequest?.requested_role }}</strong> access to <strong>{{ selectedRequest?.user_display_name }}</strong>?
         </p>
-        <div class="bg-gray-50 rounded-md p-3 mb-4">
-          <p class="text-sm text-gray-600 mb-1"><strong>Email:</strong> {{ selectedRequest?.user_email }}</p>
-          <p class="text-sm text-gray-900 whitespace-pre-wrap mt-2">{{ selectedRequest?.message }}</p>
+        <div class="bg-nautical-50 rounded-md p-3 mb-4">
+          <p class="text-sm text-nautical-600 mb-1"><strong>Email:</strong> {{ selectedRequest?.user_email }}</p>
+          <p class="text-sm text-nautical-900 whitespace-pre-wrap mt-2">{{ selectedRequest?.message }}</p>
         </div>
         <div class="mb-4">
-          <label for="approval-reason" class="block text-sm font-medium text-gray-700 mb-2">
+          <label for="approval-reason" class="block text-sm font-medium text-nautical-700 mb-2">
             Admin Comment (optional)
           </label>
           <textarea
             id="approval-reason"
             v-model="approvalReason"
             rows="3"
-            class="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-1 focus:ring-gray-900 focus:border-gray-900"
+            class="w-full px-3 py-2 border border-nautical-300 rounded-md focus:ring-1 focus:ring-gray-900 focus:border-nautical-900"
             placeholder="Add a comment about why this request was approved..."
           ></textarea>
         </div>
         <div class="flex justify-end space-x-3">
           <button
             @click="cancelApproval"
-            class="px-4 py-2 text-sm bg-gray-100 text-gray-700 rounded-md hover:bg-gray-200 transition-colors"
+            class="px-4 py-2 text-sm bg-nautical-100 text-nautical-700 rounded-md hover:bg-nautical-200 transition-colors"
           >
             Cancel
           </button>
@@ -123,23 +123,23 @@
     <!-- Rejection Modal -->
     <div v-if="showRejectionModal" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
       <div class="bg-white rounded-lg shadow-xl max-w-md w-full mx-4 p-6">
-        <h3 class="text-lg font-medium text-gray-900 mb-4">Reject Access Request</h3>
-        <p class="text-sm text-gray-600 mb-4">
+        <h3 class="text-lg font-medium text-nautical-900 mb-4">Reject Access Request</h3>
+        <p class="text-sm text-nautical-600 mb-4">
           Reject access request from <strong>{{ selectedRequest?.user_display_name }}</strong>?
         </p>
-        <div class="bg-gray-50 rounded-md p-3 mb-4">
-          <p class="text-sm text-gray-600 mb-1"><strong>Email:</strong> {{ selectedRequest?.user_email }}</p>
-          <p class="text-sm text-gray-900 whitespace-pre-wrap mt-2">{{ selectedRequest?.message }}</p>
+        <div class="bg-nautical-50 rounded-md p-3 mb-4">
+          <p class="text-sm text-nautical-600 mb-1"><strong>Email:</strong> {{ selectedRequest?.user_email }}</p>
+          <p class="text-sm text-nautical-900 whitespace-pre-wrap mt-2">{{ selectedRequest?.message }}</p>
         </div>
         <div class="mb-4">
-          <label for="rejection-reason" class="block text-sm font-medium text-gray-700 mb-2">
+          <label for="rejection-reason" class="block text-sm font-medium text-nautical-700 mb-2">
             Reason for Rejection *
           </label>
           <textarea
             id="rejection-reason"
             v-model="rejectionReason"
             rows="3"
-            class="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-1 focus:ring-gray-900 focus:border-gray-900"
+            class="w-full px-3 py-2 border border-nautical-300 rounded-md focus:ring-1 focus:ring-gray-900 focus:border-nautical-900"
             placeholder="Explain why this request is being rejected..."
             required
           ></textarea>
@@ -147,7 +147,7 @@
         <div class="flex justify-end space-x-3">
           <button
             @click="cancelRejection"
-            class="px-4 py-2 text-sm bg-gray-100 text-gray-700 rounded-md hover:bg-gray-200 transition-colors"
+            class="px-4 py-2 text-sm bg-nautical-100 text-nautical-700 rounded-md hover:bg-nautical-200 transition-colors"
           >
             Cancel
           </button>
