@@ -93,9 +93,12 @@ export default defineNuxtConfig({
       charset: 'utf-8',
       viewport: 'width=device-width, initial-scale=1',
       link: [
-        { rel: 'icon', type: 'image/png', sizes: '32x32', href: '/favicon-small.png' },
-        { rel: 'icon', type: 'image/png', sizes: '192x192', href: '/favicon-large.png' },
-        { rel: 'apple-touch-icon', sizes: '192x192', href: '/favicon-large.png' }
+        { rel: 'icon', type: 'image/x-icon', href: '/favicon.ico' },
+        { rel: 'icon', type: 'image/png', sizes: '16x16', href: '/favicon-16x16.png' },
+        { rel: 'icon', type: 'image/png', sizes: '32x32', href: '/favicon-32x32.png' },
+        { rel: 'icon', type: 'image/png', sizes: '192x192', href: '/favicon-192x192.png' },
+        { rel: 'icon', type: 'image/png', sizes: '512x512', href: '/favicon-512x512.png' },
+        { rel: 'apple-touch-icon', sizes: '180x180', href: '/apple-touch-icon.png' }
       ]
     }
   }

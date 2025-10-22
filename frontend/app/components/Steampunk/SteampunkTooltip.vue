@@ -4,10 +4,8 @@
     :placement="placement"
     :show-delay="showDelay"
     :hide-delay="hideDelay"
-    :show-arrow="showArrow"
     :clickable="clickable"
     :tooltip-classes="tooltipClasses"
-    :arrow-classes="arrowClasses"
   >
     <template #trigger>
       <!-- ALWAYS wrap slot content with styled span and icon -->
@@ -49,10 +47,6 @@ const props = defineProps({
     type: Number,
     default: 100
   },
-  showArrow: {
-    type: Boolean,
-    default: true
-  },
   clickable: {
     type: Boolean,
     default: false
@@ -70,27 +64,13 @@ const props = defineProps({
 
 // Metallic plaque tooltip classes
 const tooltipClasses = computed(() => {
-  const base = 'steampunk-tooltip metallic-tooltip z-50 px-3 py-2 text-sm rounded shadow-lg max-w-xs'
+  const base = 'steampunk-tooltip metallic-tooltip z-50 px-3 py-2 text-sm rounded shadow-lg max-w-xs leading-relaxed'
 
   const variants = {
-    steel: 'border-nautical-700 text-nautical-50',
-    'naval-brass': 'border-accent-700 text-accent-50',
-    bronze: 'border-primary-800 text-primary-50',
+    steel: 'border-nautical-700 text-white',
+    'naval-brass': 'border-accent-700 text-white',
+    bronze: 'border-primary-800 text-white',
     gold: 'border-gold-700 text-amber-950'
-  }
-
-  return `${base} ${variants[props.variant]}`
-})
-
-// Arrow classes to match tooltip variant
-const arrowClasses = computed(() => {
-  const base = 'steampunk-arrow w-2 h-2 rotate-45'
-
-  const variants = {
-    steel: 'bg-nautical-600 border-nautical-700',
-    'naval-brass': 'bg-accent-600 border-accent-700',
-    bronze: 'bg-primary-700 border-primary-800',
-    gold: 'bg-gold-600 border-gold-700'
   }
 
   return `${base} ${variants[props.variant]}`
@@ -137,23 +117,18 @@ const arrowClasses = computed(() => {
 .steampunk-tooltip-trigger:hover .tooltip-icon {
   color: #1d4ed8; /* primary-700 */
 }
+</style>
+
+<style>
+/* UNSCOPED: Styles for teleported tooltip elements */
 
 /* Metallic tooltip styling */
-:deep(.steampunk-tooltip) {
+.steampunk-tooltip {
   border-width: 2px;
-  /* Add subtle texture */
-  background-image:
-    repeating-linear-gradient(
-      45deg,
-      transparent,
-      transparent 10px,
-      rgba(0, 0, 0, 0.02) 10px,
-      rgba(0, 0, 0, 0.02) 20px
-    );
 }
 
 /* Metallic plaque effect for tooltips */
-:deep(.metallic-tooltip) {
+.metallic-tooltip {
   box-shadow:
     inset 0 2px 4px rgba(255, 255, 255, 0.2),
     inset 0 -2px 4px rgba(0, 0, 0, 0.4),
@@ -161,26 +136,60 @@ const arrowClasses = computed(() => {
 }
 
 /* Variant-specific metallic backgrounds for tooltips */
-:deep(.metallic-tooltip.border-nautical-700) {
-  background: linear-gradient(145deg, #475569 0%, #64748b 50%, #475569 100%);
+.metallic-tooltip.border-nautical-700 {
+  background:
+    repeating-linear-gradient(
+      45deg,
+      rgba(255, 255, 255, 0.05),
+      rgba(255, 255, 255, 0.05) 10px,
+      rgba(0, 0, 0, 0.05) 10px,
+      rgba(0, 0, 0, 0.05) 20px
+    ),
+    linear-gradient(145deg, #475569 0%, #64748b 50%, #475569 100%);
 }
 
-:deep(.metallic-tooltip.border-accent-700) {
-  background: linear-gradient(145deg, #0891b2 0%, #06b6d4 50%, #0891b2 100%);
+.metallic-tooltip.border-accent-700 {
+  background:
+    repeating-linear-gradient(
+      45deg,
+      rgba(255, 255, 255, 0.05),
+      rgba(255, 255, 255, 0.05) 10px,
+      rgba(0, 0, 0, 0.05) 10px,
+      rgba(0, 0, 0, 0.05) 20px
+    ),
+    linear-gradient(145deg, #0891b2 0%, #06b6d4 50%, #0891b2 100%);
 }
 
-:deep(.metallic-tooltip.border-primary-800) {
-  background: linear-gradient(145deg, #1d4ed8 0%, #2563eb 50%, #1d4ed8 100%);
+.metallic-tooltip.border-primary-800 {
+  background:
+    repeating-linear-gradient(
+      45deg,
+      rgba(255, 255, 255, 0.05),
+      rgba(255, 255, 255, 0.05) 10px,
+      rgba(0, 0, 0, 0.05) 10px,
+      rgba(0, 0, 0, 0.05) 20px
+    ),
+    linear-gradient(145deg, #1d4ed8 0%, #2563eb 50%, #1d4ed8 100%);
 }
 
-:deep(.metallic-tooltip.border-gold-700) {
-  background: linear-gradient(145deg, #ca8a04 0%, #eab308 50%, #ca8a04 100%);
+.metallic-tooltip.border-gold-700 {
+  background:
+    repeating-linear-gradient(
+      45deg,
+      rgba(255, 255, 255, 0.05),
+      rgba(255, 255, 255, 0.05) 10px,
+      rgba(0, 0, 0, 0.05) 10px,
+      rgba(0, 0, 0, 0.05) 20px
+    ),
+    linear-gradient(145deg, #eab308 0%, #fbbf24 50%, #eab308 100%);
 }
 
-/* Arrow positioning and styling */
-:deep(.steampunk-arrow) {
-  position: absolute;
-  border-left: 1px solid currentColor;
-  border-top: 1px solid currentColor;
+/* Ensure tooltip content has proper spacing and doesn't clip */
+.metallic-tooltip p:first-child {
+  margin-top: 0;
+}
+
+.metallic-tooltip p:last-child {
+  margin-bottom: 0;
 }
 </style>

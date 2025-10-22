@@ -31,24 +31,13 @@ export function useTooltip(options = {}) {
   const tooltipId = ref(`tooltip-${Math.random().toString(36).substr(2, 9)}`)
 
   // Floating UI positioning
-  const { floatingStyles, middlewareData } = useFloating(reference, floating, {
+  const { floatingStyles } = useFloating(reference, floating, {
     placement,
     middleware: [
       offset(offsetDistance),
       flip(),
-      shift({ padding: 5 })
+      shift({ padding: 10 }) // Prevent viewport clipping
     ]
-  })
-
-  // Arrow positioning (if using an arrow)
-  const arrowStyles = computed(() => {
-    if (!middlewareData.value?.arrow) return {}
-
-    const { x, y } = middlewareData.value.arrow
-    return {
-      left: x != null ? `${x}px` : '',
-      top: y != null ? `${y}px` : '',
-    }
   })
 
   // Show with delay
@@ -150,7 +139,6 @@ export function useTooltip(options = {}) {
 
     // Computed
     floatingStyles,
-    arrowStyles,
     triggerAttrs,
     tooltipAttrs,
 

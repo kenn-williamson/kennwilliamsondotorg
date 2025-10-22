@@ -27,13 +27,6 @@
           @mouseenter="handleTooltipMouseEnter"
           @mouseleave="handleTooltipMouseLeave"
         >
-          <!-- Arrow (optional) -->
-          <div
-            v-if="showArrow"
-            ref="arrow"
-            :class="arrowClasses"
-          ></div>
-
           <!-- Tooltip content -->
           <slot name="content">
             <div v-if="text">{{ text }}</div>
@@ -65,15 +58,7 @@ const props = defineProps({
     type: Number,
     default: 100
   },
-  showArrow: {
-    type: Boolean,
-    default: true
-  },
   tooltipClasses: {
-    type: String,
-    default: ''
-  },
-  arrowClasses: {
     type: String,
     default: ''
   },

@@ -6,9 +6,17 @@
         <div class="flex-shrink-0">
           <NuxtLink
             to="/"
-            class="text-2xl font-bold text-primary-100 hover:text-accent-300 transition-colors duration-200"
+            class="flex items-center gap-3 group"
           >
-            KennWilliamson
+            <img
+              src="~/assets/images/logo-48h.png"
+              srcset="~/assets/images/logo-48h.png 1x, ~/assets/images/logo-96h.png 2x"
+              alt="KennWilliamson Logo"
+              class="h-12 w-auto transition-transform duration-200 group-hover:scale-105"
+            />
+            <span class="text-2xl font-bold text-primary-100 group-hover:text-accent-300 transition-colors duration-200">
+              KennWilliamson
+            </span>
           </NuxtLink>
         </div>
 
