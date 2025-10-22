@@ -48,15 +48,20 @@ const timers = computed(() => {
 
 .history-section {
   @apply border-t pt-6;
+  border-color: rgba(139, 69, 19, 0.2);
 }
 
 .section-title {
-  @apply text-xl font-semibold text-gray-900 mb-4;
+  @apply text-xl font-semibold mb-4;
+  color: #5d3820;
+  font-family: Georgia, serif;
+  text-shadow: 0 1px 1px rgba(255, 255, 255, 0.5);
 }
 
 .loading-state,
 .empty-state {
   @apply text-center py-8;
+  color: #8B6914;
 }
 
 .timer-list {

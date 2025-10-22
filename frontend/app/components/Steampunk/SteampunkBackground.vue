@@ -28,16 +28,16 @@
         <svg viewBox="0 0 80 80" class="gear-svg">
           <defs>
             <radialGradient id="gearGradient2" cx="30%" cy="30%">
-              <stop offset="0%" style="stop-color:#B8860B"/>
-              <stop offset="40%" style="stop-color:#DAA520"/>
-              <stop offset="100%" style="stop-color:#B8860B"/>
+              <stop offset="0%" style="stop-color:#94a3b8"/>
+              <stop offset="40%" style="stop-color:#64748b"/>
+              <stop offset="100%" style="stop-color:#475569"/>
             </radialGradient>
           </defs>
-          <path d="M40 8 L44 4 L48 8 L52 4 L56 8 L60 12 L64 8 L68 12 L72 16 L76 20 L72 24 L76 28 L72 32 L68 36 L72 40 L68 44 L64 48 L68 52 L64 56 L60 60 L56 64 L60 68 L56 72 L52 68 L48 72 L44 68 L40 72 L36 68 L32 72 L28 68 L24 72 L20 68 L16 64 L12 60 L8 56 L12 52 L8 48 L12 44 L8 40 L12 36 L8 32 L12 28 L8 24 L12 20 L16 16 L20 12 L24 8 L20 4 L24 8 L28 4 L32 8 L36 4 Z" 
-                fill="url(#gearGradient2)" 
-                stroke="#8B4513" 
+          <path d="M40 8 L44 4 L48 8 L52 4 L56 8 L60 12 L64 8 L68 12 L72 16 L76 20 L72 24 L76 28 L72 32 L68 36 L72 40 L68 44 L64 48 L68 52 L64 56 L60 60 L56 64 L60 68 L56 72 L52 68 L48 72 L44 68 L40 72 L36 68 L32 72 L28 68 L24 72 L20 68 L16 64 L12 60 L8 56 L12 52 L8 48 L12 44 L8 40 L12 36 L8 32 L12 28 L8 24 L12 20 L16 16 L20 12 L24 8 L20 4 L24 8 L28 4 L32 8 L36 4 Z"
+                fill="url(#gearGradient2)"
+                stroke="#334155"
                 stroke-width="1"/>
-          <circle cx="40" cy="40" r="12" fill="#654321" stroke="#8B4513" stroke-width="1"/>
+          <circle cx="40" cy="40" r="12" fill="#1e293b" stroke="#334155" stroke-width="1"/>
         </svg>
       </div>
       
@@ -64,16 +64,16 @@
         <svg viewBox="0 0 50 50" class="gear-svg">
           <defs>
             <radialGradient id="gearGradient4" cx="30%" cy="30%">
-              <stop offset="0%" style="stop-color:#B8860B"/>
-              <stop offset="40%" style="stop-color:#DAA520"/>
-              <stop offset="100%" style="stop-color:#B8860B"/>
+              <stop offset="0%" style="stop-color:#cbd5e1"/>
+              <stop offset="40%" style="stop-color:#94a3b8"/>
+              <stop offset="100%" style="stop-color:#64748b"/>
             </radialGradient>
           </defs>
-          <path d="M25 5 L27 3 L29 5 L31 3 L33 5 L35 7 L37 5 L39 7 L41 9 L43 11 L41 13 L43 15 L41 17 L39 19 L41 21 L39 23 L37 25 L39 27 L37 29 L35 31 L33 33 L35 35 L33 37 L31 35 L29 37 L27 35 L25 37 L23 35 L21 37 L19 35 L17 37 L15 35 L13 33 L11 31 L9 29 L11 27 L9 25 L11 23 L9 21 L11 19 L9 17 L11 15 L9 13 L11 11 L13 9 L15 7 L17 5 L15 3 L17 5 L19 3 L21 5 L23 3 Z" 
-                fill="url(#gearGradient4)" 
-                stroke="#8B4513" 
+          <path d="M25 5 L27 3 L29 5 L31 3 L33 5 L35 7 L37 5 L39 7 L41 9 L43 11 L41 13 L43 15 L41 17 L39 19 L41 21 L39 23 L37 25 L39 27 L37 29 L35 31 L33 33 L35 35 L33 37 L31 35 L29 37 L27 35 L25 37 L23 35 L21 37 L19 35 L17 37 L15 35 L13 33 L11 31 L9 29 L11 27 L9 25 L11 23 L9 21 L11 19 L9 17 L11 15 L9 13 L11 11 L13 9 L15 7 L17 5 L15 3 L17 5 L19 3 L21 5 L23 3 Z"
+                fill="url(#gearGradient4)"
+                stroke="#475569"
                 stroke-width="1"/>
-          <circle cx="25" cy="25" r="6" fill="#654321" stroke="#8B4513" stroke-width="1"/>
+          <circle cx="25" cy="25" r="6" fill="#334155" stroke="#475569" stroke-width="1"/>
         </svg>
       </div>
       
@@ -126,12 +126,12 @@
   left: 0;
   width: 100%;
   height: 100%;
-  
-  /* Subtle overlay for depth and atmosphere */
-  background: 
+
+  /* Subtle overlay for depth and atmosphere - nautical blue tones */
+  background:
     radial-gradient(circle at 30% 30%, rgba(0, 0, 0, 0.1) 0%, transparent 60%),
-    radial-gradient(circle at 70% 70%, rgba(139, 69, 19, 0.08) 0%, transparent 50%);
-  
+    radial-gradient(circle at 70% 70%, rgba(30, 58, 138, 0.08) 0%, transparent 50%);
+
   opacity: 0.3;
 }
 

@@ -119,7 +119,7 @@
 
     <p>
       This isn't a temporary limitation that will be fixed in the next model.
-      <SteampunkTooltip variant="parchment">
+      <SteampunkTooltip variant="steel">
         <template #content>
           Academic research has proven that hallucination is an inevitable, innate limitation of GMs.
           Even with larger training sets, structural hallucinations cannot be eliminated.
@@ -137,7 +137,7 @@
 
     <p>
       Even more concerning:
-      <SteampunkTooltip variant="parchment">
+      <SteampunkTooltip variant="steel">
         <template #content>
           Anthropic's research on Claude 3.5 showed that "the steps Claude used to solve problems
           were not what we expected—they're also not the steps that Claude claimed it took, providing

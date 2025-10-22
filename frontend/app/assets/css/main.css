@@ -2,4 +2,26 @@
 @tailwind components;
 @tailwind utilities;
 
+/* ==========================================================================
+   SEMANTIC COLOR SYSTEM - Design Tokens
+   Nautical Steampunk Theme with Blue/Silver/Gold Palette
+
+   Colors are defined in tailwind.config.ts for Tailwind CSS v3 compatibility.
+
+   Color Palette:
+   - PRIMARY: Blue spectrum for trust & professionalism (primary-50 through primary-900)
+   - ACCENT: Cyan for nautical steampunk feel (accent-50 through accent-700)
+   - NAUTICAL: Slate/steel tones for industrial aesthetic (nautical-50 through nautical-900)
+   - GOLD: Premium accents, use sparingly (gold-50 through gold-600)
+
+   Usage in components:
+   - Use semantic color names: primary-*, accent-*, nautical-*, gold-*
+   - Avoid raw Tailwind colors (blue-*, slate-*, etc.) for consistency
+   - Refer to COLOR-MIGRATION-GUIDE.md for detailed usage patterns
+
+   To change the theme:
+   - Edit the color values in tailwind.config.ts
+   - All components will automatically update
+   ========================================================================== */
+
 /* Custom styles can be added here */

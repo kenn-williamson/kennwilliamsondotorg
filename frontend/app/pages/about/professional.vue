@@ -112,9 +112,11 @@
 
     <p>That company was SEQTEK, I joined in 2018 and I've been there ever since.</p>
 
-    <div class="photo-placeholder">
-      Photo: Coding Dojo graduation or early SEQTEK days
-    </div>
+    <img
+      src="~/assets/images/early-seqtek-photo.jpg"
+      alt="Early SEQTEK team photo"
+      class="w-full max-w-2xl mx-auto rounded-lg shadow-lg my-6"
+    />
 
     <h2>The SEQTEK Journey: Years of Growth</h2>
 

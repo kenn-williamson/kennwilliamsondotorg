@@ -1,12 +1,12 @@
 <template>
-  <header class="sticky top-0 z-50 bg-white/95 backdrop-blur-sm border-b border-sky-200 shadow-sm">
+  <header class="sticky top-0 z-50 bg-nautical-900/80 backdrop-blur-md border-b-2 border-nautical-600/50 shadow-lg nautical-header">
     <nav class="container mx-auto px-4 sm:px-6 lg:px-8">
       <div class="flex items-center justify-between h-16">
         <!-- Logo/Site Name (Left) -->
         <div class="flex-shrink-0">
-          <NuxtLink 
-            to="/" 
-            class="text-2xl font-bold text-sky-800 hover:text-sky-600 transition-colors duration-200"
+          <NuxtLink
+            to="/"
+            class="text-2xl font-bold text-primary-100 hover:text-accent-300 transition-colors duration-200"
           >
             KennWilliamson
           </NuxtLink>
@@ -36,9 +36,9 @@
         <div class="hidden md:flex items-center space-x-4">
           <!-- Authenticated State -->
           <div v-if="loggedIn" class="relative">
-            <button 
+            <button
               @click="toggleUserMenu"
-              class="flex items-center justify-center w-10 h-10 rounded-full bg-sky-600 text-white font-medium hover:bg-sky-700 transition-colors duration-200"
+              class="flex items-center justify-center w-10 h-10 rounded-full bg-gradient-to-br from-nautical-600 to-primary-700 text-accent-100 font-medium hover:from-nautical-500 hover:to-primary-600 transition-all duration-200 ring-2 ring-nautical-500/50 hover:ring-accent-400/50"
               :aria-expanded="showUserMenu"
               aria-haspopup="true"
             >
@@ -76,15 +76,15 @@
 
           <!-- Unauthenticated State -->
           <div v-else class="flex items-center space-x-3">
-            <NuxtLink 
-              to="/login" 
-              class="px-4 py-2 text-sm font-medium text-sky-700 hover:text-sky-600 transition-colors duration-200"
+            <NuxtLink
+              to="/login"
+              class="px-4 py-2 text-sm font-medium text-nautical-200 hover:text-accent-300 transition-colors duration-200"
             >
               Sign In
             </NuxtLink>
-            <NuxtLink 
-              to="/register" 
-              class="px-4 py-2 text-sm font-medium bg-sky-600 text-white rounded-md hover:bg-sky-700 transition-colors duration-200"
+            <NuxtLink
+              to="/register"
+              class="px-4 py-2 text-sm font-medium bg-gradient-to-r from-primary-600 to-accent-600 text-white rounded-md hover:from-primary-500 hover:to-accent-500 transition-all duration-200 shadow-lg hover:shadow-accent-500/50"
             >
               Register
             </NuxtLink>
@@ -93,9 +93,9 @@
 
         <!-- Mobile Menu Button -->
         <div class="md:hidden">
-          <button 
+          <button
             @click="toggleMobileMenu"
-            class="p-2 rounded-md text-sky-700 hover:text-sky-600 hover:bg-sky-50 transition-colors duration-200"
+            class="p-2 rounded-md text-nautical-200 hover:text-accent-300 hover:bg-nautical-800/50 transition-colors duration-200"
             :aria-expanded="showMobileMenu"
             aria-label="Toggle menu"
           >
@@ -120,7 +120,7 @@
       </div>
 
       <!-- Mobile Menu -->
-      <div v-if="showMobileMenu" class="md:hidden border-t border-sky-200 mt-2 pt-4 pb-4">
+      <div v-if="showMobileMenu" class="md:hidden border-t border-nautical-600/50 mt-2 pt-4 pb-4 bg-nautical-800/30">
         <div class="flex flex-col space-y-3">
           <!-- Navigation Links -->
           <NuxtLink 
@@ -137,13 +137,14 @@
           >
             Incidents
           </NuxtLink>
-          
-          <hr class="border-sky-200 my-2">
-          
+
+
+          <hr class="border-nautical-600/50 my-2">
+
           <!-- Authentication Links -->
           <div v-if="loggedIn" class="flex flex-col space-y-3">
-            <div class="px-3 py-2 text-sm text-gray-600">
-              Signed in as <span class="font-medium">{{ user?.email }}</span>
+            <div class="px-3 py-2 text-sm text-slate-300">
+              Signed in as <span class="font-medium text-accent-300">{{ user?.email }}</span>
             </div>
             <button 
               @click="goToAccountSettings"
@@ -256,15 +257,82 @@ onMounted(() => {
 </script>
 
 <style scoped>
+/* Nautical steampunk geometric pattern overlay */
+.nautical-header::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-image:
+    repeating-linear-gradient(
+      90deg,
+      transparent,
+      transparent 20px,
+      rgba(148, 163, 184, 0.03) 20px,
+      rgba(148, 163, 184, 0.03) 40px
+    ),
+    repeating-linear-gradient(
+      0deg,
+      transparent,
+      transparent 20px,
+      rgba(148, 163, 184, 0.03) 20px,
+      rgba(148, 163, 184, 0.03) 40px
+    );
+  pointer-events: none;
+  z-index: -1;
+}
+
+/* Metallic gradient border effect */
+.nautical-header::after {
+  content: '';
+  position: absolute;
+  bottom: -2px;
+  left: 0;
+  right: 0;
+  height: 2px;
+  background: linear-gradient(
+    90deg,
+    rgba(71, 85, 105, 0.5),
+    rgba(59, 130, 246, 0.6),
+    rgba(148, 163, 184, 0.7),
+    rgba(59, 130, 246, 0.6),
+    rgba(71, 85, 105, 0.5)
+  );
+  pointer-events: none;
+}
+
 .nav-link {
-  @apply px-3 py-2 text-sm font-medium text-gray-700 hover:text-sky-600 transition-colors duration-200;
+  @apply px-3 py-2 text-sm font-medium text-nautical-200 hover:text-accent-300 transition-all duration-200;
+  position: relative;
+}
+
+.nav-link::after {
+  content: '';
+  position: absolute;
+  bottom: 0;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 0;
+  height: 2px;
+  background: linear-gradient(90deg, transparent, #67e8f9, transparent);
+  transition: width 0.3s ease;
+}
+
+.nav-link:hover::after {
+  width: 80%;
 }
 
 .nav-link-active {
-  @apply text-sky-600;
+  @apply text-accent-300;
+}
+
+.nav-link-active::after {
+  width: 80%;
 }
 
 .mobile-nav-link {
-  @apply block px-3 py-2 text-base font-medium text-gray-700 hover:text-sky-600 hover:bg-sky-50 rounded-md transition-colors duration-200;
+  @apply block px-3 py-2 text-base font-medium text-nautical-200 hover:text-accent-300 hover:bg-nautical-700/50 rounded-md transition-colors duration-200;
 }
 </style>

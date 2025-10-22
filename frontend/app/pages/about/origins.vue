@@ -202,7 +202,7 @@
 
     <SteampunkAccordion
       title="Understanding Neurodivergence and Labels"
-      variant="mahogany"
+      variant="bronze"
     >
       <div class="space-y-3">
         <p>

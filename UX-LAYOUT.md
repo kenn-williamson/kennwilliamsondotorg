@@ -15,11 +15,84 @@
 - **About Me:** Frontier/Nature with Japanese traditional influences
 - **Future Features:** Rotate through aesthetic themes as appropriate
 
-### Color Palette
-- **Primary:** Sky Blue (#87CEEB family)
-- **Accent Metals:** Gold (#FFD700 family) and Silver (#C0C0C0 family)
-- **Supporting:** Rich, muted earth tones and deep blues
-- **Text:** High contrast for readability while maintaining aesthetic
+### Implemented Theme: Nautical Steampunk
+- **Color Psychology:** Blue/cyan for trust and professionalism
+- **Metallic Elements:** Silver/steel industrial accents
+- **Reserved Warm Tones:** Gold accents for premium/special features only
+- **Warm Steampunk:** Reserved for Incidents feature (brass/copper/mahogany aesthetic)
+
+### Color Palette & Semantic Design Tokens
+
+#### Semantic Color System
+The site uses a semantic color token system defined in `frontend/app/assets/css/main.css` using Tailwind's `@theme` directive. This enables theme-wide color changes from a single source of truth.
+
+#### Color Families
+
+**Primary (Blue Spectrum - Trust & Professionalism)**
+- `primary-50` through `primary-900` (Tailwind blue family)
+- Usage: Buttons, CTAs, links, headings, strong text emphasis
+- Key shades: `primary-600` (#2563eb), `primary-700` (#1d4ed8)
+
+**Accent (Cyan - Nautical Highlights)**
+- `accent-50` through `accent-700` (Tailwind cyan family)
+- Usage: Interactive highlights, hover states, accent elements
+- Key shades: `accent-300` (#67e8f9), `accent-400` (#22d3ee), `accent-500` (#06b6d4)
+
+**Nautical (Slate/Steel - Industrial Aesthetic)**
+- `nautical-50` through `nautical-900` (Tailwind slate family)
+- Usage: Dark backgrounds, borders, industrial styling
+- Key shades: `nautical-900` (#0f172a), `nautical-800` (#1e293b), `nautical-600` (#475569)
+
+**Gold (Premium Accents - Sparingly Used)**
+- `gold-50` through `gold-600` (Tailwind yellow/amber family)
+- Usage: Premium features, special emphasis only
+- Key shades: `gold-400` (#fbbf24), `gold-500` (#f59e0b)
+
+#### Semantic Aliases (Recommended Usage)
+```css
+/* Text Colors */
+text-text-primary      /* Primary narrative text */
+text-text-secondary    /* Supporting text */
+text-text-muted        /* Disabled/muted text */
+text-text-link         /* Interactive links */
+
+/* Backgrounds */
+bg-surface-base        /* Primary white/light background */
+bg-surface-elevated    /* Card/panel backgrounds */
+
+/* Borders */
+border-border-light    /* Subtle borders */
+border-border-accent   /* Accent emphasis borders */
+
+/* Interactive States */
+interactive-default    /* Button normal state */
+interactive-hover      /* Button hover state */
+interactive-active     /* Button active state */
+```
+
+#### Implementation Notes
+- All core components use semantic tokens exclusively
+- Theme changes require editing only `app/assets/css/main.css`
+- No component files need modification for theme updates
+- See `COLOR-MIGRATION-GUIDE.md` for migration patterns
+
+### Design Token Philosophy
+
+**Single Source of Truth:**
+- All colors defined in `frontend/app/assets/css/main.css`
+- Components reference semantic tokens, not raw colors
+- Theme-wide changes without touching component files
+
+**Three-Tier Token Hierarchy:**
+1. **Semantic Aliases** (Preferred): `text-text-link`, `bg-surface-elevated`
+2. **Named Color Families**: `primary-600`, `accent-300`, `nautical-900`
+3. **Raw Tailwind Colors** (Avoid): `blue-600`, `cyan-300`, `slate-900`
+
+**Benefits:**
+- Maintainability: Single file to update for theme changes
+- Consistency: Uniform naming across codebase
+- Scalability: Easy to add variants or switch themes
+- Future-proof: Following Tailwind CSS 4+ best practices
 
 ### Typography Hierarchy
 - **Headers:** Ornate, decorative treatment reflecting section aesthetic
@@ -153,6 +226,23 @@
 - **Controls:** Intuitive start/stop/reset interface
 - **Management:** CRUD interface for authenticated users
 - **Public View:** Clean, distraction-free public display
+
+### Accordion & Tooltip Components
+- **Metallic Plaque Styling:** 3D inset shadow effects for depth
+- **Variants:** Steel (default), Naval Brass (cyan), Bronze (blue), Gold (premium)
+- **Visual Effect:** Gradient backgrounds with highlight/shadow layers
+- **Usage:** Primarily in About pages for expandable content and contextual information
+- **Accessibility:** Full keyboard support, ARIA attributes, screen reader friendly
+- **Base Components:** BaseAccordion.vue and BaseTooltip.vue provide unstyled functionality
+- **Styled Components:** SteampunkAccordion.vue and SteampunkTooltip.vue add nautical theme
+
+### Footer Component
+- **Nautical Theme:** Matches header with dark slate gradients
+- **Geometric Pattern:** Repeating grid overlay (20px intervals)
+- **Metallic Border:** Gradient top border effect
+- **Content:** Copyright, GitHub badge, legal links
+- **Responsive:** Stacks vertically on mobile
+- **GitHub Badge:** Links to open-source repository with hover effects
 
 ## User Experience Flows
 

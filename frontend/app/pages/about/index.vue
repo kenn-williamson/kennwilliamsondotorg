@@ -44,7 +44,7 @@
       about it.
     </p>
 
-    <hr class="my-8 border-amber-300" />
+    <hr class="my-8 border-blue-300" />
 
     <h2>The Arc</h2>
 
@@ -113,7 +113,7 @@
               href="https://www.autismspeaks.org/levels-of-autism"
               target="_blank"
               rel="noopener noreferrer"
-              class="text-amber-800 hover:text-amber-900 underline font-semibold"
+              class="text-blue-800 hover:text-blue-900 underline font-semibold"
             >
               Learn more at Autism Speaks →
             </a>
@@ -166,7 +166,7 @@
       comfort.
     </p>
 
-    <hr class="my-8 border-amber-300" />
+    <hr class="my-8 border-blue-300" />
 
     <h2>What You'll Find Here</h2>
 
@@ -179,7 +179,7 @@
       <li v-if="hasTrustedContactAccess">
         <NuxtLink
           to="/about/origins"
-          class="font-semibold text-amber-700 hover:text-amber-900"
+          class="font-semibold text-blue-700 hover:text-blue-900"
         >
           Origins
         </NuxtLink>: Family background, the grandparents who shaped me, education struggles, and
@@ -188,7 +188,7 @@
       <li v-if="hasTrustedContactAccess">
         <NuxtLink
           to="/about/wilderness"
-          class="font-semibold text-amber-700 hover:text-amber-900"
+          class="font-semibold text-blue-700 hover:text-blue-900"
         >
           The Wilderness
         </NuxtLink>: College failures, my mother's death, the lost years, becoming a father while
@@ -197,7 +197,7 @@
       <li v-if="hasTrustedContactAccess">
         <NuxtLink
           to="/about/faith"
-          class="font-semibold text-amber-700 hover:text-amber-900"
+          class="font-semibold text-blue-700 hover:text-blue-900"
         >
           Finding Faith
         </NuxtLink>: From childhood religion through atheism to discovering the Church Fathers, and
@@ -206,7 +206,7 @@
       <li v-if="hasTrustedContactAccess">
         <NuxtLink
           to="/about/theology"
-          class="font-semibold text-amber-700 hover:text-amber-900"
+          class="font-semibold text-blue-700 hover:text-blue-900"
         >
           Theology & Practice
         </NuxtLink>: Mimetic theory, the non-sacrificial reading of the Gospel, and what Christian
@@ -215,7 +215,7 @@
       <li>
         <NuxtLink
           to="/about/professional"
-          class="font-semibold text-amber-700 hover:text-amber-900"
+          class="font-semibold text-blue-700 hover:text-blue-900"
         >
           Professional Path
         </NuxtLink>: Engineering to software, the SEQTEK story, and my problem-solving approach
@@ -223,7 +223,7 @@
       <li>
         <NuxtLink
           to="/about/ai"
-          class="font-semibold text-amber-700 hover:text-amber-900"
+          class="font-semibold text-blue-700 hover:text-blue-900"
         >
           From AI to IA
         </NuxtLink>: Why both AI hype and skepticism miss the point—Intelligence Augmentation amplifies human capabilities rather than replacing them
@@ -231,7 +231,7 @@
       <li v-if="hasTrustedContactAccess">
         <NuxtLink
           to="/about/now"
-          class="font-semibold text-amber-700 hover:text-amber-900"
+          class="font-semibold text-blue-700 hover:text-blue-900"
         >
           Life Now
         </NuxtLink>: Single dad reality, three kids with very different needs, church community,
@@ -240,7 +240,7 @@
       <li v-if="hasTrustedContactAccess">
         <NuxtLink
           to="/about/vision"
-          class="font-semibold text-amber-700 hover:text-amber-900"
+          class="font-semibold text-blue-700 hover:text-blue-900"
         >
           Philosophy & Vision
         </NuxtLink>: Core values, political-economic views, legacy hopes, and advice I wish I'd
@@ -248,7 +248,7 @@
       </li>
     </ul>
 
-    <hr class="my-8 border-amber-300" />
+    <hr class="my-8 border-blue-300" />
 
     <h2>A Note on Tone</h2>
 

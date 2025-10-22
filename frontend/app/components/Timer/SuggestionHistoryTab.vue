@@ -221,6 +221,9 @@ const formatDate = (dateString: string) => {
 <style scoped>
 .suggestion-history-tab {
   @apply p-6;
+  background: linear-gradient(145deg, #f5f0e8 0%, #faf7f0 50%, #f5f0e8 100%);
+  border-radius: 0 0 8px 8px;
+  box-shadow: inset 0 2px 4px rgba(139, 69, 19, 0.1);
 }
 
 .tab-content {
@@ -232,11 +235,14 @@ const formatDate = (dateString: string) => {
 }
 
 .section-title {
-  @apply text-xl font-semibold text-gray-900 mb-2;
+  @apply text-xl font-semibold mb-2;
+  color: #5d3820;
+  font-family: Georgia, serif;
+  text-shadow: 0 1px 1px rgba(255, 255, 255, 0.5);
 }
 
 .section-description {
-  @apply text-gray-600;
+  color: #8B6914;
 }
 
 .filter-controls {
@@ -248,12 +254,21 @@ const formatDate = (dateString: string) => {
 }
 
 .filter-label {
-  @apply text-sm font-medium text-gray-700;
+  @apply text-sm font-medium;
+  color: #5d3820;
 }
 
 .filter-select {
-  @apply px-3 py-2 border border-gray-300 rounded-md shadow-sm
-         focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500;
+  @apply px-3 py-2 rounded-md shadow-sm;
+  background: rgba(255, 255, 255, 0.9);
+  border: 2px solid rgba(139, 69, 19, 0.3);
+  color: #3c2414;
+}
+
+.filter-select:focus {
+  @apply outline-none;
+  border-color: #B8860B;
+  box-shadow: 0 0 0 3px rgba(184, 134, 11, 0.1);
 }
 
 .search-box {
@@ -261,13 +276,22 @@ const formatDate = (dateString: string) => {
 }
 
 .search-input {
-  @apply w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm
-         focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500;
+  @apply w-full px-3 py-2 rounded-md shadow-sm;
+  background: rgba(255, 255, 255, 0.9);
+  border: 2px solid rgba(139, 69, 19, 0.3);
+  color: #3c2414;
+}
+
+.search-input:focus {
+  @apply outline-none;
+  border-color: #B8860B;
+  box-shadow: 0 0 0 3px rgba(184, 134, 11, 0.1);
 }
 
 .loading-state,
 .empty-state {
   @apply text-center py-8;
+  color: #8B6914;
 }
 
 .suggestions-list {
@@ -275,7 +299,9 @@ const formatDate = (dateString: string) => {
 }
 
 .suggestion-item {
-  @apply bg-white border border-gray-200 rounded-lg p-4;
+  @apply rounded-lg p-4;
+  background: rgba(255, 255, 255, 0.7);
+  border: 2px solid rgba(139, 69, 19, 0.2);
 }
 
 .suggestion-content {
@@ -287,7 +313,8 @@ const formatDate = (dateString: string) => {
 }
 
 .suggestion-text {
-  @apply text-gray-900 font-medium text-lg flex-1;
+  @apply font-medium text-lg flex-1;
+  color: #3c2414;
 }
 
 .suggestion-status {
@@ -307,7 +334,8 @@ const formatDate = (dateString: string) => {
 }
 
 .suggestion-meta {
-  @apply flex flex-wrap gap-4 text-sm text-gray-600;
+  @apply flex flex-wrap gap-4 text-sm;
+  color: #8B6914;
 }
 
 .meta-item {
@@ -319,19 +347,23 @@ const formatDate = (dateString: string) => {
 }
 
 .meta-value {
-  @apply text-gray-500;
+  color: #8B6914;
 }
 
 .admin-feedback {
-  @apply bg-gray-50 p-3 rounded border-l-4 border-blue-200;
+  @apply p-3 rounded border-l-4;
+  background: rgba(255, 255, 255, 0.8);
+  border-color: #B8860B;
 }
 
 .feedback-header {
-  @apply text-sm font-medium text-gray-700 mb-1;
+  @apply text-sm font-medium mb-1;
+  color: #5d3820;
 }
 
 .feedback-content {
-  @apply text-sm text-gray-600;
+  @apply text-sm;
+  color: #5d3820;
 }
 
 .action-buttons {
@@ -344,10 +376,18 @@ const formatDate = (dateString: string) => {
 }
 
 .action-button.edit {
-  @apply bg-blue-100 text-blue-700 hover:bg-blue-200;
+  @apply bg-blue-100 text-blue-700;
+}
+
+.action-button.edit:hover:not(:disabled) {
+  @apply bg-blue-200;
 }
 
 .action-button.delete {
-  @apply bg-red-100 text-red-700 hover:bg-red-200;
+  @apply bg-red-100 text-red-700;
+}
+
+.action-button.delete:hover:not(:disabled) {
+  @apply bg-red-200;
 }
 </style>

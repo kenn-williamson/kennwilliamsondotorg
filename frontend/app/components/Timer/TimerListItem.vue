@@ -1,25 +1,25 @@
 <template>
-  <div class="p-6 hover:bg-blue-50/50 transition-colors duration-200">
+  <div class="timer-item p-6 transition-colors duration-200">
     <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
       <div>
-        <p class="font-medium text-gray-900">
+        <p class="timer-timestamp font-medium">
           Started: {{ formatDate(timer.reset_timestamp) }}
         </p>
-        <p v-if="timer.notes" class="text-gray-600 text-sm mt-1">
+        <p v-if="timer.notes" class="timer-notes text-sm mt-1">
           {{ timer.notes }}
         </p>
-        <p class="text-xs text-gray-500 mt-1">
+        <p class="timer-created text-xs mt-1">
           Created {{ formatDate(timer.created_at) }}
         </p>
       </div>
       <div class="flex items-center gap-3">
-        <span class="font-mono text-lg font-medium text-blue-600">
+        <span class="timer-elapsed font-mono text-lg font-medium">
           {{ elapsedTimeDisplay }}
         </span>
         <div class="flex gap-2">
           <button
             @click="handleEditTimer"
-            class="p-2 text-gray-500 hover:text-blue-600 hover:bg-blue-100 rounded-md transition-colors duration-200"
+            class="action-button edit-button p-2 rounded-md transition-colors duration-200"
             title="Edit timer"
           >
             <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -28,7 +28,7 @@
           </button>
           <button
             @click="handleDeleteTimer"
-            class="p-2 text-gray-500 hover:text-red-600 hover:bg-red-100 rounded-md transition-colors duration-200"
+            class="action-button delete-button p-2 rounded-md transition-colors duration-200"
             title="Delete timer"
           >
             <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -108,3 +108,45 @@ const handleDeleteTimer = async () => {
   }
 }
 </script>
+
+<style scoped>
+.timer-item {
+  border-radius: 8px;
+  border: 1px solid rgba(139, 69, 19, 0.2);
+}
+
+.timer-item:hover {
+  background: rgba(255, 255, 255, 0.4);
+}
+
+.timer-timestamp {
+  color: #3c2414;
+}
+
+.timer-notes {
+  color: #5d3820;
+}
+
+.timer-created {
+  color: #8B6914;
+}
+
+.timer-elapsed {
+  color: #B8860B;
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.1);
+}
+
+.action-button {
+  color: #8B6914;
+}
+
+.edit-button:hover {
+  color: #B8860B;
+  background: rgba(184, 134, 11, 0.1);
+}
+
+.delete-button:hover {
+  color: #dc2626;
+  background: rgba(220, 38, 38, 0.1);
+}
+</style>

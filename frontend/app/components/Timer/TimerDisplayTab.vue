@@ -95,6 +95,9 @@ const getUserSlug = async (): Promise<string | null> => {
 <style scoped>
 .timer-display-tab {
   @apply p-6;
+  background: linear-gradient(145deg, #f5f0e8 0%, #faf7f0 50%, #f5f0e8 100%);
+  border-radius: 0 0 8px 8px;
+  box-shadow: inset 0 2px 4px rgba(139, 69, 19, 0.1);
 }
 
 .tab-content {
@@ -106,7 +109,10 @@ const getUserSlug = async (): Promise<string | null> => {
 }
 
 .section-title {
-  @apply text-xl font-semibold text-gray-900 mb-4;
+  @apply text-xl font-semibold mb-4;
+  color: #5d3820;
+  font-family: Georgia, serif;
+  text-shadow: 0 1px 1px rgba(255, 255, 255, 0.5);
 }
 
 .timer-display {
@@ -115,10 +121,12 @@ const getUserSlug = async (): Promise<string | null> => {
 
 .no-timer {
   @apply text-center py-8;
+  color: #8B6914;
 }
 
 .share-section {
   @apply border-t pt-6;
+  border-color: rgba(139, 69, 19, 0.2);
 }
 
 .share-controls {
@@ -126,12 +134,29 @@ const getUserSlug = async (): Promise<string | null> => {
 }
 
 .share-button {
-  @apply bg-blue-600 text-white px-6 py-3 rounded-lg font-medium
-         hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed
-         transition-colors;
+  @apply px-6 py-3 rounded-lg font-medium transition-all;
+  background: linear-gradient(145deg, #B8860B 0%, #DAA520 50%, #B8860B 100%);
+  border: 2px solid #8B6914;
+  color: #1a0900;
+  font-weight: bold;
+  box-shadow:
+    inset 0 2px 4px rgba(255, 255, 255, 0.2),
+    0 4px 8px rgba(0, 0, 0, 0.2);
+}
+
+.share-button:hover:not(:disabled) {
+  transform: translateY(-2px);
+  box-shadow:
+    inset 0 2px 4px rgba(255, 255, 255, 0.3),
+    0 6px 12px rgba(0, 0, 0, 0.3);
+}
+
+.share-button:disabled {
+  @apply opacity-50 cursor-not-allowed;
 }
 
 .share-description {
-  @apply text-sm text-gray-500 mt-2;
+  @apply text-sm mt-2;
+  color: #8B6914;
 }
 </style>

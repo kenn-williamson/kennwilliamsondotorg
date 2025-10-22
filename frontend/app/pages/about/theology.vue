@@ -23,7 +23,7 @@
     </p>
 
     <h3>
-      <SteampunkTooltip variant="parchment" :clickable="true">
+      <SteampunkTooltip variant="steel" :clickable="true">
         <template #content>
           Saint Athanasius the Great (c. 297-373) was Archbishop of Alexandria and a pillar of Orthodoxy. He defended the Nicene faith against Arianism and wrote extensively on the Incarnation and theosis.
           <br><br>
@@ -54,7 +54,7 @@
     </p>
 
     <h3 class="clear-both">
-      <SteampunkTooltip variant="parchment" :clickable="true">
+      <SteampunkTooltip variant="steel" :clickable="true">
         <template #content>
           Saint Gregory of Nyssa (c. 335-395) was a Cappadocian Father, brother of Saint Basil the Great, and one of the most profound Christian thinkers of the fourth century. He taught about universal reconciliation and spiritual transformation.
           <br><br>
@@ -78,7 +78,7 @@
     </p>
 
     <h3 class="clear-both">
-      <SteampunkTooltip variant="parchment" :clickable="true">
+      <SteampunkTooltip variant="steel" :clickable="true">
         <template #content>
           Saint Ephrem the Syrian (c. 306-373) was an Aramean theologian, hymnographer, and teacher of repentance. Known for his poetic hymns and symbolic theology, he is one of the most notable Church Fathers of Eastern Christianity.
           <br><br>
@@ -102,7 +102,7 @@
     </p>
 
     <h3 class="clear-both">
-      <SteampunkTooltip variant="parchment":clickable="true">
+      <SteampunkTooltip variant="steel" :clickable="true">
         <template #content>
           Saint Maximus the Confessor (c. 580-662) was a Christian monk, theologian, and scholar. He was persecuted for his Christological positions, had his tongue and right hand mutilated, and died in exile. He developed a profound cosmic theology of Christ's redemption of all creation.
           <br><br>
@@ -143,7 +143,7 @@
 
     <ol class="list-decimal list-inside mb-4 space-y-2">
       <li>
-        <SteampunkTooltip variant="parchment" :clickable="true">
+        <SteampunkTooltip variant="steel" :clickable="true">
           <template #content>
             Girard's most accessible introduction to mimetic theory, exploring how human desire leads to rivalry and violence, and how Christ's crucifixion exposes and defeats the scapegoat mechanism.
             <br><br>
@@ -154,7 +154,7 @@
         the scapegoat mechanism
       </li>
       <li>
-        <SteampunkTooltip variant="parchment" :clickable="true">
+        <SteampunkTooltip variant="steel" :clickable="true">
           <template #content>
             Girard demonstrates how the scapegoat mechanism has structured human culture and religion throughout history, and how the biblical text uniquely reveals and subverts this pattern.
             <br><br>
@@ -164,7 +164,7 @@
         </SteampunkTooltip> - How this pattern runs through history and culture
       </li>
       <li>
-        <SteampunkTooltip variant="parchment" :clickable="true">
+        <SteampunkTooltip variant="steel" :clickable="true">
           <template #content>
             Girard's magnum opus, a comprehensive exploration of mimetic theory's theological implications, including extensive dialogue format discussions about Christianity, sacrifice, and redemption.
             <br><br>
@@ -175,7 +175,7 @@
         implications
       </li>
       <li>
-        <SteampunkTooltip variant="parchment" :clickable="true">
+        <SteampunkTooltip variant="steel" :clickable="true">
           <template #content>
             Girard's groundbreaking anthropological study examining the relationship between violence and the sacred in primitive religions, establishing the foundations of mimetic theory.
             <br><br>
@@ -237,7 +237,7 @@
       the victim.
     </p>
 
-    <SteampunkAccordion title="Learn More About Mimetic Theory" variant="mahogany">
+    <SteampunkAccordion title="Learn More About Mimetic Theory" variant="bronze">
       <p class="mb-3">
         For deeper exploration of mimetic theory and René Girard's work, check out these
         resources:
@@ -371,7 +371,7 @@
 
     <SteampunkAccordion
       title="Recommended Reading on Christian Anarchism"
-      variant="brass"
+      variant="gold"
     >
       <div class="space-y-3">
         <p>

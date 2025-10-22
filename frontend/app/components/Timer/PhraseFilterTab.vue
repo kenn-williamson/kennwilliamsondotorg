@@ -139,6 +139,9 @@ const formatDate = (dateString: string) => {
 <style scoped>
 .phrase-filter-tab {
   @apply p-6;
+  background: linear-gradient(145deg, #f5f0e8 0%, #faf7f0 50%, #f5f0e8 100%);
+  border-radius: 0 0 8px 8px;
+  box-shadow: inset 0 2px 4px rgba(139, 69, 19, 0.1);
 }
 
 .tab-content {
@@ -150,11 +153,14 @@ const formatDate = (dateString: string) => {
 }
 
 .section-title {
-  @apply text-xl font-semibold text-gray-900 mb-2;
+  @apply text-xl font-semibold mb-2;
+  color: #5d3820;
+  font-family: Georgia, serif;
+  text-shadow: 0 1px 1px rgba(255, 255, 255, 0.5);
 }
 
 .section-description {
-  @apply text-gray-600;
+  color: #8B6914;
 }
 
 .filter-controls {
@@ -166,25 +172,39 @@ const formatDate = (dateString: string) => {
 }
 
 .search-input {
-  @apply w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm
-         focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500;
+  @apply w-full px-3 py-2 rounded-md shadow-sm;
+  background: rgba(255, 255, 255, 0.9);
+  border: 2px solid rgba(139, 69, 19, 0.3);
+  color: #3c2414;
+}
+
+.search-input:focus {
+  @apply outline-none;
+  border-color: #B8860B;
+  box-shadow: 0 0 0 3px rgba(184, 134, 11, 0.1);
 }
 
 .filter-stats {
-  @apply text-sm text-gray-500;
+  @apply text-sm;
+  color: #8B6914;
 }
 
 .loading-state,
 .empty-state {
   @apply text-center py-8;
+  color: #8B6914;
 }
 
 .phrases-table {
-  @apply bg-white border border-gray-200 rounded-lg overflow-hidden;
+  @apply rounded-lg overflow-hidden;
+  background: rgba(255, 255, 255, 0.7);
+  border: 2px solid rgba(139, 69, 19, 0.2);
 }
 
 .table-header {
-  @apply bg-gray-50 px-6 py-3 flex font-medium text-sm text-gray-700;
+  @apply px-6 py-3 flex font-medium text-sm;
+  background: rgba(139, 69, 19, 0.15);
+  color: #5d3820;
 }
 
 .col-phrase {
@@ -204,7 +224,8 @@ const formatDate = (dateString: string) => {
 }
 
 .table-body {
-  @apply divide-y divide-gray-200;
+  @apply divide-y;
+  divide-color: rgba(139, 69, 19, 0.1);
 }
 
 .table-row {
@@ -212,28 +233,43 @@ const formatDate = (dateString: string) => {
 }
 
 .phrase-text {
-  @apply text-gray-900 font-medium;
+  @apply font-medium;
+  color: #3c2414;
 }
 
 .created-date {
-  @apply text-gray-500;
+  color: #8B6914;
 }
 
 .author-name {
-  @apply text-gray-600;
+  color: #8B6914;
 }
 
 .toggle-button {
   @apply px-3 py-1 text-xs font-medium rounded-full transition-colors
-         border border-gray-300 bg-white text-gray-700
-         hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed;
+         disabled:opacity-50 disabled:cursor-not-allowed;
+  border: 2px solid rgba(139, 69, 19, 0.3);
+  background: rgba(255, 255, 255, 0.9);
+  color: #5d3820;
+}
+
+.toggle-button:hover:not(:disabled) {
+  background: rgba(255, 255, 255, 1);
 }
 
 .toggle-button.excluded {
-  @apply bg-red-100 text-red-700 border-red-300 hover:bg-red-200;
+  @apply bg-red-100 text-red-700 border-red-300;
+}
+
+.toggle-button.excluded:hover:not(:disabled) {
+  @apply bg-red-200;
 }
 
 .toggle-button:not(.excluded) {
-  @apply bg-green-100 text-green-700 border-green-300 hover:bg-green-200;
+  @apply bg-green-100 text-green-700 border-green-300;
+}
+
+.toggle-button:not(.excluded):hover:not(:disabled) {
+  @apply bg-green-200;
 }
 </style>

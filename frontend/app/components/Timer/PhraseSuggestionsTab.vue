@@ -154,6 +154,9 @@ const formatDate = (dateString: string) => {
 <style scoped>
 .phrase-suggestions-tab {
   @apply p-6;
+  background: linear-gradient(145deg, #f5f0e8 0%, #faf7f0 50%, #f5f0e8 100%);
+  border-radius: 0 0 8px 8px;
+  box-shadow: inset 0 2px 4px rgba(139, 69, 19, 0.1);
 }
 
 .tab-content {
@@ -165,11 +168,15 @@ const formatDate = (dateString: string) => {
 }
 
 .section-title {
-  @apply text-xl font-semibold text-gray-900 mb-2;
+  @apply text-xl font-semibold mb-2;
+  color: #5d3820;
+  font-family: Georgia, serif;
+  text-shadow: 0 1px 1px rgba(255, 255, 255, 0.5);
 }
 
 .section-description {
-  @apply text-gray-600 mb-6;
+  @apply mb-6;
+  color: #8B6914;
 }
 
 .form {
@@ -181,13 +188,21 @@ const formatDate = (dateString: string) => {
 }
 
 .form-label {
-  @apply block text-sm font-medium text-gray-700;
+  @apply block text-sm font-medium;
+  color: #5d3820;
 }
 
 .form-textarea {
-  @apply w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm
-         focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500
-         resize-y;
+  @apply w-full px-3 py-2 rounded-md shadow-sm resize-y;
+  background: rgba(255, 255, 255, 0.9);
+  border: 2px solid rgba(139, 69, 19, 0.3);
+  color: #3c2414;
+}
+
+.form-textarea:focus {
+  @apply outline-none;
+  border-color: #B8860B;
+  box-shadow: 0 0 0 3px rgba(184, 134, 11, 0.1);
 }
 
 .form-footer {
@@ -195,7 +210,8 @@ const formatDate = (dateString: string) => {
 }
 
 .character-count {
-  @apply text-sm text-gray-500;
+  @apply text-sm;
+  color: #8B6914;
 }
 
 .error-message {
@@ -207,19 +223,45 @@ const formatDate = (dateString: string) => {
 }
 
 .submit-button {
-  @apply bg-blue-600 text-white px-6 py-2 rounded-md font-medium
-         hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed
-         transition-colors;
+  @apply px-6 py-2 rounded-md font-medium transition-all;
+  background: linear-gradient(145deg, #B8860B 0%, #DAA520 50%, #B8860B 100%);
+  border: 2px solid #8B6914;
+  color: #1a0900;
+  font-weight: bold;
+  box-shadow:
+    inset 0 2px 4px rgba(255, 255, 255, 0.2),
+    0 4px 8px rgba(0, 0, 0, 0.2);
+}
+
+.submit-button:hover:not(:disabled) {
+  transform: translateY(-2px);
+  box-shadow:
+    inset 0 2px 4px rgba(255, 255, 255, 0.3),
+    0 6px 12px rgba(0, 0, 0, 0.3);
+}
+
+.submit-button:disabled {
+  @apply opacity-50 cursor-not-allowed;
 }
 
 .clear-button {
-  @apply bg-gray-200 text-gray-800 px-6 py-2 rounded-md font-medium
-         hover:bg-gray-300 disabled:opacity-50 disabled:cursor-not-allowed
-         transition-colors;
+  @apply px-6 py-2 rounded-md font-medium transition-all;
+  background: rgba(139, 69, 19, 0.2);
+  border: 2px solid rgba(139, 69, 19, 0.3);
+  color: #5d3820;
+}
+
+.clear-button:hover:not(:disabled) {
+  background: rgba(139, 69, 19, 0.3);
+}
+
+.clear-button:disabled {
+  @apply opacity-50 cursor-not-allowed;
 }
 
 .recent-submissions {
   @apply border-t pt-6;
+  border-color: rgba(139, 69, 19, 0.2);
 }
 
 .submission-list {
@@ -227,7 +269,9 @@ const formatDate = (dateString: string) => {
 }
 
 .submission-item {
-  @apply bg-gray-50 p-4 rounded-lg;
+  @apply p-4 rounded-lg;
+  background: rgba(255, 255, 255, 0.6);
+  border: 1px solid rgba(139, 69, 19, 0.2);
 }
 
 .submission-content {
@@ -235,7 +279,8 @@ const formatDate = (dateString: string) => {
 }
 
 .submission-text {
-  @apply text-gray-900 font-medium;
+  @apply font-medium;
+  color: #3c2414;
 }
 
 .submission-meta {
@@ -259,10 +304,13 @@ const formatDate = (dateString: string) => {
 }
 
 .submission-date {
-  @apply text-gray-500;
+  color: #8B6914;
 }
 
 .admin-feedback {
-  @apply text-sm text-gray-600 bg-white p-2 rounded border-l-4 border-blue-200;
+  @apply text-sm p-2 rounded border-l-4;
+  color: #5d3820;
+  background: rgba(255, 255, 255, 0.8);
+  border-color: #B8860B;
 }
 </style>

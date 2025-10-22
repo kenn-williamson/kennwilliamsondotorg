@@ -22,13 +22,13 @@
           :class="['absolute inset-0 w-full h-full object-cover transition-opacity duration-1000', videoPlaying ? 'opacity-100' : 'opacity-0']"
         >
           <!-- High-quality video for desktop (768px and up) -->
-          <source src="~/assets/images/cathedralinmotion2.mp4" type="video/mp4" media="(min-width: 768px)" />
+          <source src="~/assets/images/cathedral-animated.mp4" type="video/mp4" media="(min-width: 768px)" />
           <!-- Lower-quality video for mobile (below 768px) -->
-          <source src="~/assets/images/cathedralinmotion.mp4" type="video/mp4" />
+          <source src="~/assets/images/cathedral-animated-mobile.mp4" type="video/mp4" />
         </video>
 
         <!-- Dark overlay for text readability -->
-        <div class="absolute inset-0 bg-gradient-to-b from-slate-900/70 via-slate-900/60 to-slate-900/80"></div>
+        <div class="absolute inset-0 bg-gradient-to-b from-nautical-900/70 via-nautical-900/60 to-nautical-900/80"></div>
       </div>
 
       <!-- Hero Content -->
@@ -36,7 +36,7 @@
         <h1 class="text-4xl sm:text-5xl lg:text-6xl font-bold text-white leading-tight mb-6">
           Kenn Williamson
         </h1>
-        <p class="text-xl sm:text-2xl lg:text-3xl text-amber-300 font-semibold mb-4">
+        <p class="text-xl sm:text-2xl lg:text-3xl text-accent-300 font-semibold mb-4">
           Enterprise Architect, Disciple, Builder
         </p>
         <p class="text-lg sm:text-xl text-gray-200 mb-8 max-w-2xl mx-auto">
@@ -47,13 +47,13 @@
         <div class="flex flex-col sm:flex-row gap-4 justify-center">
           <NuxtLink
             to="/about"
-            class="px-8 py-3 bg-amber-600 hover:bg-amber-700 text-white font-semibold rounded-lg shadow-lg transition-all duration-200 transform hover:scale-105"
+            class="px-8 py-3 bg-gradient-to-r from-primary-600 to-accent-600 hover:from-primary-700 hover:to-accent-700 text-white font-semibold rounded-lg shadow-lg transition-all duration-200 transform hover:scale-105"
           >
             Read My Story
           </NuxtLink>
           <NuxtLink
             to="/incidents"
-            class="px-8 py-3 bg-slate-700 hover:bg-slate-600 text-white font-semibold rounded-lg shadow-lg transition-all duration-200 transform hover:scale-105"
+            class="px-8 py-3 bg-nautical-700 hover:bg-nautical-600 text-white font-semibold rounded-lg shadow-lg transition-all duration-200 transform hover:scale-105"
           >
             View Projects
           </NuxtLink>
@@ -62,14 +62,14 @@
 
       <!-- Scroll Indicator -->
       <div class="absolute bottom-16 left-1/2 transform -translate-x-1/2 animate-bounce z-20">
-        <svg class="w-6 h-6 text-amber-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <svg class="w-6 h-6 text-accent-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
           <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 14l-7 7m0 0l-7-7m7 7V3"/>
         </svg>
       </div>
     </section>
 
     <!-- Quick Bio Section -->
-    <section class="py-16 px-4 sm:px-6 lg:px-8 bg-gradient-to-br from-slate-50 to-gray-100">
+    <section class="py-16 px-4 sm:px-6 lg:px-8 bg-gradient-to-br from-nautical-50 to-gray-100">
       <div class="max-w-4xl mx-auto text-center">
         <h2 class="text-3xl sm:text-4xl font-bold text-gray-900 mb-6">
           Who I Am
@@ -78,9 +78,9 @@
           I'm a single dad to three kids, an Enterprise Architect helping companies navigate AI
           realistically, learning what it means to be a disciple of Christ, and trying to walk in love.
           I read Church Fathers, design and build software systems, and believe
-          <span class="font-semibold text-amber-700">truth</span>,
-          <span class="font-semibold text-amber-700">beauty</span>, and
-          <span class="font-semibold text-amber-700">love</span>
+          <span class="font-semibold text-primary-700">truth</span>,
+          <span class="font-semibold text-primary-700">beauty</span>, and
+          <span class="font-semibold text-primary-700">love</span>
           aren't just ideals but a way of life.
         </p>
       </div>
@@ -95,10 +95,10 @@
 
         <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
           <!-- Professional Card -->
-          <div class="group bg-gradient-to-br from-slate-50 to-slate-100 rounded-lg p-8 shadow-lg hover:shadow-xl transition-all duration-300 border-2 border-slate-200 hover:border-amber-400">
+          <div class="group bg-gradient-to-br from-nautical-50 to-nautical-100 rounded-lg p-8 shadow-lg hover:shadow-xl transition-all duration-300 border-2 border-nautical-200 hover:border-primary-400">
             <div class="flex items-center mb-4">
               <!-- Gear Icon -->
-              <svg class="w-12 h-12 text-amber-600 mr-4" fill="currentColor" viewBox="0 0 20 20">
+              <svg class="w-12 h-12 text-primary-600 mr-4" fill="currentColor" viewBox="0 0 20 20">
                 <path fill-rule="evenodd" d="M11.49 3.17c-.38-1.56-2.6-1.56-2.98 0a1.532 1.532 0 01-2.286.948c-1.372-.836-2.942.734-2.106 2.106.54.886.061 2.042-.947 2.287-1.561.379-1.561 2.6 0 2.978a1.532 1.532 0 01.947 2.287c-.836 1.372.734 2.942 2.106 2.106a1.532 1.532 0 012.287.947c.379 1.561 2.6 1.561 2.978 0a1.533 1.533 0 012.287-.947c1.372.836 2.942-.734 2.106-2.106a1.533 1.533 0 01.947-2.287c1.561-.379 1.561-2.6 0-2.978a1.532 1.532 0 01-.947-2.287c.836-1.372-.734-2.942-2.106-2.106a1.532 1.532 0 01-2.287-.947zM10 13a3 3 0 100-6 3 3 0 000 6z" clip-rule="evenodd"/>
               </svg>
               <h3 class="text-2xl font-bold text-gray-900">
@@ -112,13 +112,13 @@
             <div class="flex flex-wrap gap-3">
               <NuxtLink
                 to="/about/professional"
-                class="text-amber-600 hover:text-amber-700 font-semibold underline"
+                class="text-primary-600 hover:text-primary-700 font-semibold underline"
               >
                 Professional Path →
               </NuxtLink>
               <NuxtLink
                 to="/about/ai"
-                class="text-amber-600 hover:text-amber-700 font-semibold underline"
+                class="text-primary-600 hover:text-primary-700 font-semibold underline"
               >
                 AI Philosophy →
               </NuxtLink>
@@ -126,10 +126,10 @@
           </div>
 
           <!-- Journey Card -->
-          <div class="group bg-gradient-to-br from-amber-50 to-orange-50 rounded-lg p-8 shadow-lg hover:shadow-xl transition-all duration-300 border-2 border-amber-200 hover:border-amber-400">
+          <div class="group bg-gradient-to-br from-primary-50 to-accent-50 rounded-lg p-8 shadow-lg hover:shadow-xl transition-all duration-300 border-2 border-primary-200 hover:border-primary-400">
             <div class="flex items-center mb-4">
               <!-- Compass Icon -->
-              <svg class="w-12 h-12 text-amber-600 mr-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <svg class="w-12 h-12 text-primary-600 mr-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 21v-4m0 0V5a2 2 0 012-2h6.5l1 1H21l-3 6 3 6h-8.5l-1-1H5a2 2 0 00-2 2zm9-13.5V9"/>
               </svg>
               <h3 class="text-2xl font-bold text-gray-900">
@@ -142,17 +142,17 @@
             </p>
             <NuxtLink
               to="/about"
-              class="text-amber-600 hover:text-amber-700 font-semibold underline"
+              class="text-primary-600 hover:text-primary-700 font-semibold underline"
             >
               Read My Story →
             </NuxtLink>
           </div>
 
           <!-- Incident Timer Card -->
-          <div class="group bg-gradient-to-br from-sky-50 to-blue-50 rounded-lg p-8 shadow-lg hover:shadow-xl transition-all duration-300 border-2 border-sky-200 hover:border-amber-400">
+          <div class="group bg-gradient-to-br from-sky-50 to-primary-50 rounded-lg p-8 shadow-lg hover:shadow-xl transition-all duration-300 border-2 border-sky-200 hover:border-primary-400">
             <div class="flex items-center mb-4">
               <!-- Clock Icon -->
-              <svg class="w-12 h-12 text-amber-600 mr-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <svg class="w-12 h-12 text-primary-600 mr-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/>
               </svg>
               <h3 class="text-2xl font-bold text-gray-900">
@@ -165,17 +165,17 @@
             </p>
             <NuxtLink
               to="/incidents"
-              class="text-amber-600 hover:text-amber-700 font-semibold underline"
+              class="text-primary-600 hover:text-primary-700 font-semibold underline"
             >
               Try It Live →
             </NuxtLink>
           </div>
 
           <!-- Theology Card -->
-          <div class="group bg-gradient-to-br from-purple-50 to-indigo-50 rounded-lg p-8 shadow-lg hover:shadow-xl transition-all duration-300 border-2 border-purple-200 hover:border-amber-400">
+          <div class="group bg-gradient-to-br from-purple-50 to-indigo-50 rounded-lg p-8 shadow-lg hover:shadow-xl transition-all duration-300 border-2 border-purple-200 hover:border-primary-400">
             <div class="flex items-center mb-4">
               <!-- Book Icon -->
-              <svg class="w-12 h-12 text-amber-600 mr-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <svg class="w-12 h-12 text-primary-600 mr-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253"/>
               </svg>
               <h3 class="text-2xl font-bold text-gray-900">
@@ -189,13 +189,13 @@
             <div class="flex flex-wrap gap-3">
               <NuxtLink
                 to="/about/faith"
-                class="text-amber-600 hover:text-amber-700 font-semibold underline"
+                class="text-primary-600 hover:text-primary-700 font-semibold underline"
               >
                 Finding Faith →
               </NuxtLink>
               <NuxtLink
                 to="/about/theology"
-                class="text-amber-600 hover:text-amber-700 font-semibold underline"
+                class="text-primary-600 hover:text-primary-700 font-semibold underline"
               >
                 Theology & Practice →
               </NuxtLink>
@@ -206,7 +206,7 @@
     </section>
 
     <!-- Connect Section -->
-    <section class="py-12 px-4 sm:px-6 lg:px-8 bg-slate-100">
+    <section class="py-12 px-4 sm:px-6 lg:px-8 bg-nautical-100">
       <div class="max-w-4xl mx-auto text-center">
         <h2 class="text-2xl sm:text-3xl font-bold text-gray-900 mb-4">
           Let's Connect
@@ -220,7 +220,7 @@
             href="https://linkedin.com/in/kenngineering"
             target="_blank"
             rel="noopener noreferrer"
-            class="flex items-center gap-2 px-6 py-3 bg-blue-600 hover:bg-blue-700 text-white font-semibold rounded-lg shadow-lg transition-all duration-200 transform hover:scale-105"
+            class="flex items-center gap-2 px-6 py-3 bg-primary-600 hover:bg-primary-700 text-white font-semibold rounded-lg shadow-lg transition-all duration-200 transform hover:scale-105"
           >
             <!-- LinkedIn Icon -->
             <svg class="w-5 h-5" fill="currentColor" viewBox="0 0 24 24">
@@ -233,7 +233,7 @@
     </section>
 
     <!-- Footer CTA Section -->
-    <section class="py-16 px-4 sm:px-6 lg:px-8 bg-gradient-to-br from-slate-800 to-slate-900 text-white">
+    <section class="py-16 px-4 sm:px-6 lg:px-8 bg-gradient-to-br from-nautical-800 to-nautical-900 text-white">
       <div class="max-w-4xl mx-auto text-center">
         <h2 class="text-3xl sm:text-4xl font-bold mb-6">
           Welcome to the Story
@@ -244,13 +244,13 @@
         <div class="flex flex-col sm:flex-row gap-4 justify-center">
           <NuxtLink
             to="/about"
-            class="px-8 py-3 bg-amber-600 hover:bg-amber-700 text-white font-semibold rounded-lg shadow-lg transition-all duration-200 transform hover:scale-105"
+            class="px-8 py-3 bg-gradient-to-r from-primary-600 to-accent-600 hover:from-primary-700 hover:to-accent-700 text-white font-semibold rounded-lg shadow-lg transition-all duration-200 transform hover:scale-105"
           >
             Learn More About Me
           </NuxtLink>
           <NuxtLink
             to="/incidents"
-            class="px-8 py-3 bg-slate-700 hover:bg-slate-600 text-white font-semibold rounded-lg shadow-lg transition-all duration-200 transform hover:scale-105"
+            class="px-8 py-3 bg-nautical-700 hover:bg-nautical-600 text-white font-semibold rounded-lg shadow-lg transition-all duration-200 transform hover:scale-105"
           >
             Explore Projects
           </NuxtLink>

@@ -1,15 +1,18 @@
 <template>
-  <div class="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-50 px-4 sm:px-6 lg:px-8 py-8">
-    <div class="max-w-6xl mx-auto">
+  <div class="min-h-screen mahogany-background px-4 sm:px-6 lg:px-8 py-8 relative">
+    <!-- Steampunk Background -->
+    <SteampunkBackground />
+
+    <div class="max-w-6xl mx-auto relative z-10">
       <!-- Header -->
       <div class="mb-8">
-        <h1 class="text-3xl sm:text-4xl font-bold text-gray-900 mb-2">
-          Incident 
-          <span class="text-transparent bg-clip-text bg-gradient-to-r from-blue-600 to-indigo-600">
+        <h1 class="text-3xl sm:text-4xl font-bold mb-2" style="color: #FFD700; text-shadow: 0 2px 4px rgba(0, 0, 0, 0.5), 0 0 8px rgba(255, 215, 0, 0.3);">
+          Incident
+          <span class="text-transparent bg-clip-text bg-gradient-to-r" style="background-image: linear-gradient(to right, #FFD700, #FFA500);">
             Management
           </span>
         </h1>
-        <p class="text-gray-600 text-lg">
+        <p class="text-lg" style="color: #D4AF37; text-shadow: 0 2px 4px rgba(0, 0, 0, 0.5);">
           Track and manage your incident-free time periods with precision.
         </p>
       </div>
@@ -17,24 +20,24 @@
       <!-- Unauthenticated View: Public Timer List -->
       <div v-if="!user">
         <!-- CTA Section -->
-        <div class="bg-white/80 backdrop-blur-sm rounded-lg shadow-lg border border-blue-200 p-6 mb-8">
+        <div class="steampunk-card rounded-lg shadow-lg border-4 border-brass p-6 mb-8">
           <div class="max-w-3xl mx-auto text-center">
-            <h2 class="text-2xl font-semibold text-gray-900 mb-2">
+            <h2 class="text-2xl font-semibold mb-2" style="color: #FFD700; text-shadow: 0 2px 4px rgba(0, 0, 0, 0.5);">
               Want to track your own timer?
             </h2>
-            <p class="text-gray-600 mb-6">
+            <p class="mb-6" style="color: #D4AF37; text-shadow: 0 1px 2px rgba(0, 0, 0, 0.5);">
               Sign in or create an account to start tracking your incident-free periods.
             </p>
             <div class="flex flex-col sm:flex-row gap-3 justify-center">
               <NuxtLink
                 to="/login"
-                class="px-6 py-3 bg-blue-600 text-white rounded-md hover:bg-blue-700 transition-colors duration-200 font-medium"
+                class="brass-button px-6 py-3 rounded-md transition-all duration-200 font-medium"
               >
                 Sign In
               </NuxtLink>
               <NuxtLink
                 to="/register"
-                class="px-6 py-3 border border-blue-600 text-blue-600 rounded-md hover:bg-blue-50 transition-colors duration-200 font-medium"
+                class="brass-button-outline px-6 py-3 rounded-md transition-all duration-200 font-medium"
               >
                 Create Account
               </NuxtLink>
@@ -43,8 +46,8 @@
         </div>
 
         <!-- Public Timers List -->
-        <div class="bg-white/80 backdrop-blur-sm rounded-lg shadow-lg border border-blue-200 p-6">
-          <h2 class="text-2xl font-semibold text-gray-900 mb-6">Public Timers</h2>
+        <div class="steampunk-card rounded-lg shadow-lg border-4 border-brass p-6">
+          <h2 class="text-2xl font-semibold mb-6" style="color: #FFD700; text-shadow: 0 2px 4px rgba(0, 0, 0, 0.5);">Public Timers</h2>
           <PublicTimerListDisplay />
         </div>
       </div>
@@ -57,12 +60,12 @@
         </div>
 
         <!-- Tab Navigation -->
-        <div class="bg-white/80 backdrop-blur-sm rounded-lg shadow-lg border border-blue-200 mb-6">
+        <div class="steampunk-card rounded-lg shadow-lg border-4 border-brass mb-6">
           <TabNavigation />
         </div>
 
         <!-- Tab Content -->
-        <div class="bg-white/80 backdrop-blur-sm rounded-lg shadow-lg border border-blue-200">
+        <div class="steampunk-card rounded-lg shadow-lg border-4 border-brass">
           <TimerDisplayTab
             v-if="activeTab === 'timer-display'"
           />
@@ -113,33 +116,100 @@ useSocialShare({
 const { user } = useUserSession()
 const incidentTimerStore = useIncidentTimerStore()
 
+// Load user timers during SSR for authenticated users
+// This ensures timers are available on initial page load (hard refresh)
+if (user.value) {
+  await useAsyncData(
+    'user-timers',
+    () => incidentTimerStore.loadUserTimers(),
+    {
+      server: true,
+      lazy: false
+    }
+  )
+}
+
 // Tab state using composable (SSR-compatible, reactive to route.query)
 const { activeTab, setActiveTab } = useTabs<IncidentTabId>(
   INCIDENT_TABS.ids as readonly IncidentTabId[],
   INCIDENT_TABS.default
 )
 
-// Clear public timer when navigating away (client-side only)
+// Client-side lifecycle hooks
 onMounted(() => {
+  // Clear public timer when navigating away
   incidentTimerStore.clearPublicTimerOnNavigation()
+
+  // Start live timer updates on client-side
+  if (user.value) {
+    incidentTimerStore.startLiveTimerUpdates()
+  }
+})
+
+onUnmounted(() => {
+  if (user.value) {
+    incidentTimerStore.stopLiveTimerUpdates()
+  }
 })
 </script>
 
 <style scoped>
-/* Geometric tech pattern background */
-.bg-tech-pattern {
-  background-image: 
-    linear-gradient(45deg, rgba(59, 130, 246, 0.03) 25%, transparent 25%),
-    linear-gradient(-45deg, rgba(59, 130, 246, 0.03) 25%, transparent 25%),
-    linear-gradient(45deg, transparent 75%, rgba(59, 130, 246, 0.03) 75%),
-    linear-gradient(-45deg, transparent 75%, rgba(59, 130, 246, 0.03) 75%);
-  background-size: 20px 20px;
-  background-position: 0 0, 0 10px, 10px -10px, -10px 0px;
+/* Mahogany Background - Airship Interior */
+.mahogany-background {
+  background-color: #371200; /* Fallback solid color */
+  background-image: url('~/assets/images/mahogany-wood.jpg');
+  background-repeat: repeat;
+  background-size: 400px 400px;
+  background-attachment: fixed;
 }
 
-/* Subtle metallic accent for timer display */
-.timer-display {
-  background: linear-gradient(135deg, rgba(219, 234, 254, 0.8), rgba(147, 197, 253, 0.8));
-  border: 1px solid rgba(59, 130, 246, 0.2);
+/* Steampunk Card - Brass and Leather */
+.steampunk-card {
+  background: linear-gradient(145deg, #8B4513 0%, #A0522D 50%, #8B4513 100%);
+  box-shadow:
+    inset 0 4px 8px rgba(255, 255, 255, 0.2),
+    inset 0 -4px 8px rgba(0, 0, 0, 0.4),
+    0 8px 32px rgba(0, 0, 0, 0.5);
+}
+
+/* Brass Border */
+.border-brass {
+  border-color: #C0C0C0;
+}
+
+/* Brass Buttons */
+.brass-button {
+  background: linear-gradient(145deg, #B8860B 0%, #DAA520 50%, #B8860B 100%);
+  border: 2px solid #C0C0C0;
+  color: #1a0900;
+  font-weight: bold;
+  box-shadow:
+    inset 0 2px 4px rgba(255, 255, 255, 0.2),
+    0 4px 8px rgba(0, 0, 0, 0.3);
+}
+
+.brass-button:hover {
+  transform: translateY(-2px);
+  box-shadow:
+    inset 0 2px 4px rgba(255, 255, 255, 0.3),
+    0 6px 12px rgba(0, 0, 0, 0.4);
+}
+
+.brass-button-outline {
+  background: linear-gradient(145deg, rgba(139, 69, 19, 0.3) 0%, rgba(160, 82, 45, 0.3) 50%, rgba(139, 69, 19, 0.3) 100%);
+  border: 2px solid #DAA520;
+  color: #FFD700;
+  font-weight: bold;
+  box-shadow:
+    inset 0 2px 4px rgba(255, 255, 255, 0.1),
+    0 4px 8px rgba(0, 0, 0, 0.3);
+}
+
+.brass-button-outline:hover {
+  transform: translateY(-2px);
+  background: linear-gradient(145deg, rgba(139, 69, 19, 0.5) 0%, rgba(160, 82, 45, 0.5) 50%, rgba(139, 69, 19, 0.5) 100%);
+  box-shadow:
+    inset 0 2px 4px rgba(255, 255, 255, 0.2),
+    0 6px 12px rgba(0, 0, 0, 0.4);
 }
 </style>
