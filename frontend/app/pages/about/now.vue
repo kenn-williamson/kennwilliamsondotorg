@@ -39,27 +39,144 @@
 
     <p>
       Rory is my oldest at 10, and she's like the girl version of me in so many ways. I
-      see myself in her constantly. The interesting thing is that I'm raising her
-      totally differently than my mom raised me. My mom pushed me to excel constantly,
-      which I hated growing up but which, looking back, helped me achieve a lot. With
-      Rory, I'm taking the opposite approach: letting her grow at her own pace,
-      providing a good example rather than didactic instruction, not pushing her to
-      perform.
+      see myself in her constantly. She has a tendency to ask lots of questions,
+      especially precocious ones that can be a little uncomfortable for the person she's
+      asking. She has no filter yet, no understanding of how a question might land. I
+      was the same way at her age. She'll use a word perfectly in a sentence and then
+      ask me what it means. When I explain that she just used it correctly, she'll say
+      "But what does it mean specifically?" And then ask what "specifically" means.
     </p>
 
     <p>
-      I don't know if this is the right approach. It's an experiment. But I want her to
-      develop without the constant pressure I felt, while still hopefully giving her the
-      tools she needs to succeed.
+      She's a little socially awkward, has a hard time making friends, and struggles
+      with emotional regulation. Things can get blown out of proportion quickly. If I
+      get on to her or raise my voice at all, she can shut down quickly, which
+      makes correcting bad behavior challenging. She struggles with this with other
+      children too. If she's challenged at all, she tends to shut down and try to
+      isolate. It's hard.
+    </p>
+
+    <p>
+      Rory spends hours in elaborate role-play, creating stories with her stuffies and
+      dolls, playing text-based role-play chatbot adventures on her computer, watching
+      her favorite YouTubers (she loves SPRUNKI), and playing Avatar World. She and
+      Charlie spend a lot of time making up dances and choreography together. She enjoys
+      going to the park as well.
+    </p>
+
+    <p>
+      She's naturally good at figuring things out: puzzles, schoolwork (though I don't
+      push her hard on it), making surprisingly insightful connections. But she's pretty
+      selective about friends and genuinely struggles to make them, which worries me as
+      she gets older.
+    </p>
+
+    <p>
+      With her siblings, she's protective, annoyed, and loving. She and Charlie are what
+      we call "best frenemies." They're together all the time, and it's very clear she
+      loves them. She dotes on Teddy, almost to the point where she's way up in his
+      business, but it's great.
+    </p>
+
+    <p>
+      She's entering a more self-aware phase now, starting to talk about boys and asking
+      questions about how the world works, checking if her understanding is correct,
+      seeking clarification. I can see her growing up in these moments, and I am not
+      ready for pre-teens or teenage girls.
+    </p>
+
+    <p>
+      I'm raising her very differently than my mom raised me. When I was a kid, I was
+      pushed to succeed heavily: soccer, baseball, piano, church programs, tons of
+      activities, strong emphasis on academic achievement. With Rory, I'm taking a
+      different approach. I have her in dance because I wanted one physical activity for
+      motor skills, but beyond that, I let her explore her own interests. She goes
+      deeper that way, into her role-play, into the choreography she creates with her
+      sister.
+    </p>
+
+    <p>
+      I want her to develop without the constant pressure I felt, while still giving her
+      the tools she needs to succeed. I fear that adolescence will be difficult for a
+      curious, earnest, sweet child like my daughter. I hope she doesn't get hurt too
+      badly by other kids. But that's part of growing up.
+    </p>
+
+    <p>
+      She's very interested in justice and fairness, in being kind, in things making
+      sense and being consistent. I see her becoming someone with a curious and
+      scientific mind—maybe going into a medical field or research. But she also talks a
+      lot about wanting to get married and have kids, so maybe she'll want to be a
+      homemaker. Ultimately, whatever is fulfilling and whatever is God's plan for her
+      life, that's what I want. I'm trying not to plan too heavily on it.
     </p>
 
     <h3>Charlotte Ann (Charlie)</h3>
 
     <p>
-      Charlie is 9 and is so much like my mom. She's an amazing social butterfly, loves
-      everyone, is incredibly kind. She can also have a sharp wit when she wants to.
-      Watching her navigate social situations with an ease I never had is both beautiful
-      and bittersweet. She reminds me so much of my mom, and I'm grateful for that.
+      Charlie is 9 and is so much like my mom. I'm not a social butterfly, so it's a
+      little hard for me to fully understand how she does it, but she seems to make
+      friends everywhere she goes easily. She's very friendly, very good about
+      greeting people. Strangers, people she doesn't know. Just very emotionally
+      adept and socially adept. At our homeschool co-op, we've been there maybe three
+      times, and she already has two best friends. It's crazy how quickly she makes
+      friends like that.
+    </p>
+
+    <p>
+      She captures my mom's essence of being friendly, having a lot of love for
+      people, and being deeply invested in relationships. My mom would get pretty upset
+      when things were going poorly for her friends, or if she was having problems with a
+      friend or relationship. She took it very hard. Charlie does too. She's very good
+      at sharing, very good at including people (except her sister sometimes, but
+      they're together all the time). She just wants to make sure everybody's taken care
+      of. And she has a sharp wit, playful and clever with plays on words, using her
+      bigger-for-her-age vocabulary to make funny comments. She likes to be sassy, to
+      show a little attitude, but in a nice way, never mean.
+    </p>
+
+    <p>
+      She's thriving in her activities: dance class, the drama program at co-op, being in
+      The Nutcracker (and already eager for the spring musical). Board games, especially
+      Uno, and art projects fill her time at home. Her social awareness is above average,
+      and her reading and math skills are strong too.
+    </p>
+
+    <p>
+      She needs support when people are being mean. She doesn't take that very well. She
+      needs encouragement to stay with things sometimes because she can be a little bit
+      distracted. Even in dance, as much as she loves it, she's still only nine and
+      doesn't have the drive of a serious dancer.
+    </p>
+
+    <p>
+      With her siblings, she's a caretaker for Teddy, loving to take care of him. As I
+      mentioned with Rory, Rory and Charlie are best frenemies, together all the time,
+      loving each other, playing games, getting mad at each other, fighting. It's amazing
+      to watch.
+    </p>
+
+    <p>
+      Charlie can be a little bit dramatic and expressive when it comes to big emotions.
+      She's not quite as explosive as Rory can be, but she's much more of a start-crying
+      type rather than getting mad and losing her temper like Rory does.
+    </p>
+
+    <p>
+      Seeing my mom in Charlie brings comfort. My mom's spirit is being carried on in my
+      children. Like my mom, Charlie feels relationships deeply and takes hurt to heart.
+      My mom often talked about how her own mother minimized feelings with a "nobody
+      likes a sourpuss" attitude, which was hard for someone who took relationships so
+      seriously. I'm trying to give Charlie what my mom needed: acknowledgment that it's
+      okay to be upset, that feelings matter, that you communicate through them rather
+      than stuff them down.
+    </p>
+
+    <p>
+      Watching her navigate social situations with an ease I never had is beautiful. I
+      hope she can fulfill God's purpose for her life by continuing to connect with
+      people. As she enters her preteen and teenage years, kids can be cruel, and she'll
+      have to learn how to protect her tender heart without closing it off.
     </p>
 
     <h3>Theodore Lysander (Teddy)</h3>
@@ -96,15 +213,91 @@
             </a>
           </div>
         </template> </SteampunkTooltip
-      >. He can't talk yet, which is obviously a significant challenge. I see so much of
-      myself in him, but it's hard to get to know him because he's difficult to
-      understand. Dealing with his disability has been a challenge for both of us.
+      >. He can't talk yet, which is a significant challenge. How he communicates: he
+      comes up and taps me on the shoulder, and that means "come and follow me to where
+      I'm going." Then he looks at me and I'm supposed to understand what it is. For me,
+      the breakthrough is in my ability to maintain composure despite frustration because
+      he doesn't know any better and he's trying his best, and it's frustrating
+      for him too.
     </p>
 
     <p>
-      We're doing therapy, working on equipping him with skills, hoping he'll be able to
-      communicate more as he gets older. It's a journey, and honestly, I don't know
-      where it's going to lead. But he's my son, and we're going to figure it out
+      I see so much of myself in him. That same curiosity and intelligence, the way he
+      figures things out even when he can't communicate them. When I was young, I made
+      friends with adults much more readily than children, and Teddy is the same. All of
+      his caregivers and the adults around him love and care about him deeply. Up at
+      church, there are high school and middle school helpers in the kids' Sunday
+      school, people I don't even know who know Teddy and say hi to him. I've struggled
+      all my life to communicate my feelings and felt misunderstood often. For Teddy,
+      that's in overdrive.
+    </p>
+
+    <p>
+      He's in ABA therapy and speech and occupational therapy. I worry a little bit
+      because I'm not there with him and he can't tell me if anything's going wrong. But
+      luckily, we have good therapists that I trust. The progress is slow, but
+      it's steady. One thing is that he will kind of stay close to you and follow you
+      when you ask him and doesn't run off as much, which is nice.
+    </p>
+
+    <p>
+      Swinging is his favorite thing in the world. We're lucky there's a park right
+      across from therapy to use as a reward. Give him his tablet, a movie, and his
+      preferred foods, and he's content. He loves playing peekaboo with that mischievous
+      giggle of his, though he hates trying new foods and being told no.
+    </p>
+
+    <p>
+      The hardest part of caring for Teddy day-to-day is the constant vigilance. Leave
+      something out he can get into, and he will. At the end of the day when I'm
+      frazzled, I'll make a mistake, like leaving out a mostly-full Gatorade powder
+      canister. He dumped it all over his bed, his room, himself. He was eating it, so it
+      was wet and sticky everywhere. These moments wear on you.
+    </p>
+
+    <p>
+      His autism-related behaviors are quintessential level three. He stims by
+      biting his hand, which is terrible. He doesn't bite it hard enough to break the
+      skin very much, but he chaps the skin on his hand, on the fleshy part under his
+      thumb. He will get pretty upset when things are not in routine. For instance, when
+      I pick him up from his mom's, there was this one time we had to go back to her
+      house because the girls had forgotten something. And he got like, "No, Dad, after
+      you pick me up from Mom's, we go to your house and I get my snacks and my tablet
+      and my movies. That's what we were doing, not coming back here." He got pretty
+      riled up. And he tunnels hard on things. Once he gets it in his mind that
+      he's going to get something or do something, unless you can make it disappear (out
+      of sight, out of mind), then it's going to be challenging to redirect him.
+    </p>
+
+    <p>
+      When he can't communicate and gets frustrated, he can get pretty upset with it.
+      I'm kind of following the advice of the therapist, which is to ignore it. Don't
+      engage (positive or negative, comfort or discipline) on it, because ultimately
+      that seems to be the only way to teach him that it's not worthwhile to have the
+      meltdown. I don't know what happens for other people, but I kind of have an
+      unspoken communication with him and I have an idea about what he wants in many
+      cases. Don't ask me how I know, I just kind of read the situation, I guess. Like,
+      he's brought me into his room and he has all his snacks and he's looking at the
+      TV, and I'm like, "Oh, you want a different movie. You don't like this movie."
+    </p>
+
+    <p>
+      Rory and Charlie are patient, protective, and understanding with Teddy. They're
+      very good sisters who love him deeply.
+    </p>
+
+    <p>
+      As Teddy's dad, I navigate grief and hope in equal measure. I grieve for uncertain
+      potential, wrestle with frustration and guilt, wonder what I could have done
+      differently. My hope is that he can have a somewhat independent life, that he can
+      find purpose and meaning, maybe love. My fear is that he'll be trapped in
+      frustration and isolation, feeling misunderstood. I think about his identity, how
+      much is wrapped up in autism versus just being Teddy. It's both. Autism is
+      something you are, not something you have. But it's just a part of who he is. He's
+      also a charismatic young man who draws people in, handsome and engaging in ways I
+      can't fully explain. We're doing therapy, equipping him with skills, hoping he'll
+      be able to communicate more as he gets older. It's a journey, and I don't know
+      where it leads. But he's my son, and I love him. We're going to figure it out
       together.
     </p>
 

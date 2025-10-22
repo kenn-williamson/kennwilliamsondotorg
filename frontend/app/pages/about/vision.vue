@@ -340,7 +340,7 @@
     <h2>Final Thoughts: Still Being Written</h2>
 
     <p>
-      This is where I am right now, at 43 years old, in September 2025. But the story
+      This is where I am right now, at 43 years old, in October 2025. But the story
       isn't finished. I'm still learning, still growing, still failing and getting back
       up. Still trying to figure out what it means to walk in love in a world that runs
       on violence and fear.
