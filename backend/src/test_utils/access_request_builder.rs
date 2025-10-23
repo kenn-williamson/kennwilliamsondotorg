@@ -7,7 +7,6 @@ use anyhow::Result;
 /// Builder for creating AccessRequest instances in tests with sensible defaults.
 #[derive(Clone)]
 pub struct AccessRequestBuilder {
-    id: Option<Uuid>,
     user_id: Option<Uuid>,
     message: Option<String>,
     requested_role: Option<String>,
@@ -22,7 +21,6 @@ impl AccessRequestBuilder {
     /// Create a new builder with sensible defaults
     pub fn new() -> Self {
         Self {
-            id: None,
             user_id: None,
             message: None,
             requested_role: None,

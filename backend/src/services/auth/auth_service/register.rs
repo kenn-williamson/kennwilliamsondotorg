@@ -386,10 +386,11 @@ mod tests {
         // Assert email was sent
         assert_eq!(email_service.count(), 1);
         let sent_emails = email_service.get_sent_emails();
-        assert_eq!(sent_emails[0].to_email, "test@example.com");
-        assert_eq!(sent_emails[0].to_name, Some("Test User".to_string()));
-        assert_eq!(sent_emails[0].frontend_url, "https://kennwilliamson.org");
-        assert!(!sent_emails[0].verification_token.is_empty());
+        assert_eq!(sent_emails[0].to, vec!["test@example.com"]);
+        assert_eq!(sent_emails[0].subject, "Verify Your Email Address - KennWilliamson.org");
+        assert!(sent_emails[0].html_body.is_some());
+        assert!(sent_emails[0].text_body.contains("Test User"));
+        assert!(sent_emails[0].text_body.contains("verify-email"));
 
         Ok(())
     }

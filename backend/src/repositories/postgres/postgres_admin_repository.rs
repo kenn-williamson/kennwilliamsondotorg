@@ -130,6 +130,25 @@ impl AdminRepository for PostgresAdminRepository {
 
         Ok(count)
     }
+
+    async fn get_admin_emails(&self) -> Result<Vec<String>> {
+        let emails = sqlx::query_scalar::<_, String>(
+            r#"
+            SELECT DISTINCT u.email
+            FROM users u
+            INNER JOIN user_roles ur_admin ON u.id = ur_admin.user_id
+            INNER JOIN roles r_admin ON ur_admin.role_id = r_admin.id AND r_admin.name = 'admin'
+            INNER JOIN user_roles ur_verified ON u.id = ur_verified.user_id
+            INNER JOIN roles r_verified ON ur_verified.role_id = r_verified.id AND r_verified.name = 'email-verified'
+            WHERE u.active = true
+            ORDER BY u.email
+            "#
+        )
+        .fetch_all(&self.pool)
+        .await?;
+
+        Ok(emails)
+    }
 }
 
 impl PostgresAdminRepository {

@@ -23,6 +23,7 @@ mock! {
         ) -> Result<Vec<UserWithRoles>>;
         async fn count_all_users(&self) -> Result<i64>;
         async fn count_active_users(&self) -> Result<i64>;
+        async fn get_admin_emails(&self) -> Result<Vec<String>>;
     }
 }
 

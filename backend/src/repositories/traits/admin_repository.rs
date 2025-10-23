@@ -28,4 +28,8 @@ pub trait AdminRepository: Send + Sync {
 
     /// Count active users (admin only)
     async fn count_active_users(&self) -> Result<i64>;
+
+    /// Get email addresses of all active, verified admin users for notifications
+    /// Returns empty vec if no admins found (not an error)
+    async fn get_admin_emails(&self) -> Result<Vec<String>>;
 }

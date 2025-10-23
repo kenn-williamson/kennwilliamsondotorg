@@ -1,7 +1,6 @@
 use chrono::{Duration, Utc};
 
 mod fixtures;
-use fixtures::TestContext;
 
 /// Test cleanup of expired refresh tokens
 #[actix_web::test]

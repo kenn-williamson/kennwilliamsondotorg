@@ -928,10 +928,11 @@ mod tests {
         user_repo.expect_get_users_with_public_timers()
             .with(
                 mockall::predicate::eq(20), // page_size
-                mockall::predicate::eq(0)   // offset
+                mockall::predicate::eq(0),  // offset
+                mockall::predicate::eq(None::<String>) // search
             )
             .times(1)
-            .returning(move |_, _| Ok(timers.clone()));
+            .returning(move |_, _, _| Ok(timers.clone()));
 
         let refresh_token_repo = MockRefreshTokenRepository::new();
 
@@ -971,8 +972,6 @@ mod tests {
     async fn test_get_public_timer_list_empty() {
         // Test empty list returns 200 with empty array
 
-        use crate::models::db::user::UserWithTimer;
-
         // Create mock user repository
         let mut user_repo = MockUserRepository::new();
 
@@ -980,10 +979,11 @@ mod tests {
         user_repo.expect_get_users_with_public_timers()
             .with(
                 mockall::predicate::eq(20),
-                mockall::predicate::eq(0)
+                mockall::predicate::eq(0),
+                mockall::predicate::eq(None::<String>)
             )
             .times(1)
-            .returning(|_, _| Ok(vec![]));
+            .returning(|_, _, _| Ok(vec![]));
 
         let refresh_token_repo = MockRefreshTokenRepository::new();
 

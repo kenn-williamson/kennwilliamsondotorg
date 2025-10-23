@@ -59,12 +59,22 @@ impl ServiceContainer {
         let from_email = std::env::var("SES_FROM_EMAIL")
             .unwrap_or_else(|_| "noreply@kennwilliamson.org".to_string());
         let reply_to_email = std::env::var("SES_REPLY_TO_EMAIL").ok();
+        let frontend_url = std::env::var("FRONTEND_URL").ok();
+
+        // Log configuration warnings
+        if frontend_url.is_none() {
+            log::warn!("FRONTEND_URL not set - email notifications will be disabled");
+        }
+
+        // Clone email config before moving (needed for multiple email service instances)
+        let from_email_for_auth = from_email.clone();
+        let reply_to_email_for_auth = reply_to_email.clone();
 
         // Create email service with suppression checking
         let suppression_repo = Box::new(PostgresEmailSuppressionRepository::new(pool.clone()));
         let email_service = SesEmailService::with_suppression(
-            from_email,
-            reply_to_email,
+            from_email_for_auth,
+            reply_to_email_for_auth,
             suppression_repo,
         );
 
@@ -124,9 +134,26 @@ impl ServiceContainer {
             PostgresPhraseRepository::new(pool.clone()),
         )));
 
-        let access_request_moderation_service = Arc::new(AccessRequestModerationService::new(
-            Box::new(PostgresAccessRequestRepository::new(pool.clone())),
-        ));
+        // Build access request moderation service with email notification support
+        let mut access_request_builder = AccessRequestModerationService::builder()
+            .with_access_request_repository(Box::new(PostgresAccessRequestRepository::new(pool.clone())));
+
+        // Add optional email dependencies if frontend_url is configured
+        if let Some(url) = frontend_url.as_ref() {
+            access_request_builder = access_request_builder
+                .with_admin_repository(Box::new(PostgresAdminRepository::new(pool.clone())))
+                .with_email_service(Box::new(SesEmailService::with_suppression(
+                    from_email.clone(),
+                    reply_to_email.clone(),
+                    Box::new(PostgresEmailSuppressionRepository::new(pool.clone())),
+                )))
+                .with_frontend_url(url);
+        }
+
+        let access_request_moderation_service = Arc::new(
+            access_request_builder.build()
+                .expect("Failed to build AccessRequestModerationService")
+        );
 
         let stats_service = Arc::new(StatsService::new(
             Box::new(PostgresPhraseRepository::new(pool.clone())),

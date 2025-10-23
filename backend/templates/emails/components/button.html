@@ -1,0 +1,18 @@
+{#
+    Button component for email templates
+
+    Usage in templates:
+    {% set button_text = "Verify Email" %}
+    {% set button_url = verification_url %}
+    {% include "emails/components/button.html" %}
+#}
+
+<table role="presentation" cellspacing="0" cellpadding="0" border="0" align="center" style="margin: 20px auto;">
+    <tr>
+        <td align="center" style="border-radius: 6px; background: linear-gradient(to bottom, #d4a574, #b8956a);">
+            <a href="{{ button_url }}" target="_blank" style="display: inline-block; padding: 16px 40px; font-size: 16px; font-weight: bold; color: #2c1810; text-decoration: none; border-radius: 6px; border: 2px solid #8b6f47; box-shadow: 0 2px 4px rgba(0, 0, 0, 0.3); letter-spacing: 1px;">
+                {{ button_text }}
+            </a>
+        </td>
+    </tr>
+</table>

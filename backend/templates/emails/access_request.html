@@ -1,0 +1,64 @@
+{% extends "emails/base.html" %}
+
+{% block title %}New Access Request - KennWilliamson.org{% endblock %}
+
+{% block content %}
+<div style="color: #e8dcc4; font-size: 16px; line-height: 1.6;">
+    <h2 style="margin: 0 0 20px 0; font-size: 24px; color: #d4a574; font-weight: bold;">
+        New Access Request
+    </h2>
+
+    <p style="margin: 0 0 20px 0;">
+        A user has requested elevated access to KennWilliamson.org.
+    </p>
+
+    <!-- Request Details Card -->
+    <div style="margin: 20px 0; padding: 20px; background-color: #2c1810; border: 2px solid #8b6f47; border-radius: 6px;">
+        <table role="presentation" width="100%" cellspacing="0" cellpadding="0" border="0">
+            <tr>
+                <td style="padding: 8px 0; color: #b8956a; font-size: 14px; font-weight: bold; width: 120px;">
+                    User:
+                </td>
+                <td style="padding: 8px 0; color: #e8dcc4; font-size: 14px;">
+                    {{ user_display_name }}
+                </td>
+            </tr>
+            <tr>
+                <td style="padding: 8px 0; color: #b8956a; font-size: 14px; font-weight: bold;">
+                    Requested Role:
+                </td>
+                <td style="padding: 8px 0; color: #d4a574; font-size: 14px; font-weight: bold;">
+                    {{ requested_role }}
+                </td>
+            </tr>
+        </table>
+
+        {% match request_message %}
+        {% when Some with (message) %}
+        <div style="margin-top: 20px; padding-top: 15px; border-top: 1px solid #8b6f47;">
+            <p style="margin: 0 0 10px 0; color: #b8956a; font-size: 14px; font-weight: bold;">
+                User's Message:
+            </p>
+            <p style="margin: 0; padding: 12px; background-color: #3d2a1f; border-left: 3px solid #d4a574; color: #e8dcc4; font-size: 14px; line-height: 1.5; font-style: italic;">
+                "{{ message }}"
+            </p>
+        </div>
+        {% when None %}
+        {% endmatch %}
+    </div>
+
+    <p style="margin: 20px 0; font-size: 14px; color: #b8956a;">
+        Please review this request in the admin panel:
+    </p>
+
+    {% set button_text = "Review Access Request" %}
+    {% set button_url = admin_panel_url %}
+    {% include "emails/components/button.html" %}
+
+    <div style="margin-top: 30px; padding: 15px; background-color: #4a3628; border-left: 4px solid #d4a574; border-radius: 4px;">
+        <p style="margin: 0; font-size: 13px; color: #e8dcc4;">
+            <strong>Note:</strong> You can approve or deny this request from the admin panel. The user will be notified of your decision.
+        </p>
+    </div>
+</div>
+{% endblock %}

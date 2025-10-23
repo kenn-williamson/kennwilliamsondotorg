@@ -384,7 +384,9 @@ async fn test_verify_email_success() {
     // Extract the verification token from the MockEmailService
     assert_eq!(ctx.email_service.count(), 1, "Verification email should be sent");
     let sent_emails = ctx.email_service.get_sent_emails();
-    let verification_token = &sent_emails[0].verification_token;
+    let verification_token = ctx.email_service
+        .extract_verification_token(&sent_emails[0])
+        .expect("Failed to extract verification token from email");
 
     // Verify email with the token
     let mut resp = ctx.server.get(&format!("/backend/public/auth/verify-email?token={}", verification_token))

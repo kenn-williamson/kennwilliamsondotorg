@@ -11,14 +11,19 @@ pub mod data_generators;
 pub mod database;
 
 // Re-export commonly used items
+// Note: Not all exports are used in every test file, which is expected for a fixtures module
+#[allow(unused_imports)]
 pub use test_context::{TestContext, TestContainer};
+#[allow(unused_imports)]
 pub use jwt::create_test_jwt_token;
+#[allow(unused_imports)]
 pub use data_generators::{
     unique_test_email,
     unique_test_slug,
     test_password_hash,
     unique_test_phrase,
 };
+#[allow(unused_imports)]
 pub use database::{
     create_verified_user,
     create_unverified_user,
