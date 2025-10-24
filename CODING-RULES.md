@@ -37,10 +37,21 @@ This document establishes coding standards and development conventions for the K
 - **Async**: Use async/await patterns consistently
 - **Testing**: Add integration tests for new API endpoints
 - **Builder Pattern**: Use builder pattern for struct initialization instead of `new()` constructors
-  - ✅ Correct: `MyStruct::builder().with_option(value).build()`
-  - ❌ Avoid: `MyStruct::new(arg1, arg2, arg3)`
-  - Rationale: Builder pattern provides flexibility, discoverability, and prevents breaking changes when adding new fields
-  - Exception: Simple value types (like `String::new()`, `Vec::new()`) can use `new()`
+
+  **Why**: Flexibility, discoverability, prevents breaking changes when adding fields
+
+  ```rust
+  // ✅ Good: Builder pattern
+  let timer = IncidentTimer::builder()
+      .reset_timestamp(timestamp)
+      .notes("System restart")
+      .build();
+
+  // ❌ Avoid: Constructor with many args
+  let timer = IncidentTimer::new(id, user_id, timestamp, Some("notes"), created, updated);
+  ```
+
+  **Exception**: Simple value types (`String::new()`, `Vec::new()`) can use `new()`
 
 ### SQL/Database
 - **Migrations**: Use SQLx migrations for all schema changes
@@ -112,9 +123,18 @@ This document establishes coding standards and development conventions for the K
   - Run tests with: `cargo test -- --test-threads=4`
   - Prevents Docker container/database connection pool exhaustion
 - **Test Fixtures**: Use builder pattern for test fixture creation
-  - ✅ `TestContext::builder().build().await` for full integration tests
-  - ✅ `TestContainer::builder().build().await` for low-level database tests
-  - Avoid direct constructor calls to prevent coupling to internal implementation details
+
+  **Why**: Prevents coupling to internal implementation details, allows adding test setup options without breaking existing tests
+
+  ```rust
+  // ✅ Good: Builder for test fixtures
+  let ctx = TestContext::builder()
+      .with_user("test@example.com")
+      .build().await;
+
+  // ❌ Avoid: Direct construction couples to internals
+  let ctx = TestContext::new(pool, container, user);
+  ```
 
 ### Frontend Testing
 - **Unit Tests**: Component-level testing (planned)

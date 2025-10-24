@@ -1,81 +1,172 @@
 # CLAUDE.md - Project Context
 
-## Project Overview
-**KennWilliamson.org** is a production-deployed full-stack web application with:
-- **Frontend**: Nuxt.js 4.0.3 (Vue 3 + SSR + TypeScript + TailwindCSS)
-- **Backend**: Rust 1.90.0 + Actix-web 4.x + PostgreSQL 17.0
-- **Development**: Docker Compose + Hot Reload Environment
-- **Infrastructure**: Nginx reverse proxy with SSL
-- **Deployment**: Live at kennwilliamson.org
+## Business Purpose
 
-**Current State**: Production application with complete feature set including authentication (normalized multi-table schema), multi-provider OAuth, email verification, incident timers, phrases system, admin panel, GDPR/CCPA compliance, 3-layer architecture refactor, and comprehensive test coverage (~620 tests total: ~445 backend + 175 frontend).
+**KennWilliamson.org** serves multiple strategic goals:
 
-**Recent Major Update**: Auth schema refactor completed (January 2025, Phases 0-9). Migrated from monolithic `users` table to normalized multi-table architecture (`users`, `user_credentials`, `user_external_logins`, `user_profiles`, `user_preferences`) for improved maintainability, multi-provider OAuth support, and enhanced GDPR/CCPA compliance.
+1. **Portfolio & Demonstration**: Production full-stack application showcasing professional deployment skills (Rust + Nuxt.js + PostgreSQL + Docker + AWS)
+2. **Learning Platform**: Exploring AI-assisted development in unfamiliar stack (Rust/Nuxt) while applying strong architectural knowledge
+3. **Public Platform**: Personal testimony and community engagement through incident timers and motivational phrases
+4. **Creative Outlet**: Personal project with steampunk aesthetic and unique features
 
-## Quick Start
-```bash
-# Start entire development environment
-./scripts/dev-start.sh
+**Deployment**: Live production site at kennwilliamson.org
 
-# OR start local production environment for production testing
-./scripts/setup-local-prod.sh
+## Users & Needs
 
-# View logs and monitor services
-./scripts/dev-logs.sh
+**Primary Audiences:**
+- General public wanting to know Kenn
+- Potential employers, clients, collaborators
+- Community participants (sharing incident timers, contributing phrases)
+- Personal network (friends, potential partners)
 
-# Access application at https://localhost
-```
+**Key User Constraints:**
+- Public visibility requires professional polish and performance
+- SEO critical for discoverability
+- Community features require trust and data privacy compliance
+- Mobile access expected (responsive design essential)
 
-## Key Features
-- **Authentication**: Normalized multi-table schema with JWT + refresh token system, session management, and multi-provider OAuth support
-- **Database Schema**: Normalized user authentication (credentials, external logins, profiles, preferences in separate tables)
-- **Email Verification**: Token-based email verification with role-based access control
-- **Password Reset**: Secure token-based password reset with expiration tracking
-- **Incident Timers**: Full CRUD operations with public sharing and steampunk UI
-- **Phrases System**: Random motivational phrases with user suggestions, filtering, and full-text search
-- **Admin Panel**: User management, phrase moderation, RBAC, and system statistics
-- **Profile Management**: Display name, slug editing, password changes, and account settings
-- **Data Privacy**: Self-service account deletion and data export (GDPR/CCPA compliant)
-- **Email Suppression**: AWS SES compliance with bounce/complaint/unsubscribe handling
-- **Public Display**: Public timer and phrase endpoints (no auth required)
-- **Testing**: ~620 tests (~445 backend unit/integration + 175 frontend) with paradigm-based documentation
-- **Architecture**: 3-layer backend (API/Service/Repository) with dependency injection
-- **Frontend Architecture**: Stores with embedded actions for SSR hydration
-- **Responsive UI**: Mobile-first design with TailwindCSS and steampunk aesthetics
-- **Route Protection**: Middleware-based authentication with role-based access (RBAC)
-- **Hot Reload**: Instant updates for both frontend and backend
+## Technology Stack Decisions
 
-# Core Documentation (Loaded in Memory)
-- @ARCHITECTURE.md - System architecture and service design
-- @CODING-RULES.md - Development standards and conventions
-- @DEVELOPMENT-WORKFLOW.md - Common development workflows
+### Core Technologies
+- **Frontend**: Nuxt.js 4.0.3 (Vue 3 + SSR + TypeScript)
+- **Backend**: Rust 1.90.0 + Actix-web 4.x
+- **Database**: PostgreSQL 17.0
+- **Infrastructure**: Docker Compose + Nginx + AWS
 
-## Implementation Documentation (Reference as Needed)
-- IMPLEMENTATION-AUTH.md - Authentication system design
-- IMPLEMENTATION-BACKEND.md - Rust backend implementation
-- IMPLEMENTATION-DATA-CONTRACTS.md - API request/response schemas
-- IMPLEMENTATION-DATABASE.md - PostgreSQL schema and migrations
-- IMPLEMENTATION-FRONTEND.md - Nuxt.js frontend implementation
-- IMPLEMENTATION-NGINX.md - Reverse proxy configuration
-- IMPLEMENTATION-SCRIPTS.md - Development automation scripts
-- IMPLEMENTATION-TESTING.md - Testing implementation and patterns
-- IMPLEMENTATION-UTILS.md - Development utilities
+### Why Nuxt.js SSR
+**Decision**: Server-side rendering with Nuxt.js
 
-## Additional Documentation
-- UX-LAYOUT.md - Design system and responsive breakpoints
-- ROADMAP.md - Future development priorities
+**Why**: SEO requirement for public discoverability. Search engines need server-rendered HTML for portfolio and testimony content to be indexed.
 
-## Development Context7 Usage
-When working on this project, use Context7 MCP to look up framework documentation:
-- **Nuxt.js**: `resolve-library-id` with "nuxt.js" for SSR and routing
-- **Actix-web**: `resolve-library-id` with "actix-web" for Rust web framework
+**Alternative rejected**: Client-side SPA (React/Vue) - insufficient SEO for public-facing content.
+
+### Why Rust Backend
+**Decision**: Rust + Actix-web for API
+
+**Why**:
+- Learning goal: AI-assisted development in unfamiliar systems language
+- Performance: Stateless Rust API handles high throughput with minimal resources
+- Type safety: Catches errors at compile-time (important for learning new stack)
+
+**Trade-off**: Steeper learning curve vs. Node.js, but superior performance and safety.
+
+### Why PostgreSQL
+**Decision**: PostgreSQL 17 over alternatives
+
+**Why**: Full-text search, JSONB flexibility, ACID compliance, mature ecosystem. See [IMPLEMENTATION-DATABASE.md](IMPLEMENTATION-DATABASE.md#technology-stack-decisions) for detailed rationale.
+
+## Architectural Decisions
+
+### Hybrid API Architecture
+**Decision**: Two API patterns - `/api/*` SSR proxy vs `/backend/*` direct
+
+**Why**:
+- **SEO**: Nuxt SSR renders initial page load (search engine indexing)
+- **Security/UX**: `/api/*` leverages stateful Nuxt for session handling and cookie management
+- **Performance**: `/backend/*` leverages stateless Rust speed for mutations and API calls
+
+**Trade-off**: Architectural complexity vs. optimizing each use case appropriately.
+
+See [ARCHITECTURE.md](ARCHITECTURE.md#hybrid-api-architecture) for implementation details.
+
+### 3-Layer Backend Architecture
+**Decision**: API → Service → Repository pattern
+
+**Why**: Testability critical for AI-assisted development. Clear separation enables unit testing with mocks, integration testing with real database, and confidence when exploring unfamiliar patterns.
+
+See [IMPLEMENTATION-BACKEND.md](IMPLEMENTATION-BACKEND.md#architecture-decisions) for detailed patterns and rationale.
+
+### Normalized Auth Schema
+**Decision**: Split user data across 5 tables (users, credentials, external_logins, profiles, preferences)
+
+**Why**:
+- Multi-provider OAuth support (future-proofing)
+- GDPR/CCPA compliance (clear data boundaries)
+- Maintainability (auth changes don't affect profile)
+
+See [IMPLEMENTATION-DATABASE.md](IMPLEMENTATION-DATABASE.md#normalized-auth-architecture) for schema design decisions.
+
+## Constraints & Requirements
+
+### Budget: AWS t3.small (2GB RAM)
+**Impact**: All resource allocation decisions driven by 2GB RAM constraint
+- Connection pooling: Limited to 10 database connections
+- PostgreSQL optimization: Tuned for 2GB environment
+- Stateless design: Enables horizontal scaling without memory penalties
+
+See [ARCHITECTURE.md](ARCHITECTURE.md#resource-management) for resource targets.
+
+### GDPR/CCPA Compliance
+**Impact**: Data privacy requirements drive architecture
+- Self-service account deletion and data export
+- Email suppression list (AWS SES compliance)
+- Clear data boundaries in normalized schema
+- Audit logging for compliance demonstration
+
+### Performance Targets
+**Impact**: Fast response times despite resource constraints
+- Stateless Rust API for throughput
+- Connection pooling and query optimization
+- SSR for initial page load, client hydration for interactivity
+
+### Learning Goals
+**Impact**: Exploring AI-assisted development patterns
+- 3-layer architecture for testability and confidence
+- Comprehensive test coverage (~620 tests)
+- Documentation-driven development for AI context
+
+## What Makes This Unique
+
+- **Steampunk Aesthetic**: Personal creative expression in UI design
+- **Public Incident Timers**: Community transparency feature (share "days since incident")
+- **AI-Assisted Production**: Real-world exploration of Claude-assisted development
+- **Hybrid Platform**: Portfolio + testimony + community engagement in one application
+- **Normalized Auth**: Multi-table architecture unusual for small projects (learning investment)
+
+## Core Documentation
+
+**Read First** (strategic context and patterns):
+- **ARCHITECTURE.md**: System architecture and design decisions
+- **CODING-RULES.md**: Development standards and conventions
+- **DEVELOPMENT-WORKFLOW.md**: Daily development workflows and scripts
+
+**Implementation Details** (decision rationale by component):
+- **IMPLEMENTATION-BACKEND.md**: Rust backend architecture decisions
+- **IMPLEMENTATION-FRONTEND.md**: Nuxt.js frontend architecture decisions
+- **IMPLEMENTATION-DATABASE.md**: PostgreSQL schema design decisions
+- **IMPLEMENTATION-SECURITY.md**: Authentication and security decisions
+- **IMPLEMENTATION-TESTING.md**: Testing strategy and paradigms
+- **IMPLEMENTATION-NGINX.md**: Reverse proxy configuration decisions
+- **IMPLEMENTATION-SCRIPTS.md**: Development automation scripts
+- **IMPLEMENTATION-DEPLOYMENT.md**: Production deployment decisions
+- **IMPLEMENTATION-LOGGING.md**: Logging and observability decisions
+- **IMPLEMENTATION-UTILS.md**: Development utilities
+
+**Additional Documentation**:
+- **UX-LAYOUT.md**: Design system and responsive breakpoints
+- **ROADMAP.md**: Future development priorities
+
+**Note**: IMPLEMENTATION-* documents follow "Decision/Why/Alternatives/Trade-offs" pattern. Focus on decisions and rationale, not current code structure (code is discoverable).
+
+## Development Context
+
+### AI Assistant Usage
+When working on this project, use Context7 MCP for framework documentation:
+- **Nuxt.js**: `resolve-library-id` with "nuxt.js" for SSR and routing patterns
+- **Actix-web**: `resolve-library-id` with "actix-web" for Rust web framework patterns
 - **PostgreSQL**: `resolve-library-id` with "postgresql" for database operations
 - **Docker**: `resolve-library-id` with "docker" for containerization
 
-## Essential Rules
-- Always use development scripts instead of manual Docker commands
-- Use `.env.development` for all development work
-- Check service health after major changes with `./scripts/health-check.sh`
-- Run migrations safely with `./scripts/setup-db.sh` (preserves data)
-- Update SQLx cache with `./scripts/prepare-sqlx.sh` after SQL changes
-- Follow [CODING-RULES.md](CODING-RULES.md) for development standards
+### Essential Development Practices
+- **Use development scripts**: `./scripts/dev-start.sh`, `./scripts/health-check.sh` (never manual Docker commands)
+- **Environment**: `.env.development` for all development work
+- **Migrations**: `./scripts/setup-db.sh` preserves data (safe for running repeatedly)
+- **SQLx cache**: `./scripts/prepare-sqlx.sh` after SQL query changes (compile-time verification)
+- **Testing**: `cargo test -- --test-threads=4` (prevents Docker resource exhaustion)
+- **Standards**: Follow [CODING-RULES.md](CODING-RULES.md) for language-specific conventions
+
+See [DEVELOPMENT-WORKFLOW.md](DEVELOPMENT-WORKFLOW.md) for comprehensive workflow guidance.
+
+## Project History
+
+**Recent Major Update** (January 2025): Auth schema refactor completed (Phases 0-9). Migrated from monolithic `users` table to normalized multi-table architecture for multi-provider OAuth support and GDPR/CCPA compliance enhancement.

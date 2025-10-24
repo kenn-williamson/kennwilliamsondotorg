@@ -1,314 +1,180 @@
 # Backend Implementation
 
 ## Overview
-Rust-based REST API using Actix-web 4.x with PostgreSQL integration and comprehensive test coverage. The backend has been refactored with a modular service architecture, enhanced admin capabilities, and comprehensive testing infrastructure.
+Rust-based REST API using Actix-web 4.x with PostgreSQL integration and comprehensive test coverage.
 
-## Technology Stack
+## Technology Stack Decisions
+
+### Core Technologies
 - **Language**: Rust 1.90.0
+  - Why: Type safety, performance, fearless concurrency
 - **Framework**: Actix-web 4.x
+  - Why: High performance, async by default, mature ecosystem
 - **Database**: SQLx with PostgreSQL
+  - Why: Compile-time query verification, async support
 - **Serialization**: Serde
-- **Environment**: dotenv
-- **Testing**: actix-test
-- **Logging**: env_logger
+  - Why: Industry standard, zero-copy deserialization
+- **Testing**: actix-test + testcontainers
+  - Why: Integration tests with real database, full request/response cycle testing
 
-## Project Structure
-```
-backend/
-├── src/
-│   ├── main.rs           # Application entry point
-│   ├── lib.rs            # Library exports
-│   ├── models/           # Database models
-│   │   ├── mod.rs        # Module exports
-│   │   ├── api/          # API models
-│   │   │   └── user.rs   # User API models
-│   │   ├── oauth/        # OAuth models
-│   │   │   ├── mod.rs
-│   │   │   └── google_user_info.rs # Google OAuth user info
-│   │   ├── user.rs       # User model + auth requests
-│   │   ├── incident_timer.rs # Incident timer model
-│   │   └── phrase.rs     # Phrase and suggestion models
-│   ├── repositories/     # Repository layer (3-layer architecture)
-│   │   ├── mod.rs        # Repository exports
-│   │   ├── traits/       # Repository trait definitions
-│   │   │   ├── mod.rs
-│   │   │   ├── user_repository.rs # Core user identity operations
-│   │   │   ├── user_credentials_repository.rs # Password authentication
-│   │   │   ├── user_external_login_repository.rs # OAuth provider linkage
-│   │   │   ├── user_profile_repository.rs # User profile data
-│   │   │   ├── user_preferences_repository.rs # User settings
-│   │   │   ├── refresh_token_repository.rs
-│   │   │   ├── verification_token_repository.rs
-│   │   │   ├── password_reset_token_repository.rs
-│   │   │   ├── email_suppression_repository.rs
-│   │   │   ├── incident_timer_repository.rs
-│   │   │   ├── phrase_repository.rs
-│   │   │   ├── admin_repository.rs
-│   │   │   └── pkce_storage.rs
-│   │   ├── postgres/     # PostgreSQL implementations
-│   │   │   ├── mod.rs
-│   │   │   ├── postgres_user_repository.rs
-│   │   │   ├── postgres_user_credentials_repository.rs
-│   │   │   ├── postgres_user_external_login_repository.rs
-│   │   │   ├── postgres_user_profile_repository.rs
-│   │   │   ├── postgres_user_preferences_repository.rs
-│   │   │   ├── postgres_refresh_token_repository.rs
-│   │   │   ├── postgres_verification_token_repository.rs
-│   │   │   ├── postgres_password_reset_token_repository.rs
-│   │   │   ├── postgres_email_suppression_repository.rs
-│   │   │   ├── postgres_incident_timer_repository.rs
-│   │   │   ├── postgres_phrase_repository.rs
-│   │   │   └── postgres_admin_repository.rs
-│   │   └── mocks/        # Mock implementations for testing
-│   │       ├── mod.rs
-│   │       ├── mock_user_repository.rs
-│   │       ├── mock_user_credentials_repository.rs
-│   │       ├── mock_user_external_login_repository.rs
-│   │       ├── mock_user_profile_repository.rs
-│   │       ├── mock_user_preferences_repository.rs
-│   │       ├── mock_refresh_token_repository.rs
-│   │       ├── mock_verification_token_repository.rs
-│   │       ├── mock_password_reset_token_repository.rs
-│   │       ├── mock_email_suppression_repository.rs
-│   │       ├── mock_incident_timer_repository.rs
-│   │       ├── mock_phrase_repository.rs
-│   │       └── mock_admin_repository.rs
-│   ├── routes/           # API route handlers
-│   │   ├── mod.rs        # Route configuration with public/protected/admin scoping
-│   │   ├── auth.rs       # Authentication endpoints
-│   │   ├── incident_timers.rs # Timer CRUD + public endpoints
-│   │   ├── phrases.rs    # Phrase management endpoints
-│   │   ├── admin.rs      # Admin user management and phrase moderation endpoints
-│   │   └── health.rs     # Health check endpoints
-│   ├── services/         # Business logic layer
-│   │   ├── mod.rs        # Service exports
-│   │   ├── container.rs  # ServiceContainer for dependency injection
-│   │   ├── auth/         # Authentication services (modularized)
-│   │   │   ├── mod.rs    # Auth service exports
-│   │   │   ├── jwt.rs    # JWT token management
-│   │   │   ├── oauth/    # OAuth service abstraction
-│   │   │   │   ├── mod.rs
-│   │   │   │   ├── google_oauth_service.rs # Google OAuth implementation
-│   │   │   │   └── mock_google_oauth_service.rs # Mock for testing
-│   │   │   └── auth_service/ # Auth service modules
-│   │   │       ├── mod.rs
-│   │   │       ├── register.rs # User registration
-│   │   │       ├── login.rs    # User login
-│   │   │       ├── refresh_token.rs # Token refresh logic
-│   │   │       ├── profile.rs  # Profile management
-│   │   │       ├── password.rs # Password operations
-│   │   │       ├── slug.rs     # Username slug generation
-│   │   │       ├── email_verification.rs # Email verification logic
-│   │   │       └── oauth.rs    # Google OAuth PKCE flow
-│   │   ├── email/         # Email service abstraction
-│   │   │   ├── mod.rs     # EmailService trait
-│   │   │   ├── mock_email_service.rs # Mock for testing
-│   │   │   └── ses_email_service.rs  # AWS SES implementation
-│   │   ├── cleanup/       # Token cleanup service
-│   │   │   └── mod.rs     # CleanupService for expired tokens
-│   │   ├── incident_timer/ # Timer business logic (modularized)
-│   │   │   ├── mod.rs
-│   │   │   ├── create.rs
-│   │   │   ├── read.rs
-│   │   │   ├── update.rs
-│   │   │   └── delete.rs
-│   │   ├── phrase/       # Phrase and suggestion business logic (modularized)
-│   │   │   ├── mod.rs
-│   │   │   ├── public_access.rs
-│   │   │   ├── user_management.rs
-│   │   │   ├── admin_management.rs
-│   │   │   ├── exclusions.rs
-│   │   │   └── suggestions.rs
-│   │   └── admin/        # Admin services (modularized)
-│   │       ├── mod.rs    # Admin service exports
-│   │       ├── user_management/ # User management service modules
-│   │       │   └── mod.rs # UserManagementService + 7 unit tests
-│   │       ├── phrase_moderation/ # Phrase moderation service modules
-│   │       │   └── mod.rs # PhraseModerationService + 5 unit tests
-│   │       └── stats/    # Statistics service modules
-│   │           └── mod.rs # StatsService + 3 unit tests
-│   ├── middleware/       # Custom middleware
-│   │   ├── mod.rs        # Middleware exports
-│   │   ├── auth.rs       # JWT validation with role extraction
-│   │   └── admin.rs      # Admin role validation middleware
-│   └── utils/            # Utility functions
-├── migrations/           # SQLx migrations
-│   ├── 20250914134643_initial_schema.sql
-│   ├── 20250914134654_add_refresh_tokens_and_user_active.sql
-│   └── 20250914134703_add_phrases_system.sql
-├── tests/               # Test suite
-│   ├── mod.rs           # Test module organization
-│   ├── test_helpers.rs  # Test utilities
-│   ├── refresh_token_validation.rs # Refresh token validation tests
-│   └── api/             # API endpoint tests
-│       ├── mod.rs
-│       ├── testcontainers_auth_api_tests.rs # Authentication API tests
-│       ├── testcontainers_incident_timer_api_tests.rs # Incident timer API tests
-│       ├── testcontainers_phrase_api_tests.rs # Phrase API tests
-│       ├── testcontainers_admin_api_tests.rs # Admin API tests
-│       └── testcontainers_health_api_tests.rs # Health API tests
-├── Cargo.toml           # Dependencies
-├── Dockerfile           # Multi-stage container build
-└── .env                 # Environment configuration
-```
-
-## Core Features
-- **Authentication**: Normalized multi-table schema with JWT-based auth and refresh tokens (see [IMPLEMENTATION-SECURITY.md](IMPLEMENTATION-SECURITY.md#authentication-system))
-- **Database Architecture**: Normalized user data across dedicated tables (credentials, external logins, profiles, preferences)
-- **OAuth Integration**: Multi-provider OAuth support with PKCE flow (Google implemented)
-- **Email Verification**: Token-based email verification with role-based access control
-- **Password Reset**: Secure token-based password reset with expiration and usage tracking
-- **Token Cleanup**: Automatic background cleanup of expired tokens (refresh + verification)
-- **User Management**: Registration, login, slug generation, profile updates
-- **Profile Management**: Display name and slug editing, password changes
-- **Account Management**: Self-service account deletion and data export (GDPR/CCPA compliance)
-- **Email Suppression**: AWS SES compliance with bounce/complaint/unsubscribe handling
-- **Admin Management**: User deactivation, password reset, user promotion, system statistics
-- **Incident Timers**: CRUD operations with user ownership and public sharing
-- **Phrases System**: Dynamic phrases with user suggestions and admin approval
-- **Enhanced Search**: PostgreSQL full-text search with `ts_rank` ranking and ILIKE fallback
-- **Public API**: Unauthenticated access to user timers and phrases
-- **Database Integration**: SQLx with compile-time query verification
-- **3-Layer Architecture**: Clean separation with repository pattern and dependency injection
-- **Modular Services**: Auth service split into focused modules (register, login, refresh, profile, password, slug, email_verification, oauth)
-- **Modular Incident Timer Service**: Split into focused modules (create, read, update, delete)
-- **Modular Phrase Service**: Split into focused modules (public_access, user_management, admin_management, exclusions, suggestions)
-- **Modular Admin Services**: Split into focused modules (user_management, phrase_moderation, stats)
-- **Background Tasks**: Scheduled cleanup service for token expiration management
-- **Route Scoping**: Public/protected/admin route organization with appropriate middleware
-- **Testing**: See [IMPLEMENTATION-TESTING.md](IMPLEMENTATION-TESTING.md) for comprehensive testing details
-
-## Architecture Patterns
+## Architecture Decisions
 
 ### 3-Layer Architecture
-- **API Layer**: HTTP handlers in `routes/` directory with public/protected/admin scoping
-- **Service Layer**: Business logic in `services/` directory using repository traits
-- **Repository Layer**: Data access in `repositories/` directory with trait-based design
+Clean separation of concerns with testability via dependency injection:
+
+**API Layer (routes/)**
+- HTTP request/response handling
+- Middleware application (auth, RBAC)
+- Route scoping: public / protected / admin
+- Minimal business logic - delegates to services
+
+**Service Layer (services/)**
+- Business logic and orchestration
+- Depends on repository traits (not concrete implementations)
+- Modular design: Split large services into focused modules
+- Error handling and validation
+
+**Repository Layer (repositories/)**
+- Data access abstraction
+- Trait-based design for testability
+- PostgreSQL implementations for production
+- Mock implementations for unit testing
+
+**Why 3 layers:**
+- Testability: Services testable with mock repositories
+- Maintainability: Changes to data layer don't cascade
+- Flexibility: Can swap database implementations
+- Clear boundaries: Each layer has single responsibility
 
 ### Repository Pattern
-- **Traits**: Abstract interfaces for all data operations
-- **PostgreSQL Implementations**: Concrete implementations using SQLx
-- **Mock Implementations**: Complete mock implementations for unit testing
-- **Dependency Injection**: ServiceContainer manages all dependencies
-- **Admin Repository**: Dedicated repository for admin operations and system statistics
-- **Search Implementation**: PostgreSQL full-text search with `ts_rank` ranking and ILIKE fallback for phrase search
+Trait-based abstraction for all data operations:
 
-### Service Layer
-- **Repository Dependencies**: All services use repository traits instead of direct database access
-- **Business Logic**: Clean separation from data access concerns
-- **Error Handling**: Consistent error responses across endpoints
-- **Testing**: Easy unit testing with mock repositories
-- **Modular Design**: Auth service split into focused modules for maintainability
-- **Admin Services**: Dedicated service layer for administrative operations
+**Design:**
+- `traits/` directory defines interfaces
+- `postgres/` directory implements for production
+- `mocks/` directory implements for testing
+- Services depend on traits, not concrete types
 
-### API Layer
-- **Route Handlers**: Use service layer exclusively
-- **Middleware**: JWT validation and admin role validation via `actix_web::middleware::from_fn()`
-- **Route Structure**: Three-tier scoping (public/protected/admin) with appropriate middleware
-- **Error Handling**: Consistent error responses across endpoints
-- **Service Injection**: Services injected via ServiceContainer for dependency management
+**Benefits:**
+- Unit test services without database
+- Swap implementations (e.g., Redis cache layer)
+- Compile-time verification of dependencies
+- Clear contracts between layers
+
+**Trade-offs:**
+- More upfront code (trait + postgres + mock)
+- Worth it: Enables comprehensive unit testing
 
 ### Service Container Pattern
-- **Dependency Injection**: Centralized service management and configuration
-- **Environment Awareness**: Development, testing, and production configurations
-- **Repository Abstraction**: Services depend on traits, not concrete implementations
-- **Testing Support**: Easy switching between real and mock implementations
+Centralized dependency injection for services:
 
-## API Endpoints
+**Purpose:**
+- Manage service lifecycle and configuration
+- Inject dependencies based on environment
+- Abstract repository creation from routes
 
-### API Endpoints
-For complete endpoint documentation and request/response contracts, see [IMPLEMENTATION-DATA-CONTRACTS.md](IMPLEMENTATION-DATA-CONTRACTS.md#api-endpoints).
+**Environments:**
+- Development: Real repositories + logging
+- Testing: Mock repositories + no cleanup service
+- Production: Real repositories + background tasks
 
-For authentication and security details, see [IMPLEMENTATION-SECURITY.md](IMPLEMENTATION-SECURITY.md#api-security).
+**Why:**
+- Single place to wire up dependencies
+- Easy environment-specific configuration
+- Simplifies route handlers (just extract from container)
+
+### Normalized Auth Schema
+Multi-table user authentication architecture:
+
+**Design:**
+- `users`: Core identity (id, email, active, verified)
+- `user_credentials`: Password auth
+- `user_external_logins`: OAuth providers
+- `user_profiles`: Display data
+- `user_preferences`: Settings
+
+**Why:**
+- Multi-provider OAuth: Users can link multiple providers
+- GDPR compliance: Clear data boundaries
+- Maintainability: Changes to one auth method don't affect others
+- Extensibility: Add new providers without schema changes
+
+**Trade-offs:**
+- More joins for full user data
+- Worth it: Flexibility and compliance benefits
+
+### Modular Service Design
+Large services split into focused submodules:
+
+**Pattern:**
+- `auth/auth_service/` contains: register, login, refresh, profile, password, oauth
+- `incident_timer/` contains: create, read, update, delete
+- `phrase/` contains: public_access, user_management, admin_management
+- `admin/` contains: user_management, phrase_moderation, stats
+
+**Why:**
+- Easier navigation: Find auth registration logic in `register.rs`
+- Smaller files: Each module <200 lines
+- Clear boundaries: Each module has single responsibility
+- Testability: Test modules independently
+
+## Security Architecture
+See [IMPLEMENTATION-SECURITY.md](IMPLEMENTATION-SECURITY.md) for authentication, authorization, and security decisions.
+
+## Testing Strategy
+See [IMPLEMENTATION-TESTING.md](IMPLEMENTATION-TESTING.md) for testing philosophy and paradigm-based approach.
+
+## Database Integration
+See [IMPLEMENTATION-DATABASE.md](IMPLEMENTATION-DATABASE.md) for schema decisions and migration strategy.
+
+## Key Patterns
+
+### Token Cleanup Service
+**Decision**: Background task removes expired tokens automatically
+
+**Why:**
+- Prevents unbounded database growth
+- Maintains query performance
+- No manual maintenance required
+
+**Trade-offs:**
+- Additional background process
+- Worth it: Set it and forget it
+
+### Route Scoping
+**Decision**: Three-tier route organization (public / protected / admin)
+
+**Why:**
+- Clear security boundaries
+- Middleware applied at scope level
+- Self-documenting API structure
+
+### Error Handling
+**Decision**: Services return `Result<T, anyhow::Error>`, routes map to HTTP status codes
+
+**Why:**
+- Services don't know about HTTP
+- Routes handle HTTP concerns
+- Clear error propagation
 
 ## Development Environment
 
-### Installation Requirements
+### Hot Reload
+Use development scripts for automatic rebuilds:
 ```bash
-# Install Rust toolchain
-curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh
-source $HOME/.cargo/env
-
-# Add useful tools
-cargo install cargo-watch  # Auto-reload during development
-cargo install sqlx-cli     # Database migrations
-```
-
-### Environment Configuration
-Configuration via `backend/.env`. See [IMPLEMENTATION-DEPLOYMENT.md](IMPLEMENTATION-DEPLOYMENT.md#environment-configuration) for production setup.
-
-### Running the Backend
-The backend is typically run through development scripts:
-```bash
-# Start with hot reload (recommended)
 ./scripts/dev-start.sh backend
-
-# View backend logs
-./scripts/dev-logs.sh backend
-
-# Direct cargo commands (if needed)
-cd backend
-cargo run
-cargo test
 ```
 
-## Testing
-
-See [IMPLEMENTATION-TESTING.md](IMPLEMENTATION-TESTING.md) for comprehensive testing documentation.
-
-## Token Cleanup Service
-
-### Overview
-Automated background service that removes expired tokens from the database to prevent unbounded growth and maintain system performance.
-
-### Architecture
-- **Service**: `CleanupService` in `services/cleanup/mod.rs`
-- **Repository Dependencies**: Uses `RefreshTokenRepository` and `VerificationTokenRepository` traits
-- **Background Task**: Spawned via `actix_web::rt::spawn` on application startup
-- **Scheduling**: Uses `actix_web::rt::time::interval` for periodic execution
-
-### Behavior
-- **Startup**: Runs immediately on application startup to clean any existing expired tokens
-- **Interval**: Runs every N hours (configurable via `CLEANUP_INTERVAL_HOURS`, default: 24)
-- **Target**: Cleans both refresh tokens and verification tokens in a single operation
-- **Logging**: Logs cleanup results (count of deleted tokens) at INFO level
-
-### Configuration
+### Database Migrations
+SQLx manages schema migrations with compile-time verification:
 ```bash
-# .env.development
-CLEANUP_INTERVAL_HOURS=24  # Run cleanup every 24 hours
+./scripts/setup-db.sh              # Run migrations
+./scripts/prepare-sqlx.sh --clean  # Update query cache
 ```
-
-### Implementation Details
-```rust
-// Spawned in main.rs on startup
-actix_web::rt::spawn(async move {
-    let mut interval = actix_web::rt::time::interval(
-        std::time::Duration::from_secs(cleanup_interval_hours * 3600)
-    );
-
-    loop {
-        interval.tick().await;  // First tick completes immediately
-        // Cleanup logic...
-    }
-});
-```
-
-### Testing
-- **Unit Tests**: 5 tests with mock repositories (service creation, repository calls, error handling)
-- **Integration Tests**: 5 tests with testcontainers (expired refresh tokens, verification tokens, both types, no expired tokens, empty database)
-
-## Database Integration
-- **Connection**: SQLx with connection pooling
-- **Migrations**: Managed via SQLx CLI
-- **Schema**: See [IMPLEMENTATION-DATABASE.md](IMPLEMENTATION-DATABASE.md)
-- **Query Safety**: Compile-time SQL verification
-
-## Security
-See [IMPLEMENTATION-SECURITY.md](IMPLEMENTATION-SECURITY.md) for authentication, authorization, and security implementation details.
 
 ## Docker Configuration
-- **Multi-Stage Build**: Compilation + minimal Alpine runtime
-- **Security**: Non-root user execution
-- **Health Checks**: Built-in monitoring endpoints
-- **Optimization**: Dependency caching for faster rebuilds
+Multi-stage build for minimal production images:
+- Compilation stage: Full Rust toolchain
+- Runtime stage: Alpine with just the binary
+- Non-root user for security
+- Health check endpoints for orchestration

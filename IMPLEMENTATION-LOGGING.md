@@ -1,167 +1,118 @@
-# Log Rotation Configuration for KennWilliamson.org
+# Logging Implementation
 
 ## Overview
-This document describes the log rotation and monitoring setup for all Docker containers in the KennWilliamson.org project.
+Logging strategy decisions for development and production environments.
 
-## Log Rotation Strategy
+## Logging Philosophy
 
-### Docker Log Driver Configuration
-All services use the `json-file` log driver with rotation:
+### What We Log
+**Decision**: Structured logging at appropriate levels
 
-```yaml
-logging:
-  driver: "json-file"
-  options:
-    max-size: "10m"    # Rotate when log reaches 10MB
-    max-file: "3"      # Keep 3 rotated files (30MB total)
+**Why:**
+- INFO: Business events, user actions
+- WARN: Rate limiting, recoverable issues
+- ERROR: Failures, exceptions
+- DEBUG: Development diagnostics
+
+**What we don't log:**
+- Passwords, tokens, PII
+- Excessive debug in production
+- Request bodies with sensitive data
+
+## Architecture Decisions
+
+### Docker Log Driver
+**Decision**: JSON file driver with rotation
+
+**Configuration:**
+- 10MB per file
+- 3 rotated files (30MB total per service)
+- Automatic rotation
+
+**Why:**
+- Prevents disk exhaustion
+- JSON format for parsing
+- Standard Docker tooling works
+- No additional log daemon needed
+
+**Trade-offs:**
+- 30MB limit might be low for production
+- Could upgrade to ELK stack later
+- Worth it: Simple, works out-of-box
+
+### Rate Limiting Logs
+**Decision**: Log all rate limit violations at WARN level
+
+**Why:**
+- Track abuse patterns
+- Adjust limits based on data
+- Security monitoring
+
+**Format:**
+```
+WARN: Rate limit exceeded for {id} on {endpoint}: {count} requests/hour
 ```
 
 ### Service-Specific Logging
 
-#### Backend (Rust/Actix-web)
-- **Log Level**: Controlled by `RUST_LOG` environment variable
-- **Default**: `backend=info,actix_web=info`
-- **Rate Limiting**: All rate limit violations logged with WARN level
-- **Rotation**: 10MB per file, 3 files retained
+**Backend (Rust):**
+- RUST_LOG environment variable
+- actix_web logs for HTTP
+- Structured with context
 
-#### Frontend (Nuxt.js)
-- **Log Level**: Controlled by Nuxt logging configuration
-- **SSR Logs**: Rate limiting and API calls logged
-- **Rotation**: 10MB per file, 3 files retained
+**Frontend (Nuxt):**
+- SSR logs for server-side
+- Browser console for client-side
+- Rate limiting violations logged
 
-#### Nginx
-- **Access Logs**: Detailed request logging with timing
-- **Error Logs**: Error and warning messages
-- **Rotation**: 10MB per file, 3 files retained
+**Nginx:**
+- Access logs with timing
+- Error logs for failures
+- Upstream failures logged
 
-#### PostgreSQL
-- **Query Logs**: Database queries and errors
-- **Connection Logs**: Connection attempts and failures
-- **Rotation**: 10MB per file, 3 files retained
+**PostgreSQL:**
+- Query logs in development
+- Connection logs always
+- Error logs always
 
-#### Redis
-- **Command Logs**: Redis commands and errors
-- **Memory Logs**: Memory usage and eviction events
-- **Rotation**: 10MB per file, 3 files retained
+## Log Monitoring
 
-## Log Monitoring Script
+**Development:**
+- `./scripts/dev-logs.sh [service]`
+- Real-time tailing
+- Service-specific viewing
 
-### Usage
-```bash
-# Show log status for all services
-./scripts/log-monitor.sh status
-
-# Tail logs for specific service
-./scripts/log-monitor.sh tail backend
-
-# Monitor all services in real-time
-./scripts/log-monitor.sh monitor -f
-
-# Show log file sizes
-./scripts/log-monitor.sh size
-
-# Force log rotation
-./scripts/log-monitor.sh rotate
-
-# Clean old logs
-./scripts/log-monitor.sh clean
-```
-
-### Features
-- **Status Monitoring**: Check if containers are running and log activity
-- **Real-time Monitoring**: Follow logs from multiple services simultaneously
-- **Size Management**: Monitor log file sizes and disk usage
-- **Rotation Control**: Force log rotation when needed
-- **Cleanup**: Remove old logs and unused Docker resources
-
-## Rate Limiting Logs
-
-### Backend Rate Limiting
-- **Violations**: Logged with WARN level
-- **Format**: `Rate limit exceeded for {identifier} on {endpoint}: {count} requests/hour`
-- **Monitoring**: Track patterns of abuse and adjust limits
-
-### Frontend SSR Rate Limiting
-- **Violations**: Logged to console with warning level
-- **Format**: `SSR Rate limit exceeded for {identifier} on {endpoint}: {count} requests/hour`
-- **Monitoring**: Track SSR-specific abuse patterns
-
-## Log Analysis
-
-### Key Metrics to Monitor
-1. **Rate Limit Violations**: Frequency and patterns
-2. **Error Rates**: 4xx and 5xx response rates
-3. **Response Times**: API performance degradation
-4. **Resource Usage**: Memory and CPU spikes
-5. **Database Performance**: Query times and connection issues
-
-### Alert Conditions
-- **High Error Rate**: >5% 5xx responses
-- **Rate Limit Abuse**: >10 violations per hour from same IP
-- **Slow Responses**: >2s average response time
-- **Resource Exhaustion**: >80% memory usage
-- **Database Issues**: Connection failures or slow queries
+**Production:**
+- `./scripts/log-monitor.sh status`
+- Size monitoring
+- Rotation management
 
 ## Production Considerations
 
-### Log Retention
-- **Development**: 3 files × 10MB = 30MB per service
-- **Production**: Consider longer retention for audit trails
-- **Compliance**: Adjust retention based on regulatory requirements
+### External Logging (Future)
+**Options:**
+- ELK Stack (Elasticsearch + Logstash + Kibana)
+- Cloud logging (AWS CloudWatch)
+- Fluentd for aggregation
 
-### External Logging
-For production, consider:
-- **ELK Stack**: Elasticsearch, Logstash, Kibana
-- **Fluentd**: Log aggregation and forwarding
-- **Cloud Logging**: AWS CloudWatch, Google Cloud Logging
-- **Splunk**: Enterprise log management
+**When to add:**
+- Multiple server instances
+- Compliance requirements
+- Need for log search/analysis
+- Alert automation
+
+**Current approach sufficient for:**
+- Single-instance deployment
+- Basic monitoring needs
+- Development workflows
 
 ### Security
-- **Sensitive Data**: Never log passwords, tokens, or PII
-- **Access Control**: Restrict log file access
-- **Encryption**: Encrypt logs in transit and at rest
-- **Audit Trails**: Maintain immutable audit logs
+**Requirements:**
+- Never log sensitive data
+- Restrict log file access
+- Audit trail for security events
 
-## Troubleshooting
-
-### Common Issues
-1. **Logs Not Rotating**: Check Docker log driver configuration
-2. **High Disk Usage**: Run `./scripts/log-monitor.sh clean`
-3. **Missing Logs**: Verify container is running and logging is enabled
-4. **Performance Impact**: Monitor log I/O impact on services
-
-### Debug Commands
-```bash
-# Check Docker log configuration
-docker inspect <container_name> | grep -A 10 LogConfig
-
-# View raw log files
-docker logs <container_name> --details
-
-# Monitor disk usage
-docker system df
-
-# Check log rotation
-ls -la /var/lib/docker/containers/*/
-```
-
-## Maintenance Schedule
-
-### Daily
-- Monitor log status: `./scripts/log-monitor.sh status`
-- Check for errors in logs
-- Monitor rate limiting violations
-
-### Weekly
-- Review log sizes: `./scripts/log-monitor.sh size`
-- Clean old logs if needed: `./scripts/log-monitor.sh clean`
-- Analyze rate limiting patterns
-
-### Monthly
-- Review log retention policies
-- Update log monitoring scripts
-- Performance analysis and optimization
-
----
-
-*This log rotation setup ensures reliable logging while preventing disk space issues and maintaining system performance.*
+**Implementation:**
+- Sanitize before logging
+- File permissions on logs
+- Security events at WARN/ERROR

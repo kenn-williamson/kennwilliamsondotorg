@@ -1,58 +1,144 @@
 # Development Utilities Implementation
 
 ## Overview
-Focused utilities for development tasks. Each utility is self-contained with its own dependencies.
+Utility architecture philosophy and design decisions.
 
-## Architecture Strategy
+## Architecture Philosophy
 
-### Directory Structure
-```
-utils/
-├── hash_gen/           # Rust bcrypt password hasher
-│   ├── Cargo.toml
-│   └── src/main.rs
-└── [additional utilities as needed]
-```
+### Single-Purpose Utilities
+**Decision**: One utility = one task
 
-### Design Principles
-- **Single Responsibility**: Each utility focuses on one specific task
-- **Language Flexibility**: Use the best tool for each job (Rust, Python, Node.js, etc.)
-- **Isolated Dependencies**: No shared dependencies between utilities
-- **Integration Ready**: Designed for use in development scripts and automation
+**Why:**
+- Clear responsibility
+- Easy to understand
+- Simple to maintain
+- No shared dependencies
+
+**Alternative rejected:**
+- Monolithic utility library: Becomes unwieldy
+- Shared dependencies: Coupling issues
+
+### Language Flexibility
+**Decision**: Use best language per utility
+
+**Why:**
+- Rust for performance (hash generation)
+- Python for scripting (if needed)
+- JavaScript for frontend tools (if needed)
+- Right tool for the job
+
+**Trade-offs:**
+- Multiple toolchains
+- Worth it: Each utility optimized
+
+### Isolated Dependencies
+**Decision**: Each utility has own dependencies
+
+**Why:**
+- No dependency conflicts
+- Update independently
+- Delete utility = delete dependencies
+- Clear ownership
+
+**Pattern:**
+- Each utility in own directory
+- Own Cargo.toml, package.json, requirements.txt
+- Self-contained
 
 ## Implemented Utilities
 
-### hash_gen - Bcrypt Password Hasher
-
+### hash_gen - Password Hasher
 **Purpose**: Generate bcrypt hashes for development
-**Technology**: Rust + bcrypt
-**Location**: `utils/hash_gen/`
 
-**Usage**:
-```bash
-cd utils/hash_gen
-cargo run <password>
-# Output: $2b$04$...
-```
+**Why Rust:**
+- Same library as backend (consistent)
+- Fast compilation
+- Type safety
 
-**Details**:
-- Cost factor 4 for development speed
-- Compatible with backend's bcrypt verification
-- Used by `scripts/reset-db.sh` for test data
+**Why needed:**
+- Test data requires hashed passwords
+- Manual hashing error-prone
+- Scripts need automation
 
-## Development Integration
+**Design decision:**
+- Cost factor 4 for development (fast)
+- Backend uses 12 for production (secure)
+- Balance: Development speed vs production security
 
-### Usage in Scripts
-Utilities are designed to be called from development scripts and automation workflows.
+## Integration Strategy
 
-### Adding New Utilities
-1. Create subdirectory in `utils/`
-2. Add language-specific setup
-3. Document in this file
-4. Test integration
+### Script Integration
+**Decision**: Utilities called from development scripts
 
-## Security Notes
-- Never log plaintext passwords
-- Clear sensitive data after use
-- Validate all inputs
-- See [IMPLEMENTATION-SECURITY.md](IMPLEMENTATION-SECURITY.md) for security guidelines
+**Why:**
+- Automation over manual use
+- Consistent workflows
+- Documented usage
+- Error handling in scripts
+
+**Pattern:**
+- Script calls utility
+- Script handles output
+- Script provides user feedback
+
+### No Complex CLI
+**Decision**: Simple argument passing, no fancy CLI
+
+**Why:**
+- Used by scripts, not humans directly
+- Simplicity over features
+- Less code to maintain
+
+**Trade-offs:**
+- Not user-friendly for direct use
+- Worth it: Scripts provide friendly interface
+
+## Security Considerations
+
+### Sensitive Data Handling
+**Decision**: Never log sensitive data
+
+**Why:**
+- Prevent accidental exposure
+- Development logs can leak
+- Security by default
+
+**Pattern:**
+- Accept password as argument
+- Output hash only
+- No intermediate logging
+
+### Cleanup
+**Decision**: Utilities don't persist sensitive data
+
+**Why:**
+- No files written
+- No cache created
+- Ephemeral by design
+
+## Maintenance Philosophy
+
+### Add When Needed
+**Decision**: Create utilities reactively, not proactively
+
+**Why:**
+- YAGNI principle
+- Solve actual problems
+- Don't build unused tools
+
+**When to add:**
+- Same task repeated 3+ times
+- Script logic getting complex
+- Reusable across projects
+
+### Delete Freely
+**Decision**: Remove unused utilities
+
+**Why:**
+- No obligation to maintain
+- Clutter is technical debt
+- Easy to recreate if needed
+
+**Pattern:**
+- If not used in 6 months, consider deletion
+- Git history preserves if needed later

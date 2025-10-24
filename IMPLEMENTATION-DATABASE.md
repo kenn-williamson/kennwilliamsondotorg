@@ -1,97 +1,222 @@
 # Database Implementation
 
 ## Overview
-PostgreSQL 17 with pg_uuidv7 extension, automated timestamps, and SQLx migrations.
+Database architecture decisions and schema design rationale.
 
-## Technology Stack
-- **Database**: PostgreSQL 17.0
-- **Extensions**: pg_uuidv7
-- **Migrations**: SQLx CLI
-- **Connection**: SQLx pooling
-- **Container**: Docker with health checks
+## Technology Stack Decisions
 
-## Database Management
-Scripts for database operations:
-- **Migrations**: `./scripts/setup-db.sh` (preserves data)
-- **Reset**: `./scripts/reset-db.sh` (fresh start)
-- **Backup**: `./scripts/backup-db.sh`
+### PostgreSQL 17
+**Decision**: PostgreSQL over alternatives
 
-See [DEVELOPMENT-WORKFLOW.md](DEVELOPMENT-WORKFLOW.md#database-development-workflow) for usage.
+**Why:**
+- Robust ACID compliance
+- Advanced features (full-text search, JSON, extensions)
+- Mature ecosystem
+- Free and open source
 
-## Timestamp Management
-All tables use PostgreSQL triggers for `updated_at` timestamps:
-- **created_at**: `NOT NULL DEFAULT NOW()` - Set once on insert
-- **updated_at**: `NOT NULL DEFAULT NOW()` - Auto-updated by trigger on every UPDATE
-- **Trigger Function**: Single `update_updated_at_column()` function shared across all tables
+**Alternatives considered:**
+- **MySQL**: Less advanced features
+- **MongoDB**: Not suitable for relational data
+- **SQLite**: Not production-ready for concurrent access
 
-## Migration Files
-```
-migrations/
-├── 20250914134643_initial_schema.up.sql          # Users, roles, incident_timers
-├── 20250914134654_add_refresh_tokens_and_user_active.up.sql # Refresh tokens + user.active
-├── 20250914134703_add_phrases_system.up.sql      # Phrases system with initial data
-├── 20250927212836_add_search_and_performance_optimization.up.sql # Full-text search + trigram + indexes
-├── 20251003192001_add_auth_and_compliance_features.up.sql # OAuth, email verification, password reset, email suppression
-├── 20251011000000_create_normalized_auth_tables.up.sql # Normalized auth schema (Phase 1)
-└── 20251012222532_drop_old_auth_columns.up.sql   # Data backfill and old column removal (Phase 9)
-```
+### UUIDv7 Primary Keys
+**Decision**: Use pg_uuidv7 extension for all primary keys
 
-## Schema Design
+**Why:**
+- Time-ordered for better indexing than random UUIDs
+- Globally unique (no conflicts in distributed systems)
+- No auto-increment collision issues
+- 128-bit vs 64-bit integer (future-proof)
 
-### Core Tables
+**Trade-offs:**
+- Slightly larger storage than integers
+- Worth it: Distributed system ready, better indexing than UUID4
 
-#### User Management (Normalized Multi-Table Architecture)
-- **users**: Core user identity (id, email, display_name, slug, active status)
-- **user_credentials**: Password authentication (password_hash, password_updated_at)
-- **user_external_logins**: OAuth provider linkage (provider, provider_user_id, linked_at)
-- **user_profiles**: User profile data (real_name, bio, avatar_url, etc.)
-- **user_preferences**: User settings (timer_is_public, timer_show_in_list, email preferences)
+### SQLx for Database Access
+**Decision**: SQLx over ORMs
 
-**Schema Refactor**: Completed January 2025 (Phases 0-9). Previously monolithic `users` table split into normalized structure for better maintainability, multi-provider OAuth support, and GDPR/CCPA compliance.
+**Why:**
+- Compile-time SQL verification
+- Prevents SQL typos in production
+- Raw SQL control
+- Async support
 
-#### Access Control
-- **roles**: System role definitions (user, email-verified, trusted-contact, admin)
-- **user_roles**: User-to-role mapping with role-based access control (RBAC)
+**Alternatives rejected:**
+- **Diesel**: Compile times too slow
+- **SeaORM**: Less mature, adds abstraction layer
+- **Raw queries**: No compile-time safety
 
-#### Authentication & Security
-- **refresh_tokens**: Secure token storage with expiration and rotation
-- **verification_tokens**: Email verification tokens with expiration
-- **password_reset_tokens**: Password reset tokens with expiration and usage tracking
-- **email_suppressions**: Email suppression list for AWS SES compliance (bounces, complaints, unsubscribes)
+## Schema Design Decisions
 
-#### Features
-- **incident_timers**: User timer entries with public sharing
-- **phrases**: Motivational phrase system with full-text search
-- **user_excluded_phrases**: Phrase filtering preferences
-- **phrase_suggestions**: User submission workflow
+### Normalized Auth Architecture
+**Decision**: Split user data across 5 tables
 
-### Design Patterns
-- **Primary Keys**: UUIDv7 for time-ordered indexing
-- **Timestamps**: Automated via triggers
-- **Constraints**: Foreign keys, unique indexes
-- **Schema Definition**: See migration files in `backend/migrations/`
+**Tables:**
+- `users`: Core identity (email, slug, status)
+- `user_credentials`: Password authentication
+- `user_external_logins`: OAuth providers
+- `user_profiles`: Display data
+- `user_preferences`: Settings
 
-## Container Configuration
-- **Image**: PostgreSQL 17 official
-- **Health Checks**: Built-in connectivity verification
-- **Volumes**: Persistent data storage
-- **Network**: Internal Docker network only
+**Why:**
+- Multi-provider OAuth: Users link multiple providers
+- GDPR compliance: Clear data boundaries
+- Maintainability: Changes to auth don't affect profile
+- Extensibility: Add providers without schema changes
 
-## Connection Configuration
-```env
-DATABASE_URL=postgresql://user:password@postgres:5432/kennwilliamson
-DB_MAX_CONNECTIONS=10
-DB_MIN_CONNECTIONS=2
-DB_ACQUIRE_TIMEOUT=30
-```
+**Trade-offs:**
+- More joins for full user data
+- More tables to maintain
+- Worth it: Flexibility and compliance
 
-## Performance & Security
-- **Indexing**: Primary keys, foreign keys, email uniqueness, full-text search (GIN), trigram search, composite indexes
-- **Search Optimization**: PostgreSQL full-text search with ts_rank ranking + pg_trgm for ILIKE fallback
-- **Connection Pooling**: 10 max connections (AWS free tier constraint)
-- **Access Control**: Minimal privileges, Docker network isolation
-- **Backups**: Automated via `backup-db.sh` script
-- **Extensions**: pg_uuidv7 (time-ordered UUIDs), pg_trgm (trigram similarity search)
+**Alternative rejected:**
+- Monolithic users table: Doesn't scale to multiple OAuth providers
 
-## Development Integration
-See [DEVELOPMENT-WORKFLOW.md](DEVELOPMENT-WORKFLOW.md#database-development-workflow) for database development workflows.
+### Automated Timestamps
+**Decision**: PostgreSQL triggers for `updated_at`
+
+**Why:**
+- Can't forget to update
+- Consistent across all code paths
+- Database-level guarantee
+- No application logic needed
+
+**Pattern:**
+- `created_at`: DEFAULT NOW() on insert
+- `updated_at`: Trigger updates on every UPDATE
+
+**Alternative rejected:**
+- Application-level updates: Easy to forget, inconsistent
+
+### Role-Based Access Control (RBAC)
+**Decision**: Separate roles and user_roles tables
+
+**Why:**
+- Flexible role assignment
+- Many-to-many relationship
+- Easy to add new roles
+- Query-friendly for permission checks
+
+**Roles:**
+- `user`: Base role (immutable)
+- `email-verified`: Verified identity
+- `trusted-contact`: Personal content access
+- `admin`: Full system access
+
+**Trade-offs:**
+- Join required for role checks
+- Worth it: Flexible, standard pattern
+
+## Migration Strategy
+
+### SQLx Migrations
+**Decision**: Version-controlled SQL migrations
+
+**Why:**
+- Declarative schema changes
+- Rollback capability
+- Source control integration
+- Database-agnostic SQL
+
+**Pattern:**
+- Up migrations only (no down)
+- Sequential numbering
+- Preserve data by default
+
+**Scripts:**
+- `setup-db.sh`: Run migrations (safe)
+- `reset-db.sh`: Fresh start (destructive)
+
+### Data Preservation Philosophy
+**Decision**: Migrations preserve data by default
+
+**Why:**
+- Accidents are expensive
+- Development data valuable
+- Explicit destructive operations
+- Safe by default
+
+## Performance Decisions
+
+### Connection Pooling
+**Decision**: 10 max connections, 2 min
+
+**Why:**
+- AWS free tier constraint (limited connections)
+- Balance availability and resource usage
+- Sufficient for single-instance deployment
+
+**Trade-offs:**
+- May need to increase for multiple instances
+- Worth it: Fits current infrastructure
+
+### Indexing Strategy
+**Decision**: Index primary keys, foreign keys, and search fields
+
+**Why:**
+- Fast lookups by ID
+- Fast joins
+- Full-text search performance
+- Trigram search for fuzzy matching
+
+**Indexed fields:**
+- All primary keys (automatic)
+- All foreign keys
+- `email` (unique, frequent lookups)
+- Phrase text (full-text search GIN index)
+
+### Full-Text Search
+**Decision**: PostgreSQL built-in full-text search + trigram fallback
+
+**Why:**
+- No external search engine needed
+- Good enough performance
+- Trigram handles partial matches
+- Simpler architecture
+
+**Alternatives considered:**
+- **Elasticsearch**: Overkill for scale
+- **Meilisearch**: External dependency
+- **ILIKE only**: Too slow without trigram
+
+**Trade-offs:**
+- Not as powerful as dedicated search
+- Worth it: Simple, no external service
+
+## Security Decisions
+
+### Network Isolation
+**Decision**: Database only accessible via internal Docker network
+
+**Why:**
+- No external exposure
+- Services connect via service name
+- Automatic DNS resolution
+
+**Trade-offs:**
+- Can't connect from host without port forward
+- Worth it: Security by default
+
+### Minimal Privileges
+**Decision**: Application user has minimal required permissions
+
+**Why:**
+- Limit blast radius of compromise
+- Can't drop tables from application
+- Defense in depth
+
+## Backup Strategy
+
+**Decision**: Script-based backups
+
+**Why:**
+- Simple and reliable
+- Version controlled process
+- Environment-aware
+- Manual for now (automated later if needed)
+
+**Script**: `backup-db.sh`
+
+**Trade-offs:**
+- Manual execution required
+- Worth it: Sufficient for current scale

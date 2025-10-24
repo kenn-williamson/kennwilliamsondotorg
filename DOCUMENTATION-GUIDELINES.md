@@ -5,68 +5,125 @@ This document establishes the standards and conventions for all documentation in
 
 ## Core Principles
 
-### 1. Dual Audience Design
+### 1. Strategic Over Tactical
+**Strategic** = WHY and WHAT (business goals, constraints, rationale)
+**Tactical** = HOW (implementation details, current code structure)
+
+- **CLAUDE.md**: Strategic context (business purpose, decisions, constraints)
+- **ARCHITECTURE.md**: System-level decisions with rationale
+- **IMPLEMENTATION-*.md**: Component-level decisions with rationale (Decision/Why/Alternatives/Trade-offs pattern)
+- **Code**: Tactical implementation (discoverable)
+
+**Documentation hierarchy**: Strategic context → Architectural decisions → Implementation decisions → Code
+
+### 2. Durable Over Current
+- Document decisions and rationale, not current code structure
+- Strategic context survives refactoring (WHY doesn't change)
+- Implementation details become stale quickly (HOW changes constantly)
+- **Test**: Will this still be accurate after a major refactor? If no, make it more strategic.
+
+### 3. Discoverable Not Documented
+**Golden Rule**: Can Claude discover this by reading the code?
+- If YES → Don't document it (Claude can read code faster and more completely)
+- If NO → Document it (strategic context Claude needs)
+
+Examples:
+- ❌ Don't document: "We have a User model with email field" (discoverable)
+- ✅ Do document: "We chose multi-table auth for GDPR compliance" (strategic rationale)
+
+### 4. Dual Audience Design
 - **Human Developers**: Assume familiarity with web/CS concepts but explain framework-specific details
 - **AI Assistants**: Optimize for token efficiency while maintaining completeness
 - **Balance**: Write concisely but include necessary context for understanding architectural decisions
 
-### 2. Clear and Concise
+### 5. Clear and Concise
 - Focus on essential information without unnecessary verbosity
 - Use simple language for concepts, technical language for specifics
 - Each sentence should add value - remove filler words and redundant explanations
 
-### 3. Aggressive Cross-Referencing
+### 6. Aggressive Cross-Referencing
 - **Never duplicate information** - use markdown cross-references instead
 - Link format: `[Link Text](FILENAME.md#section-header)`
 - Always use relative paths for internal documentation
 - Create specific section anchors for precise linking
 
-### 4. Separation of Concerns
+### 7. Separation of Concerns
 - Each document should have a single, clear purpose
-- Implementation details in IMPLEMENTATION-*.md files
-- Architecture decisions in ARCHITECTURE.md
+- Strategic context in CLAUDE.md
+- System decisions in ARCHITECTURE.md
+- Component decisions in IMPLEMENTATION-*.md files
 - Future plans exclusively in ROADMAP.md
-
-### 5. Current State Documentation
-- Implementation documents describe what IS, not what WILL BE
-- Remove all future tense and planning language from implementation docs
-- No TODO items or planned features in implementation documents
-
-### 6. No Code Duplication
-- **NEVER include code snippets in documentation**
-- Reference actual files: `backend/src/routes/auth.rs`
-- Reference sections: `See JWT validation in backend/src/middleware/auth.rs`
-- Exception: JSON schema representations for API contracts (language-agnostic)
 
 ## Document Organization Strategy
 
 ### Core Documentation Structure
+- **CLAUDE.md**: Strategic context for AI assistants (business purpose, decisions, constraints)
 - **README.md**: Public-facing overview and getting started
-- **ARCHITECTURE.md**: System design, service architecture, infrastructure decisions
+- **ARCHITECTURE.md**: System-level design decisions and rationale
 - **DEVELOPMENT-WORKFLOW.md**: Daily development processes, scripts, troubleshooting
 - **CODING-RULES.md**: Development standards and conventions
-- **DOCUMENTATION-GUIDELINES.md**: This document
+- **DOCUMENTATION-GUIDELINES.md**: This document (meta-documentation standards)
 - **UX-LAYOUT.md**: Design system and UI/UX guidelines
 - **ROADMAP.md**: Future features and planned enhancements
-- **PROJECT_HISTORY.md**: Completed phases and lessons learned
 
 ### Implementation Documentation
-- **IMPLEMENTATION-BACKEND.md**: Rust/Actix-web API implementation
-- **IMPLEMENTATION-FRONTEND.md**: Nuxt.js/Vue frontend implementation
-- **IMPLEMENTATION-DATABASE.md**: PostgreSQL schema and management
-- **IMPLEMENTATION-SECURITY.md**: Authentication, authorization, and security measures
-- **IMPLEMENTATION-NGINX.md**: Reverse proxy and SSL configuration
-- **IMPLEMENTATION-DEPLOYMENT.md**: Production deployment process
-- **IMPLEMENTATION-SCRIPTS.md**: Development and deployment scripts
-- **IMPLEMENTATION-DATA-CONTRACTS.md**: API contracts and JSON schemas
-- **IMPLEMENTATION-TESTING.md**: Test architecture and coverage
-- **IMPLEMENTATION-UTILS.md**: Development utilities and tools
+**Purpose**: Document component-level decisions with rationale, not current code structure.
+
+**Pattern**: Decision/Why/Alternatives/Trade-offs for each major choice.
+
+- **IMPLEMENTATION-BACKEND.md**: Rust backend architecture decisions
+- **IMPLEMENTATION-FRONTEND.md**: Nuxt.js frontend architecture decisions
+- **IMPLEMENTATION-DATABASE.md**: PostgreSQL schema design decisions
+- **IMPLEMENTATION-SECURITY.md**: Authentication and security decisions
+- **IMPLEMENTATION-NGINX.md**: Reverse proxy configuration decisions
+- **IMPLEMENTATION-DEPLOYMENT.md**: Production deployment decisions
+- **IMPLEMENTATION-SCRIPTS.md**: Development automation script decisions
+- **IMPLEMENTATION-TESTING.md**: Testing strategy and paradigm decisions
+- **IMPLEMENTATION-LOGGING.md**: Logging and observability decisions
+- **IMPLEMENTATION-UTILS.md**: Development utility decisions
 
 ### Feature Documentation Strategy
 - **Brief Descriptions Only**: Feature implementations should be briefly described in their component docs
 - **No Separate Feature Docs**: Avoid creating IMPLEMENTATION-FEATURE.md files
 - **Cross-Component Features**: Document in the primary component, reference from others
 - **Example**: Phrases system documented in IMPLEMENTATION-BACKEND.md, referenced from FRONTEND
+
+## Decision Documentation Pattern
+
+For all major architectural and implementation decisions, use this consistent pattern:
+
+```markdown
+### [Decision Name]
+**Decision**: [What was chosen]
+
+**Why**: [Rationale and constraints that drove this choice]
+
+**Alternatives rejected**: [What else was considered and why it was rejected]
+
+**Trade-offs**: [What you gain vs. what you lose with this choice]
+```
+
+**Example**:
+```markdown
+### UUIDv7 Primary Keys
+**Decision**: Use pg_uuidv7 extension for all primary keys
+
+**Why**:
+- Time-ordered for better indexing than random UUIDs
+- Globally unique (no conflicts in distributed systems)
+- Future-proof for horizontal scaling
+
+**Alternatives rejected**:
+- Auto-increment integers: Risk of ID collisions in distributed systems
+- UUID v4: Random ordering degrades index performance
+
+**Trade-offs**: Slightly larger storage (128-bit vs 64-bit) vs. distributed-ready architecture
+```
+
+This pattern applies to:
+- **CLAUDE.md**: High-level strategic decisions
+- **ARCHITECTURE.md**: System-level architectural decisions
+- **IMPLEMENTATION-*.md**: Component-level implementation decisions
 
 ## Markdown Formatting Standards
 
@@ -85,7 +142,8 @@ This document establishes the standards and conventions for all documentation in
 ### Code References
 - Reference files using: `backend/src/routes/auth.rs`
 - Reference file sections using: `backend/src/routes/auth.rs (Authentication handlers section)`
-- Never include actual code snippets
+- **Minimal code examples**: OK when clarifying confusing rules (see CODING-RULES.md)
+- **Decision pattern examples**: OK in IMPLEMENTATION-* docs to illustrate the pattern being discussed
 - Use backticks for file names and technical terms
 
 ### Status Indicators
@@ -114,14 +172,19 @@ For deployment details, refer to [ARCHITECTURE.md](ARCHITECTURE.md#deployment-st
 ## Document Structure Guidelines
 
 ### Implementation Documents
-- **Purpose**: Document current technical implementation only
-- **Structure**: 
-  - Overview (what is currently implemented)
-  - Technology stack (actual versions in use)
-  - Current features (working functionality)
-  - File structure (actual directory layout)
-  - Integration points (how it connects to other components)
-- **Avoid**: Future plans, TODO items, planning sections
+- **Purpose**: Document component-level decisions with rationale, not current code structure
+- **Pattern**: Use Decision/Why/Alternatives/Trade-offs for each major choice
+- **Structure**:
+  - Overview (component purpose and strategic decisions)
+  - Technology stack decisions (why this choice over alternatives)
+  - Architecture decisions (why this pattern with rationale)
+  - Key patterns (decisions that shape implementation)
+  - Trade-offs (what you gain/lose with these choices)
+- **Avoid**:
+  - Current code structure (discoverable from code)
+  - File trees and organization (Claude can explore)
+  - Feature inventories (focus on decisions, not catalog)
+  - Future plans (belongs in ROADMAP.md)
 
 ### Architecture Documents  
 - **Purpose**: System design and deployment strategy
@@ -135,15 +198,18 @@ For deployment details, refer to [ARCHITECTURE.md](ARCHITECTURE.md#deployment-st
 
 ## Content Organization Principles
 
-### Current vs Future State
-- **Implementation docs**: Current state only
-- **Roadmap**: Future state only  
-- **Architecture**: Current architecture with cross-references to roadmap for changes
+### Strategic vs Tactical Content
+- **CLAUDE.md**: Strategic WHY/WHAT (business goals, constraints, decisions)
+- **ARCHITECTURE.md**: System-level decisions with rationale
+- **IMPLEMENTATION-*.md**: Component-level decisions with rationale
+- **Code**: Tactical HOW (implementation)
+- **Roadmap**: Future decisions and plans
 
-### File References vs Code Snippets
+### File References vs Code Examples
 - **Preferred**: `See authentication handlers in backend/src/routes/auth.rs`
-- **Avoid**: Copying actual Rust/TypeScript/SQL code into documentation
-- **Exception**: JSON request/response schemas (language-agnostic contracts)
+- **Minimal examples OK**: When clarifying confusing rules (CODING-RULES.md)
+- **Decision examples OK**: When illustrating pattern discussed (IMPLEMENTATION-*.md)
+- **Avoid**: Comprehensive code tutorials (let Claude read the actual code)
 
 ### Cross-Document Relationships
 - Use markdown links to connect related information
@@ -196,9 +262,11 @@ For deployment details, refer to [ARCHITECTURE.md](ARCHITECTURE.md#deployment-st
 ## Special Document Rules
 
 ### CLAUDE.md
-- Lightweight entry point for AI assistants
-- Project context and high-level overview only
-- Aggressive cross-referencing to detailed documentation
+- Strategic context for AI assistants (WHY and WHAT, not HOW)
+- Business purpose, user needs, architectural decisions, constraints
+- Answers: "Why does this project exist? What makes it unique?"
+- Aggressive cross-referencing to detailed decision documentation
+- **Not**: Feature inventory, current state descriptions, how-to guides
 
 ### README.md
 - Public-facing for GitHub visitors
@@ -217,9 +285,10 @@ For deployment details, refer to [ARCHITECTURE.md](ARCHITECTURE.md#deployment-st
 - No implementation details
 
 ### IMPLEMENTATION-*.md
-- Current state only
-- Technical details for specific components
-- Cross-references for shared concepts
+- Component-level decisions with rationale (Decision/Why/Alternatives/Trade-offs pattern)
+- Strategic "why" for this component, not current "how" (code is discoverable)
+- Focus on decisions that shape implementation
+- Cross-references for related decisions in other components
 
 ---
 

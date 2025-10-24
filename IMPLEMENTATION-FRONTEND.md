@@ -1,462 +1,270 @@
 # Frontend Implementation
 
 ## Overview
-Nuxt.js 4.0.3 frontend with Vue 3, TypeScript, and SSR support. Features authentication, incident timers, phrases system, and page-specific design aesthetics.
+Nuxt.js 4.0.3 frontend with Vue 3, TypeScript, and SSR support.
 
-## Technology Stack
-- **Framework**: Nuxt.js 4.0.3, Vue 3, TypeScript
-- **State Management**: Pinia, nuxt-auth-utils
+## Technology Stack Decisions
+
+### Core Technologies
+- **Framework**: Nuxt.js 4.0.3 + Vue 3 + TypeScript
+  - Why: SSR for SEO, file-based routing, TypeScript for type safety
+- **State Management**: Pinia + nuxt-auth-utils
+  - Why: Composition API compatible, SSR support, separate session management
 - **Styling**: TailwindCSS
+  - Why: Utility-first, responsive by default, fast iteration
 - **Forms**: VeeValidate + Yup
-- **Utilities**: VueUse
+  - Why: Type-safe validation, async rules, consistent error handling
+- **Testing**: Vitest + Vue Test Utils
+  - Why: Fast, Vite-native, component testing support
 
-## Project Structure
-```
-frontend/
-├── app/                    # Nuxt 4 app directory structure
-│   ├── app.vue            # Main application entry point
-│   ├── assets/            # Assets directory
-│   │   ├── css/           # TailwindCSS configuration
-│   │   │   └── main.css   # Main CSS file
-│   │   └── images/        # Image assets
-│   │       ├── construction-castle.jpg
-│   │       ├── favicon-large.png.png
-│   │       ├── favicon-small.png.png
-│   │       ├── mahogany-wood.jpg
-│   │       └── scroll.png
-│   ├── components/        # Vue components (feature-based organization)
-│   │   ├── Layout/        # Layout and navigation components
-│   │   │   ├── AppHeader.vue # Responsive header with auth states
-│   │   │   └── AppFooter.vue # Site footer with legal links and copyright
-│   │   ├── Timer/         # Timer feature components
-│   │   │   ├── TimerStats.vue     # Current timer display with SteamClock
-│   │   │   ├── TimerListItem.vue  # Individual timer row component
-│   │   │   ├── TimerEditModal.vue # Edit timer modal with validation
-│   │   │   ├── TimerResetModal.vue# Quick reset modal
-│   │   │   ├── TimerDisplayTab.vue # Timer display tab component
-│   │   │   ├── TimerControlsTab.vue # Timer controls tab component
-│   │   │   ├── PhraseSuggestionsTab.vue # Phrase suggestions tab component
-│   │   │   ├── PhraseFilterTab.vue # Phrase filtering tab component
-│   │   │   ├── SuggestionHistoryTab.vue # Suggestion history tab component
-│   │   │   └── TabNavigation.vue # Tab navigation component
-│   │   ├── Phrases/       # Phrases feature components
-│   │   │   └── RandomPhrase.vue  # Random phrase display component
-│   │   ├── Profile/       # Profile management components
-│   │   │   ├── AccountInformationForm.vue # Account info editing form
-│   │   │   └── SecurityForm.vue # Password change form
-│   │   ├── Admin/         # Admin panel components
-│   │   │   ├── AdminPanel.vue           # Main admin panel with tabs
-│   │   │   ├── AdminTabNavigation.vue   # Tab navigation component
-│   │   │   ├── OverviewTab.vue          # System statistics display
-│   │   │   ├── UsersTab.vue             # User management interface
-│   │   │   ├── PhraseSuggestionApprovalTab.vue # Phrase moderation interface
-│   │   │   └── UserSearchBox.vue        # User search component
-│   │   └── Steampunk/     # Steampunk design system components
-│   │       ├── SteamClock.vue     # Main steampunk timer display
-│   │       ├── FlippingDigit.vue  # Animated flip-digit component
-│   │       ├── SlidingTimeGroup.vue # Time unit group container
-│   │       ├── SteampunkBackground.vue # Mahogany wood + gears background
-│   │       ├── SteampunkBanner.vue # Gold enamel motto plaque
-│   │       └── VintageNoteCard.vue # Vintage scroll note display
-│   ├── pages/             # File-based routing
-│   │   ├── index.vue      # Homepage with gothic construction theme
-│   │   ├── about.vue      # About page (placeholder)
-│   │   ├── login.vue      # Authentication login page
-│   │   ├── register.vue   # User registration with dynamic URL preview
-│   │   ├── verify-email.vue # Email verification page
-│   │   ├── profile.vue    # User profile management page
-│   │   ├── privacy.vue    # Privacy Policy page
-│   │   ├── terms.vue      # Terms of Service page
-│   │   ├── incidents.vue  # Protected CRUD management
-│   │   ├── admin/         # Admin panel pages
-│   │   │   └── index.vue  # Admin panel main page
-│   │   ├── auth/          # OAuth callback pages
-│   │   │   └── google/
-│   │   │       └── callback.vue # Google OAuth callback handler
-│   │   └── [user_slug]/
-│   │       └── incident-timer.vue # Public timer display
-│   ├── stores/            # Pinia stores with embedded actions for SSR hydration
-│   │   ├── incident-timers.ts # Timer state management with actions
-│   │   ├── phrases.ts     # Phrase state management with actions
-│   │   ├── admin.ts       # Admin state management with actions
-│   │   ├── incident-timers.spec.ts # Timer store tests
-│   │   ├── phrases.spec.ts # Phrase store tests
-│   │   └── admin.spec.ts  # Admin store tests
-│   ├── middleware/        # Route middleware
-│   │   ├── auth.ts        # Route protection
-│   │   └── admin.ts       # Admin route protection
-│   ├── composables/       # Composition API utilities
-│   │   ├── useAuthActions.ts # Authentication operations (only remaining action composable)
-│   │   ├── useAuthProfileActions.ts # Profile management operations
-│   │   ├── useAuthFetch.ts # HTTP client with auth interceptors
-│   │   ├── useBackendFetch.ts # Direct backend client with automatic JWT management
-│   │   ├── useJwtManager.ts # JWT token management with automatic refresh
-│   │   ├── useBaseService.ts # Base service utilities (loading states, error handling)
-│   │   ├── useSmartFetch.ts # Smart routing fetcher with SSR/client detection
-│   │   ├── useSessionWatcher.ts # Session state watcher for automatic cleanup
-│   │   └── useCallOnceWatcher.ts # One-time watcher utility
-│   ├── services/          # Pure services with curried dependency injection
-│   │   ├── authService.ts # Authentication operations
-│   │   ├── authProfileService.ts # Profile operations
-│   │   ├── phraseService.ts # Phrase operations
-│   │   ├── adminService.ts # Admin operations
-│   │   └── incidentTimerService.ts # Timer operations
-│   ├── utils/             # Utility functions
-│   │   └── timer-manager.ts # Timer management utilities
-│   ├── types/             # TypeScript definitions
-│   │   └── phrases.ts     # Phrases type definitions
-│   ├── constants/         # Application constants
-│   ├── layouts/           # Layout components
-│   └── plugins/           # Nuxt plugins
-├── shared/                # Shared utilities and types
-│   ├── types/             # Shared type definitions
-│   │   ├── admin.ts       # Admin type definitions
-│   │   ├── api-routes.ts  # API route type definitions
-│   │   ├── auth.d.ts      # Authentication type definitions
-│   │   ├── auth.ts        # Authentication types
-│   │   ├── common.ts      # Common type definitions
-│   │   ├── index.ts       # Type exports
-│   │   ├── phrases.ts     # Phrases type definitions
-│   │   ├── timers.ts      # Timer type definitions
-│   │   └── ui.ts          # UI type definitions
-│   ├── utils/             # Shared utility functions
-│   │   ├── jwt.ts         # JWT token utilities
-│   │   └── validation.ts  # Validation utilities
-│   ├── config/            # Configuration files
-│   │   └── api-routes.ts  # Centralized API route definitions
-│   └── schemas/           # Validation schemas
-│       ├── auth.ts        # Authentication validation schemas
-│       ├── index.ts       # Schema exports
-│       ├── phrases.ts     # Phrase validation schemas
-│       └── timers.ts      # Timer validation schemas
-├── server/                # Server API routes
-│   ├── api/               # API endpoint handlers
-│   │   ├── auth/          # Authentication endpoints
-│   │   │   ├── debug-refresh-token.get.ts # Debug refresh token endpoint
-│   │   │   ├── jwt.get.ts # Get current JWT token
-│   │   │   ├── login.post.ts # Login endpoint
-│   │   │   ├── logout.post.ts # Logout endpoint
-│   │   │   ├── me.get.ts  # Get current user
-│   │   │   ├── register.post.ts # Registration endpoint
-│   │   │   └── session-check.get.ts # Session validation
-│   │   ├── phrases/       # Phrases endpoints
-│   │   │   └── random.get.ts # Get random phrase
-│   │   ├── [user_slug]/   # Dynamic user routes
-│   │   │   ├── incident-timer.get.ts # Public timer display
-│   │   │   └── phrase.get.ts # Public phrase display
-│   │   ├── incident-timers.get.ts # Get user timers
-│   │   ├── health.get.ts  # Health check
-│   │   ├── simple.ts      # Simple test endpoint
-│   │   ├── test/          # Test endpoints
-│   │   │   ├── clear-jwt.post.ts # Clear JWT test endpoint
-│   │   │   └── session-state.get.ts # Session state test endpoint
-│   │   └── test.get.ts    # Test endpoint
-│   └── utils/             # Server utilities
-│       ├── client-ip.ts   # Client IP utilities
-│       └── jwt-handler.ts # JWT handling utilities
-├── nuxt.config.ts         # Nuxt configuration
-├── package.json           # Dependencies
-├── Dockerfile             # Production container
-├── Dockerfile.dev         # Development container
-├── tsconfig.json          # TypeScript config
-├── vitest.config.ts       # Vitest configuration
-└── README.md              # Frontend documentation
-```
-
-## Core Features
-
-### Authentication
-- **Implementation**: JWT-based with refresh tokens
-- **Session Management**: nuxt-auth-utils for secure session handling
-- **Route Protection**: Middleware-based authentication
-- **Details**: See [IMPLEMENTATION-SECURITY.md](IMPLEMENTATION-SECURITY.md#frontend-security)
-
-### Incident Timer System
-- **Interface**: 5-tab dashboard (display, controls, suggestions, filtering, history)
-- **CRUD Operations**: Full timer management with ownership validation
-- **Public Sharing**: Shareable URLs at `/{user_slug}/incident-timer`
-- **Design**: Steampunk aesthetic with flip-clock animation
-
-### Phrases System
-- **Display**: Random motivational phrases
-- **User Features**: Submit suggestions, filter phrases, track status
-- **Search Capabilities**: Enhanced search with full-text search and intelligent fallback
-- **Admin Features**: Approve/reject suggestions, manage phrases
-- **State Management**: Pinia stores for data management
-
-### Admin Panel System
-- **User Management**: Search users, deactivate accounts, reset passwords, promote to admin
-- **Phrase Moderation**: Review and approve/reject user suggestions
-- **System Statistics**: Overview of users, phrases, and pending suggestions
-- **Access Control**: Admin-only routes with role validation via admin middleware
-- **Tab Navigation**: URL-synchronized tab navigation with state persistence
-- **Admin Interface**: Clean, minimal design following authentication page styling
-
-### Design System
-Page-specific aesthetics following [UX-LAYOUT.md](UX-LAYOUT.md):
-- **Homepage**: Sacred/Gothic construction theme
-- **Authentication**: Minimal with sacred elements
-- **Incidents**: Technology/geometric patterns
-- **Public Timer**: Full steampunk aesthetic
-- **About**: Frontier/Nature with Japanese influences
-
-## Component Architecture
-
-**Refactored Architecture**: All components have been migrated to the new store-based actions pattern, eliminating event emission antipatterns and improving maintainability. The data layer has been completely refactored for SSR hydration with stores containing embedded actions and curried services.
-
-**Layout Components** (2 components):
-- AppHeader.vue (responsive header with auth states and mobile menu) ✅ **Refactored**
-- AppFooter.vue (site footer with copyright and legal page links)
-
-**Timer Components** (11 components) ✅ **All Refactored**:
-- TimerStats.vue, TimerList.vue, TimerListItem.vue, TimerEditModal.vue, TimerResetModal.vue
-- TimerDisplayTab.vue, TimerControlsTab.vue, PhraseSuggestionsTab.vue, PhraseFilterTab.vue, SuggestionHistoryTab.vue, TabNavigation.vue
-- **Pattern**: All use `useIncidentTimerStore()` with embedded actions for SSR hydration
-
-**Profile Components** (4 components) ✅ **All Refactored**:
-- AccountInformationForm.vue (display name and slug editing with validation)
-- SecurityForm.vue (password change with current password verification)
-- DataExport.vue (GDPR/CCPA data export functionality)
-- DeleteAccountSection.vue (self-service account deletion)
-- **Pattern**: All use `useAuthProfileActions()` composable (only remaining action composable)
-
-**Admin Components** (6 components) ✅ **All Refactored**:
-- AdminPanel.vue (main admin interface with tabbed navigation and URL state management)
-- AdminTabNavigation.vue (tab navigation with URL synchronization)
-- OverviewTab.vue (system statistics dashboard)
-- UsersTab.vue (user management with search and actions)
-- PhraseSuggestionApprovalTab.vue (phrase suggestion moderation)
-- UserSearchBox.vue (user search functionality)
-- **Pattern**: All use `useAdminStore()` with embedded actions for SSR hydration
-
-**Auth Components** (6 components) ✅ **All Refactored**:
-- login.vue (email/password login with OAuth option)
-- register.vue (user registration with email verification)
-- verify-email.vue (email verification page)
-- auth/google/callback.vue (Google OAuth callback handler)
-- AppHeader.vue (header with auth states)
-- **Pattern**: All use `useAuthActions()` composable + `useAuthStore()` for session management
-
-**Legal Pages** (2 components):
-- privacy.vue (Privacy Policy with GDPR/CCPA compliance)
-- terms.vue (Terms of Service with user rights)
-- **Styling**: Steampunk aesthetic matching site design (gold, silver, prussian blue, mahogany)
-
-**Steampunk Design** (9 components):
-- SteamClock.vue, FlippingDigit.vue, SlidingTimeGroup.vue, TimeGroup.vue
-- SteampunkBackground.vue, SteampunkBanner.vue, VintageNoteCard.vue
-- SteampunkAccordion.vue, SteampunkTooltip.vue
-
-**Phrases**: RandomPhrase.vue (random phrase display component) ✅ **Refactored**
-
-**Page Structure**: 5-tab interface in incidents.vue with TimerDisplayTab, TimerControlsTab, PhraseSuggestionsTab, PhraseFilterTab, SuggestionHistoryTab ✅ **All Refactored**
-
-**Migration Status**: All components (100% complete) - All components now use store-based actions pattern for SSR hydration
-
-## Steampunk Design System
-- **Flip Clock**: FlippingDigit.vue (split-flap animation), SlidingTimeGroup.vue (time units), SteamClock.vue (main assembly)
-- **Visual Elements**: SteampunkBackground.vue (mahogany wood + gears), SteampunkBanner.vue (gold plaque with phrases), VintageNoteCard.vue (scroll notes)
-- **Animations**: Split-flap mechanics, gear synchronization, slide transitions, engraved text effects
-
-## Architecture Patterns
+## Architecture Decisions
 
 ### Hybrid API Architecture
-- **SSR Routes**: `/api/*` for server-side data fetching
-- **Direct API**: `/backend/*` for client-side mutations
-- **Authentication**: See [IMPLEMENTATION-SECURITY.md](IMPLEMENTATION-SECURITY.md#session-security)
-- **Details**: See [ARCHITECTURE.md](ARCHITECTURE.md#data-flow-architecture)
+Dual-path API strategy for SSR and client-side needs:
 
-### State Management
+**SSR Proxy Pattern** (`/api/*`)
+- Server-side data fetching for initial page loads
+- Session-based authentication (cookies)
+- Nuxt server acts as proxy to backend
 
-**Refactored Architecture**: Stores with embedded actions for SSR hydration and rendering. Actions are embedded within stores to enable proper server-side rendering and client-side hydration.
+**Direct Backend Pattern** (`/backend/*`)
+- Client-side API calls for mutations
+- JWT authentication in request headers
+- Direct routing through nginx to backend
 
-**Stores with Embedded Actions (3 Complete):**
-- `stores/phrases.ts` - Phrase state management with embedded actions for SSR hydration
-- `stores/admin.ts` - Admin state management with embedded actions for SSR hydration  
-- `stores/incident-timers.ts` - Timer state management with embedded actions for SSR hydration
+**Why hybrid:**
+- SSR needs cookies (secure, httpOnly)
+- Client mutations need JWT (stateless, flexible)
+- Each optimized for its use case
 
-**Action Composables (2 Remaining):**
-- `useAuthActions.ts` - Authentication operations orchestration (session management)
-- `useAuthProfileActions.ts` - Profile management operations orchestration
+**Trade-offs:**
+- Two auth mechanisms to maintain
+- Worth it: SSR performance + client flexibility
 
-**Architecture Benefits:**
-- **SSR Hydration**: Stores with embedded actions enable proper server-side rendering
-- **State Persistence**: Actions within stores maintain state across SSR/client boundary
-- **Easy Testing**: Each store can be tested in isolation with comprehensive mocking
-- **Better Patterns**: Direct store action calls instead of event emissions
-- **Maintainable**: Clean separation of concerns with actions co-located with state
-- **Testable**: Store actions enable comprehensive unit testing with embedded service calls
+### Store Architecture (SSR Hydration Pattern)
 
-**Forms**: All forms use VeeValidate + Yup validation
+**Decision**: Actions embedded within stores, not separate composables
 
-### Service Architecture
-
-**Refactored Architecture Pattern:**
-The frontend has been completely refactored to use stores with embedded actions and curried services for maximum testability and SSR hydration:
-
+**Pattern:**
 ```
-Components <-> Stores (with embedded actions) <-> Curried Services <-> Smart Fetch
+Components → Stores (with actions) → Services → API
 ```
 
-**Stores with Embedded Actions (3 Complete):**
-- `stores/phrases.ts` - Phrase state management with embedded actions
-- `stores/admin.ts` - Admin state management with embedded actions
-- `stores/incident-timers.ts` - Timer state management with embedded actions
+**Why:**
+- SSR Hydration: Actions in stores survive server→client handoff
+- State Persistence: Reactive state + actions together
+- No event emissions: Direct action calls
 
-**Action Composables (2 Remaining):**
-- `useAuthActions.ts` - Authentication operations orchestration (session management)
-- `useAuthProfileActions.ts` - Profile management operations orchestration
+**Alternative rejected:**
+- Action composables: Don't hydrate properly in SSR
+- Caused state mismatches between server/client renders
 
-**Curried Services with Dependency Injection (5 Complete):**
-- `services/authService.ts` - Authentication operations
-- `services/authProfileService.ts` - Profile operations
-- `services/phraseService.ts` - Phrase operations
-- `services/adminService.ts` - Admin operations
-- `services/incidentTimerService.ts` - Timer operations
+**Trade-offs:**
+- Larger store files (state + actions)
+- Worth it: SSR actually works correctly
 
-**Smart Fetch System:**
-- `useSmartFetch.ts` - Smart routing fetcher with SSR/client detection
-- `useSessionWatcher.ts` - Session state watcher for automatic cleanup
-- `useJwtManager.ts` - JWT token management with automatic refresh
+**Exceptions:**
+- Auth actions: Session management requires composable for lifecycle hooks
+- Profile actions: Composable for form-specific orchestration
 
-**Timer Management Utilities:**
-- `utils/timer-manager.ts` - Timer utilities (live updates, calculations, formatting)
+### Service Layer Pattern
 
-**Architecture Benefits:**
-- **SSR Hydration**: Stores with embedded actions enable proper server-side rendering
-- **State Persistence**: Actions within stores maintain state across SSR/client boundary
-- **Easy Testing**: Each layer can be tested in isolation with comprehensive mocking
-- **Reusable Services**: Curried services can be used outside Vue context
-- **Better Component Patterns**: Direct store action calls instead of event emissions
-- **Maintainable**: Clean separation of concerns with actions co-located with state
-- **Testable**: Curried services enable easy mocking and comprehensive test coverage
+**Decision**: Curried services with dependency injection
 
-**Centralized API Routes:**
-- **Configuration**: `frontend/shared/config/api-routes.ts` - Single source of truth for all endpoints
-- **Categorization**: PUBLIC (no auth), PROTECTED (JWT required), API (SSR passthrough)
-- **Type Safety**: TypeScript support with route parameter functions
-- **Maintainability**: Centralized route definitions eliminate duplication
-
-**Smart Fetch System:**
-- **Server-Side**: Uses `useRequestFetch()` for SSR-safe requests with cookie forwarding
-- **Client-Side**: Uses `$fetch` for standard client-side requests
-- **JWT Management**: Automatic JWT token addition for protected requests only
-- **URL Routing**: SSR uses internal Docker network, Client uses nginx proxy
-- **Smart Routing**: Automatically chooses passthrough vs direct based on route config
-
-**API Route Usage:**
-- `API_ROUTES.PUBLIC.*` - Public endpoints (no auth needed)
-- `API_ROUTES.PROTECTED.*` - Protected endpoints (JWT required)
-- `API_ROUTES.API.*` - SSR proxy routes (session-based)
-
-**Store with Embedded Actions Pattern:**
-
+**Pattern:**
 ```typescript
-// ✅ CORRECT: Store with embedded actions for SSR hydration
-export const useMyStore = defineStore('my-store', () => {
-  const data = ref<MyData[]>([])
-  const isLoading = ref(false)
-  const error = ref<string | null>(null)
-  
-  // Service instance with curried dependency injection
-  const smartFetch = useSmartFetch()
-  const myService = myService(smartFetch)
-  
-  // Embedded actions for SSR hydration
-  const loadData = async () => {
-    isLoading.value = true
-    error.value = null
-    
-    try {
-      const result = await myService.getData()
-      data.value = result
-    } catch (err) {
-      error.value = 'Failed to load data'
-    } finally {
-      isLoading.value = false
-    }
-  }
-  
-  const updateSomething = async (id: string, updates: any) => {
-    isLoading.value = true
-    error.value = null
-    
-    try {
-      const result = await myService.updateSomething(id, updates)
-      const index = data.value.findIndex(item => item.id === id)
-      if (index !== -1) {
-        data.value[index] = { ...data.value[index], ...result }
-      }
-    } catch (err) {
-      error.value = 'Failed to update data'
-    } finally {
-      isLoading.value = false
-    }
-  }
-  
-  return {
-    data,
-    isLoading,
-    error,
-    loadData,
-    updateSomething
-  }
+// Service takes fetch function as parameter
+export const myService = (fetcher) => ({
+  getData: () => fetcher('/endpoint'),
+  updateData: (data) => fetcher('/endpoint', { method: 'PUT', body: data })
 })
 
-// ✅ CORRECT: Component usage
-const { data, loadData, isLoading } = useMyStore()
-await loadData() // Store action calls curried service
+// Usage in store
+const smartFetch = useSmartFetch()
+const service = myService(smartFetch)
 ```
 
-**Service Currying Pattern:**
+**Why:**
+- Testability: Easy to mock fetcher function
+- Reusability: Services work outside Vue context
+- Flexibility: Swap fetcher implementation
 
-```typescript
-// ✅ CORRECT: Curried service for testability
-export const myService = (fetcher: FetcherFunction) => ({
-  getData: () => fetcher('/protected/data'),
-  updateSomething: (id: string, updates: any) => 
-    fetcher(`/protected/data/${id}`, { method: 'PUT', body: updates })
-})
+**Trade-offs:**
+- Extra function call wrapper
+- Worth it: Tests don't need real API
 
-// ✅ CORRECT: Easy testing with mock fetcher
-const mockFetcher = vi.fn()
-const service = myService(mockFetcher)
-await service.getData()
-expect(mockFetcher).toHaveBeenCalledWith('/protected/data')
-```
+### Smart Fetch System
 
-**Environment Configuration:**
-- `NUXT_API_BASE=http://backend:8080/backend` (SSR - internal Docker network)
-- `NUXT_PUBLIC_API_BASE=https://localhost/backend` (CSR - browser access)
-- `useSmartFetch()` automatically handles routing and JWT tokens
+**Decision**: Automatic SSR/client detection with environment-aware routing
+
+**Behavior:**
+- Server-side: Uses internal Docker network
+- Client-side: Uses nginx proxy
+- Automatic JWT token management
+- Cookie forwarding for SSR
+
+**Why:**
+- Services don't know about environment
+- SSR can't access localhost from container
+- Client can't access internal Docker network
+
+**Implementation:**
+- Detects `import.meta.server` vs `import.meta.client`
+- Routes to appropriate API base URL
+- Handles JWT injection automatically
+
+### Centralized API Routes
+
+**Decision**: Single source of truth for all endpoint definitions
+
+**Location**: `shared/config/api-routes.ts`
+
+**Categories:**
+- PUBLIC: No auth required
+- PROTECTED: JWT required
+- API: SSR proxy routes
+
+**Why:**
+- No magic strings in code
+- Type safety for routes
+- Single place to update endpoints
+- Self-documenting API surface
+
+### Component Organization
+
+**Decision**: Feature-based, not type-based
+
+**Structure:**
+- `components/Timer/` - All timer components
+- `components/Admin/` - All admin components
+- `components/Profile/` - All profile components
+
+**Why:**
+- Easier to find related components
+- Clearer feature boundaries
+- Co-locate feature-specific logic
+
+**Alternative rejected:**
+- Type-based (`modals/`, `forms/`, `cards/`)
+- Gets unwieldy as features grow
 
 ### Form Validation Standards
-- **Required**: All forms must use VeeValidate + Yup for validation
-- **Consistency**: Standardized validation patterns across authentication, timers, and phrases
-- **User Experience**: Real-time validation with clear error messaging
 
-## Development Environment
+**Decision**: VeeValidate + Yup required for all forms
 
-### Running the Frontend
-```bash
-./scripts/dev-start.sh frontend    # Start with hot reload
-./scripts/dev-logs.sh frontend     # View logs
-```
+**Why:**
+- Consistent validation experience
+- Type-safe with TypeScript
+- Async validation support
+- Composable pattern works with Composition API
 
-### Development Features
-- **HMR**: Instant Vue/TypeScript updates
-- **State Preservation**: Component hot swapping
-- **Style Updates**: Real-time TailwindCSS changes
+**Enforcement:**
+- No raw form submissions
+- Yup schemas define validation rules
+- VeeValidate handles UI feedback
 
-## API Integration
+## Design System Decisions
 
-### Server Routes (SSR)
-Proxy routes in `server/api/` for server-side rendering:
-- **Authentication**: JWT token management
-- **Data Fetching**: Timer and phrase data
-- **Health Checks**: Service monitoring
+### Page-Specific Aesthetics
+Different pages have different themes (see UX-LAYOUT.md):
 
-### Backend Integration
-- **Endpoints**: See [IMPLEMENTATION-DATA-CONTRACTS.md](IMPLEMENTATION-DATA-CONTRACTS.md)
-- **Authentication**: See [IMPLEMENTATION-SECURITY.md](IMPLEMENTATION-SECURITY.md#frontend-security)
-- **Architecture**: See [ARCHITECTURE.md](ARCHITECTURE.md#data-flow-architecture)
+**Why:**
+- Each section has unique mood/purpose
+- Gothic for construction, steampunk for timers
+- Visual variety maintains interest
+
+**Trade-offs:**
+- More CSS, more components
+- Worth it: Memorable user experience
+
+### Steampunk Components
+Custom flip-clock, gears, mahogany backgrounds:
+
+**Decision**: Build custom, don't use library
+
+**Why:**
+- Unique aesthetic matches brand
+- Full control over animations
+- Learning opportunity
+
+**Trade-offs:**
+- More implementation time
+- Worth it: Distinctive design
+
+## Route Protection
+
+**Middleware Pattern:**
+- `auth.ts`: Redirects unauthenticated users to login
+- `admin.ts`: Checks for admin role
+
+**Why middleware:**
+- Declarative protection in route definitions
+- Runs before page load
+- Consistent behavior across routes
+
+## State Management Philosophy
+
+**Pinia for application state:**
+- Timers, phrases, admin data
+- Persists across navigation
+
+**nuxt-auth-utils for session:**
+- User authentication state
+- Secure session management
+- Automatic refresh handling
+
+**Why separate:**
+- Session is special: Security-critical
+- Application state is different: Feature data
+- Each optimized for its purpose
+
+## Development Features
+
+### Hot Module Replacement
+Development scripts provide instant updates:
+- Vue components update without reload
+- TailwindCSS updates instantly
+- TypeScript errors show immediately
+
+**Configuration:**
+- WebSocket through nginx SSL
+- Development container mounts code
+- cargo-watch + Nuxt HMR
+
+### Testing Strategy
+See [IMPLEMENTATION-TESTING.md](IMPLEMENTATION-TESTING.md) for testing philosophy and paradigm-based approach.
+
+## Key Patterns
+
+### No Event Emission for Data Mutations
+**Decision**: Components call store actions directly
+
+**Why:**
+- Events are for DOM interactions
+- Data mutations should be direct
+- Easier to trace data flow
+
+**Alternative rejected:**
+- Event-driven architecture
+- Hard to debug, unclear flow
+
+### Session Watcher
+**Pattern**: Automatic cleanup on session changes
+
+**Why:**
+- Logout should clear all user data
+- Prevents stale data after re-login
+- Centralized cleanup logic
+
+### JWT Manager
+**Pattern**: Automatic token refresh before expiration
+
+**Why:**
+- Seamless user experience
+- No sudden logouts
+- Handles refresh token rotation
+
+**Implementation:**
+- Checks expiration on API calls
+- Refreshes proactively
+- Falls back to login on refresh failure

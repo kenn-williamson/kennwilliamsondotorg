@@ -63,6 +63,8 @@ Development Environment (https://localhost)
 
 ### 3-Layer Backend Architecture
 
+**Decision**: API → Service → Repository pattern with dependency injection.
+
 **API Layer** (`routes/`):
 - HTTP request/response handling
 - Route validation and middleware
@@ -78,22 +80,32 @@ Development Environment (https://localhost)
 - PostgreSQL and mock implementations
 - Database query execution
 
+**Why**: Testability critical for AI-assisted development. Services depend on repository traits (not concrete implementations), enabling unit testing with mocks and integration testing with real database. Clean separation provides confidence when exploring unfamiliar patterns.
+
+See [IMPLEMENTATION-BACKEND.md](IMPLEMENTATION-BACKEND.md#architecture-decisions) for detailed design patterns, benefits, and trade-offs.
+
 ### Authentication Flow
 Hybrid JWT/refresh token architecture with secure session management. See [IMPLEMENTATION-SECURITY.md](IMPLEMENTATION-SECURITY.md#authentication-system) for details.
 
 ### Hybrid API Architecture
 
+**Decision**: Two distinct API patterns for different use cases.
+
 **SSR Proxy Pattern** (`/api/*`):
 - Server-side data fetching for initial page loads
 - Session-based authentication handling
 - Nuxt server acts as proxy to backend
+- **Why**: SEO (server-rendered content for indexing), security (httpOnly cookies), UX (faster initial render)
 
 **Direct Backend Pattern** (`/backend/*`):
 - Client-side API calls for mutations
 - JWT authentication in request headers
 - Direct routing through nginx to backend
+- **Why**: Performance (bypass Nuxt overhead, leverage stateless Rust speed)
 
-See [IMPLEMENTATION-FRONTEND.md](IMPLEMENTATION-FRONTEND.md#architecture-patterns) for implementation details.
+**Trade-off**: Architectural complexity of two patterns vs. optimizing each use case appropriately (SEO+security+UX via Nuxt, performance via direct Rust).
+
+See [IMPLEMENTATION-FRONTEND.md](IMPLEMENTATION-FRONTEND.md#architecture-patterns) for implementation details and [CLAUDE.md](CLAUDE.md#hybrid-api-architecture) for full decision rationale.
 
 ### Data Flow Examples
 
@@ -133,6 +145,18 @@ See [DEVELOPMENT-WORKFLOW.md](DEVELOPMENT-WORKFLOW.md) for detailed development 
 
 ## Resource Management
 
+### Budget Constraint: AWS t3.small (2GB RAM)
+
+**Decision**: Deploy on AWS t3.small instance (2 vCPU, 2GB RAM).
+
+**Why**: Budget-conscious deployment (low monthly cost) while maintaining production quality. This constraint drives architectural decisions:
+- **Stateless design**: JWT tokens enable horizontal scaling without memory penalties
+- **Connection pooling**: Limited to 10 PostgreSQL connections (prevents exhaustion)
+- **PostgreSQL tuning**: Optimized for 2GB environment
+- **Rust backend**: Minimal memory footprint vs. Node.js alternatives
+
+**Trade-off**: Resource optimization complexity vs. cost savings. Architecture must be efficient, but enables learning performance optimization patterns.
+
 ### Development Environment (Typical Development Machine)
 - **Nginx**: ~20MB (lightweight alpine)
 - **Frontend (Nuxt.js)**: ~150MB (development mode)
@@ -140,12 +164,13 @@ See [DEVELOPMENT-WORKFLOW.md](DEVELOPMENT-WORKFLOW.md) for detailed development 
 - **PostgreSQL**: ~100MB (development load)
 - **Docker Overhead**: ~50MB
 
-### Production Target (AWS EC2 t2.micro - 1GB RAM)
+### Production Target (AWS t3.small - 2GB RAM)
 - **Nginx**: ~50MB
 - **Frontend (Nuxt.js)**: ~200MB (production build)
 - **Backend (Rust)**: ~150MB (release build)
-- **PostgreSQL**: ~300MB (optimized for 1GB constraint)
-- **System/Docker**: ~300MB
+- **PostgreSQL**: ~800MB (tuned for 2GB environment)
+- **System/Docker**: ~800MB
+- **Total**: ~2000MB (fits within 2GB with minimal headroom)
 
 ## Integration Points
 

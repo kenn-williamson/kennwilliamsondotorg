@@ -1,215 +1,318 @@
 # Security Implementation
 
 ## Overview
-Comprehensive security implementation covering authentication, authorization, data protection, and infrastructure security for the KennWilliamson.org application.
+Security architecture decisions covering authentication, authorization, data protection, and infrastructure security.
 
-## Authentication System
+## Authentication Decisions
 
-### JWT-Based Authentication
-- **Token Type**: JSON Web Tokens with HS256 algorithm
-- **Access Token**: 1-hour expiration, minimal claims (user ID only)
-- **Storage**: In-memory via Nuxt session for security
-- **Validation**: Signature verification on all protected routes
+### JWT + Refresh Token Hybrid
+**Decision**: Short-lived JWT with long-lived refresh tokens
 
-### Refresh Token System
-- **Duration**: 1-week rolling tokens with 6-month hard limit
-- **Storage**: SHA-256 hashed in database (never plaintext)
-- **Rolling Strategy**: Each refresh generates new JWT + new refresh token
-- **Multi-Device**: Separate tokens per login session
-- **Revocation**: Individual or bulk token revocation support
+**Why:**
+- JWT: Stateless, no database lookup per request
+- Refresh: Revocable, database-backed
+- Best of both: Performance + security
 
-### Password Security
-- **Hashing**: bcrypt with cost factor 12 (production)
-- **Validation**: Frontend validation with backend verification
-- **Storage**: Only hashed passwords in database
-- **Requirements**: Enforced via VeeValidate + Yup schemas
+**Configuration:**
+- Access token: 1 hour (short window if compromised)
+- Refresh token: 1 week rolling, 6 month hard limit
 
-### OAuth Authentication
-- **Provider**: Google OAuth 2.0 with PKCE flow
-- **Flow Type**: Authorization Code with Proof Key for Code Exchange (PKCE)
-- **State Storage**: Redis-backed state validation with expiration
-- **Security**: PKCE prevents authorization code interception attacks
-- **User Integration**: Automatic user creation or linking on successful OAuth
-- **Implementation**: `backend/src/services/auth/auth_service/oauth.rs`
-- **Frontend**: `frontend/app/pages/auth/google/callback.vue`
+**Alternative rejected:**
+- JWT only: Can't revoke without database
+- Sessions only: Database lookup every request
 
-**PKCE Flow**:
-1. Frontend generates code verifier and challenge
-2. Backend creates OAuth URL with state stored in Redis (10-minute expiration)
-3. User authenticates with Google
-4. Google redirects to callback with authorization code
-5. Backend validates state from Redis
-6. Backend exchanges code for tokens using code verifier
-7. Backend fetches user info and creates/links account
-8. User receives JWT and refresh token
+### Refresh Token Rotation
+**Decision**: Generate new refresh token on every refresh
+
+**Why:**
+- Limits attack window
+- Detects token theft (old token used)
+- Industry best practice
+
+**Trade-offs:**
+- More database writes
+- Worth it: Better security
+
+### Password Hashing
+**Decision**: bcrypt with cost factor 12
+
+**Why:**
+- Slow by design (brute force resistant)
+- Adaptive cost (can increase over time)
+- Battle-tested
+
+**Alternatives considered:**
+- **Argon2**: Better, but less mature in Rust ecosystem
+- **PBKDF2**: Less resistant to GPU attacks
+- **bcrypt**: Good enough, widely supported
+
+**Trade-offs:**
+- Slower login (intentional)
+- Worth it: Security over speed
+
+### OAuth with PKCE
+**Decision**: Authorization Code flow with PKCE
+
+**Why:**
+- PKCE prevents authorization code interception
+- Required for public clients (SPAs)
+- More secure than implicit flow
+
+**Flow:**
+1. Generate code verifier + challenge
+2. Store state in Redis (10min expiry)
+3. User authenticates with provider
+4. Validate state, exchange code for token
+5. Create/link user account
+
+**Trade-offs:**
+- More complex than implicit flow
+- Worth it: Industry standard for SPAs
 
 ### Email Verification
-- **Service**: AWS SES for email delivery
-- **Token Generation**: Secure random tokens stored in database
-- **Expiration**: Verification tokens expire after 24 hours
-- **Flow**: Registration → Email sent → User clicks link → Token validated → Account verified
-- **Implementation**: `backend/src/services/auth/auth_service/email_verification.rs`
-- **Frontend**: `frontend/app/composables/useEmailVerification.ts`
-- **Database**: `verification_tokens` table with user_id and expiration
+**Decision**: Token-based verification required for features
 
-## Authorization System
+**Why:**
+- Prevents spam accounts
+- Confirms user identity
+- Required for trusted operations
+
+**Token strategy:**
+- Secure random tokens
+- 24-hour expiration
+- Single-use
+
+**Trade-offs:**
+- Friction in signup
+- Worth it: Quality users over quantity
+
+## Authorization Decisions
 
 ### Role-Based Access Control (RBAC)
+**Decision**: 4-tier role system
 
-The application implements a 4-tier role system stored in the `roles` and `user_roles` tables:
+**Roles:**
+1. `user` - Base role (immutable, auto-assigned)
+2. `email-verified` - Verified identity (manageable)
+3. `trusted-contact` - Personal content access (manageable)
+4. `admin` - Full system access (manageable)
 
-#### Role Definitions
+**Why RBAC:**
+- Clear permission boundaries
+- Easy to add roles
+- Standard pattern
+- Query-friendly
 
-1. **`user`** (Base Role - Immutable)
-   - Automatically assigned on registration
-   - Cannot be removed or changed via admin interface
-   - Represents basic authenticated user status
-   - Permissions: View public content, manage account settings
+**Why immutable base role:**
+- Can't lock out users accidentally
+- Base permissions always present
+- Admin can revoke additional roles
 
-2. **`email-verified`** (Manageable)
-   - Assigned after successful email verification
-   - Can be manually granted/revoked by admins
-   - Required for creating timers and phrases
-   - Gates features requiring verified identity
-
-3. **`trusted-contact`** (Manageable)
-   - Manually granted by admins after request approval
-   - Provides access to personal/family content on about pages
-   - Protected content: Origins, Wilderness, Faith, Theology, Life Now, Vision pages
-   - Public content: Overview, Professional, AI pages (no authentication required)
-
-4. **`admin`** (Manageable)
-   - Full system access including user management
-   - Can grant/revoke manageable roles (`email-verified`, `trusted-contact`, `admin`)
-   - Cannot remove `user` role (base role is permanent)
-   - Access to admin panel and all privileged endpoints
-
-#### Role Management
-- **Assignment**: Roles assigned via `user_roles` junction table (many-to-many)
-- **Middleware**: JWT validation extracts user context and roles
-- **Route Protection**: Automatic role checking for admin and protected endpoints
-- **Admin Interface**: Role toggle controls for manageable roles
-- **Implementation**: See `backend/src/middleware/auth.rs`
+**Alternative rejected:**
+- Permission-based: Too granular for current needs
+- Single admin flag: Not flexible enough
 
 ### Protected Resources
-- **User Data**: Users can only access their own timers
-- **Admin Routes**: Additional role check for admin-only endpoints
-- **Public Routes**: Specific endpoints bypass authentication
-- **API Structure**: Clear separation of public/protected/admin routes
+**Decision**: Users can only access their own data
 
-## Data Protection
+**Why:**
+- Privacy by default
+- Clear ownership model
+- Simple to verify
+
+**Pattern:**
+- Extract user ID from JWT
+- Filter queries by user_id
+- Reject if mismatch
+
+## Data Protection Decisions
 
 ### Input Validation
-- **Frontend**: VeeValidate + Yup for form validation
-- **Backend**: Serde validation on all requests
-- **SQL Injection**: Prevented via SQLx parameterized queries
-- **XSS Prevention**: Input sanitization and proper escaping
+**Decision**: Validate on both frontend and backend
 
-### Database Security
-- **Connection**: Internal Docker network only
-- **Credentials**: Environment variables, never in code
-- **Query Safety**: SQLx compile-time SQL verification
-- **Access Control**: Minimal database privileges
+**Why:**
+- Frontend: User experience (instant feedback)
+- Backend: Security (never trust client)
+- Defense in depth
 
-### Session Security
-- **JWT Storage**: Client memory (not localStorage)
-- **Refresh Tokens**: httpOnly cookies on server
-- **CSRF Protection**: Origin validation
-- **Session Cleanup**: Automatic expired token removal
+**Implementation:**
+- Frontend: VeeValidate + Yup
+- Backend: Serde validation
 
-## Infrastructure Security
+### SQL Injection Prevention
+**Decision**: Parameterized queries only via SQLx
 
-### SSL/TLS Configuration
-- **Development**: Self-signed certificates for HTTPS testing
-- **Production**: Let's Encrypt with automatic renewal
-- **Configuration**: See [IMPLEMENTATION-NGINX.md](IMPLEMENTATION-NGINX.md#ssl-certificate-management)
-- **Enforcement**: HTTP automatically redirects to HTTPS
+**Why:**
+- Compile-time verification
+- Impossible to forget
+- No string concatenation
+
+**Alternative rejected:**
+- String building: Error-prone
+- ORM only: Still need raw SQL sometimes
+
+### XSS Prevention
+**Decision**: Framework defaults + sanitization
+
+**Why:**
+- Vue auto-escapes by default
+- Explicit v-html only where needed
+- Backend validates input
+
+## Infrastructure Security Decisions
+
+### SSL/TLS Enforcement
+**Decision**: HTTPS required, HTTP redirects
+
+**Why:**
+- Encrypt all traffic
+- Prevent downgrade attacks
+- Required for modern APIs
+
+**Certificates:**
+- Development: Self-signed
+- Production: Let's Encrypt (free, automated)
 
 ### Security Headers
-- **Implementation**: Nginx security headers in production
-- **CORS**: Environment-specific configuration
-- **Rate Limiting**: Configured in nginx for API protection
-- **Details**: See [IMPLEMENTATION-NGINX.md](IMPLEMENTATION-NGINX.md#security-features)
+**Decision**: Defense-in-depth headers via nginx
+
+**Headers:**
+- HSTS: Force HTTPS
+- X-Frame-Options: Prevent clickjacking
+- X-Content-Type-Options: Prevent MIME sniffing
+- X-XSS-Protection: Browser protection
+- Referrer-Policy: Limit referer leakage
+
+**Why:**
+- Minimal performance cost
+- Defense in depth
+- Industry best practices
 
 ### Container Security
-- **Non-Root**: Containers run as non-root users
-- **Network Isolation**: Internal Docker network
-- **Minimal Images**: Alpine-based for reduced attack surface
-- **Health Checks**: Built-in container monitoring
+**Decision**: Non-root users, minimal images
 
-## API Security
+**Why:**
+- Limit blast radius
+- Smaller attack surface
+- Security by default
+
+**Pattern:**
+- Alpine Linux base (minimal)
+- Non-root user execution
+- Internal network only
+
+## Session Security Decisions
+
+### JWT Storage
+**Decision**: In-memory only (Nuxt session), never localStorage
+
+**Why:**
+- localStorage vulnerable to XSS
+- Memory cleared on tab close
+- httpOnly cookies for refresh tokens
+
+**Trade-offs:**
+- Lost on page refresh (re-fetch from session)
+- Worth it: Better security
+
+### CSRF Protection
+**Decision**: Origin validation + SameSite cookies
+
+**Why:**
+- Prevents cross-site requests
+- Standard browser protection
+- No custom tokens needed
+
+### Automatic Cleanup
+**Decision**: Background job removes expired tokens
+
+**Why:**
+- Prevents database bloat
+- Automatic maintenance
+- No manual intervention
+
+**Pattern:**
+- Run every 24 hours
+- Delete expired refresh + verification tokens
+- Logs cleanup results
+
+## API Security Decisions
 
 ### Endpoint Protection Levels
-1. **Public Endpoints** (No auth required):
-   - Health checks: `/backend/health`
-   - Authentication: `/backend/auth/register`, `/backend/auth/login`
-   - Public data: `/backend/{user_slug}/incident-timer`
+**Decision**: Three-tier access control
 
-2. **Protected Endpoints** (JWT required):
-   - User resources: `/backend/incident-timers/*`
-   - Profile: `/backend/auth/me`
-   - Phrases: `/backend/phrases/*`
+**Tiers:**
+1. **Public**: No auth (health, login, register, public data)
+2. **Protected**: JWT required (user resources)
+3. **Admin**: Admin role required (management)
 
-3. **Admin Endpoints** (Admin role required):
-   - Admin panel: `/backend/admin/*`
-   - User management: `/backend/admin/users/*`
-   - Phrase moderation: `/backend/admin/suggestions/*`
+**Why:**
+- Clear security boundaries
+- Self-documenting
+- Middleware enforcement
 
 ### Error Handling
-- **Generic Responses**: No information leakage in errors
-- **Consistent Format**: Standardized error response structure
-- **Logging**: Detailed server logs without sensitive data
-- **Status Codes**: Appropriate HTTP status for each error type
+**Decision**: Generic error messages to clients
 
-## Security Implementation Details
+**Why:**
+- No information leakage
+- Log details server-side
+- Consistent format
 
-### Backend Security (Rust/Actix-web)
-- **Middleware**: `backend/src/middleware/auth.rs` for JWT validation
-- **Services**: `backend/src/services/auth.rs` for authentication logic
-- **Password Hashing**: bcrypt implementation in auth service
-- **Token Generation**: JWT creation with proper claims
+**Pattern:**
+- Client: "Authentication failed"
+- Server log: "User not found: email@example.com"
 
-### Frontend Security (Nuxt/Vue)
-- **Auth Utils**: Nuxt auth-utils for session management
-- **Route Guards**: `app/middleware/auth.ts` for protected pages
-- **API Client**: `app/composables/useBackendFetch.ts` with auth headers
-- **Form Validation**: Comprehensive client-side validation
+## Security Testing
 
-### Database Security
-- **Schema**: Role-based tables with proper constraints
-- **Migrations**: Version-controlled schema changes
-- **Triggers**: Automated timestamp management
-- **Details**: See [IMPLEMENTATION-DATABASE.md](IMPLEMENTATION-DATABASE.md)
+### What We Test
+**Decision**: Test boundaries, not internals
 
-## Security Best Practices
+**Areas:**
+- Invalid JWT handling
+- Expired token rejection
+- Permission boundaries
+- Input validation
+- SQL injection attempts (via parameterized query tests)
 
-### Development Security
-- **Environment Files**: Never commit `.env` files
-- **Secrets Management**: Use environment variables
-- **Development Data**: Use separate test credentials
-- **Code Reviews**: Security-focused review process
+**Why:**
+- Catch security regressions
+- Verify protections work
+- Document security contracts
 
-### Production Security
-- **Secret Generation**: Cryptographically secure secrets
-- **Monitoring**: Log analysis for security events
-- **Updates**: Regular dependency updates
-- **Backups**: Encrypted database backups
+## Security Trade-Offs
 
-### Incident Response
-- **Token Revocation**: Immediate revocation capability
-- **User Deactivation**: Account disable functionality
-- **Audit Logging**: Track security-relevant events
-- **Recovery**: Documented recovery procedures
+### Usability vs Security
+**Decisions:**
+- Email verification required (security wins)
+- 1-hour JWT expiry (security wins)
+- Automatic refresh (usability wins)
+- Remember me via refresh token (balanced)
 
-## Testing Security
+**Philosophy:**
+- Security by default
+- Usability where safe
+- Clear trade-offs
 
-### Security Test Coverage
-- **Authentication**: Login/registration edge cases
-- **Authorization**: Permission boundary testing
-- **Input Validation**: Malformed input handling
-- **Token Security**: Expiration and validation tests
-- **Details**: See [IMPLEMENTATION-TESTING.md](IMPLEMENTATION-TESTING.md#backend-testing)
+### Performance vs Security
+**Decisions:**
+- bcrypt cost 12 (security wins)
+- JWT signature validation every request (security wins)
+- Connection pooling (balanced)
 
----
+**Philosophy:**
+- Security over raw performance
+- Optimize elsewhere
 
-*For security-related API contracts, see [IMPLEMENTATION-DATA-CONTRACTS.md](IMPLEMENTATION-DATA-CONTRACTS.md#authentication-contracts). For deployment security, see [IMPLEMENTATION-DEPLOYMENT.md](IMPLEMENTATION-DEPLOYMENT.md#security-configuration).*
+## Future Security Enhancements
+
+**When to add:**
+- **2FA**: When user base grows
+- **Rate limiting**: Already implemented
+- **Audit logging**: When compliance requires
+- **WAF**: When attack patterns emerge
+
+**Current approach sufficient for:**
+- Personal project scale
+- Known threat model
+- Single developer oversight
