@@ -1,6 +1,8 @@
+use anyhow::Result;
 use std::sync::Arc;
 use uuid::Uuid;
 
+use crate::events::EventPublisher;
 use crate::models::api::{
     CreatePhraseRequest, PhraseResponse, PhraseSuggestionRequest, UpdatePhraseRequest,
     UserPhrasesResponse,
@@ -15,12 +17,63 @@ pub mod user_management;
 
 pub struct PhraseService {
     repository: Arc<dyn PhraseRepository>,
+    event_bus: Option<Arc<dyn EventPublisher>>,
+}
+
+/// Builder for PhraseService
+pub struct PhraseServiceBuilder {
+    repository: Option<Box<dyn PhraseRepository>>,
+    event_bus: Option<Arc<dyn EventPublisher>>,
+}
+
+impl PhraseServiceBuilder {
+    pub fn new() -> Self {
+        Self {
+            repository: None,
+            event_bus: None,
+        }
+    }
+
+    pub fn with_repository(mut self, repository: Box<dyn PhraseRepository>) -> Self {
+        self.repository = Some(repository);
+        self
+    }
+
+    pub fn with_event_bus(mut self, event_bus: Arc<dyn EventPublisher>) -> Self {
+        self.event_bus = Some(event_bus);
+        self
+    }
+
+    pub fn build(self) -> Result<PhraseService> {
+        let repository = self.repository
+            .ok_or_else(|| anyhow::anyhow!("PhraseRepository is required"))?;
+
+        Ok(PhraseService {
+            repository: Arc::from(repository),
+            event_bus: self.event_bus,
+        })
+    }
 }
 
 impl PhraseService {
+    /// Create a new builder for PhraseService
+    pub fn builder() -> PhraseServiceBuilder {
+        PhraseServiceBuilder::new()
+    }
+
+    /// Create service with repository only (backward compatibility)
+    ///
+    /// For new code, prefer using the builder pattern:
+    /// ```ignore
+    /// PhraseService::builder()
+    ///     .with_repository(repository)
+    ///     .with_event_bus(event_bus)
+    ///     .build()?
+    /// ```
     pub fn new(repository: Box<dyn PhraseRepository>) -> Self {
         Self {
             repository: Arc::from(repository),
+            event_bus: None,
         }
     }
 
@@ -119,12 +172,38 @@ impl PhraseService {
     }
 
     /// Submit a phrase suggestion
+    ///
+    /// # Arguments
+    /// * `user_id` - ID of the user submitting the suggestion
+    /// * `request` - The phrase suggestion request
+    ///
+    /// # Domain Events
+    /// Emits `PhraseSuggestionCreatedEvent` if EventBus is configured.
+    /// Event handlers are responsible for fetching user details as needed.
     pub async fn submit_phrase_suggestion(
         &self,
         user_id: Uuid,
         request: PhraseSuggestionRequest,
     ) -> anyhow::Result<crate::models::db::PhraseSuggestion> {
-        suggestions::submit_phrase_suggestion(&self.repository, user_id, request).await
+        // Submit suggestion to repository
+        let suggestion = suggestions::submit_phrase_suggestion(&self.repository, user_id, request).await?;
+
+        // Emit domain event if EventBus is configured
+        if let Some(event_bus) = &self.event_bus {
+            let event = crate::events::types::PhraseSuggestionCreatedEvent::new(
+                user_id,
+                &suggestion.phrase_text,
+            );
+
+            // Fire-and-forget event publishing
+            if let Err(e) = event_bus.publish(Box::new(event)).await {
+                log::error!("Failed to publish PhraseSuggestionCreatedEvent: {}", e);
+            } else {
+                log::debug!("Published PhraseSuggestionCreatedEvent for user_id {}", user_id);
+            }
+        }
+
+        Ok(suggestion)
     }
 
     /// Get user's phrase suggestions

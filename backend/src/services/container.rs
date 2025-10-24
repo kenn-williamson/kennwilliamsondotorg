@@ -24,6 +24,19 @@ use crate::repositories::postgres::{
 };
 use crate::repositories::redis::RedisPkceStorage;
 
+// Import event system
+use crate::events::event_bus::InMemoryEventBus;
+use crate::events::handlers::{
+    AccessRequestApprovedEmailHandler, AccessRequestEmailNotificationHandler,
+    AccessRequestRejectedEmailHandler, PhraseSuggestionApprovedEmailHandler,
+    PhraseSuggestionEmailNotificationHandler, PhraseSuggestionRejectedEmailHandler,
+};
+use crate::events::types::{
+    AccessRequestApprovedEvent, AccessRequestCreatedEvent, AccessRequestRejectedEvent,
+    PhraseSuggestionApprovedEvent, PhraseSuggestionCreatedEvent, PhraseSuggestionRejectedEvent,
+};
+use crate::events::{EventBus, EventPublisher};
+
 use super::admin::{
     AccessRequestModerationService, PhraseModerationService, StatsService, UserManagementService,
 };
@@ -85,6 +98,134 @@ impl ServiceContainer {
         let pkce_storage = RedisPkceStorage::new(&redis_url)
             .expect("Failed to create PKCE storage");
 
+        // Create and configure EventBus with handlers
+        let mut event_bus = InMemoryEventBus::new();
+
+        // Register event handlers if email dependencies are configured
+        if let Some(url) = frontend_url.as_ref() {
+            // Create email service for AccessRequestEmailHandler
+            let access_request_email_service: Arc<dyn super::email::EmailService> = Arc::new(
+                SesEmailService::with_suppression(
+                    from_email.clone(),
+                    reply_to_email.clone(),
+                    Box::new(PostgresEmailSuppressionRepository::new(pool.clone())),
+                )
+            );
+
+            // Register AccessRequestEmailNotificationHandler
+            let access_request_handler = AccessRequestEmailNotificationHandler::new(
+                Arc::new(PostgresAdminRepository::new(pool.clone())),
+                access_request_email_service,
+                url.clone(),
+            );
+            event_bus
+                .register_handler::<AccessRequestCreatedEvent>(Box::new(access_request_handler))
+                .expect("Failed to register AccessRequestEmailNotificationHandler");
+
+            // Create email service for PhraseSuggestionEmailHandler
+            let phrase_suggestion_email_service: Arc<dyn super::email::EmailService> = Arc::new(
+                SesEmailService::with_suppression(
+                    from_email.clone(),
+                    reply_to_email.clone(),
+                    Box::new(PostgresEmailSuppressionRepository::new(pool.clone())),
+                )
+            );
+
+            // Register PhraseSuggestionEmailNotificationHandler
+            let phrase_suggestion_handler = PhraseSuggestionEmailNotificationHandler::new(
+                Arc::new(PostgresAdminRepository::new(pool.clone())),
+                Arc::new(PostgresUserRepository::new(pool.clone())),
+                phrase_suggestion_email_service,
+                url.clone(),
+            );
+            event_bus
+                .register_handler::<PhraseSuggestionCreatedEvent>(Box::new(phrase_suggestion_handler))
+                .expect("Failed to register PhraseSuggestionEmailNotificationHandler");
+
+            // Create email service for AccessRequestApprovedEmailHandler
+            let approved_email_service: Arc<dyn super::email::EmailService> = Arc::new(
+                SesEmailService::with_suppression(
+                    from_email.clone(),
+                    reply_to_email.clone(),
+                    Box::new(PostgresEmailSuppressionRepository::new(pool.clone())),
+                )
+            );
+
+            // Register AccessRequestApprovedEmailHandler
+            let approved_handler = AccessRequestApprovedEmailHandler::new(
+                Arc::new(PostgresUserRepository::new(pool.clone())),
+                approved_email_service,
+                url.clone(),
+            );
+            event_bus
+                .register_handler::<AccessRequestApprovedEvent>(Box::new(approved_handler))
+                .expect("Failed to register AccessRequestApprovedEmailHandler");
+
+            // Create email service for AccessRequestRejectedEmailHandler
+            let rejected_email_service: Arc<dyn super::email::EmailService> = Arc::new(
+                SesEmailService::with_suppression(
+                    from_email.clone(),
+                    reply_to_email.clone(),
+                    Box::new(PostgresEmailSuppressionRepository::new(pool.clone())),
+                )
+            );
+
+            // Register AccessRequestRejectedEmailHandler
+            let rejected_handler = AccessRequestRejectedEmailHandler::new(
+                Arc::new(PostgresUserRepository::new(pool.clone())),
+                rejected_email_service,
+                url.clone(),
+            );
+            event_bus
+                .register_handler::<AccessRequestRejectedEvent>(Box::new(rejected_handler))
+                .expect("Failed to register AccessRequestRejectedEmailHandler");
+
+            // Create email service for PhraseSuggestionApprovedEmailHandler
+            let phrase_approved_email_service: Arc<dyn super::email::EmailService> = Arc::new(
+                SesEmailService::with_suppression(
+                    from_email.clone(),
+                    reply_to_email.clone(),
+                    Box::new(PostgresEmailSuppressionRepository::new(pool.clone())),
+                )
+            );
+
+            // Register PhraseSuggestionApprovedEmailHandler
+            let phrase_approved_handler = PhraseSuggestionApprovedEmailHandler::new(
+                Arc::new(PostgresUserRepository::new(pool.clone())),
+                phrase_approved_email_service,
+                url.clone(),
+            );
+            event_bus
+                .register_handler::<PhraseSuggestionApprovedEvent>(Box::new(phrase_approved_handler))
+                .expect("Failed to register PhraseSuggestionApprovedEmailHandler");
+
+            // Create email service for PhraseSuggestionRejectedEmailHandler
+            let phrase_rejected_email_service: Arc<dyn super::email::EmailService> = Arc::new(
+                SesEmailService::with_suppression(
+                    from_email.clone(),
+                    reply_to_email.clone(),
+                    Box::new(PostgresEmailSuppressionRepository::new(pool.clone())),
+                )
+            );
+
+            // Register PhraseSuggestionRejectedEmailHandler
+            let phrase_rejected_handler = PhraseSuggestionRejectedEmailHandler::new(
+                Arc::new(PostgresUserRepository::new(pool.clone())),
+                phrase_rejected_email_service,
+                url.clone(),
+            );
+            event_bus
+                .register_handler::<PhraseSuggestionRejectedEvent>(Box::new(phrase_rejected_handler))
+                .expect("Failed to register PhraseSuggestionRejectedEmailHandler");
+
+            log::info!("EventBus configured with email notification handlers");
+        } else {
+            log::warn!("EventBus created without handlers - FRONTEND_URL not configured");
+        }
+
+        // Convert EventBus to Arc<dyn EventPublisher> for dependency injection
+        let event_publisher: Arc<dyn EventPublisher> = Arc::new(event_bus);
+
         // Create services with repository dependencies using builder pattern
         let mut auth_builder = AuthService::builder()
             .user_repository(Box::new(PostgresUserRepository::new(pool.clone())))
@@ -120,9 +261,13 @@ impl ServiceContainer {
             PostgresIncidentTimerRepository::new(pool.clone()),
         )));
 
-        let phrase_service = Arc::new(PhraseService::new(Box::new(PostgresPhraseRepository::new(
-            pool.clone(),
-        ))));
+        let phrase_service = Arc::new(
+            PhraseService::builder()
+                .with_repository(Box::new(PostgresPhraseRepository::new(pool.clone())))
+                .with_event_bus(Arc::clone(&event_publisher))
+                .build()
+                .expect("Failed to build PhraseService"),
+        );
 
         let admin_service = Arc::new(UserManagementService::new(
             Box::new(PostgresUserRepository::new(pool.clone())),
@@ -130,15 +275,20 @@ impl ServiceContainer {
             Box::new(PostgresAdminRepository::new(pool.clone())),
         ));
 
-        let phrase_moderation_service = Arc::new(PhraseModerationService::new(Box::new(
-            PostgresPhraseRepository::new(pool.clone()),
-        )));
+        let phrase_moderation_service = Arc::new(
+            PhraseModerationService::builder()
+                .with_repository(Box::new(PostgresPhraseRepository::new(pool.clone())))
+                .with_event_bus(Arc::clone(&event_publisher))
+                .build()
+                .expect("Failed to build PhraseModerationService")
+        );
 
-        // Build access request moderation service with email notification support
+        // Build access request moderation service with event bus and email notification support
         let mut access_request_builder = AccessRequestModerationService::builder()
-            .with_access_request_repository(Box::new(PostgresAccessRequestRepository::new(pool.clone())));
+            .with_access_request_repository(Box::new(PostgresAccessRequestRepository::new(pool.clone())))
+            .with_event_bus(Arc::clone(&event_publisher));
 
-        // Add optional email dependencies if frontend_url is configured
+        // Add optional email dependencies if frontend_url is configured (Phase 1 fallback)
         if let Some(url) = frontend_url.as_ref() {
             access_request_builder = access_request_builder
                 .with_admin_repository(Box::new(PostgresAdminRepository::new(pool.clone())))

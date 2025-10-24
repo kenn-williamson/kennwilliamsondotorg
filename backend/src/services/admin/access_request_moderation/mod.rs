@@ -2,6 +2,10 @@ use anyhow::Result;
 use std::sync::Arc;
 use uuid::Uuid;
 
+use crate::events::types::{
+    AccessRequestApprovedEvent, AccessRequestCreatedEvent, AccessRequestRejectedEvent,
+};
+use crate::events::EventPublisher;
 use crate::models::api::access_request::{AccessRequestListResponse, AccessRequestWithUserResponse};
 use crate::repositories::traits::{AccessRequestRepository, AdminRepository};
 use crate::services::email::{EmailService, templates::{AccessRequestNotificationTemplate, Email, EmailTemplate}};
@@ -12,6 +16,7 @@ pub struct AccessRequestModerationService {
     admin_repository: Option<Arc<dyn AdminRepository>>,
     email_service: Option<Arc<dyn EmailService>>,
     frontend_url: Option<String>,
+    event_bus: Option<Arc<dyn EventPublisher>>,
 }
 
 impl std::fmt::Debug for AccessRequestModerationService {
@@ -21,6 +26,7 @@ impl std::fmt::Debug for AccessRequestModerationService {
             .field("admin_repository", &self.admin_repository.as_ref().map(|_| "Arc<dyn AdminRepository>"))
             .field("email_service", &self.email_service.as_ref().map(|_| "Arc<dyn EmailService>"))
             .field("frontend_url", &self.frontend_url)
+            .field("event_bus", &self.event_bus.as_ref().map(|_| "Arc<dyn EventPublisher>"))
             .finish()
     }
 }
@@ -31,6 +37,7 @@ pub struct AccessRequestModerationServiceBuilder {
     admin_repository: Option<Box<dyn AdminRepository>>,
     email_service: Option<Box<dyn EmailService>>,
     frontend_url: Option<String>,
+    event_bus: Option<Arc<dyn EventPublisher>>,
 }
 
 impl AccessRequestModerationServiceBuilder {
@@ -40,6 +47,7 @@ impl AccessRequestModerationServiceBuilder {
             admin_repository: None,
             email_service: None,
             frontend_url: None,
+            event_bus: None,
         }
     }
 
@@ -63,6 +71,11 @@ impl AccessRequestModerationServiceBuilder {
         self
     }
 
+    pub fn with_event_bus(mut self, event_bus: Arc<dyn EventPublisher>) -> Self {
+        self.event_bus = Some(event_bus);
+        self
+    }
+
     pub fn build(self) -> Result<AccessRequestModerationService> {
         let access_request_repository = self.access_request_repository
             .ok_or_else(|| anyhow::anyhow!("AccessRequestRepository is required"))?;
@@ -72,6 +85,7 @@ impl AccessRequestModerationServiceBuilder {
             admin_repository: self.admin_repository.map(Arc::from),
             email_service: self.email_service.map(Arc::from),
             frontend_url: self.frontend_url,
+            event_bus: self.event_bus,
         })
     }
 }
@@ -91,6 +105,7 @@ impl AccessRequestModerationService {
     ///     .with_admin_repository(admin_repo)
     ///     .with_email_service(email_service)
     ///     .with_frontend_url("https://kennwilliamson.org")
+    ///     .with_event_bus(event_bus)
     ///     .build()
     /// ```
     pub fn new(access_request_repository: Box<dyn AccessRequestRepository>) -> Self {
@@ -99,6 +114,7 @@ impl AccessRequestModerationService {
             admin_repository: None,
             email_service: None,
             frontend_url: None,
+            event_bus: None,
         }
     }
 
@@ -116,10 +132,8 @@ impl AccessRequestModerationService {
     ///
     /// # Email Notifications
     /// Email sending is fire-and-forget - failures are logged but don't block the request.
-    /// Emails are only sent if all email dependencies are configured:
-    /// - AdminRepository (to get admin email addresses)
-    /// - EmailService (to send emails)
-    /// - frontend_url (to construct admin panel links)
+    /// Emails are sent via domain events if EventBus is configured, otherwise via direct
+    /// email service if email dependencies are present.
     pub async fn create_request(
         &self,
         user_id: Uuid,
@@ -133,8 +147,26 @@ impl AccessRequestModerationService {
             .create_request(user_id, message.clone(), requested_role.clone())
             .await?;
 
-        // Send email notifications (fire-and-forget - don't propagate errors)
-        self.send_notification_emails(&user_email, &user_display_name, message, &requested_role).await;
+        // Emit domain event if EventBus is configured (Phase 2)
+        if let Some(event_bus) = &self.event_bus {
+            let event = AccessRequestCreatedEvent::new(
+                user_id,
+                &user_email,
+                &user_display_name,
+                &message,
+                &requested_role,
+            );
+
+            // Fire-and-forget event publishing (box for type erasure)
+            if let Err(e) = event_bus.publish(Box::new(event)).await {
+                log::error!("Failed to publish AccessRequestCreatedEvent: {}", e);
+            } else {
+                log::debug!("Published AccessRequestCreatedEvent for user {} ({})", user_display_name, user_email);
+            }
+        } else {
+            // Fallback to Phase 1 direct email sending
+            self.send_notification_emails(&user_email, &user_display_name, message, &requested_role).await;
+        }
 
         Ok(())
     }
@@ -278,9 +310,38 @@ impl AccessRequestModerationService {
         admin_id: Uuid,
         admin_reason: Option<String>,
     ) -> Result<()> {
+        // Fetch the access request details first to get user_id and requested_role
+        let access_request = self
+            .access_request_repository
+            .get_request_by_id(request_id)
+            .await?
+            .ok_or_else(|| anyhow::anyhow!("Access request not found"))?;
+
+        // Approve the request in database
         self.access_request_repository
-            .approve_request(request_id, admin_id, admin_reason)
-            .await
+            .approve_request(request_id, admin_id, admin_reason.clone())
+            .await?;
+
+        // Emit event if EventBus is configured
+        if let Some(event_bus) = &self.event_bus {
+            let event = AccessRequestApprovedEvent::new(
+                access_request.user_id,
+                &access_request.requested_role,
+                admin_reason,
+            );
+
+            // Fire-and-forget event publishing
+            if let Err(e) = event_bus.publish(Box::new(event)).await {
+                log::error!("Failed to publish AccessRequestApprovedEvent: {}", e);
+            } else {
+                log::debug!(
+                    "Published AccessRequestApprovedEvent for user_id {}",
+                    access_request.user_id
+                );
+            }
+        }
+
+        Ok(())
     }
 
     /// Reject an access request
@@ -290,9 +351,37 @@ impl AccessRequestModerationService {
         admin_id: Uuid,
         admin_reason: Option<String>,
     ) -> Result<()> {
+        // Fetch the access request details first to get user_id
+        let access_request = self
+            .access_request_repository
+            .get_request_by_id(request_id)
+            .await?
+            .ok_or_else(|| anyhow::anyhow!("Access request not found"))?;
+
+        // Reject the request in database
         self.access_request_repository
-            .reject_request(request_id, admin_id, admin_reason)
-            .await
+            .reject_request(request_id, admin_id, admin_reason.clone())
+            .await?;
+
+        // Emit event if EventBus is configured
+        if let Some(event_bus) = &self.event_bus {
+            let event = AccessRequestRejectedEvent::new(
+                access_request.user_id,
+                admin_reason,
+            );
+
+            // Fire-and-forget event publishing
+            if let Err(e) = event_bus.publish(Box::new(event)).await {
+                log::error!("Failed to publish AccessRequestRejectedEvent: {}", e);
+            } else {
+                log::debug!(
+                    "Published AccessRequestRejectedEvent for user_id {}",
+                    access_request.user_id
+                );
+            }
+        }
+
+        Ok(())
     }
 }
 
@@ -520,8 +609,27 @@ mod tests {
         let mut mock_repo = MockAccessRequestRepository::new();
         let request_id = Uuid::new_v4();
         let admin_id = Uuid::new_v4();
+        let user_id = Uuid::new_v4();
 
-        // Configure mock expectations
+        // Configure mock expectations - service now fetches request first
+        mock_repo
+            .expect_get_request_by_id()
+            .with(eq(request_id))
+            .times(1)
+            .returning(move |_| {
+                Ok(Some(crate::models::db::AccessRequest {
+                    id: request_id,
+                    user_id,
+                    message: "Test message".to_string(),
+                    requested_role: "trusted-contact".to_string(),
+                    status: "pending".to_string(),
+                    admin_id: None,
+                    admin_reason: None,
+                    created_at: Utc::now(),
+                    updated_at: Utc::now(),
+                }))
+            });
+
         mock_repo
             .expect_approve_request()
             .with(
@@ -550,8 +658,27 @@ mod tests {
         let mut mock_repo = MockAccessRequestRepository::new();
         let request_id = Uuid::new_v4();
         let admin_id = Uuid::new_v4();
+        let user_id = Uuid::new_v4();
 
-        // Configure mock expectations
+        // Configure mock expectations - service now fetches request first
+        mock_repo
+            .expect_get_request_by_id()
+            .with(eq(request_id))
+            .times(1)
+            .returning(move |_| {
+                Ok(Some(crate::models::db::AccessRequest {
+                    id: request_id,
+                    user_id,
+                    message: "Test message".to_string(),
+                    requested_role: "trusted-contact".to_string(),
+                    status: "pending".to_string(),
+                    admin_id: None,
+                    admin_reason: None,
+                    created_at: Utc::now(),
+                    updated_at: Utc::now(),
+                }))
+            });
+
         mock_repo
             .expect_reject_request()
             .with(

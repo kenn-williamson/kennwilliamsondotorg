@@ -2,18 +2,72 @@ use anyhow::Result;
 use std::sync::Arc;
 use uuid::Uuid;
 
+use crate::events::types::{PhraseSuggestionApprovedEvent, PhraseSuggestionRejectedEvent};
+use crate::events::EventPublisher;
 use crate::models::api::{PendingSuggestionResponse, PendingSuggestionsResponse};
 use crate::repositories::traits::PhraseRepository;
 
 /// Phrase moderation service for admin operations
 pub struct PhraseModerationService {
     phrase_repository: Arc<dyn PhraseRepository>,
+    event_bus: Option<Arc<dyn EventPublisher>>,
+}
+
+/// Builder for PhraseModerationService
+pub struct PhraseModerationServiceBuilder {
+    phrase_repository: Option<Box<dyn PhraseRepository>>,
+    event_bus: Option<Arc<dyn EventPublisher>>,
+}
+
+impl PhraseModerationServiceBuilder {
+    pub fn new() -> Self {
+        Self {
+            phrase_repository: None,
+            event_bus: None,
+        }
+    }
+
+    pub fn with_repository(mut self, repository: Box<dyn PhraseRepository>) -> Self {
+        self.phrase_repository = Some(repository);
+        self
+    }
+
+    pub fn with_event_bus(mut self, event_bus: Arc<dyn EventPublisher>) -> Self {
+        self.event_bus = Some(event_bus);
+        self
+    }
+
+    pub fn build(self) -> Result<PhraseModerationService> {
+        let phrase_repository = self
+            .phrase_repository
+            .ok_or_else(|| anyhow::anyhow!("PhraseRepository is required"))?;
+
+        Ok(PhraseModerationService {
+            phrase_repository: Arc::from(phrase_repository),
+            event_bus: self.event_bus,
+        })
+    }
 }
 
 impl PhraseModerationService {
+    /// Create a new builder for PhraseModerationService
+    pub fn builder() -> PhraseModerationServiceBuilder {
+        PhraseModerationServiceBuilder::new()
+    }
+
+    /// Create service with repository only (backward compatibility)
+    ///
+    /// For new code, prefer using the builder pattern:
+    /// ```ignore
+    /// PhraseModerationService::builder()
+    ///     .with_repository(repository)
+    ///     .with_event_bus(event_bus)
+    ///     .build()?
+    /// ```
     pub fn new(phrase_repository: Box<dyn PhraseRepository>) -> Self {
         Self {
             phrase_repository: Arc::from(phrase_repository),
+            event_bus: None,
         }
     }
 
@@ -53,9 +107,41 @@ impl PhraseModerationService {
         admin_id: Uuid,
         admin_reason: Option<String>,
     ) -> Result<()> {
+        // Fetch suggestion details before approving (needed for event)
+        let suggestion = self
+            .phrase_repository
+            .get_suggestion_by_id(suggestion_id)
+            .await?
+            .ok_or_else(|| anyhow::anyhow!("Phrase suggestion not found"))?;
+
+        // Approve in repository
         self.phrase_repository
-            .approve_suggestion(suggestion_id, admin_id, admin_reason)
-            .await
+            .approve_suggestion(suggestion_id, admin_id, admin_reason.clone())
+            .await?;
+
+        // Emit event if event bus is configured
+        if let Some(event_bus) = &self.event_bus {
+            let event = PhraseSuggestionApprovedEvent::new(
+                suggestion.user_id,
+                suggestion.phrase_text,
+                admin_reason,
+            );
+
+            if let Err(e) = event_bus.publish(Box::new(event)).await {
+                log::error!(
+                    "Failed to publish PhraseSuggestionApprovedEvent for suggestion {}: {}",
+                    suggestion_id,
+                    e
+                );
+            } else {
+                log::debug!(
+                    "Published PhraseSuggestionApprovedEvent for suggestion {}",
+                    suggestion_id
+                );
+            }
+        }
+
+        Ok(())
     }
 
     /// Reject a phrase suggestion
@@ -65,9 +151,41 @@ impl PhraseModerationService {
         admin_id: Uuid,
         admin_reason: Option<String>,
     ) -> Result<()> {
+        // Fetch suggestion details before rejecting (needed for event)
+        let suggestion = self
+            .phrase_repository
+            .get_suggestion_by_id(suggestion_id)
+            .await?
+            .ok_or_else(|| anyhow::anyhow!("Phrase suggestion not found"))?;
+
+        // Reject in repository
         self.phrase_repository
-            .reject_suggestion(suggestion_id, admin_id, admin_reason)
-            .await
+            .reject_suggestion(suggestion_id, admin_id, admin_reason.clone())
+            .await?;
+
+        // Emit event if event bus is configured
+        if let Some(event_bus) = &self.event_bus {
+            let event = PhraseSuggestionRejectedEvent::new(
+                suggestion.user_id,
+                suggestion.phrase_text,
+                admin_reason,
+            );
+
+            if let Err(e) = event_bus.publish(Box::new(event)).await {
+                log::error!(
+                    "Failed to publish PhraseSuggestionRejectedEvent for suggestion {}: {}",
+                    suggestion_id,
+                    e
+                );
+            } else {
+                log::debug!(
+                    "Published PhraseSuggestionRejectedEvent for suggestion {}",
+                    suggestion_id
+                );
+            }
+        }
+
+        Ok(())
     }
 }
 
@@ -76,6 +194,7 @@ mod tests {
     use super::*;
     use crate::repositories::mocks::MockPhraseRepository;
     use crate::repositories::traits::phrase_repository::PendingSuggestionWithUser;
+    use crate::test_utils::PhraseSuggestionBuilder;
     use chrono::Utc;
     use mockall::predicate::*;
     use uuid::Uuid;
@@ -170,6 +289,19 @@ mod tests {
 
         // Configure mock expectations
         mock_repo
+            .expect_get_suggestion_by_id()
+            .with(eq(suggestion_id))
+            .times(1)
+            .returning(move |id| {
+                Ok(Some(
+                    PhraseSuggestionBuilder::new()
+                        .with_id(id)
+                        .with_text("Test phrase suggestion")
+                        .build(),
+                ))
+            });
+
+        mock_repo
             .expect_approve_suggestion()
             .with(
                 eq(suggestion_id),
@@ -199,6 +331,19 @@ mod tests {
         let admin_id = Uuid::new_v4();
 
         // Configure mock expectations
+        mock_repo
+            .expect_get_suggestion_by_id()
+            .with(eq(suggestion_id))
+            .times(1)
+            .returning(move |id| {
+                Ok(Some(
+                    PhraseSuggestionBuilder::new()
+                        .with_id(id)
+                        .with_text("Test phrase suggestion")
+                        .build(),
+                ))
+            });
+
         mock_repo
             .expect_reject_suggestion()
             .with(

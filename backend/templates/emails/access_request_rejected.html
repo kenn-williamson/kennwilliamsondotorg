@@ -1,0 +1,57 @@
+{% extends "emails/base.html" %}
+
+{% block title %}Access Request Update - KennWilliamson.org{% endblock %}
+
+{% block content %}
+<div style="color: #e8dcc4; font-size: 16px; line-height: 1.6;">
+    <h2 style="margin: 0 0 20px 0; font-size: 24px; color: #d4a574; font-weight: bold;">
+        Access Request Update
+    </h2>
+
+    <p style="margin: 0 0 20px 0;">
+        Hello <strong style="color: #d4a574;">{{ user_display_name }}</strong>,
+    </p>
+
+    <p style="margin: 0 0 20px 0;">
+        Thank you for your interest in elevated access to KennWilliamson.org.
+    </p>
+
+    <!-- Update Details Card -->
+    <div style="margin: 20px 0; padding: 20px; background-color: #2c1810; border: 2px solid #8b6f47; border-radius: 6px;">
+        <p style="margin: 0 0 15px 0; color: #e8dcc4; font-size: 14px;">
+            After review, we're unable to approve your access request at this time.
+        </p>
+
+        {% match admin_message %}
+        {% when Some with (message) %}
+        <div style="margin-top: 20px; padding-top: 15px; border-top: 1px solid #8b6f47;">
+            <p style="margin: 0 0 10px 0; color: #b8956a; font-size: 14px; font-weight: bold;">
+                Message from Admin:
+            </p>
+            <p style="margin: 0; padding: 12px; background-color: #3d2a1f; border-left: 3px solid #d4a574; color: #e8dcc4; font-size: 14px; line-height: 1.5; font-style: italic;">
+                "{{ message }}"
+            </p>
+        </div>
+        {% when None %}
+        {% endmatch %}
+    </div>
+
+    <p style="margin: 20px 0; font-size: 14px; color: #b8956a;">
+        You're welcome to continue using the public features of our site, and we appreciate your understanding.
+    </p>
+
+    <p style="margin: 20px 0; font-size: 14px; color: #b8956a;">
+        If you have questions or would like to submit a new request in the future, please don't hesitate to reach out.
+    </p>
+
+    {% set button_text = "Visit KennWilliamson.org" %}
+    {% set button_url = home_url %}
+    {% include "emails/components/button.html" %}
+
+    <div style="margin-top: 30px; padding: 15px; background-color: #4a3628; border-left: 4px solid #8b6f47; border-radius: 4px;">
+        <p style="margin: 0; font-size: 13px; color: #e8dcc4;">
+            <strong>Note:</strong> This decision was made after careful consideration. We value your interest in our platform and hope you'll continue to enjoy the features available to all users.
+        </p>
+    </div>
+</div>
+{% endblock %}

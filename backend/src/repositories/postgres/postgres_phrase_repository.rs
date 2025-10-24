@@ -497,6 +497,22 @@ impl PhraseRepository for PostgresPhraseRepository {
         Ok(suggestions)
     }
 
+    async fn get_suggestion_by_id(&self, suggestion_id: Uuid) -> Result<Option<PhraseSuggestion>> {
+        let suggestion = sqlx::query_as!(
+            PhraseSuggestion,
+            r#"
+            SELECT id, user_id, phrase_text, status, admin_id, admin_reason, created_at, updated_at
+            FROM phrase_suggestions
+            WHERE id = $1
+            "#,
+            suggestion_id
+        )
+        .fetch_optional(&self.pool)
+        .await?;
+
+        Ok(suggestion)
+    }
+
     async fn get_pending_suggestions(
         &self,
     ) -> Result<Vec<crate::repositories::traits::phrase_repository::PendingSuggestionWithUser>>

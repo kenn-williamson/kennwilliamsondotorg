@@ -36,6 +36,7 @@ mock! {
         async fn get_user_excluded_phrases(&self, user_id: Uuid) -> Result<Vec<(Uuid, String, chrono::DateTime<chrono::Utc>)>>;
         async fn submit_phrase_suggestion(&self, user_id: Uuid, request: PhraseSuggestionRequest) -> Result<PhraseSuggestion>;
         async fn get_user_suggestions(&self, user_id: Uuid) -> Result<Vec<PhraseSuggestion>>;
+        async fn get_suggestion_by_id(&self, suggestion_id: Uuid) -> Result<Option<PhraseSuggestion>>;
         async fn get_pending_suggestions(&self) -> Result<Vec<crate::repositories::traits::phrase_repository::PendingSuggestionWithUser>>;
         async fn approve_suggestion(
             &self,

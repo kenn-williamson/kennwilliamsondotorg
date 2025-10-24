@@ -69,6 +69,9 @@ pub trait PhraseRepository: Send + Sync {
     /// Get user's phrase suggestions
     async fn get_user_suggestions(&self, user_id: Uuid) -> Result<Vec<PhraseSuggestion>>;
 
+    /// Get a phrase suggestion by ID
+    async fn get_suggestion_by_id(&self, suggestion_id: Uuid) -> Result<Option<PhraseSuggestion>>;
+
     /// Get all pending phrase suggestions (admin only)
     async fn get_pending_suggestions(&self) -> Result<Vec<PendingSuggestionWithUser>>;
 
