@@ -16,6 +16,9 @@ pub struct AccessRequestRejectedTemplate {
 
     /// URL to request access again or learn more
     pub home_url: String,
+
+    /// Base URL of the frontend (for dynamic logo and other header content)
+    pub frontend_url: String,
 }
 
 impl AccessRequestRejectedTemplate {
@@ -37,6 +40,7 @@ impl AccessRequestRejectedTemplate {
             user_display_name: user_display_name.into(),
             admin_message,
             home_url,
+            frontend_url: frontend_url.into(),
         }
     }
 }

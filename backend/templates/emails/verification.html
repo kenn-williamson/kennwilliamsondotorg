@@ -3,8 +3,8 @@
 {% block title %}Verify Your Email - KennWilliamson.org{% endblock %}
 
 {% block content %}
-<div style="color: #e8dcc4; font-size: 16px; line-height: 1.6;">
-    <h2 style="margin: 0 0 20px 0; font-size: 24px; color: #d4a574; font-weight: bold;">
+<div style="color: #f1f5f9; font-size: 16px; line-height: 1.6;">
+    <h2 style="margin: 0 0 20px 0; font-size: 24px; color: #06b6d4; font-weight: bold;">
         Welcome, {{ to_name }}!
     </h2>
 
@@ -16,20 +16,20 @@
     {% set button_url = verification_url %}
     {% include "emails/components/button.html" %}
 
-    <p style="margin: 20px 0; font-size: 14px; color: #b8956a;">
+    <p style="margin: 20px 0; font-size: 14px; color: #94a3b8;">
         Or copy and paste this link into your browser:
     </p>
-    <p style="margin: 0 0 20px 0; padding: 10px; background-color: #2c1810; border: 1px solid #8b6f47; border-radius: 4px; word-break: break-all; font-size: 13px; color: #d4a574;">
+    <p style="margin: 0 0 20px 0; padding: 10px; background-color: #0f172a; border: 1px solid #475569; border-radius: 4px; word-break: break-all; font-size: 13px; color: #3b82f6;">
         {{ verification_url }}
     </p>
 
-    <div style="margin-top: 30px; padding: 15px; background-color: #4a3628; border-left: 4px solid #d4a574; border-radius: 4px;">
-        <p style="margin: 0; font-size: 14px; color: #e8dcc4;">
+    <div style="margin-top: 30px; padding: 15px; background-color: #334155; border-left: 4px solid #3b82f6; border-radius: 4px;">
+        <p style="margin: 0; font-size: 14px; color: #f1f5f9;">
             <strong>Important:</strong> This verification link will expire in 24 hours for security reasons.
         </p>
     </div>
 
-    <p style="margin: 30px 0 0 0; font-size: 14px; color: #8b6f47; font-style: italic;">
+    <p style="margin: 30px 0 0 0; font-size: 14px; color: #64748b; font-style: italic;">
         If you didn't create an account with KennWilliamson.org, you can safely ignore this email.
     </p>
 </div>

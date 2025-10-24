@@ -1,4 +1,5 @@
 use super::jwt::JwtService;
+use crate::events::EventPublisher;
 use crate::repositories::traits::incident_timer_repository::IncidentTimerRepository;
 use crate::repositories::traits::password_reset_token_repository::PasswordResetTokenRepository;
 use crate::repositories::traits::phrase_repository::PhraseRepository;
@@ -13,6 +14,7 @@ use crate::repositories::traits::verification_token_repository::VerificationToke
 use crate::services::auth::oauth::GoogleOAuthServiceTrait;
 use crate::services::email::EmailService;
 use anyhow::Result;
+use std::sync::Arc;
 
 pub mod builder;
 pub mod account_deletion;
@@ -44,6 +46,7 @@ pub struct AuthService {
     external_login_repository: Option<Box<dyn UserExternalLoginRepository>>,
     profile_repository: Option<Box<dyn UserProfileRepository>>,
     preferences_repository: Option<Box<dyn UserPreferencesRepository>>,
+    event_publisher: Option<Arc<dyn EventPublisher>>,
 }
 
 impl AuthService {

@@ -1,4 +1,5 @@
 use super::AuthService;
+use crate::events::EventPublisher;
 use crate::repositories::traits::incident_timer_repository::IncidentTimerRepository;
 use crate::repositories::traits::password_reset_token_repository::PasswordResetTokenRepository;
 use crate::repositories::traits::phrase_repository::PhraseRepository;
@@ -13,6 +14,7 @@ use crate::repositories::traits::verification_token_repository::VerificationToke
 use crate::services::auth::jwt::JwtService;
 use crate::services::auth::oauth::GoogleOAuthServiceTrait;
 use crate::services::email::EmailService;
+use std::sync::Arc;
 
 /// Builder for AuthService to handle optional dependencies
 pub struct AuthServiceBuilder {
@@ -29,6 +31,7 @@ pub struct AuthServiceBuilder {
     external_login_repository: Option<Box<dyn UserExternalLoginRepository>>,
     profile_repository: Option<Box<dyn UserProfileRepository>>,
     preferences_repository: Option<Box<dyn UserPreferencesRepository>>,
+    event_publisher: Option<Arc<dyn EventPublisher>>,
     jwt_secret: Option<String>,
 }
 
@@ -48,6 +51,7 @@ impl AuthServiceBuilder {
             external_login_repository: None,
             profile_repository: None,
             preferences_repository: None,
+            event_publisher: None,
             jwt_secret: None,
         }
     }
@@ -131,6 +135,11 @@ impl AuthServiceBuilder {
         self
     }
 
+    pub fn event_publisher(mut self, publisher: Arc<dyn EventPublisher>) -> Self {
+        self.event_publisher = Some(publisher);
+        self
+    }
+
     pub fn build(self) -> AuthService {
         let jwt_secret = self.jwt_secret.expect("jwt_secret is required");
         let user_repository = self.user_repository.expect("user_repository is required");
@@ -153,6 +162,7 @@ impl AuthServiceBuilder {
             external_login_repository: self.external_login_repository,
             profile_repository: self.profile_repository,
             preferences_repository: self.preferences_repository,
+            event_publisher: self.event_publisher,
         }
     }
 }

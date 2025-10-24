@@ -3,6 +3,7 @@ use bcrypt::{hash, verify, DEFAULT_COST};
 use uuid::Uuid;
 
 use super::AuthService;
+use crate::events::types::PasswordChangedEvent;
 use crate::models::api::{PasswordChangeRequest, SetPasswordRequest};
 
 impl AuthService {
@@ -46,6 +47,15 @@ impl AuthService {
             .update_password(user_id, new_password_hash)
             .await?;
 
+        // Publish PasswordChangedEvent if event publisher is configured
+        if let Some(event_publisher) = &self.event_publisher {
+            let event = PasswordChangedEvent::new(user_id);
+            if let Err(e) = event_publisher.publish(Box::new(event)).await {
+                log::error!("Failed to publish PasswordChangedEvent: {}", e);
+                // Don't fail the operation if event publishing fails
+            }
+        }
+
         Ok(())
     }
 
@@ -83,6 +93,15 @@ impl AuthService {
         credentials_repo
             .create(user_id, password_hash)
             .await?;
+
+        // Publish PasswordChangedEvent if event publisher is configured
+        if let Some(event_publisher) = &self.event_publisher {
+            let event = PasswordChangedEvent::new(user_id);
+            if let Err(e) = event_publisher.publish(Box::new(event)).await {
+                log::error!("Failed to publish PasswordChangedEvent: {}", e);
+                // Don't fail the operation if event publishing fails
+            }
+        }
 
         Ok(())
     }

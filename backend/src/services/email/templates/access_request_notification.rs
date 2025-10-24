@@ -19,6 +19,9 @@ pub struct AccessRequestNotificationTemplate {
 
     /// URL to the admin panel for reviewing the request
     pub admin_panel_url: String,
+
+    /// Base URL of the frontend (for dynamic logo and other header content)
+    pub frontend_url: String,
 }
 
 impl AccessRequestNotificationTemplate {
@@ -43,6 +46,7 @@ impl AccessRequestNotificationTemplate {
             request_message,
             requested_role: requested_role.into(),
             admin_panel_url,
+            frontend_url: frontend_url.into(),
         }
     }
 }

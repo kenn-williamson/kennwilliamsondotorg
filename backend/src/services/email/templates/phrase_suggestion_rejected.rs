@@ -19,6 +19,9 @@ pub struct PhraseSuggestionRejectedTemplate {
 
     /// URL to submit another phrase
     pub submit_phrase_url: String,
+
+    /// Base URL of the frontend (for dynamic logo and other header content)
+    pub frontend_url: String,
 }
 
 impl PhraseSuggestionRejectedTemplate {
@@ -43,6 +46,7 @@ impl PhraseSuggestionRejectedTemplate {
             phrase_text: phrase_text.into(),
             admin_message,
             submit_phrase_url,
+            frontend_url: frontend_url.into(),
         }
     }
 }

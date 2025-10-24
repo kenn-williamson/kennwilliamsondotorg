@@ -40,6 +40,7 @@ services:
       - ./backend/Cargo.toml:/app/Cargo.toml:ro
       - ./backend/Cargo.lock:/app/Cargo.lock:ro
       - ./backend/migrations:/app/migrations:ro  # Mount migrations
+      - ./backend/templates:/app/templates:ro    # Mount email templates
       - backend_target_dev:/app/target      # Separate dev build cache
     depends_on:
       postgres:

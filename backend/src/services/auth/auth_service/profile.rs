@@ -4,6 +4,7 @@ use uuid::Uuid;
 
 use super::slug::{generate_slug, is_valid_slug};
 use super::AuthService;
+use crate::events::types::ProfileUpdatedEvent;
 use crate::models::api::{
     ProfileUpdateRequest, SlugPreviewRequest, SlugPreviewResponse, SlugValidationRequest,
     SlugValidationResponse, UserResponse,
@@ -74,6 +75,10 @@ impl AuthService {
         user_id: Uuid,
         request: ProfileUpdateRequest,
     ) -> Result<UserResponse> {
+        // Fetch current user to capture old values for event notification
+        let old_user = self.user_repository.find_by_id(user_id).await?
+            .ok_or_else(|| anyhow::anyhow!("User not found"))?;
+
         // Validate slug format - only check for excluded characters
         if !is_valid_slug(&request.slug) {
             return Err(anyhow::anyhow!("Invalid slug format"));
@@ -90,12 +95,27 @@ impl AuthService {
 
         // Update user profile
         let updates = UserUpdates {
-            display_name: request.display_name,
-            slug: request.slug,
+            display_name: request.display_name.clone(),
+            slug: request.slug.clone(),
         };
 
         let user = self.user_repository.update_user(user_id, &updates).await?;
         let roles = self.user_repository.get_user_roles(user.id).await?;
+
+        // Publish ProfileUpdatedEvent if event publisher is configured
+        if let Some(event_publisher) = &self.event_publisher {
+            let event = ProfileUpdatedEvent::new(
+                user_id,
+                old_user.display_name,
+                request.display_name,
+                old_user.slug,
+                request.slug,
+            );
+            if let Err(e) = event_publisher.publish(Box::new(event)).await {
+                log::error!("Failed to publish ProfileUpdatedEvent: {}", e);
+                // Don't fail the operation if event publishing fails
+            }
+        }
 
         let user_response = self.build_user_response_with_details(user, roles).await?;
         Ok(user_response)
@@ -359,8 +379,15 @@ mod tests {
         let mut user_repo = MockUserRepository::new();
         let user_id = Uuid::new_v4();
         let updated_user = create_test_user(user_id);
+        let old_user = create_test_user(user_id);
 
-        // Setup mock expectations - only need slug_exists_excluding_user now
+        // Setup mock expectations - now includes find_by_id to get old values
+        user_repo
+            .expect_find_by_id()
+            .times(1)
+            .with(eq(user_id))
+            .returning(move |_| Ok(Some(old_user.clone())));
+
         user_repo
             .expect_slug_exists_excluding_user()
             .times(1)
@@ -408,6 +435,14 @@ mod tests {
     async fn update_profile_fails_with_invalid_slug_format() -> Result<()> {
         let mut user_repo = MockUserRepository::new();
         let user_id = Uuid::new_v4();
+        let old_user = create_test_user(user_id);
+
+        // Should fetch old user first
+        user_repo
+            .expect_find_by_id()
+            .times(1)
+            .with(eq(user_id))
+            .returning(move |_| Ok(Some(old_user.clone())));
 
         let request = ProfileUpdateRequest {
             display_name: "New Name".to_string(),
@@ -434,6 +469,13 @@ mod tests {
     async fn update_profile_fails_with_underscore_in_slug() -> Result<()> {
         let mut user_repo = MockUserRepository::new();
         let user_id = Uuid::new_v4();
+        let old_user = create_test_user(user_id);
+
+        user_repo
+            .expect_find_by_id()
+            .times(1)
+            .with(eq(user_id))
+            .returning(move |_| Ok(Some(old_user.clone())));
 
         let request = ProfileUpdateRequest {
             display_name: "New Name".to_string(),
@@ -460,6 +502,13 @@ mod tests {
     async fn update_profile_fails_with_url_encoded_characters() -> Result<()> {
         let mut user_repo = MockUserRepository::new();
         let user_id = Uuid::new_v4();
+        let old_user = create_test_user(user_id);
+
+        user_repo
+            .expect_find_by_id()
+            .times(1)
+            .with(eq(user_id))
+            .returning(move |_| Ok(Some(old_user.clone())));
 
         let request = ProfileUpdateRequest {
             display_name: "New Name".to_string(),
@@ -486,6 +535,13 @@ mod tests {
     async fn update_profile_fails_with_leading_hyphen() -> Result<()> {
         let mut user_repo = MockUserRepository::new();
         let user_id = Uuid::new_v4();
+        let old_user = create_test_user(user_id);
+
+        user_repo
+            .expect_find_by_id()
+            .times(1)
+            .with(eq(user_id))
+            .returning(move |_| Ok(Some(old_user.clone())));
 
         let request = ProfileUpdateRequest {
             display_name: "New Name".to_string(),
@@ -512,6 +568,13 @@ mod tests {
     async fn update_profile_fails_with_trailing_hyphen() -> Result<()> {
         let mut user_repo = MockUserRepository::new();
         let user_id = Uuid::new_v4();
+        let old_user = create_test_user(user_id);
+
+        user_repo
+            .expect_find_by_id()
+            .times(1)
+            .with(eq(user_id))
+            .returning(move |_| Ok(Some(old_user.clone())));
 
         let request = ProfileUpdateRequest {
             display_name: "New Name".to_string(),
@@ -537,8 +600,15 @@ mod tests {
     async fn update_profile_fails_when_slug_taken() -> Result<()> {
         let mut user_repo = MockUserRepository::new();
         let user_id = Uuid::new_v4();
+        let old_user = create_test_user(user_id);
 
-        // Setup mock expectations - only need slug_exists_excluding_user now
+        // Setup mock expectations
+        user_repo
+            .expect_find_by_id()
+            .times(1)
+            .with(eq(user_id))
+            .returning(move |_| Ok(Some(old_user.clone())));
+
         user_repo
             .expect_slug_exists_excluding_user()
             .times(1)
@@ -569,8 +639,15 @@ mod tests {
     async fn update_profile_handles_database_error_during_slug_check() -> Result<()> {
         let mut user_repo = MockUserRepository::new();
         let user_id = Uuid::new_v4();
+        let old_user = create_test_user(user_id);
 
-        // Setup mock expectations - only need slug_exists_excluding_user now
+        // Setup mock expectations
+        user_repo
+            .expect_find_by_id()
+            .times(1)
+            .with(eq(user_id))
+            .returning(move |_| Ok(Some(old_user.clone())));
+
         user_repo
             .expect_slug_exists_excluding_user()
             .times(1)
@@ -597,8 +674,15 @@ mod tests {
     async fn update_profile_handles_database_error_during_update() -> Result<()> {
         let mut user_repo = MockUserRepository::new();
         let user_id = Uuid::new_v4();
+        let old_user = create_test_user(user_id);
 
-        // Setup mock expectations - only need slug_exists_excluding_user now
+        // Setup mock expectations
+        user_repo
+            .expect_find_by_id()
+            .times(1)
+            .with(eq(user_id))
+            .returning(move |_| Ok(Some(old_user.clone())));
+
         user_repo
             .expect_slug_exists_excluding_user()
             .times(1)

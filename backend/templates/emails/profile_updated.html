@@ -1,0 +1,96 @@
+{% extends "emails/base.html" %}
+
+{% block title %}Profile Updated - KennWilliamson.org{% endblock %}
+
+{% block content %}
+<div style="color: #f1f5f9; font-size: 16px; line-height: 1.6;">
+    <h2 style="margin: 0 0 20px 0; font-size: 24px; color: #06b6d4; font-weight: bold;">
+        Profile Updated Successfully
+    </h2>
+
+    <p style="margin: 0 0 20px 0;">
+        Hello {{ user_display_name }},
+    </p>
+
+    <p style="margin: 0 0 20px 0;">
+        Your profile on KennWilliamson.org was successfully updated on <strong style="color: #3b82f6;">{{ updated_at }}</strong>.
+    </p>
+
+    <!-- Changes Card -->
+    <div style="margin: 20px 0; padding: 20px; background-color: #0f172a; border: 2px solid #475569; border-radius: 6px;">
+        <p style="margin: 0 0 15px 0; color: #06b6d4; font-size: 14px; font-weight: bold;">
+            Changes Made:
+        </p>
+
+        <table role="presentation" width="100%" cellspacing="0" cellpadding="0" border="0">
+            {% match old_display_name %}
+            {% when Some with (old_name) %}
+            <tr>
+                <td style="padding: 8px 0; color: #94a3b8; font-size: 14px; width: 120px; vertical-align: top;">
+                    Display Name:
+                </td>
+                <td style="padding: 8px 0; color: #f1f5f9; font-size: 14px;">
+                    <span style="color: #64748b; text-decoration: line-through;">{{ old_name }}</span>
+                    →
+                    <span style="color: #3b82f6; font-weight: bold;">{{ new_display_name }}</span>
+                </td>
+            </tr>
+            {% when None %}
+            <tr>
+                <td style="padding: 8px 0; color: #94a3b8; font-size: 14px; width: 120px; vertical-align: top;">
+                    Display Name:
+                </td>
+                <td style="padding: 8px 0; color: #3b82f6; font-size: 14px; font-weight: bold;">
+                    {{ new_display_name }}
+                </td>
+            </tr>
+            {% endmatch %}
+
+            {% match old_slug %}
+            {% when Some with (old_slug_val) %}
+            <tr>
+                <td style="padding: 8px 0; color: #94a3b8; font-size: 14px; width: 120px; vertical-align: top;">
+                    Username:
+                </td>
+                <td style="padding: 8px 0; color: #f1f5f9; font-size: 14px;">
+                    <span style="color: #64748b; text-decoration: line-through;">{{ old_slug_val }}</span>
+                    →
+                    <span style="color: #3b82f6; font-weight: bold;">{{ new_slug }}</span>
+                </td>
+            </tr>
+            {% when None %}
+            <tr>
+                <td style="padding: 8px 0; color: #94a3b8; font-size: 14px; width: 120px; vertical-align: top;">
+                    Username:
+                </td>
+                <td style="padding: 8px 0; color: #3b82f6; font-size: 14px; font-weight: bold;">
+                    {{ new_slug }}
+                </td>
+            </tr>
+            {% endmatch %}
+        </table>
+    </div>
+
+    <div style="margin: 20px 0; font-size: 14px; color: #94a3b8;">
+        <p style="margin: 0 0 10px 0;">
+            You can view your updated profile here:
+        </p>
+        {% set button_text = "View Your Profile" %}
+        {% set button_url = profile_url %}
+        {% include "emails/components/button.html" %}
+    </div>
+
+    <div style="margin-top: 30px; padding: 15px; background-color: #334155; border-left: 4px solid #3b82f6; border-radius: 4px;">
+        <p style="margin: 0 0 10px 0; font-size: 14px; color: #f1f5f9;">
+            <strong>If you didn't make this change:</strong>
+        </p>
+        <p style="margin: 0; font-size: 14px; color: #f1f5f9;">
+            Someone may have accessed your account. We recommend changing your password immediately and reviewing your account activity.
+        </p>
+    </div>
+
+    <p style="margin: 30px 0 0 0; font-size: 14px; color: #64748b; font-style: italic;">
+        This is an automated security notification. For your protection, we send this email whenever your profile is updated.
+    </p>
+</div>
+{% endblock %}

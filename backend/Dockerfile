@@ -13,6 +13,7 @@ RUN rm src/main.rs
 # Build application
 COPY src ./src
 COPY migrations ./migrations
+COPY templates ./templates
 COPY .sqlx ./.sqlx
 RUN touch src/main.rs
 RUN cargo build --release
@@ -28,6 +29,9 @@ COPY --from=builder /app/target/release/backend /app/
 
 # Copy migrations for runtime
 COPY --from=builder /app/migrations /app/migrations
+
+# Copy templates for runtime (needed for email rendering)
+COPY --from=builder /app/templates /app/templates
 
 # Create non-root user
 RUN addgroup -g 1001 -S appgroup && \

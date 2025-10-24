@@ -13,6 +13,9 @@ pub struct PasswordResetEmailTemplate {
 
     /// Full URL for password reset (includes token)
     pub reset_url: String,
+
+    /// Base URL of the frontend (for dynamic logo and other header content)
+    pub frontend_url: String,
 }
 
 impl PasswordResetEmailTemplate {
@@ -29,6 +32,7 @@ impl PasswordResetEmailTemplate {
         Self {
             to_name: to_name.into(),
             reset_url,
+            frontend_url: frontend_url.into(),
         }
     }
 }

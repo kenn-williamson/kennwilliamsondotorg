@@ -16,6 +16,9 @@ pub struct PhraseSuggestionNotificationTemplate {
 
     /// URL to the admin panel for reviewing the suggestion
     pub admin_panel_url: String,
+
+    /// Base URL of the frontend (for dynamic logo and other header content)
+    pub frontend_url: String,
 }
 
 impl PhraseSuggestionNotificationTemplate {
@@ -37,6 +40,7 @@ impl PhraseSuggestionNotificationTemplate {
             user_display_name: user_display_name.into(),
             phrase_text: phrase_text.into(),
             admin_panel_url,
+            frontend_url: frontend_url.into(),
         }
     }
 }

@@ -893,6 +893,24 @@
 - Integration with AWS SES for email delivery
 - Support for both HTML and plain text email formats
 
+#### Security Notification Emails
+**Achievement**: Automated security notification system sending email alerts for password changes and profile updates.
+
+**Key Deliverables**:
+- Password changed notification emails with security alert messaging
+- Profile updated notification emails showing what changed (display name and slug)
+- Domain events integration for password and profile changes
+- HTML and plain text email templates for both notification types
+- Event-driven architecture leveraging existing EventBus system
+
+**Technical Implementation**:
+- Domain events: `PasswordChangedEvent` and `ProfileUpdatedEvent` with correlation ID support
+- Email templates: `PasswordChangedEmailTemplate` and `ProfileUpdatedEmailTemplate` using Askama
+- HTML templates: password_changed.html and profile_updated.html with steampunk branding
+- Event handler: `EmailNotificationHandler` processes security events and sends notifications
+- Service integration: AuthService emits events on password changes and profile updates
+- Security messaging: Clear instructions for unauthorized change response with password reset links
+
 ## Current Status
 - **Application**: Live at kennwilliamson.org with full production infrastructure
 - **Testing**: 636 total tests (445 backend + 191 frontend) with comprehensive coverage across all architectural layers

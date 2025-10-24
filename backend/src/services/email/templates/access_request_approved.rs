@@ -19,6 +19,9 @@ pub struct AccessRequestApprovedTemplate {
 
     /// URL to the user's profile or relevant page
     pub profile_url: String,
+
+    /// Base URL of the frontend (for dynamic logo and other header content)
+    pub frontend_url: String,
 }
 
 impl AccessRequestApprovedTemplate {
@@ -43,6 +46,7 @@ impl AccessRequestApprovedTemplate {
             granted_role: granted_role.into(),
             admin_message,
             profile_url,
+            frontend_url: frontend_url.into(),
         }
     }
 }

@@ -3,19 +3,23 @@ use anyhow::Result;
 pub mod access_request_approved;
 pub mod access_request_notification;
 pub mod access_request_rejected;
+pub mod password_changed_email;
 pub mod password_reset_email;
 pub mod phrase_suggestion;
 pub mod phrase_suggestion_approved;
 pub mod phrase_suggestion_rejected;
+pub mod profile_updated_email;
 pub mod verification_email;
 
 pub use access_request_approved::AccessRequestApprovedTemplate;
 pub use access_request_notification::AccessRequestNotificationTemplate;
 pub use access_request_rejected::AccessRequestRejectedTemplate;
+pub use password_changed_email::PasswordChangedEmailTemplate;
 pub use password_reset_email::PasswordResetEmailTemplate;
 pub use phrase_suggestion::PhraseSuggestionNotificationTemplate;
 pub use phrase_suggestion_approved::PhraseSuggestionApprovedTemplate;
 pub use phrase_suggestion_rejected::PhraseSuggestionRejectedTemplate;
+pub use profile_updated_email::ProfileUpdatedEmailTemplate;
 pub use verification_email::VerificationEmailTemplate;
 
 /// Trait for email templates that can render to both HTML and plain text

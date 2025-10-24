@@ -28,12 +28,14 @@ use crate::repositories::redis::RedisPkceStorage;
 use crate::events::event_bus::InMemoryEventBus;
 use crate::events::handlers::{
     AccessRequestApprovedEmailHandler, AccessRequestEmailNotificationHandler,
-    AccessRequestRejectedEmailHandler, PhraseSuggestionApprovedEmailHandler,
-    PhraseSuggestionEmailNotificationHandler, PhraseSuggestionRejectedEmailHandler,
+    AccessRequestRejectedEmailHandler, PasswordChangedEmailHandler,
+    PhraseSuggestionApprovedEmailHandler, PhraseSuggestionEmailNotificationHandler,
+    PhraseSuggestionRejectedEmailHandler, ProfileUpdatedEmailHandler,
 };
 use crate::events::types::{
     AccessRequestApprovedEvent, AccessRequestCreatedEvent, AccessRequestRejectedEvent,
-    PhraseSuggestionApprovedEvent, PhraseSuggestionCreatedEvent, PhraseSuggestionRejectedEvent,
+    PasswordChangedEvent, PhraseSuggestionApprovedEvent, PhraseSuggestionCreatedEvent,
+    PhraseSuggestionRejectedEvent, ProfileUpdatedEvent,
 };
 use crate::events::{EventBus, EventPublisher};
 
@@ -218,6 +220,44 @@ impl ServiceContainer {
                 .register_handler::<PhraseSuggestionRejectedEvent>(Box::new(phrase_rejected_handler))
                 .expect("Failed to register PhraseSuggestionRejectedEmailHandler");
 
+            // Create email service for PasswordChangedEmailHandler
+            let password_changed_email_service: Arc<dyn super::email::EmailService> = Arc::new(
+                SesEmailService::with_suppression(
+                    from_email.clone(),
+                    reply_to_email.clone(),
+                    Box::new(PostgresEmailSuppressionRepository::new(pool.clone())),
+                )
+            );
+
+            // Register PasswordChangedEmailHandler
+            let password_changed_handler = PasswordChangedEmailHandler::new(
+                Arc::new(PostgresUserRepository::new(pool.clone())),
+                password_changed_email_service,
+                url.clone(),
+            );
+            event_bus
+                .register_handler::<PasswordChangedEvent>(Box::new(password_changed_handler))
+                .expect("Failed to register PasswordChangedEmailHandler");
+
+            // Create email service for ProfileUpdatedEmailHandler
+            let profile_updated_email_service: Arc<dyn super::email::EmailService> = Arc::new(
+                SesEmailService::with_suppression(
+                    from_email.clone(),
+                    reply_to_email.clone(),
+                    Box::new(PostgresEmailSuppressionRepository::new(pool.clone())),
+                )
+            );
+
+            // Register ProfileUpdatedEmailHandler
+            let profile_updated_handler = ProfileUpdatedEmailHandler::new(
+                Arc::new(PostgresUserRepository::new(pool.clone())),
+                profile_updated_email_service,
+                url.clone(),
+            );
+            event_bus
+                .register_handler::<ProfileUpdatedEvent>(Box::new(profile_updated_handler))
+                .expect("Failed to register ProfileUpdatedEmailHandler");
+
             log::info!("EventBus configured with email notification handlers");
         } else {
             log::warn!("EventBus created without handlers - FRONTEND_URL not configured");
@@ -248,6 +288,7 @@ impl ServiceContainer {
             .phrase_repository(Box::new(PostgresPhraseRepository::new(pool.clone())))
             .email_service(Box::new(email_service))
             .pkce_storage(Box::new(pkce_storage))
+            .event_publisher(Arc::clone(&event_publisher))
             .jwt_secret(jwt_secret.clone());
 
         // Add OAuth service if configured

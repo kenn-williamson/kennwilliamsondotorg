@@ -3,13 +3,13 @@
 {% block title %}Phrase Suggestion Update - KennWilliamson.org{% endblock %}
 
 {% block content %}
-<div style="color: #e8dcc4; font-size: 16px; line-height: 1.6;">
-    <h2 style="margin: 0 0 20px 0; font-size: 24px; color: #d4a574; font-weight: bold;">
+<div style="color: #f1f5f9; font-size: 16px; line-height: 1.6;">
+    <h2 style="margin: 0 0 20px 0; font-size: 24px; color: #94a3b8; font-weight: bold;">
         Phrase Suggestion Update
     </h2>
 
     <p style="margin: 0 0 20px 0;">
-        Hello <strong style="color: #d4a574;">{{ user_display_name }}</strong>,
+        Hello <strong style="color: #3b82f6;">{{ user_display_name }}</strong>,
     </p>
 
     <p style="margin: 0 0 20px 0;">
@@ -17,31 +17,31 @@
     </p>
 
     <!-- Update Details Card -->
-    <div style="margin: 20px 0; padding: 20px; background-color: #2c1810; border: 2px solid #8b6f47; border-radius: 6px;">
+    <div style="margin: 20px 0; padding: 20px; background-color: #0f172a; border: 2px solid #64748b; border-radius: 6px;">
         <table role="presentation" width="100%" cellspacing="0" cellpadding="0" border="0">
             <tr>
-                <td style="padding: 8px 0; color: #b8956a; font-size: 14px; font-weight: bold;">
+                <td style="padding: 8px 0; color: #94a3b8; font-size: 14px; font-weight: bold;">
                     Your Suggestion:
                 </td>
             </tr>
             <tr>
-                <td style="padding: 8px 0; color: #e8dcc4; font-size: 16px; font-style: italic;">
+                <td style="padding: 8px 0; color: #f1f5f9; font-size: 16px; font-style: italic;">
                     "{{ phrase_text }}"
                 </td>
             </tr>
         </table>
 
-        <p style="margin: 15px 0 0 0; color: #e8dcc4; font-size: 14px;">
+        <p style="margin: 15px 0 0 0; color: #f1f5f9; font-size: 14px;">
             After review, we're unable to include this phrase in our collection at this time.
         </p>
 
         {% match admin_message %}
         {% when Some with (message) %}
-        <div style="margin-top: 20px; padding-top: 15px; border-top: 1px solid #8b6f47;">
-            <p style="margin: 0 0 10px 0; color: #b8956a; font-size: 14px; font-weight: bold;">
+        <div style="margin-top: 20px; padding-top: 15px; border-top: 1px solid #475569;">
+            <p style="margin: 0 0 10px 0; color: #94a3b8; font-size: 14px; font-weight: bold;">
                 Message from Admin:
             </p>
-            <p style="margin: 0; padding: 12px; background-color: #3d2a1f; border-left: 3px solid #d4a574; color: #e8dcc4; font-size: 14px; line-height: 1.5; font-style: italic;">
+            <p style="margin: 0; padding: 12px; background-color: #1e293b; border-left: 3px solid #64748b; color: #f1f5f9; font-size: 14px; line-height: 1.5; font-style: italic;">
                 "{{ message }}"
             </p>
         </div>
@@ -49,7 +49,7 @@
         {% endmatch %}
     </div>
 
-    <p style="margin: 20px 0; font-size: 14px; color: #b8956a;">
+    <p style="margin: 20px 0; font-size: 14px; color: #94a3b8;">
         We appreciate your creativity and encourage you to submit other phrases in the future. Your participation helps make our community more vibrant!
     </p>
 
@@ -57,8 +57,8 @@
     {% set button_url = submit_phrase_url %}
     {% include "emails/components/button.html" %}
 
-    <div style="margin-top: 30px; padding: 15px; background-color: #4a3628; border-left: 4px solid #8b6f47; border-radius: 4px;">
-        <p style="margin: 0; font-size: 13px; color: #e8dcc4;">
+    <div style="margin-top: 30px; padding: 15px; background-color: #334155; border-left: 4px solid #64748b; border-radius: 4px;">
+        <p style="margin: 0; font-size: 13px; color: #f1f5f9;">
             <strong>Note:</strong> Each suggestion is carefully reviewed to ensure it aligns with our site's content guidelines and tone. We value your contribution and hope you'll continue to share your ideas with us.
         </p>
     </div>

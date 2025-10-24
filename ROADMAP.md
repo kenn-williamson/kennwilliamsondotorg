@@ -16,29 +16,24 @@
 
 **Remaining Features** (Ordered by Priority):
 
-1. **Security Notification Emails** (1-2 days) - LEGAL COMPLIANCE
-   - Password changed notification
-   - Profile updated notification
-   - Security alerts as promised in Privacy Policy
+**Account Termination Notifications** (1 day) - LEGAL COMPLIANCE
+- Deactivation reason field in database
+- Email notification when account deactivated
+- Terms of Service compliance
 
-2. **Account Termination Notifications** (1 day) - LEGAL COMPLIANCE
-   - Deactivation reason field in database
-   - Email notification when account deactivated
-   - Terms of Service compliance
+**Account Deletion Confirmation Email** (low effort) - LEGAL COMPLIANCE
+- Confirmation email when deletion initiated
+- Cancellation link during 30-day grace period
 
-3. **Account Deletion Confirmation Email** (low effort) - LEGAL COMPLIANCE
-   - Confirmation email when deletion initiated
-   - Cancellation link during 30-day grace period
+**OAuth User Redirect** (4-6 hours) - UX IMPROVEMENT
+- Preserve intended destination through OAuth flow
+- Encode redirect in OAuth state parameter
+- Quick win for better user experience
+- See [PLANNING-LOGIN-USER-REDIRECT.md](PLANNING-LOGIN-USER-REDIRECT.md)
 
-4. **OAuth User Redirect** (4-6 hours) - UX IMPROVEMENT
-   - Preserve intended destination through OAuth flow
-   - Encode redirect in OAuth state parameter
-   - Quick win for better user experience
-   - See [PLANNING-LOGIN-USER-REDIRECT.md](PLANNING-LOGIN-USER-REDIRECT.md)
+**Estimated Effort**: 2-3 days for all remaining features
 
-**Estimated Effort**: 3-5 days for all remaining features
-
-**Status**: 3/3 critical features complete. 4 important features remaining (3 legal + 1 UX).
+**Status**: 3/3 critical features complete. 3 important features remaining (2 legal + 1 UX).
 
 ### Content Development
 **Priority**: High

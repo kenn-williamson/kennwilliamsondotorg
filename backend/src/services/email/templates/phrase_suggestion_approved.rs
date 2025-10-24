@@ -19,6 +19,9 @@ pub struct PhraseSuggestionApprovedTemplate {
 
     /// URL to the phrases page
     pub phrases_url: String,
+
+    /// Base URL of the frontend (for dynamic logo and other header content)
+    pub frontend_url: String,
 }
 
 impl PhraseSuggestionApprovedTemplate {
@@ -43,6 +46,7 @@ impl PhraseSuggestionApprovedTemplate {
             phrase_text: phrase_text.into(),
             admin_message,
             phrases_url,
+            frontend_url: frontend_url.into(),
         }
     }
 }

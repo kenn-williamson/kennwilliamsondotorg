@@ -13,6 +13,9 @@ pub struct VerificationEmailTemplate {
 
     /// Full URL for email verification (includes token)
     pub verification_url: String,
+
+    /// Base URL of the frontend (for dynamic logo and other header content)
+    pub frontend_url: String,
 }
 
 impl VerificationEmailTemplate {
@@ -29,6 +32,7 @@ impl VerificationEmailTemplate {
         Self {
             to_name: to_name.into(),
             verification_url,
+            frontend_url: frontend_url.into(),
         }
     }
 }

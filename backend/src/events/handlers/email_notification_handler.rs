@@ -1,14 +1,15 @@
 use crate::events::types::{
     AccessRequestApprovedEvent, AccessRequestCreatedEvent, AccessRequestRejectedEvent,
-    PhraseSuggestionApprovedEvent, PhraseSuggestionCreatedEvent, PhraseSuggestionRejectedEvent,
+    PasswordChangedEvent, PhraseSuggestionApprovedEvent, PhraseSuggestionCreatedEvent,
+    PhraseSuggestionRejectedEvent, ProfileUpdatedEvent,
 };
 use crate::events::EventHandler;
 use crate::repositories::traits::{AdminRepository, UserRepository};
 use crate::services::email::templates::{
     AccessRequestApprovedTemplate, AccessRequestNotificationTemplate,
-    AccessRequestRejectedTemplate, Email, EmailTemplate,
+    AccessRequestRejectedTemplate, Email, EmailTemplate, PasswordChangedEmailTemplate,
     PhraseSuggestionApprovedTemplate, PhraseSuggestionNotificationTemplate,
-    PhraseSuggestionRejectedTemplate,
+    PhraseSuggestionRejectedTemplate, ProfileUpdatedEmailTemplate,
 };
 use crate::services::email::EmailService;
 use anyhow::Result;
@@ -698,5 +699,189 @@ impl EventHandler<PhraseSuggestionRejectedEvent> for PhraseSuggestionRejectedEma
 
     fn handler_name(&self) -> &'static str {
         "PhraseSuggestionRejectedEmailHandler"
+    }
+}
+
+/// Email notification handler for password changed events
+///
+/// Sends security alert email to the user when their password is changed.
+pub struct PasswordChangedEmailHandler {
+    user_repository: Arc<dyn UserRepository>,
+    email_service: Arc<dyn EmailService>,
+    frontend_url: String,
+}
+
+impl PasswordChangedEmailHandler {
+    /// Create a new PasswordChangedEmailHandler
+    ///
+    /// # Arguments
+    /// * `user_repository` - Repository for fetching user details
+    /// * `email_service` - Service for sending emails
+    /// * `frontend_url` - Base URL for frontend links
+    pub fn new(
+        user_repository: Arc<dyn UserRepository>,
+        email_service: Arc<dyn EmailService>,
+        frontend_url: impl Into<String>,
+    ) -> Self {
+        Self {
+            user_repository,
+            email_service,
+            frontend_url: frontend_url.into(),
+        }
+    }
+}
+
+#[async_trait]
+impl EventHandler<PasswordChangedEvent> for PasswordChangedEmailHandler {
+    async fn handle(&self, event: &PasswordChangedEvent) -> Result<()> {
+        log::info!(
+            "Handling PasswordChangedEvent for user_id {}",
+            event.user_id
+        );
+
+        // Fetch user details
+        let user = self
+            .user_repository
+            .find_by_id(event.user_id)
+            .await?
+            .ok_or_else(|| anyhow::anyhow!("User not found for id {}", event.user_id))?;
+
+        // Format timestamp for email
+        let changed_at = event.occurred_at.format("%B %d, %Y at %I:%M %P UTC").to_string();
+
+        // Build email template
+        let template = PasswordChangedEmailTemplate::new(
+            &user.display_name,
+            changed_at,
+            &self.frontend_url,
+        );
+
+        // Render email content
+        let html_body = template.render_html()?;
+        let text_body = template.render_plain_text();
+        let subject = template.subject();
+
+        // Build email
+        let email = Email::builder()
+            .to(&user.email)
+            .subject(subject)
+            .text_body(text_body)
+            .html_body(html_body)
+            .build()?;
+
+        // Send email
+        self.email_service.send_email(email).await?;
+
+        log::info!(
+            "Sent password changed notification to user '{}' ({})",
+            user.display_name,
+            user.email
+        );
+
+        Ok(())
+    }
+
+    fn handler_name(&self) -> &'static str {
+        "PasswordChangedEmailHandler"
+    }
+}
+
+/// Email notification handler for profile updated events
+///
+/// Sends security notification email to the user when their profile is updated.
+pub struct ProfileUpdatedEmailHandler {
+    user_repository: Arc<dyn UserRepository>,
+    email_service: Arc<dyn EmailService>,
+    frontend_url: String,
+}
+
+impl ProfileUpdatedEmailHandler {
+    /// Create a new ProfileUpdatedEmailHandler
+    ///
+    /// # Arguments
+    /// * `user_repository` - Repository for fetching user details
+    /// * `email_service` - Service for sending emails
+    /// * `frontend_url` - Base URL for frontend links
+    pub fn new(
+        user_repository: Arc<dyn UserRepository>,
+        email_service: Arc<dyn EmailService>,
+        frontend_url: impl Into<String>,
+    ) -> Self {
+        Self {
+            user_repository,
+            email_service,
+            frontend_url: frontend_url.into(),
+        }
+    }
+}
+
+#[async_trait]
+impl EventHandler<ProfileUpdatedEvent> for ProfileUpdatedEmailHandler {
+    async fn handle(&self, event: &ProfileUpdatedEvent) -> Result<()> {
+        log::info!(
+            "Handling ProfileUpdatedEvent for user_id {}",
+            event.user_id
+        );
+
+        // Fetch user details
+        let user = self
+            .user_repository
+            .find_by_id(event.user_id)
+            .await?
+            .ok_or_else(|| anyhow::anyhow!("User not found for id {}", event.user_id))?;
+
+        // Format timestamp for email
+        let updated_at = event.occurred_at.format("%B %d, %Y at %I:%M %P UTC").to_string();
+
+        // Determine if values actually changed (only show arrows if changed)
+        let old_name = if event.old_display_name != event.new_display_name {
+            Some(event.old_display_name.clone())
+        } else {
+            None
+        };
+        let old_slug_val = if event.old_slug != event.new_slug {
+            Some(event.old_slug.clone())
+        } else {
+            None
+        };
+
+        // Build email template
+        let template = ProfileUpdatedEmailTemplate::new(
+            &user.display_name,
+            old_name,
+            &event.new_display_name,
+            old_slug_val,
+            &event.new_slug,
+            updated_at,
+            &self.frontend_url,
+        );
+
+        // Render email content
+        let html_body = template.render_html()?;
+        let text_body = template.render_plain_text();
+        let subject = template.subject();
+
+        // Build email
+        let email = Email::builder()
+            .to(&user.email)
+            .subject(subject)
+            .text_body(text_body)
+            .html_body(html_body)
+            .build()?;
+
+        // Send email
+        self.email_service.send_email(email).await?;
+
+        log::info!(
+            "Sent profile updated notification to user '{}' ({})",
+            user.display_name,
+            user.email
+        );
+
+        Ok(())
+    }
+
+    fn handler_name(&self) -> &'static str {
+        "ProfileUpdatedEmailHandler"
     }
 }
