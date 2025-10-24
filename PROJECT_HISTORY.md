@@ -778,6 +778,121 @@
 - **User Experience**: Engaging animated hero that gracefully degrades to static image
 - **Development Workflow**: Simplified asset management with automatic LFS handling
 
+### Recent Major Features (January 2025)
+
+#### Password Reset Flow
+**Achievement**: Complete token-based password reset system with email notifications and secure token handling.
+
+**Key Deliverables**:
+- Token-based password reset with 1-hour expiry window
+- Email templates for password reset requests
+- Frontend pages: forgot-password.vue and reset-password.vue
+- Secure token hashing with SHA-256 in database
+- Rate limiting to prevent abuse
+
+**Technical Implementation**:
+- Backend service: `password_reset.rs` with token generation and validation
+- Repository layer: `password_reset_token_repository.rs` for token management
+- Email integration: HTML template with time-limited reset links
+- Security: Single-use tokens with automatic expiration cleanup
+
+#### Email Suppression System
+**Achievement**: AWS SES compliance system for managing email suppression list and bounce handling.
+
+**Key Deliverables**:
+- AWS SES suppression list management with 36 tests
+- Bounce and complaint handling
+- Admin interface for suppression list viewing
+- Automatic email validation before sending
+
+**Technical Implementation**:
+- Backend service integration with AWS SES API
+- Database table for suppression list tracking
+- Comprehensive test coverage across all suppression scenarios
+
+#### OAuth + Email Verification
+**Achievement**: Multi-provider OAuth architecture with Google implementation and email verification system.
+
+**Key Deliverables**:
+- Google OAuth with PKCE flow and Redis state storage
+- Email verification with token-based validation
+- Multi-provider architecture ready for additional OAuth providers
+- AWS SES integration for verification emails
+
+**Technical Implementation**:
+- OAuth service with PKCE security flow
+- Verification token generation and validation
+- Frontend callback page with error handling
+- Mock OAuth service for testing environments
+
+#### Timer List Feature
+**Achievement**: User-facing timer list functionality with public timer browsing capabilities.
+
+**Key Deliverables**:
+- PublicTimerListDisplay component for viewing community timers
+- PublicTimersTab integration in incidents interface
+- Timer privacy controls (public/private, show in list)
+- Responsive design for mobile and desktop
+
+#### Auth Schema Refactor
+**Achievement**: Migration from monolithic users table to normalized 5-table architecture.
+
+**Key Deliverables**:
+- Normalized schema: users, user_credentials, user_external_logins, user_profiles, user_preferences
+- Multi-provider OAuth support architecture
+- Zero data loss migration with data backfill
+- Builder pattern for test data creation
+
+**Technical Implementation**:
+- 9-phase TDD implementation (Phases 0-9)
+- Complete repository layer for all new tables
+- Service layer updates across registration, login, OAuth, and profile management
+- GDPR/CCPA data export v2.0 including all new tables
+
+#### User Updates Refactor
+**Achievement**: Pass-through routes and session refresh architecture for improved user update handling.
+
+**Key Deliverables**:
+- Pass-through routes for user updates through Nuxt server
+- Session refresh plugin for automatic state synchronization
+- Improved SSR hydration consistency
+- Smart fetch system for intelligent SSR/CSR data fetching
+
+**Technical Implementation**:
+- useSmartFetch composable for environment-aware routing
+- Session management composables (useSessionWatcher, useCallOnceWatcher)
+- Enhanced session integration with nuxt-auth-utils
+
+#### Domain Events System
+**Achievement**: Event-driven architecture with EventBus infrastructure for decoupled notification handling.
+
+**Key Deliverables**:
+- EventBus infrastructure for domain events
+- Event-driven notification system
+- Decoupled architecture for cross-domain communication
+- Support for email notifications and future event handlers
+
+**Technical Implementation**:
+- Event publisher/subscriber pattern
+- Type-safe event handling with domain event definitions
+- Integration with email service for automated notifications
+- Extensible architecture for future event types
+
+#### Email Templates System
+**Achievement**: Askama HTML email template system with base template and specialized templates.
+
+**Key Deliverables**:
+- Askama template engine integration for HTML emails
+- Base email template with consistent branding
+- 9+ specialized templates (verification, password reset, access requests, phrase suggestions, etc.)
+- Responsive email design with mobile support
+
+**Technical Implementation**:
+- Base template: base.html with header, footer, and consistent styling
+- Template inheritance for specialized email types
+- Integration with AWS SES for email delivery
+- Support for both HTML and plain text email formats
+
 ## Current Status
 - **Application**: Live at kennwilliamson.org with full production infrastructure
 - **Testing**: 636 total tests (445 backend + 191 frontend) with comprehensive coverage across all architectural layers

@@ -5,27 +5,40 @@
 
 ## Immediate Priorities
 
-### Legal Compliance Implementation
+### Legal Compliance & Quick Wins (HIGHEST PRIORITY)
 **Priority**: CRITICAL (Required for Production)
-**Goal**: Implement features promised in Privacy Policy and Terms of Service to achieve GDPR/CCPA compliance
+**Goal**: Complete remaining legal compliance features and high-value UX improvements
 
-**Background**: Privacy Policy and Terms of Service make explicit promises about features that create legal liability. See [LEGAL-COMPLIANCE-GAPS.md](LEGAL-COMPLIANCE-GAPS.md) for comprehensive analysis.
-
-**Critical Features** (Must fix before production):
+**Critical Features Status**:
 - ✅ Account deletion functionality with comprehensive cleanup (completed)
 - ✅ Data export/portability in JSON format (completed)
-- Password reset flow (forgot password) - NEXT PRIORITY
+- ✅ Password reset flow (completed)
 
-**Important Features** (Should fix before production):
-- Security notification emails (password changes, profile updates)
-- Account termination notifications with reasons
-- Account deletion confirmation emails
+**Remaining Features** (Ordered by Priority):
 
-**Status**: OAuth and email verification complete. Legal documents complete. 2/3 critical features complete (account deletion + data export). About Me pages with role-based access complete. Password reset flow is next priority.
+1. **Security Notification Emails** (1-2 days) - LEGAL COMPLIANCE
+   - Password changed notification
+   - Profile updated notification
+   - Security alerts as promised in Privacy Policy
 
-**Estimated Effort**: 1-2 weeks for remaining critical + important features
+2. **Account Termination Notifications** (1 day) - LEGAL COMPLIANCE
+   - Deactivation reason field in database
+   - Email notification when account deactivated
+   - Terms of Service compliance
 
-**Reference**: See [LEGAL-COMPLIANCE-GAPS.md](LEGAL-COMPLIANCE-GAPS.md) for detailed implementation roadmap and risk assessment.
+3. **Account Deletion Confirmation Email** (low effort) - LEGAL COMPLIANCE
+   - Confirmation email when deletion initiated
+   - Cancellation link during 30-day grace period
+
+4. **OAuth User Redirect** (4-6 hours) - UX IMPROVEMENT
+   - Preserve intended destination through OAuth flow
+   - Encode redirect in OAuth state parameter
+   - Quick win for better user experience
+   - See [PLANNING-LOGIN-USER-REDIRECT.md](PLANNING-LOGIN-USER-REDIRECT.md)
+
+**Estimated Effort**: 3-5 days for all remaining features
+
+**Status**: 3/3 critical features complete. 4 important features remaining (3 legal + 1 UX).
 
 ### Content Development
 **Priority**: High
@@ -36,6 +49,26 @@
 - ✅ About page content and design (completed with 9 biography pages)
 - ✅ Role-based access control for personal content (trusted-contact role)
 - Professional presentation for portfolio project
+
+## Next Priorities
+
+### OpenAPI Documentation (MEDIUM-HIGH PRIORITY)
+**Priority**: Medium-High (Professional Polish)
+**Goal**: Auto-generated OpenAPI documentation for API discoverability
+**Estimated Effort**: 12-28 hours
+
+**Implementation Approach**:
+- Use `utoipa` crate with `utoipa-actix-web` for auto-collection
+- Auto-generated OpenAPI 3.0 specification
+- Swagger UI for interactive API exploration
+- Type-safe documentation from Rust code
+- See [OPENAPI-RECOMMENDATION.md](OPENAPI-RECOMMENDATION.md) for detailed approach
+
+**Benefits**:
+- Professional API documentation
+- Easier for collaborators and future maintainers
+- Portfolio demonstration of API design
+- Interactive testing interface
 
 ### Steampunk Asset Integration
 **Priority**: High (Contingent on receiving assets)

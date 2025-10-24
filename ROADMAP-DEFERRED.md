@@ -40,6 +40,87 @@ This document contains features, optimizations, and architectural improvements t
 
 ## Advanced Features (Deferred)
 
+### Messaging Feature
+**Deferred Reason**: High complexity (36-50 hours) with uncertain usage demand
+**Future Trigger**: User feedback requesting messaging capability or demonstrated need
+**Estimated Effort**: 36-50 hours across 4 phases
+
+**Core Concept**: Real-time messaging system for direct user communication
+
+**Technical Components**:
+
+**Phase 1: Database Schema (8-12 hours)**:
+- Messages table with sender/recipient tracking
+- Conversations table for thread management
+- Read receipts and message status
+- Attachments support
+
+**Phase 2: Backend API (12-16 hours)**:
+- RESTful endpoints for message CRUD
+- Conversation management endpoints
+- Message filtering and pagination
+- Attachment handling
+
+**Phase 3: Frontend UI (8-12 hours)**:
+- Inbox/conversation list interface
+- Message composer component
+- Conversation view with threading
+- Real-time UI updates
+
+**Phase 4: Real-time WebSocket (8-10 hours)**:
+- WebSocket connection management
+- Real-time message delivery
+- Typing indicators
+- Online presence tracking
+
+**Deferred Rationale**:
+- Uncertain demand - "not sure anyone will want to message me"
+- High implementation complexity for uncertain value
+- Can ship initial release without it
+- Can add later if users actually request it
+
+**Reference**: See [DESIGN-MESSAGING-FEATURE.md](DESIGN-MESSAGING-FEATURE.md) for detailed implementation plan
+
+### SSM Secrets Management
+**Deferred Reason**: Current .env file adequate with sole VM access
+**Future Trigger**: Team growth, secret rotation requirements, or multi-environment deployment
+**Estimated Effort**: 10-14 days across 7 phases
+
+**Core Concept**: AWS SSM Parameter Store integration for secure secret management
+
+**Technical Components**:
+
+**Phase 1: Figment SSM Provider (2-3 days)**:
+- SSM client integration
+- Parameter fetching with caching
+- Environment-aware configuration
+
+**Phase 2: Testing Infrastructure (1-2 days)**:
+- Mock SSM provider for tests
+- Test helper utilities
+- Comprehensive test coverage
+
+**Phase 3: Migration Strategy (1-2 days)**:
+- Hybrid .env + SSM support
+- Fallback mechanisms
+- Documentation for migration
+
+**Phase 4-7: Secrets Migration (6-7 days)**:
+- Database credentials
+- JWT secrets
+- OAuth credentials
+- AWS credentials
+- Email service configuration
+
+**Deferred Rationale**:
+- Current security model adequate (sole VM access)
+- No immediate secret rotation requirements
+- No team members requiring secret access
+- .env file sufficient for current scale
+- Can migrate when security model changes
+
+**Reference**: See [DESIGN-FIGMENT-SSM-SECRETS.md](DESIGN-FIGMENT-SSM-SECRETS.md) for detailed implementation plan
+
 ### AI-Powered Dating Assistant System
 **Deferred Reason**: Massive undertaking that would overshadow core timer functionality
 **Future Trigger**: Separate passion project or dedicated dating app development
