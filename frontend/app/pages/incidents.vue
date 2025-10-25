@@ -30,13 +30,13 @@
             </p>
             <div class="flex flex-col sm:flex-row gap-3 justify-center">
               <NuxtLink
-                to="/login"
+                to="/login?redirect=/incidents"
                 class="brass-button px-6 py-3 rounded-md transition-all duration-200 font-medium"
               >
                 Sign In
               </NuxtLink>
               <NuxtLink
-                to="/register"
+                to="/register?redirect=/incidents"
                 class="brass-button-outline px-6 py-3 rounded-md transition-all duration-200 font-medium"
               >
                 Create Account

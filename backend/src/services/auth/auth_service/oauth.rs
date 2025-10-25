@@ -10,8 +10,11 @@ use crate::repositories::traits::user_repository::CreateOAuthUserData;
 impl AuthService {
     /// Generate Google OAuth authorization URL with PKCE and CSRF protection
     /// Stores PKCE verifier in storage for later retrieval in callback
+    /// Optional redirect parameter is encoded into the state for post-auth redirect
     /// Returns: (auth_url, csrf_token) - verifier is stored internally
-    pub async fn google_oauth_url(&self) -> Result<(String, CsrfToken)> {
+    pub async fn google_oauth_url(&self, redirect: Option<String>) -> Result<(String, CsrfToken)> {
+        use base64::{engine::general_purpose::STANDARD as base64_engine, Engine as _};
+
         let oauth_service = self
             .google_oauth_service
             .as_ref()
@@ -22,24 +25,40 @@ impl AuthService {
             .as_ref()
             .ok_or_else(|| anyhow!("PKCE storage not configured"))?;
 
-        // Generate OAuth URL with PKCE challenge
-        let (auth_url, csrf_token, pkce_verifier) = oauth_service.get_authorization_url().await?;
+        // Generate base CSRF token
+        let base_csrf = CsrfToken::new_random();
 
-        // Store PKCE verifier with CSRF token as key (5 minute TTL)
+        // Build enhanced state with redirect if provided and valid
+        let enhanced_state = if let Some(redirect_url) = redirect {
+            if validate_redirect_url(&redirect_url) {
+                let encoded_redirect = base64_engine.encode(redirect_url.as_bytes());
+                Some(format!("{}|{}", base_csrf.secret(), encoded_redirect))
+            } else {
+                // Invalid redirect, use plain state
+                None
+            }
+        } else {
+            None
+        };
+
+        // Generate OAuth URL with PKCE challenge and custom state (if we have redirect)
+        let (auth_url, csrf_token, pkce_verifier) = oauth_service.get_authorization_url(enhanced_state.clone()).await?;
+
+        // Store PKCE verifier with the state that Google will return (5 minute TTL)
+        // This is either the enhanced state or the plain csrf token
+        let storage_key = enhanced_state.unwrap_or_else(|| csrf_token.secret().to_string());
         pkce_storage
-            .store_pkce(csrf_token.secret(), pkce_verifier.secret(), 300)
+            .store_pkce(&storage_key, pkce_verifier.secret(), 300)
             .await?;
 
-        log::debug!(
-            "Stored PKCE verifier for state: {}",
-            csrf_token.secret()
-        );
+        log::debug!("Stored PKCE verifier for state: {}", storage_key);
 
         Ok((auth_url, csrf_token))
     }
 
     /// Handle Google OAuth callback (Phase 4C: Using external_logins table)
     /// Validates authorization code, exchanges for token, fetches user info, and performs account linking
+    /// Extracts optional redirect URL from state parameter for post-auth navigation
     ///
     /// Account linking strategy:
     /// 1. Check if external login exists (provider + provider_user_id) → Login existing user
@@ -61,7 +80,10 @@ impl AuthService {
             .as_ref()
             .ok_or_else(|| anyhow!("PKCE storage not configured"))?;
 
-        // Retrieve PKCE verifier from storage using state parameter
+        // Parse state parameter to extract CSRF token and optional redirect
+        let (_csrf_token, redirect_url) = parse_state_parameter(&state);
+
+        // Retrieve PKCE verifier from storage using full state parameter
         let verifier_secret = pkce_storage
             .retrieve_and_delete_pkce(&state)
             .await?
@@ -195,8 +217,8 @@ impl AuthService {
             }
         };
 
-        // Generate tokens and return AuthResponse
-        self.generate_auth_response(user).await
+        // Generate tokens and return AuthResponse with optional redirect
+        self.generate_auth_response(user, redirect_url).await
     }
 
     /// Helper: Create new OAuth user (OLD - Phase 4B)
@@ -339,8 +361,8 @@ impl AuthService {
         Ok(slug)
     }
 
-    /// Helper: Generate AuthResponse with tokens
-    async fn generate_auth_response(&self, user: User) -> Result<AuthResponse> {
+    /// Helper: Generate AuthResponse with tokens and optional redirect URL
+    async fn generate_auth_response(&self, user: User, redirect_url: Option<String>) -> Result<AuthResponse> {
         // Get user roles
         let roles = self.user_repository.get_user_roles(user.id).await?;
 
@@ -370,6 +392,7 @@ impl AuthService {
             token,
             refresh_token: refresh_token_string,
             user: user_response,
+            redirect_url,
         })
     }
 }
@@ -388,6 +411,46 @@ fn hash_token(token: &str) -> String {
     let mut hasher = Sha256::new();
     hasher.update(token.as_bytes());
     hex::encode(hasher.finalize())
+}
+
+/// Parse OAuth state parameter to extract CSRF token and optional redirect URL
+/// Format: {csrf_token}|{base64_encoded_redirect}
+/// Returns: (csrf_token, optional_redirect_url)
+fn parse_state_parameter(state: &str) -> (String, Option<String>) {
+    use base64::{engine::general_purpose::STANDARD as base64_engine, Engine as _};
+
+    if let Some((csrf, encoded_redirect)) = state.split_once('|') {
+        // Attempt to decode the redirect URL
+        if let Ok(decoded_bytes) = base64_engine.decode(encoded_redirect) {
+            if let Ok(redirect) = String::from_utf8(decoded_bytes) {
+                // Validate the redirect URL before returning
+                if validate_redirect_url(&redirect) {
+                    return (csrf.to_string(), Some(redirect));
+                }
+            }
+        }
+        // If decoding or validation failed, return None for redirect
+        return (csrf.to_string(), None);
+    }
+    // No redirect in state, return state as csrf token
+    (state.to_string(), None)
+}
+
+/// Validate redirect URL for security
+/// Only allow internal redirects (must start with / but not //)
+fn validate_redirect_url(url: &str) -> bool {
+    if url.is_empty() {
+        return false;
+    }
+    // Must start with / (internal redirect)
+    if !url.starts_with('/') {
+        return false;
+    }
+    // Must not start with // (protocol-relative URL - open redirect attack)
+    if url.starts_with("//") {
+        return false;
+    }
+    true
 }
 
 #[cfg(test)]
@@ -516,7 +579,7 @@ mod tests {
         let mock_oauth = MockGoogleOAuthService::new();
         let service = create_test_auth_service_with_mock_oauth(mock_oauth);
 
-        let result = service.google_oauth_url().await;
+        let result = service.google_oauth_url(None).await;
         assert!(result.is_ok());
 
         let (url, _csrf) = result.unwrap();
@@ -528,7 +591,7 @@ mod tests {
         let mock_oauth = MockGoogleOAuthService::new();
         let service = create_test_auth_service_with_mock_oauth(mock_oauth);
 
-        let result = service.google_oauth_url().await;
+        let result = service.google_oauth_url(None).await;
         assert!(result.is_ok());
 
         let (url, _csrf) = result.unwrap();
@@ -541,7 +604,7 @@ mod tests {
         let mock_oauth = MockGoogleOAuthService::new();
         let service = create_test_auth_service_with_mock_oauth(mock_oauth);
 
-        let result = service.google_oauth_url().await;
+        let result = service.google_oauth_url(None).await;
         assert!(result.is_ok());
 
         let (url, _csrf) = result.unwrap();
@@ -554,7 +617,7 @@ mod tests {
         let mock_oauth = MockGoogleOAuthService::new();
         let service = create_test_auth_service_with_mock_oauth(mock_oauth);
 
-        let result = service.google_oauth_url().await;
+        let result = service.google_oauth_url(None).await;
         assert!(result.is_ok());
 
         let (url, _csrf) = result.unwrap();
@@ -568,7 +631,7 @@ mod tests {
         let mock_oauth = MockGoogleOAuthService::new();
         let service = create_test_auth_service_with_mock_oauth(mock_oauth);
 
-        let result = service.google_oauth_url().await;
+        let result = service.google_oauth_url(None).await;
         assert!(result.is_ok());
 
         let (_url, csrf_token) = result.unwrap();
@@ -580,7 +643,7 @@ mod tests {
         let mock_oauth = MockGoogleOAuthService::new();
         let service = create_test_auth_service_with_mock_oauth(mock_oauth);
 
-        let result = service.google_oauth_url().await;
+        let result = service.google_oauth_url(None).await;
         assert!(result.is_ok());
 
         let (url, _csrf) = result.unwrap();
@@ -594,7 +657,7 @@ mod tests {
         let mock_oauth = MockGoogleOAuthService::new();
         let service = create_test_auth_service_with_mock_oauth(mock_oauth);
 
-        let result = service.google_oauth_url().await;
+        let result = service.google_oauth_url(None).await;
         assert!(result.is_ok());
 
         // Verifier is now stored in PKCE storage, not returned
@@ -1515,5 +1578,265 @@ mod tests {
         let providers: Vec<String> = logins.iter().map(|l| l.provider.clone()).collect();
         assert!(providers.contains(&"google".to_string()));
         assert!(providers.contains(&"github".to_string()));
+    }
+
+    // ==================== OAuth Redirect State Tests ====================
+
+    #[test]
+    fn test_parse_state_parameter_with_redirect() {
+        use base64::{engine::general_purpose::STANDARD as base64_engine, Engine as _};
+
+        // Encode redirect URL
+        let redirect_url = "/profile";
+        let encoded_redirect = base64_engine.encode(redirect_url.as_bytes());
+        let state = format!("csrf-token-123|{}", encoded_redirect);
+
+        let (csrf, redirect) = parse_state_parameter(&state);
+
+        assert_eq!(csrf, "csrf-token-123");
+        assert_eq!(redirect, Some("/profile".to_string()));
+    }
+
+    #[test]
+    fn test_parse_state_parameter_without_redirect() {
+        let state = "csrf-token-only";
+
+        let (csrf, redirect) = parse_state_parameter(&state);
+
+        assert_eq!(csrf, "csrf-token-only");
+        assert_eq!(redirect, None);
+    }
+
+    #[test]
+    fn test_parse_state_parameter_with_special_characters() {
+        use base64::{engine::general_purpose::STANDARD as base64_engine, Engine as _};
+
+        let redirect_url = "/profile?tab=security&foo=bar";
+        let encoded_redirect = base64_engine.encode(redirect_url.as_bytes());
+        let state = format!("csrf-123|{}", encoded_redirect);
+
+        let (csrf, redirect) = parse_state_parameter(&state);
+
+        assert_eq!(csrf, "csrf-123");
+        assert_eq!(redirect, Some("/profile?tab=security&foo=bar".to_string()));
+    }
+
+    #[test]
+    fn test_parse_state_parameter_with_invalid_base64() {
+        // Invalid base64 should not crash, just return None for redirect
+        let state = "csrf-token|invalid-base64!!!";
+
+        let (csrf, redirect) = parse_state_parameter(&state);
+
+        assert_eq!(csrf, "csrf-token");
+        // Invalid base64 should result in None
+        assert_eq!(redirect, None);
+    }
+
+    #[test]
+    fn test_validate_redirect_url_valid() {
+        assert!(validate_redirect_url("/profile"));
+        assert!(validate_redirect_url("/"));
+        assert!(validate_redirect_url("/profile/edit"));
+        assert!(validate_redirect_url("/profile?tab=security"));
+    }
+
+    #[test]
+    fn test_validate_redirect_url_invalid() {
+        // Protocol-relative URLs (open redirect attack)
+        assert!(!validate_redirect_url("//evil.com"));
+        assert!(!validate_redirect_url("//evil.com/phishing"));
+
+        // Absolute URLs
+        assert!(!validate_redirect_url("http://evil.com"));
+        assert!(!validate_redirect_url("https://evil.com"));
+
+        // Other protocols
+        assert!(!validate_redirect_url("javascript:alert(1)"));
+        assert!(!validate_redirect_url("data:text/html,<script>alert(1)</script>"));
+
+        // Empty string
+        assert!(!validate_redirect_url(""));
+    }
+
+    #[tokio::test]
+    async fn test_oauth_url_with_redirect() {
+        use base64::{engine::general_purpose::STANDARD as base64_engine, Engine as _};
+
+        let mock_oauth = MockGoogleOAuthService::new();
+        let service = create_test_auth_service_with_mock_oauth(mock_oauth);
+
+        let redirect = Some("/profile".to_string());
+        let result = service.google_oauth_url(redirect.clone()).await;
+
+        assert!(result.is_ok());
+
+        let (_url, csrf_token) = result.unwrap();
+
+        // Verify that the redirect was encoded in the stored state
+        // We'll verify this by checking the PKCE storage has the enhanced state
+        let pkce_storage = service.pkce_storage.as_ref().unwrap();
+
+        // Build the expected state key
+        let encoded_redirect = base64_engine.encode(redirect.unwrap().as_bytes());
+        let expected_state = format!("{}|{}", csrf_token.secret(), encoded_redirect);
+
+        // Try to retrieve with the enhanced state (should work)
+        let verifier = pkce_storage.retrieve_and_delete_pkce(&expected_state).await;
+        assert!(verifier.is_ok());
+        assert!(verifier.unwrap().is_some());
+    }
+
+    #[tokio::test]
+    async fn test_oauth_url_without_redirect() {
+        let mock_oauth = MockGoogleOAuthService::new();
+        let service = create_test_auth_service_with_mock_oauth(mock_oauth);
+
+        let result = service.google_oauth_url(None).await;
+
+        assert!(result.is_ok());
+
+        let (_url, csrf_token) = result.unwrap();
+
+        // Verify that the state doesn't contain a redirect separator
+        assert!(!csrf_token.secret().contains('|'));
+
+        // Verify PKCE storage works with plain csrf token
+        let pkce_storage = service.pkce_storage.as_ref().unwrap();
+        let verifier = pkce_storage.retrieve_and_delete_pkce(csrf_token.secret()).await;
+        assert!(verifier.is_ok());
+        assert!(verifier.unwrap().is_some());
+    }
+
+    #[tokio::test]
+    async fn test_oauth_callback_extracts_redirect() {
+        use base64::{engine::general_purpose::STANDARD as base64_engine, Engine as _};
+
+        let redirect_url = "/profile";
+        let encoded_redirect = base64_engine.encode(redirect_url.as_bytes());
+        let csrf_token = "test-csrf";
+        let state_with_redirect = format!("{}|{}", csrf_token, encoded_redirect);
+
+        let user_info = GoogleUserInfo {
+            given_name: None,
+            family_name: None,
+            picture: None,
+            locale: None,
+            sub: "redirect_test_id".to_string(),
+            email: "redirect@example.com".to_string(),
+            name: Some("Redirect Test".to_string()),
+            email_verified: Some(true),
+        };
+
+        let mock_oauth = MockGoogleOAuthService::new().with_user_info(user_info);
+        let user_repo = mock_user_repo_for_new_oauth_user("redirect_test_id");
+        let token_repo = mock_token_repo();
+
+        // Store PKCE with the enhanced state
+        let pkce_storage = MockPkceStorage::new();
+        pkce_storage
+            .store_pkce(&state_with_redirect, TEST_VERIFIER, 300)
+            .await
+            .unwrap();
+
+        let service = AuthService::builder()
+            .user_repository(Box::new(user_repo))
+            .refresh_token_repository(Box::new(token_repo))
+            .verification_token_repository(Box::new(MockVerificationTokenRepository::new()))
+            .email_service(Box::new(MockEmailService::new()))
+            .google_oauth_service(Box::new(mock_oauth))
+            .pkce_storage(Box::new(pkce_storage))
+            .jwt_secret("test-secret".to_string())
+            .build();
+
+        let result = service
+            .google_oauth_callback("auth_code".to_string(), state_with_redirect)
+            .await;
+
+        assert!(result.is_ok());
+
+        let auth_response = result.unwrap();
+        assert_eq!(auth_response.redirect_url, Some("/profile".to_string()));
+    }
+
+    #[tokio::test]
+    async fn test_oauth_callback_without_redirect() {
+        let user_info = GoogleUserInfo {
+            given_name: None,
+            family_name: None,
+            picture: None,
+            locale: None,
+            sub: "no_redirect_test".to_string(),
+            email: "noredirect@example.com".to_string(),
+            name: Some("No Redirect Test".to_string()),
+            email_verified: Some(true),
+        };
+
+        let mock_oauth = MockGoogleOAuthService::new().with_user_info(user_info);
+        let user_repo = mock_user_repo_for_new_oauth_user("no_redirect_test");
+        let token_repo = mock_token_repo();
+        let service =
+            create_test_auth_service_with_stored_pkce(mock_oauth, user_repo, token_repo).await;
+
+        let result = service
+            .google_oauth_callback("auth_code".to_string(), TEST_STATE.to_string())
+            .await;
+
+        assert!(result.is_ok());
+
+        let auth_response = result.unwrap();
+        assert_eq!(auth_response.redirect_url, None);
+    }
+
+    #[tokio::test]
+    async fn test_oauth_callback_validates_redirect_url() {
+        use base64::{engine::general_purpose::STANDARD as base64_engine, Engine as _};
+
+        // Try with an invalid redirect (protocol-relative URL)
+        let invalid_redirect = "//evil.com";
+        let encoded_redirect = base64_engine.encode(invalid_redirect.as_bytes());
+        let csrf_token = "test-csrf";
+        let state_with_bad_redirect = format!("{}|{}", csrf_token, encoded_redirect);
+
+        let user_info = GoogleUserInfo {
+            given_name: None,
+            family_name: None,
+            picture: None,
+            locale: None,
+            sub: "validation_test".to_string(),
+            email: "validation@example.com".to_string(),
+            name: Some("Validation Test".to_string()),
+            email_verified: Some(true),
+        };
+
+        let mock_oauth = MockGoogleOAuthService::new().with_user_info(user_info);
+        let user_repo = mock_user_repo_for_new_oauth_user("validation_test");
+        let token_repo = mock_token_repo();
+
+        let pkce_storage = MockPkceStorage::new();
+        pkce_storage
+            .store_pkce(&state_with_bad_redirect, TEST_VERIFIER, 300)
+            .await
+            .unwrap();
+
+        let service = AuthService::builder()
+            .user_repository(Box::new(user_repo))
+            .refresh_token_repository(Box::new(token_repo))
+            .verification_token_repository(Box::new(MockVerificationTokenRepository::new()))
+            .email_service(Box::new(MockEmailService::new()))
+            .google_oauth_service(Box::new(mock_oauth))
+            .pkce_storage(Box::new(pkce_storage))
+            .jwt_secret("test-secret".to_string())
+            .build();
+
+        let result = service
+            .google_oauth_callback("auth_code".to_string(), state_with_bad_redirect)
+            .await;
+
+        assert!(result.is_ok());
+
+        let auth_response = result.unwrap();
+        // Invalid redirect should be rejected (None)
+        assert_eq!(auth_response.redirect_url, None);
     }
 }

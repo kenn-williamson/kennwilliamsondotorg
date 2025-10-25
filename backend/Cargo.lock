@@ -951,6 +951,7 @@ dependencies = [
  "aws-config",
  "aws-sdk-sesv2",
  "backend",
+ "base64 0.22.1",
  "bcrypt",
  "chrono",
  "dotenv",

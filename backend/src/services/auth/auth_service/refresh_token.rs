@@ -81,6 +81,7 @@ impl AuthService {
             token: new_jwt,
             refresh_token: new_refresh_token,
             user: user_response,
+            redirect_url: None,
         }))
     }
 

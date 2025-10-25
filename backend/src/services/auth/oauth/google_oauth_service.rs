@@ -11,8 +11,9 @@ use crate::models::oauth::GoogleUserInfo;
 #[async_trait]
 pub trait GoogleOAuthServiceTrait: Send + Sync {
     /// Generate Google OAuth authorization URL with PKCE
+    /// Optionally accepts a custom state token (for encoding redirect info)
     /// Returns: (auth_url, csrf_token, pkce_verifier)
-    async fn get_authorization_url(&self) -> Result<(String, CsrfToken, PkceCodeVerifier)>;
+    async fn get_authorization_url(&self, custom_state: Option<String>) -> Result<(String, CsrfToken, PkceCodeVerifier)>;
 
     /// Exchange authorization code for access token using PKCE verifier
     async fn exchange_code_for_token(
@@ -46,14 +47,21 @@ impl GoogleOAuthService {
 
 #[async_trait]
 impl GoogleOAuthServiceTrait for GoogleOAuthService {
-    async fn get_authorization_url(&self) -> Result<(String, CsrfToken, PkceCodeVerifier)> {
+    async fn get_authorization_url(&self, custom_state: Option<String>) -> Result<(String, CsrfToken, PkceCodeVerifier)> {
         // Generate PKCE challenge
         let (pkce_challenge, pkce_verifier) = PkceCodeChallenge::new_random_sha256();
 
         // Generate authorization URL with PKCE and scopes
+        // Use custom state if provided, otherwise generate random
         let (auth_url, csrf_token) = self
             .client
-            .authorize_url(CsrfToken::new_random)
+            .authorize_url(|| {
+                if let Some(ref state) = custom_state {
+                    CsrfToken::new(state.clone())
+                } else {
+                    CsrfToken::new_random()
+                }
+            })
             .add_scope(Scope::new("openid".to_string()))
             .add_scope(Scope::new("email".to_string()))
             .add_scope(Scope::new("profile".to_string()))

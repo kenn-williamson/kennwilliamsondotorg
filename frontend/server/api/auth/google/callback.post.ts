@@ -60,7 +60,8 @@ export default defineEventHandler(async (event: any) => {
 
     return {
       success: true,
-      user: response.user
+      user: response.user,
+      redirect_url: response.redirect_url
     }
   } catch (error: any) {
     console.error('❌ [Google OAuth Callback] Error:', error)

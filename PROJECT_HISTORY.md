@@ -780,6 +780,27 @@
 
 ### Recent Major Features (January 2025)
 
+#### OAuth Redirect Preservation
+**Achievement**: Complete implementation of redirect URL preservation through Google OAuth flow for improved user experience.
+
+**Key Deliverables**:
+- Redirect parameter encoded in OAuth state for secure transmission through OAuth flow
+- Backend OAuth URL generation with optional redirect parameter support
+- OAuth callback extraction and validation of redirect URLs
+- Frontend integration passing redirect from login page through OAuth flow
+- Security validation preventing open redirect vulnerabilities (protocol-relative URLs blocked)
+- Backward compatibility with existing OAuth flow when no redirect specified
+
+**Technical Implementation**:
+- Backend: Modified `google_oauth_url()` to accept optional redirect parameter and encode in state
+- State parameter format: `{csrf_token}|{base64_encoded_redirect}` for secure transmission
+- OAuth callback service parses state to extract redirect and return in `AuthResponse`
+- Frontend composable extracts redirect from route query and passes to backend
+- Nuxt server API routes forward redirect parameter through OAuth URL generation
+- Callback page validates redirect URL (must start with `/`, cannot start with `//`)
+- Graceful fallback to `/` homepage when no redirect or invalid redirect provided
+- Base64 encoding prevents special characters from breaking URL encoding
+
 #### Password Reset Flow
 **Achievement**: Complete token-based password reset system with email notifications and secure token handling.
 

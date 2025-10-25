@@ -64,14 +64,19 @@ onMounted(async () => {
 
   try {
     // Complete OAuth flow
-    await handleOAuthCallback(code, state)
+    const result = await handleOAuthCallback(code, state)
 
     // Refresh the session to pick up the new user data
     const { fetch: refreshSession } = useUserSession()
     await refreshSession()
 
-    // Success - redirect to home page
-    await router.push('/')
+    // Get redirect from result and validate for security
+    const redirectUrl = result?.redirect_url || '/'
+    const isValidRedirect = redirectUrl.startsWith('/') && !redirectUrl.startsWith('//')
+    const targetPath = isValidRedirect ? redirectUrl : '/'
+
+    // Success - redirect to intended destination or home page
+    await router.push(targetPath)
   } catch (err) {
     // Use the error from the composable or fallback to a generic message
     error.value = oauthError.value || 'Authentication failed'

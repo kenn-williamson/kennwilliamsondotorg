@@ -45,9 +45,30 @@ Automation philosophy and script architecture for development and deployment wor
 ### Development Scripts
 **Purpose**: Daily development workflows
 
+#### dev-start.sh - Start services
+**Usage:** `./scripts/dev-start.sh [OPTIONS] [SERVICES]`
+
+**Build Options:**
+- `--build` - Force rebuild of containers
+- `--rebuild` - Force recreate containers (--force-recreate)
+- `--no-cache` - Build without using cache (removes frontend node_modules volume if frontend is targeted)
+- `--restart` - Restart existing containers
+
+**Runtime Options:**
+- `--logs, -f` - Show logs after starting (runs in foreground)
+- `--help, -h` - Show help message
+
+**Services (optional):**
+- `postgres`, `backend`, `frontend`, `nginx` - Start specific services only
+
 **Examples:**
-- `dev-start.sh` - Start services
-- `dev-logs.sh` - View logs
+- `./scripts/dev-start.sh` - Start all services
+- `./scripts/dev-start.sh --restart backend` - Restart just backend
+- `./scripts/dev-start.sh --rebuild backend` - Force recreate backend container
+- `./scripts/dev-start.sh --build` - Rebuild all services
+
+#### Other Development Scripts
+- `dev-logs.sh` - View logs (run `--help` for options)
 - `dev-stop.sh` - Stop services
 - `health-check.sh` - Verify health
 
@@ -56,6 +77,7 @@ Automation philosophy and script architecture for development and deployment wor
 - Handle environment detection
 - Proper service ordering
 - User-friendly output
+- Self-documenting (--help flag)
 
 ### Database Scripts
 **Purpose**: Safe database operations

@@ -80,26 +80,31 @@ impl Default for MockGoogleOAuthService {
 
 #[async_trait]
 impl GoogleOAuthServiceTrait for MockGoogleOAuthService {
-    async fn get_authorization_url(&self) -> Result<(String, CsrfToken, PkceCodeVerifier)> {
+    async fn get_authorization_url(&self, custom_state: Option<String>) -> Result<(String, CsrfToken, PkceCodeVerifier)> {
         let state = self.state.lock().unwrap();
         if state.url_should_fail {
             return Err(anyhow!("Mock URL generation failure"));
         }
 
+        // Use custom state if provided, otherwise use default mock state
+        let csrf_token_value = custom_state.unwrap_or_else(|| "mock_csrf_token".to_string());
+
         // Return mock URL with all expected query parameters for testing
-        let url = "https://accounts.google.com/o/oauth2/v2/auth\
+        let url = format!(
+            "https://accounts.google.com/o/oauth2/v2/auth\
             ?client_id=mock_client_id\
             &redirect_uri=https%3A%2F%2Flocalhost%2Fcallback\
             &response_type=code\
             &scope=openid+email+profile\
-            &state=mock_csrf_token\
+            &state={}\
             &code_challenge=mock_code_challenge\
-            &code_challenge_method=S256"
-            .to_string();
+            &code_challenge_method=S256",
+            csrf_token_value
+        );
 
         Ok((
             url,
-            CsrfToken::new("mock_csrf_token".to_string()),
+            CsrfToken::new(csrf_token_value),
             PkceCodeVerifier::new("mock_pkce_verifier".to_string()),
         ))
     }
@@ -148,7 +153,7 @@ mod tests {
         let mock = MockGoogleOAuthService::new();
 
         // Test URL generation
-        let result = mock.get_authorization_url().await;
+        let result = mock.get_authorization_url(None).await;
         assert!(result.is_ok());
 
         // Test token exchange
@@ -169,7 +174,7 @@ mod tests {
             .with_exchange_failure()
             .with_user_info_failure();
 
-        assert!(mock.get_authorization_url().await.is_err());
+        assert!(mock.get_authorization_url(None).await.is_err());
         assert!(mock
             .exchange_code_for_token("code".to_string(), PkceCodeVerifier::new("verifier".to_string()))
             .await

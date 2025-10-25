@@ -5,17 +5,6 @@
 
 ## Immediate Priorities
 
-### OAuth User Redirect (UX IMPROVEMENT)
-**Priority**: High
-**Goal**: Preserve intended destination through OAuth flow
-**Estimated Effort**: 4-6 hours
-
-**Tasks**:
-- Encode redirect in OAuth state parameter
-- Update OAuth callback to honor redirect parameter
-- Quick win for better user experience
-- See [PLANNING-LOGIN-USER-REDIRECT.md](PLANNING-LOGIN-USER-REDIRECT.md)
-
 ## Next Priorities
 
 ### OpenAPI Documentation (MEDIUM-HIGH PRIORITY)

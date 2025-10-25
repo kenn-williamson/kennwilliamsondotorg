@@ -95,6 +95,7 @@ export interface AuthResponse {
   token: string
   refresh_token: string
   user: AuthenticatedUser
+  redirect_url?: string
 }
 
 export interface SlugPreviewRequest {

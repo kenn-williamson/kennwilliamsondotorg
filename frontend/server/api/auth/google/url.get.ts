@@ -1,16 +1,23 @@
-import { defineEventHandler, createError } from 'h3'
+import { defineEventHandler, createError, getQuery } from 'h3'
 import { useRuntimeConfig } from '#imports'
 import { API_ROUTES } from '#shared/config/api-routes'
 
 export default defineEventHandler(async (event) => {
   try {
     const config = useRuntimeConfig()
+    const query = getQuery(event)
+    const redirect = query.redirect as string | undefined
 
-    console.log('🔍 [Google OAuth URL] Fetching OAuth authorization URL')
+    console.log('🔍 [Google OAuth URL] Fetching OAuth authorization URL', redirect ? `with redirect: ${redirect}` : '')
+
+    // Build URL with redirect parameter if present
+    const url = redirect
+      ? `${config.apiBase}${API_ROUTES.PUBLIC.AUTH.GOOGLE_URL}?redirect=${encodeURIComponent(redirect)}`
+      : `${config.apiBase}${API_ROUTES.PUBLIC.AUTH.GOOGLE_URL}`
 
     const response = await $fetch<{
       url: string
-    }>(`${config.apiBase}${API_ROUTES.PUBLIC.AUTH.GOOGLE_URL}`, {
+    }>(url, {
       method: 'GET',
     })
 

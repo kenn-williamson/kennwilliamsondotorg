@@ -64,6 +64,8 @@ pub struct AuthResponse {
     pub token: String,
     pub refresh_token: String,
     pub user: UserResponse,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub redirect_url: Option<String>,
 }
 
 #[derive(Debug, Serialize, Deserialize)]

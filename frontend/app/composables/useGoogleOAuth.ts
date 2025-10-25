@@ -13,6 +13,12 @@ import { useBaseService } from '~/composables/useBaseService'
 import { API_ROUTES } from '#shared/config/api-routes'
 import type { GoogleOAuthUrlResponse } from '#shared/types'
 
+interface OAuthCallbackResult {
+  success: boolean
+  user: any
+  redirect_url?: string
+}
+
 export const useGoogleOAuth = () => {
   // Create dependencies
   const smartFetch = useSmartFetch()
@@ -32,9 +38,18 @@ export const useGoogleOAuth = () => {
   const initiateOAuth = async (): Promise<void> => {
     return executeRequest(
       async () => {
+        // Get redirect from current route query
+        const route = useRoute()
+        const redirect = route.query.redirect as string | undefined
+
+        // Build URL with redirect parameter if present
+        const url = redirect
+          ? `${API_ROUTES.API.AUTH.GOOGLE_URL}?redirect=${encodeURIComponent(redirect)}`
+          : API_ROUTES.API.AUTH.GOOGLE_URL
+
         // Get Google OAuth URL from backend (PKCE verifier stored in Redis)
         const response = await smartFetch<GoogleOAuthUrlResponse>(
-          API_ROUTES.API.AUTH.GOOGLE_URL,
+          url,
           { method: 'GET' }
         )
 
@@ -55,11 +70,11 @@ export const useGoogleOAuth = () => {
    * 4. Backend exchanges code for tokens and returns JWT
    * 5. Nuxt API sets session
    */
-  const handleOAuthCallback = async (code: string, state: string): Promise<void> => {
+  const handleOAuthCallback = async (code: string, state: string): Promise<OAuthCallbackResult> => {
     return executeRequest(
       async () => {
         // Call Nuxt API route which will complete OAuth flow
-        await smartFetch(
+        const result = await smartFetch<OAuthCallbackResult>(
           API_ROUTES.API.AUTH.GOOGLE_CALLBACK,
           {
             method: 'POST',
@@ -68,7 +83,8 @@ export const useGoogleOAuth = () => {
         )
 
         // Session is set by the API route
-        // Caller (page component) will handle redirect to homepage
+        // Return result with optional redirect_url for caller
+        return result
       },
       'handleOAuthCallback'
     )

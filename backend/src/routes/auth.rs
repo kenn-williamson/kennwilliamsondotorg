@@ -417,13 +417,15 @@ pub async fn reset_password(
 // GOOGLE OAUTH ROUTES
 // ============================================================================
 
-/// GET /backend/public/auth/google/url
+/// GET /backend/public/auth/google/url?redirect=/profile
 /// Get Google OAuth authorization URL with PKCE challenge
+/// Optional redirect parameter is encoded into state for post-auth navigation
 /// PKCE verifier is stored in Redis and retrieved during callback
 pub async fn google_oauth_url(
+    query: web::Query<GoogleOAuthUrlQuery>,
     auth_service: web::Data<AuthService>,
 ) -> Result<HttpResponse, actix_web::Error> {
-    match auth_service.google_oauth_url().await {
+    match auth_service.google_oauth_url(query.redirect.clone()).await {
         Ok((url, _csrf_token)) => {
             // PKCE verifier is now stored in Redis by the auth service
             // The URL contains the state parameter (csrf_token) for callback validation
@@ -437,6 +439,11 @@ pub async fn google_oauth_url(
             })))
         }
     }
+}
+
+#[derive(serde::Deserialize)]
+pub struct GoogleOAuthUrlQuery {
+    pub redirect: Option<String>,
 }
 
 /// POST /backend/public/auth/google/callback

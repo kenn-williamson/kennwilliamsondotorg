@@ -90,8 +90,8 @@
         <div class="mt-6 text-center">
           <p class="text-sm text-nautical-600">
             Don't have an account?
-            <NuxtLink 
-              to="/register" 
+            <NuxtLink
+              :to="`/register${$route.query.redirect ? `?redirect=${$route.query.redirect}` : ''}`"
               class="text-sky-600 hover:text-sky-700 font-medium hover:underline transition-colors duration-200"
             >
               Create one here

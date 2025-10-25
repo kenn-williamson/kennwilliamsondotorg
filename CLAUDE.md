@@ -158,10 +158,29 @@ When working on this project, use Context7 MCP for framework documentation:
 - **Docker**: `resolve-library-id` with "docker" for containerization
 
 ### Essential Development Practices
-- **Use development scripts**: `./scripts/dev-start.sh`, `./scripts/health-check.sh` (never manual Docker commands)
+
+**CRITICAL: ALWAYS use development scripts - NEVER use Docker commands directly**
+
+**Common Development Scripts:**
+- `./scripts/dev-start.sh` - Start all services (not `docker-compose up`)
+- `./scripts/dev-stop.sh` - Stop all services (not `docker-compose down`)
+- `./scripts/dev-logs.sh` - View service logs (not `docker logs`)
+- `./scripts/health-check.sh` - Verify system health
+- `./scripts/setup-db.sh` - Run migrations (preserves data, safe to run repeatedly)
+- `./scripts/reset-db.sh` - Fresh database start (DESTRUCTIVE)
+- `./scripts/prepare-sqlx.sh` - Update SQLx cache after SQL query changes
+- `./scripts/backup-db.sh` - Backup/restore database
+
+**Why scripts matter:**
+- Consistent interface across all developers
+- Handle environment detection automatically
+- Proper service ordering and error handling
+- User-friendly output with progress indicators
+
+**See [IMPLEMENTATION-SCRIPTS.md](IMPLEMENTATION-SCRIPTS.md) for complete script reference**
+
+**Other Essentials:**
 - **Environment**: `.env.development` for all development work
-- **Migrations**: `./scripts/setup-db.sh` preserves data (safe for running repeatedly)
-- **SQLx cache**: `./scripts/prepare-sqlx.sh` after SQL query changes (compile-time verification)
 - **Testing**: `cargo test -- --test-threads=4` (prevents Docker resource exhaustion)
 - **Standards**: Follow [CODING-RULES.md](CODING-RULES.md) for language-specific conventions
 

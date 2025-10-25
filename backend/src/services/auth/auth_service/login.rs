@@ -49,6 +49,7 @@ impl AuthService {
             token,
             refresh_token,
             user: user_response,
+            redirect_url: None,
         }))
     }
 }
