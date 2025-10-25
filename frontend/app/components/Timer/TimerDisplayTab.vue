@@ -48,8 +48,8 @@ const incidentTimerStore = useIncidentTimerStore()
 const { activeTimerBreakdown, latestTimer } = storeToRefs(incidentTimerStore)
 const isSharing = ref(false)
 
-// ✅ CORRECT: Use callOnce to prevent double execution during SSR/hydration
-await callOnce('user-timers', () => incidentTimerStore.loadUserTimers())
+// Load user timers (useAsyncData caches and handles navigation correctly)
+await useAsyncData('user-timers', () => incidentTimerStore.loadUserTimers())
 
 // Start timers after hydration (client-side only)
 onMounted(() => {

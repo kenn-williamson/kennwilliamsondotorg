@@ -30,8 +30,14 @@
 
 <script setup lang="ts">
 import { ref } from 'vue'
+import { useIncidentTimerStore } from '~/stores/incident-timers'
 import TimerList from '~/components/Timer/TimerList.vue'
 import TimerResetModal from '~/components/Timer/TimerResetModal.vue'
+
+const incidentTimerStore = useIncidentTimerStore()
+
+// Load user timers (useAsyncData caches and handles navigation correctly)
+await useAsyncData('user-timers', () => incidentTimerStore.loadUserTimers())
 
 const isResetting = ref(false)
 const showResetModal = ref(false)

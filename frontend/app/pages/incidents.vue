@@ -116,18 +116,18 @@ useSocialShare({
 const { user } = useUserSession()
 const incidentTimerStore = useIncidentTimerStore()
 
-// Load user timers during SSR for authenticated users
-// This ensures timers are available on initial page load (hard refresh)
-if (user.value) {
-  await useAsyncData(
-    'user-timers',
-    () => incidentTimerStore.loadUserTimers(),
-    {
-      server: true,
-      lazy: false
-    }
-  )
-}
+// Load public timer list for all users (authenticated and unauthenticated)
+// This is the default view for unauthenticated users and a tab for authenticated users
+await useAsyncData(
+  'public-timers-list',
+  () => incidentTimerStore.loadPublicTimerList(),
+  {
+    server: true,
+    lazy: false
+  }
+)
+
+// User timers will be loaded by the individual tabs that need them (TimerDisplayTab, TimerControlsTab)
 
 // Tab state using composable (SSR-compatible, reactive to route.query)
 const { activeTab, setActiveTab } = useTabs<IncidentTabId>(

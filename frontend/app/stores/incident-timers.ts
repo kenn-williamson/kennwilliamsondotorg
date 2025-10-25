@@ -257,6 +257,10 @@ export const useIncidentTimerStore = defineStore('incident-timers', () => {
   const startLiveTimerUpdates = () => {
     // Only start timers on client-side (not during SSR)
     if (import.meta.client) {
+      console.log('🔄 [Timer Store] Starting live timer updates on client-side')
+      console.log('🔄 [Timer Store] Current timers.value.length:', timers.value.length)
+      console.log('🔄 [Timer Store] Current latestTimer:', latestTimer.value ? 'exists' : 'null')
+
       // Create timer manager if it doesn't exist
       if (!timerManager) {
         timerManager = new TimerManager(
@@ -265,7 +269,7 @@ export const useIncidentTimerStore = defineStore('incident-timers', () => {
       }
 
       timerManager.start()
-      console.log('🔄 [Timer Store] Started live timer updates on client-side')
+      console.log('✅ [Timer Store] Started live timer updates on client-side')
     } else {
       console.log('ℹ️ [Timer Store] Skipping timer start during SSR')
     }
@@ -300,8 +304,10 @@ export const useIncidentTimerStore = defineStore('incident-timers', () => {
     const data = await _handleAction(() => incidentTimerServiceInstance.getUserTimers(), 'loadUserTimers')
     if (data) {
       timers.value = data
+      console.log('✅ [IncidentTimerStore] Set timers.value with', data.length, 'timers')
+      console.log('✅ [IncidentTimerStore] timers.value now has', timers.value.length, 'items')
       // Note: latestTimer computed property will automatically pick the most recent timer
-      
+
       // Calculate initial breakdown for SSR (find most recent timer directly from data)
       if (data.length > 0) {
         const mostRecentTimer = [...data]
@@ -398,6 +404,10 @@ export const useIncidentTimerStore = defineStore('incident-timers', () => {
 
   // Public timer list actions
   const loadPublicTimerList = async (page: number = 1, pageSize: number = 20, search?: string) => {
+    console.log('🔄 [IncidentTimerStore] loadPublicTimerList called')
+    console.log('🔄 [IncidentTimerStore] Environment:', import.meta.server ? 'SERVER' : 'CLIENT')
+    console.log('🔄 [IncidentTimerStore] Page:', page, 'PageSize:', pageSize, 'Search:', search)
+
     publicTimersLoading.value = true
     const data = await _handleAction(
       () => userPreferencesServiceInstance.getPublicTimerList(page, pageSize, search),
@@ -409,6 +419,7 @@ export const useIncidentTimerStore = defineStore('incident-timers', () => {
       publicTimersList.value = data
       publicTimersPage.value = page
       publicTimersPageSize.value = pageSize
+      console.log('✅ [IncidentTimerStore] Loaded', data.length, 'public timers')
     }
     return data
   }

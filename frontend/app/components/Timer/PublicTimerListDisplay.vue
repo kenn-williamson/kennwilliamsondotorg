@@ -121,10 +121,8 @@ const previousPage = async () => {
   await incidentTimerStore.loadPublicTimerList(prevPageNum, incidentTimerStore.publicTimersPageSize, searchQuery.value.trim() || undefined)
 }
 
-// Load initial data when component mounts
-onMounted(async () => {
-  await incidentTimerStore.loadPublicTimerList()
-})
+// Note: Initial data is loaded during SSR by the parent page (incidents.vue)
+// This component only handles search and pagination, which reload data as needed
 </script>
 
 <style scoped>

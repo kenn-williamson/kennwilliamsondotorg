@@ -845,6 +845,23 @@
                   </div>
                 </div>
 
+                <!-- SSR Data Loading -->
+                <div class="challenge-card">
+                  <h3 class="challenge-title">Confidently Investigating the Wrong Problem</h3>
+                  <p class="challenge-text mb-3">
+                    <strong>The Bug:</strong> Public timer list wasn't loading for authenticated users. Simple SSR data loading issue.
+                  </p>
+                  <p class="challenge-text mb-3">
+                    <strong>Claude's Investigation:</strong> Spent 20 minutes confidently debugging JWT tokens, SSR hydration patterns, and Pinia state management. Even started editing the wrong component (user timer history instead of public timer list).
+                  </p>
+                  <p class="challenge-text mb-3">
+                    <strong>The Fix:</strong> One line: <code class="bg-nautical-100 px-1">await useAsyncData('public-timers-list', ...)</code>. Authenticated users just needed to load the public timer data. 30 seconds after human redirection.
+                  </p>
+                  <div class="solution-box">
+                    <strong class="text-primary-700">Lesson:</strong> GMs can be confidently wrong about simple problems, investigating complex solutions when the answer is obvious. Human oversight essential to redirect from rabbit holes. Sometimes "just load the data" beats 20 minutes of SSR hydration analysis.
+                  </div>
+                </div>
+
                 <!-- Resource Constraints Evolution -->
                 <div class="challenge-card">
                   <h3 class="challenge-title">Resource Targeting: 1GB → 2GB</h3>
