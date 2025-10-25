@@ -133,7 +133,7 @@
             </p>
             <ul class="list-disc pl-6 text-nautical-700 space-y-2">
               <li><strong>Active accounts:</strong> Data is retained indefinitely while you use the site</li>
-              <li><strong>Deleted accounts:</strong> Account data is permanently deleted within 30 days, though some content you've made public (like shared timers) may remain visible but disassociated from your account</li>
+              <li><strong>Deleted accounts:</strong> Account data is permanently deleted immediately upon request, though some content you've made public (like shared timers) may remain visible but disassociated from your account</li>
               <li><strong>Technical logs:</strong> Server logs and IP addresses are retained for up to 90 days for security purposes</li>
               <li><strong>Legal compliance:</strong> If required by law, some data may be retained longer</li>
             </ul>
@@ -162,7 +162,7 @@
             <h3 class="text-xl font-semibold text-nautical-800 mb-3">Deletion</h3>
             <p class="text-nautical-700 leading-relaxed mb-4">
               You can delete your account at any time through your profile settings. This will
-              remove your account data within 30 days. You can also request deletion by contacting me.
+              immediately and permanently remove your account data. You can also request deletion by contacting me.
             </p>
 
             <h3 class="text-xl font-semibold text-nautical-800 mb-3">Data Portability</h3>

@@ -17,10 +17,16 @@ If ambiguous or unclear, ask the user: "What feature did you complete?" and wait
 ## Step 2: Update ROADMAP.md
 
 Read the current ROADMAP.md file and:
-- **Remove** the completed feature/task entirely (do NOT mark as complete with ✅)
+- **DELETE** the completed feature/task section entirely from the file
+- This means remove the entire section including headers, descriptions, and all tasks
+- Do NOT mark items as complete with ✅ or "COMPLETE" status
+- Do NOT leave sections with status updates - delete them completely
+- The completed work belongs in PROJECT_HISTORY.md, not ROADMAP.md
+- If a section has both completed and incomplete items, delete only the completed items
 - If a feature is only partially complete, update the description to reflect remaining work
 - Preserve the document structure and formatting
 - Keep only current and upcoming work in the roadmap
+- The ROADMAP DOES NOT HAVE NUMBERED ITEMS
 
 ## Step 3: Update PROJECT_HISTORY.md
 
@@ -76,16 +82,13 @@ Optionally include a scope in parentheses if clear (e.g., `feat(email)`, `docs(r
 Use the Bash tool to create a git commit with this format:
 
 ```bash
-git commit -m "$(cat <<'EOF'
-[type]([scope]): [brief description]
+git commit -m "[type]([scope]): [brief description]
 
-[Optional longer description if needed]
+[Full description of what has changed]
 
 🤖 Generated with [Claude Code](https://claude.com/claude-code)
 
-Co-Authored-By: Claude <noreply@anthropic.com>
-EOF
-)"
+Co-Authored-By: Claude <noreply@anthropic.com>"
 ```
 
 **IMPORTANT**:

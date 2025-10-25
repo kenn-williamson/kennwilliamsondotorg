@@ -5,45 +5,16 @@
 
 ## Immediate Priorities
 
-### Legal Compliance & Quick Wins (HIGHEST PRIORITY)
-**Priority**: CRITICAL (Required for Production)
-**Goal**: Complete remaining legal compliance features and high-value UX improvements
-
-**Critical Features Status**:
-- ✅ Account deletion functionality with comprehensive cleanup (completed)
-- ✅ Data export/portability in JSON format (completed)
-- ✅ Password reset flow (completed)
-
-**Remaining Features** (Ordered by Priority):
-
-**Account Termination Notifications** (1 day) - LEGAL COMPLIANCE
-- Deactivation reason field in database
-- Email notification when account deactivated
-- Terms of Service compliance
-
-**Account Deletion Confirmation Email** (low effort) - LEGAL COMPLIANCE
-- Confirmation email when deletion initiated
-- Cancellation link during 30-day grace period
-
-**OAuth User Redirect** (4-6 hours) - UX IMPROVEMENT
-- Preserve intended destination through OAuth flow
-- Encode redirect in OAuth state parameter
-- Quick win for better user experience
-- See [PLANNING-LOGIN-USER-REDIRECT.md](PLANNING-LOGIN-USER-REDIRECT.md)
-
-**Estimated Effort**: 2-3 days for all remaining features
-
-**Status**: 3/3 critical features complete. 3 important features remaining (2 legal + 1 UX).
-
-### Content Development
+### OAuth User Redirect (UX IMPROVEMENT)
 **Priority**: High
-**Goal**: Replace construction pages with actual content
+**Goal**: Preserve intended destination through OAuth flow
+**Estimated Effort**: 4-6 hours
 
 **Tasks**:
-- ✅ Landing page content and design (completed with Cathedral hero and feature showcase)
-- ✅ About page content and design (completed with 9 biography pages)
-- ✅ Role-based access control for personal content (trusted-contact role)
-- Professional presentation for portfolio project
+- Encode redirect in OAuth state parameter
+- Update OAuth callback to honor redirect parameter
+- Quick win for better user experience
+- See [PLANNING-LOGIN-USER-REDIRECT.md](PLANNING-LOGIN-USER-REDIRECT.md)
 
 ## Next Priorities
 

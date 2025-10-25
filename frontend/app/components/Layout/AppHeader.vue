@@ -23,15 +23,22 @@
         <!-- Desktop Navigation (Center) -->
         <div class="hidden md:block">
           <div class="flex items-center space-x-8">
-            <NuxtLink 
-              to="/about" 
+            <NuxtLink
+              to="/about"
               class="nav-link"
               :class="{ 'nav-link-active': $route.path === '/about' }"
             >
               About
             </NuxtLink>
-            <NuxtLink 
-              to="/incidents" 
+            <NuxtLink
+              to="/project"
+              class="nav-link"
+              :class="{ 'nav-link-active': $route.path === '/project' }"
+            >
+              Project
+            </NuxtLink>
+            <NuxtLink
+              to="/incidents"
               class="nav-link"
               :class="{ 'nav-link-active': $route.path === '/incidents' }"
             >
@@ -131,15 +138,22 @@
       <div v-if="showMobileMenu" class="md:hidden border-t border-nautical-600/50 mt-2 pt-4 pb-4 bg-nautical-800/30">
         <div class="flex flex-col space-y-3">
           <!-- Navigation Links -->
-          <NuxtLink 
-            to="/about" 
+          <NuxtLink
+            to="/about"
             class="mobile-nav-link"
             @click="showMobileMenu = false"
           >
             About
           </NuxtLink>
-          <NuxtLink 
-            to="/incidents" 
+          <NuxtLink
+            to="/project"
+            class="mobile-nav-link"
+            @click="showMobileMenu = false"
+          >
+            Project
+          </NuxtLink>
+          <NuxtLink
+            to="/incidents"
             class="mobile-nav-link"
             @click="showMobileMenu = false"
           >

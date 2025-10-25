@@ -203,7 +203,7 @@
             <h3 class="text-xl font-semibold text-nautical-800 mb-3">You Can Leave Anytime</h3>
             <p class="text-nautical-700 leading-relaxed mb-4">
               You can delete your account at any time through your profile settings. When you do,
-              your account data will be deleted within 30 days (see the Privacy Policy for details).
+              your account data will be permanently deleted immediately (see the Privacy Policy for details).
             </p>
 
             <h3 class="text-xl font-semibold text-nautical-800 mb-3">I Can Terminate Accounts</h3>
