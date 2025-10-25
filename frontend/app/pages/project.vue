@@ -180,9 +180,78 @@
               <p class="text-sm text-nautical-600 italic mt-4">
                 <strong>For the technical audience:</strong> This page documents the full journey: what worked, what didn't, course corrections we made, and lessons learned about practicing IA in a complex learning environment. If you're evaluating IA for your team or exploring GM-assisted development, the details below show what the process actually looks like.
               </p>
+
+              <!-- IA Workflow Diagram -->
+              <div class="mt-8">
+                <h4 class="text-lg font-bold text-primary-800 mb-4 text-center">The IA Collaboration Cycle</h4>
+
+                <!-- Desktop: Show diagram -->
+                <div class="hidden md:block">
+                  <MermaidDiagram :diagram="iaWorkflowDiagram" />
+                </div>
+
+                <!-- Mobile: Show message -->
+                <div class="block md:hidden bg-gradient-to-br from-nautical-50 to-primary-50 border-2 border-nautical-300 rounded-lg p-6 text-center">
+                  <p class="text-sm text-nautical-700 mb-2">
+                    📱 Workflow diagram available on larger screens
+                  </p>
+                  <p class="text-xs text-nautical-600">
+                    View this page on a tablet or desktop to see the IA collaboration cycle diagram
+                  </p>
+                </div>
+
+                <p class="text-xs text-nautical-600 italic text-center mt-4">
+                  <strong>The Human-AI Feedback Loop:</strong> Human judgment drives decisions and validates output. Claude accelerates execution and explores patterns. Tests provide fast feedback. Iteration happens continuously. This cycle ran hundreds of times over 2 months.
+                </p>
+              </div>
             </section>
 
-            <!-- Section 3: Architecture -->
+            <!-- Section 3: What the Site Does -->
+            <section id="what-it-does" class="mb-12 scroll-mt-24">
+              <h2 class="section-heading">What the Site Does</h2>
+
+              <p class="text-nautical-800 leading-relaxed mb-6">
+                This isn't just a technical demonstration. Real users interact with real features requiring real architecture decisions.
+              </p>
+
+              <div class="space-y-6">
+                <div class="border-l-4 border-primary-500 pl-4 bg-primary-50 p-4 rounded-r-lg">
+                  <h3 class="text-lg font-bold text-primary-800 mb-2">Incident Timers</h3>
+                  <p class="text-sm text-nautical-700 mb-2">
+                    Users track recovery milestones (days since last incident). Each user controls their timer's visibility through two settings: "Show timer at my personal slug?" and "Show timer in the public directory?" Simple feature on the surface.
+                  </p>
+                  <p class="text-sm text-nautical-700">
+                    <strong class="text-primary-800">What it drove:</strong> Feature-based role system (<code class="bg-nautical-100 px-1 text-xs">email_verified</code> to create/edit timers, preventing spam accounts), user preference architecture, public/protected API routing patterns.
+                  </p>
+                </div>
+
+                <div class="border-l-4 border-accent-500 pl-4 bg-accent-50/30 p-4 rounded-r-lg">
+                  <h3 class="text-lg font-bold text-primary-800 mb-2">Motivational Phrases</h3>
+                  <p class="text-sm text-nautical-700 mb-2">
+                    Community members suggest inspirational quotes. Admin reviews and approves via moderation panel. Approved phrases appear in daily rotation for all users. Straightforward workflow.
+                  </p>
+                  <p class="text-sm text-nautical-700">
+                    <strong class="text-primary-800">What it drove:</strong> Domain event system with observer pattern, AWS SES integration for approval notifications, email template architecture (Askama compile-time verification), admin panel with moderation queue.
+                  </p>
+                </div>
+
+                <div class="border-l-4 border-primary-600 pl-4 bg-sky-50 p-4 rounded-r-lg">
+                  <h3 class="text-lg font-bold text-primary-800 mb-2">Personal Testimony & Access Requests</h3>
+                  <p class="text-sm text-nautical-700 mb-2">
+                    Public platform for professional work and faith journey. Personal content (Origins, The Wilderness, Finding Faith, etc.) requires <code class="bg-nautical-100 px-1 text-xs">trusted-contact</code> role. Users request access, I approve manually.
+                  </p>
+                  <p class="text-sm text-nautical-700">
+                    <strong class="text-primary-800">What it drove:</strong> SEO requirements (Nuxt SSR for search indexing), role-based content gating, access request workflow with email notifications, data privacy architecture (GDPR/CCPA self-service deletion and export).
+                  </p>
+                </div>
+              </div>
+
+              <p class="text-sm text-nautical-600 italic mt-6">
+                These straightforward user features required sophisticated technical architecture. The sections below explain how we built them and what we learned along the way.
+              </p>
+            </section>
+
+            <!-- Section 4: Architecture -->
             <section id="architecture" class="mb-12 scroll-mt-24">
               <h2 class="section-heading">Architecture</h2>
 
@@ -264,6 +333,31 @@
                     </ul>
                   </div>
                 </div>
+
+                <!-- Architecture Diagram -->
+                <div class="mt-8">
+                  <h4 class="text-lg font-bold text-primary-800 mb-4 text-center">Request Flow Architecture</h4>
+
+                  <!-- Desktop: Show diagram -->
+                  <div class="hidden md:block">
+                    <MermaidDiagram :diagram="architectureDiagram" />
+                  </div>
+
+                  <!-- Mobile: Show message -->
+                  <div class="block md:hidden bg-gradient-to-br from-nautical-50 to-primary-50 border-2 border-nautical-300 rounded-lg p-6 text-center">
+                    <p class="text-sm text-nautical-700 mb-2">
+                      📱 Architecture diagram available on larger screens
+                    </p>
+                    <p class="text-xs text-nautical-600">
+                      View this page on a tablet or desktop to see the interactive request flow diagram
+                    </p>
+                  </div>
+
+                  <p class="text-xs text-nautical-600 italic text-center mt-4">
+                    <strong>Four distinct pathways:</strong> ① Built-in Session (Green) - nuxt-auth-utils automatic route reads cookie, no backend/DB | ② Custom Auth Routes (Steel) - Login/register/profile hit Rust backend and update session | ③ SSR (Blue) - Gets session + fetches page data from backend | ④ Direct Backend (Cyan dashed) - Client-side data operations bypass Nuxt.<br/>
+                    * All HTTP traffic reverse-proxied through Nginx (SSL termination, routing). Pathways ②③④ share single Rust → PostgreSQL connection.
+                  </p>
+                </div>
               </div>
 
               <div>
@@ -285,10 +379,10 @@
 
                 <!-- Backend Badges -->
                 <div class="flex flex-wrap gap-3 mb-4">
-                  <img src="https://img.shields.io/badge/Rust-000000?style=for-the-badge&logo=rust&logoColor=white" alt="Rust" />
-                  <img src="https://img.shields.io/badge/Actix--Web-000000?style=for-the-badge&logo=rust&logoColor=white" alt="Actix-Web" />
-                  <img src="https://img.shields.io/badge/PostgreSQL-4169E1?style=for-the-badge&logo=postgresql&logoColor=white" alt="PostgreSQL" />
-                  <img src="https://img.shields.io/badge/SQLx-000000?style=for-the-badge&logo=rust&logoColor=white" alt="SQLx" />
+                  <img src="https://img.shields.io/badge/Rust-000000?style=for-the-badge&logo=rust&logoColor=white" alt="Rust" class="tech-badge" />
+                  <img src="https://img.shields.io/badge/Actix--Web-000000?style=for-the-badge&logo=rust&logoColor=white" alt="Actix-Web" class="tech-badge" />
+                  <img src="https://img.shields.io/badge/PostgreSQL-4169E1?style=for-the-badge&logo=postgresql&logoColor=white" alt="PostgreSQL" class="tech-badge" />
+                  <img src="https://img.shields.io/badge/SQLx-000000?style=for-the-badge&logo=rust&logoColor=white" alt="SQLx" class="tech-badge" />
                 </div>
 
                 <ul class="space-y-3">
@@ -316,10 +410,10 @@
 
                 <!-- Frontend Badges -->
                 <div class="flex flex-wrap gap-3 mb-4">
-                  <img src="https://img.shields.io/badge/Nuxt.js-00DC82?style=for-the-badge&logo=nuxtdotjs&logoColor=white" alt="Nuxt.js" />
-                  <img src="https://img.shields.io/badge/Vue.js-4FC08D?style=for-the-badge&logo=vuedotjs&logoColor=white" alt="Vue.js" />
-                  <img src="https://img.shields.io/badge/TypeScript-3178C6?style=for-the-badge&logo=typescript&logoColor=white" alt="TypeScript" />
-                  <img src="https://img.shields.io/badge/TailwindCSS-06B6D4?style=for-the-badge&logo=tailwindcss&logoColor=white" alt="TailwindCSS" />
+                  <img src="https://img.shields.io/badge/Nuxt.js-00DC82?style=for-the-badge&logo=nuxtdotjs&logoColor=white" alt="Nuxt.js" class="tech-badge" />
+                  <img src="https://img.shields.io/badge/Vue.js-4FC08D?style=for-the-badge&logo=vuedotjs&logoColor=white" alt="Vue.js" class="tech-badge" />
+                  <img src="https://img.shields.io/badge/TypeScript-3178C6?style=for-the-badge&logo=typescript&logoColor=white" alt="TypeScript" class="tech-badge" />
+                  <img src="https://img.shields.io/badge/TailwindCSS-06B6D4?style=for-the-badge&logo=tailwindcss&logoColor=white" alt="TailwindCSS" class="tech-badge" />
                 </div>
 
                 <ul class="space-y-3">
@@ -347,9 +441,9 @@
 
                 <!-- Infrastructure Badges -->
                 <div class="flex flex-wrap gap-3 mb-4">
-                  <img src="https://img.shields.io/badge/Docker-2496ED?style=for-the-badge&logo=docker&logoColor=white" alt="Docker" />
-                  <img src="https://img.shields.io/badge/Nginx-009639?style=for-the-badge&logo=nginx&logoColor=white" alt="Nginx" />
-                  <img src="https://img.shields.io/badge/AWS-232F3E?style=for-the-badge&logo=amazonaws&logoColor=white" alt="AWS" />
+                  <img src="https://img.shields.io/badge/Docker-2496ED?style=for-the-badge&logo=docker&logoColor=white" alt="Docker" class="tech-badge" />
+                  <img src="https://img.shields.io/badge/Nginx-009639?style=for-the-badge&logo=nginx&logoColor=white" alt="Nginx" class="tech-badge" />
+                  <img src="https://img.shields.io/badge/AWS-232F3E?style=for-the-badge&logo=amazonaws&logoColor=white" alt="AWS" class="tech-badge" />
                 </div>
 
                 <ul class="space-y-3">
@@ -376,6 +470,12 @@
               <div class="space-y-6">
                 <div class="feature-highlight">
                   <h3 class="feature-highlight-title">Authentication & Security</h3>
+                  <p class="text-sm text-nautical-700 mb-3">
+                    <strong class="text-primary-800">User Need:</strong> Account creation with email/password or Google, email verification to unlock features, password reset when forgotten, self-service account deletion.
+                  </p>
+                  <p class="text-sm text-nautical-700 mb-4">
+                    <strong class="text-primary-800">Technical Implementation:</strong>
+                  </p>
                   <ul class="feature-list">
                     <li><strong>Google OAuth with PKCE:</strong> Proof Key for Code Exchange for enhanced security (architected for multi-provider support)</li>
                     <li><strong>Email verification:</strong> Secure token-based verification (24-hour single-use tokens) required for trusted operations</li>
@@ -386,8 +486,14 @@
 
                 <div class="feature-highlight">
                   <h3 class="feature-highlight-title">Role-Based Access Control (RBAC)</h3>
+                  <p class="text-sm text-nautical-700 mb-3">
+                    <strong class="text-primary-800">User Need:</strong> Control access to features and content. Email verification prevents spam accounts from creating timers/phrases. Trusted contacts can view personal testimony content. Admin moderates phrases and manages users.
+                  </p>
+                  <p class="text-sm text-nautical-700 mb-4">
+                    <strong class="text-primary-800">Technical Implementation:</strong>
+                  </p>
                   <ul class="feature-list">
-                    <li><strong>4-tier role system:</strong> user (base), email-verified, trusted-contact (personal content access), admin (full system)</li>
+                    <li><strong>Feature-based role system:</strong> <code class="bg-nautical-100 px-1 text-xs">user</code> (read-only base), <code class="bg-nautical-100 px-1 text-xs">email-verified</code> (create timers/suggestions), <code class="bg-nautical-100 px-1 text-xs">trusted-contact</code> (view personal content), <code class="bg-nautical-100 px-1 text-xs">admin</code> (full system control)</li>
                     <li><strong>Middleware-based authorization:</strong> Applied at route scope level for clear security boundaries</li>
                     <li><strong>Route scoping:</strong> Public, protected, and admin routes with automatic permission enforcement</li>
                     <li><strong>Flexible role management:</strong> Admin can grant/revoke manageable roles (preserves immutable base role)</li>
@@ -396,6 +502,12 @@
 
                 <div class="feature-highlight">
                   <h3 class="feature-highlight-title">Domain Events & Notifications</h3>
+                  <p class="text-sm text-nautical-700 mb-3">
+                    <strong class="text-primary-800">User Flow:</strong> User suggests phrase → System fires domain event → Admin receives email notification → Admin approves/rejects → System fires approval event → User receives confirmation email. Also handles security alerts and access request notifications.
+                  </p>
+                  <p class="text-sm text-nautical-700 mb-4">
+                    <strong class="text-primary-800">Technical Implementation:</strong>
+                  </p>
                   <ul class="feature-list">
                     <li><strong>Event bus with observer pattern:</strong> Type-safe event routing via TypeId, fire-and-forget async execution</li>
                     <li><strong>Email notification system:</strong> Security alerts, phrase suggestion approvals, access request notifications</li>
@@ -406,16 +518,29 @@
 
                 <div class="feature-highlight">
                   <h3 class="feature-highlight-title">Admin Panel</h3>
+                  <p class="text-sm text-nautical-700 mb-3">
+                    <strong class="text-primary-800">User Need:</strong> Admin (me) needs to moderate phrase suggestions, grant access requests from trusted contacts, manage user accounts, view system statistics, and handle email deliverability issues.
+                  </p>
+                  <p class="text-sm text-nautical-700 mb-4">
+                    <strong class="text-primary-800">Technical Implementation:</strong>
+                  </p>
                   <ul class="feature-list">
-                    <li><strong>User management:</strong> Account activation/deactivation, role assignment, password reset</li>
+                    <li><strong>User management:</strong> Account activation/deactivation, role assignment, password reset, promote to admin</li>
                     <li><strong>Phrase moderation:</strong> Approval workflow for user-submitted motivational phrases with admin review</li>
-                    <li><strong>Email suppression:</strong> Bounce and complaint handling for deliverability compliance</li>
+                    <li><strong>Access request handling:</strong> Review and approve/reject trusted-contact role requests with email notifications</li>
                     <li><strong>System dashboard:</strong> Statistics, user activity, content moderation queue</li>
+                    <li><strong>Email suppression:</strong> Bounce and complaint handling for deliverability compliance</li>
                   </ul>
                 </div>
 
                 <div class="feature-highlight">
                   <h3 class="feature-highlight-title">Data Privacy & Compliance</h3>
+                  <p class="text-sm text-nautical-700 mb-3">
+                    <strong class="text-primary-800">User Need:</strong> Users need control over their data. Self-service account deletion when leaving. Data export for portability. Privacy-respecting design without invasive tracking.
+                  </p>
+                  <p class="text-sm text-nautical-700 mb-4">
+                    <strong class="text-primary-800">Technical Implementation:</strong>
+                  </p>
                   <ul class="feature-list">
                     <li><strong>GDPR/CCPA compliance:</strong> Self-service account deletion (immediate permanent removal), data export in JSON format</li>
                     <li><strong>Normalized auth schema:</strong> 5-table architecture (users, credentials, external_logins, profiles, preferences) with clear data boundaries</li>
@@ -513,6 +638,30 @@
                 <p class="text-nautical-800 leading-relaxed mb-4">
                   Comprehensive test coverage (~600 tests total) across all layers with paradigm-based testing approach.
                   TDD workflow with Claude: write tests defining behavior, Claude implements, validate against specification. Fast feedback loop crucial for learning new patterns.
+                </p>
+              </div>
+
+              <!-- Testing Strategy Diagram -->
+              <div class="mt-8 mb-8">
+                <h4 class="text-lg font-bold text-primary-800 mb-4 text-center">Testing Pyramid: ~600 Tests Across All Layers</h4>
+
+                <!-- Desktop: Show diagram -->
+                <div class="hidden md:block">
+                  <MermaidDiagram :diagram="testingStrategyDiagram" />
+                </div>
+
+                <!-- Mobile: Show message -->
+                <div class="block md:hidden bg-gradient-to-br from-nautical-50 to-primary-50 border-2 border-nautical-300 rounded-lg p-6 text-center">
+                  <p class="text-sm text-nautical-700 mb-2">
+                    📱 Testing diagram available on larger screens
+                  </p>
+                  <p class="text-xs text-nautical-600">
+                    View this page on a tablet or desktop to see the testing pyramid visualization
+                  </p>
+                </div>
+
+                <p class="text-xs text-nautical-600 italic text-center mt-4">
+                  <strong>Paradigm-Based Testing:</strong> Each layer tested at the appropriate level. Repository tests verify database operations with real PostgreSQL. Service tests verify business logic with mocked data. API tests verify HTTP behavior and integration. Frontend tests verify components, composables, and utilities.
                 </p>
               </div>
 
@@ -811,6 +960,10 @@
 
 <script setup>
 import { ref, computed, onMounted, onUnmounted } from 'vue'
+import MermaidDiagram from '~/components/MermaidDiagram.vue'
+import { architectureDiagram } from '~/diagrams/architecture.mermaid'
+import { iaWorkflowDiagram } from '~/diagrams/ia-workflow.mermaid'
+import { testingStrategyDiagram } from '~/diagrams/testing-strategy.mermaid'
 
 const mobileMenuOpen = ref(false)
 const activeSection = ref('overview')
@@ -819,6 +972,7 @@ const activeSection = ref('overview')
 const sections = [
   { id: 'overview', title: 'Project Overview' },
   { id: 'ia-laboratory', title: 'The IA Laboratory' },
+  { id: 'what-it-does', title: 'What the Site Does' },
   { id: 'architecture', title: 'Architecture' },
   { id: 'tech-stack', title: 'Technology Stack' },
   { id: 'features', title: 'Key Features' },
@@ -1020,5 +1174,16 @@ html {
 /* Tech items */
 .tech-item {
   @apply leading-relaxed;
+}
+
+/* Tech badges - make shields larger and more readable */
+.tech-badge {
+  height: 32px;
+  width: auto;
+  transition: transform 0.2s ease;
+}
+
+.tech-badge:hover {
+  transform: scale(1.05);
 }
 </style>

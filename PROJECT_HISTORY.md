@@ -801,6 +801,27 @@
 - Graceful fallback to `/` homepage when no redirect or invalid redirect provided
 - Base64 encoding prevents special characters from breaking URL encoding
 
+#### Interactive Technical Diagrams
+**Achievement**: Enhanced project showcase page with interactive Mermaid diagrams visualizing architecture, IA workflow, and testing strategy.
+
+**Key Deliverables**:
+- MermaidDiagram.vue component with custom steampunk theming matching site aesthetic
+- Three technical diagrams embedded in project showcase page
+- Mobile-responsive design showing diagrams on desktop, helpful message on mobile
+- Enhanced content sections with user-need and technical-implementation explanations
+- Tech badge styling improvements with hover effects
+
+**Technical Implementation**:
+- Mermaid.js integration with custom theme using nautical color palette
+- Three diagram definitions as TypeScript exports:
+  - `architecture.mermaid.ts` - Hybrid API architecture with 4 request pathways
+  - `ia-workflow.mermaid.ts` - Intelligence Augmentation collaboration cycle
+  - `testing-strategy.mermaid.ts` - Testing pyramid with ~600 tests across layers
+- Component features: Auto-initialization, dynamic rendering, error handling, responsive SVG sizing
+- Viewport-aware display logic: Desktop shows interactive diagrams, mobile shows notification
+- Diagram captions explaining technical concepts for non-technical audience
+- Feature sections enhanced with "User Need" + "Technical Implementation" dual perspective
+
 #### Password Reset Flow
 **Achievement**: Complete token-based password reset system with email notifications and secure token handling.
 
