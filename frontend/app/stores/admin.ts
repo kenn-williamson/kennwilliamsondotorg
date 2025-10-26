@@ -65,16 +65,6 @@ export const useAdminStore = defineStore('admin', () => {
     // TODO: Add toast notifications here
   }
 
-  // Get backend URL based on environment
-  const getBackendUrl = () => {
-    // During SSR, use internal Docker network
-    if (process.server) {
-      return 'http://backend:8080/backend'
-    }
-    // On client, use public URL
-    return 'https://localhost/backend'
-  }
-
   const fetchStats = async () => {
     const data = await _handleAction(() => adminServiceInstance.getStats(), 'fetchStats')
     if (data) {

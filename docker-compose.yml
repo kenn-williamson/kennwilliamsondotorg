@@ -79,7 +79,9 @@ services:
       context: ./frontend
       dockerfile: Dockerfile
     environment:
+      NUXT_API_BASE: ${NUXT_API_BASE:-http://backend:8080/backend}
       NUXT_PUBLIC_API_BASE: ${NUXT_PUBLIC_API_BASE:-http://localhost:8080/backend}
+      NUXT_SESSION_PASSWORD: ${NUXT_SESSION_PASSWORD}
       REDIS_URL: redis://redis:6379
       JWT_SECRET: ${JWT_SECRET}
     ports:
