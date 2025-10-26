@@ -115,7 +115,14 @@ impl SnsHandler {
     /// Handle SNS notification (bounce or complaint)
     pub async fn handle_notification(&self, sns_message: &SnsMessage) -> Result<()> {
         // Parse the nested SES notification from the SNS message
+        log::debug!("Parsing SES notification from SNS message: {}", sns_message.message);
+
         let ses_notification: SesNotification = serde_json::from_str(&sns_message.message)
+            .map_err(|e| {
+                log::error!("Failed to deserialize SES notification: {}", e);
+                log::error!("Raw SES message: {}", sns_message.message);
+                e
+            })
             .context("Failed to parse SES notification from SNS message")?;
 
         match ses_notification.notification_type.as_str() {
