@@ -45,12 +45,19 @@ pub struct BounceDetails {
     pub bounce_sub_type: Option<String>,
     pub bounced_recipients: Vec<BouncedRecipient>,
     pub timestamp: String,
+    pub feedback_id: String, // Required by AWS
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub reporting_mta: Option<String>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub remote_mta_ip: Option<String>,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub struct BouncedRecipient {
     pub email_address: String,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub action: Option<String>,
     #[serde(skip_serializing_if = "Option::is_none")]
     pub status: Option<String>,
     #[serde(skip_serializing_if = "Option::is_none")]
@@ -115,14 +122,7 @@ impl SnsHandler {
     /// Handle SNS notification (bounce or complaint)
     pub async fn handle_notification(&self, sns_message: &SnsMessage) -> Result<()> {
         // Parse the nested SES notification from the SNS message
-        log::debug!("Parsing SES notification from SNS message: {}", sns_message.message);
-
         let ses_notification: SesNotification = serde_json::from_str(&sns_message.message)
-            .map_err(|e| {
-                log::error!("Failed to deserialize SES notification: {}", e);
-                log::error!("Raw SES message: {}", sns_message.message);
-                e
-            })
             .context("Failed to parse SES notification from SNS message")?;
 
         match ses_notification.notification_type.as_str() {

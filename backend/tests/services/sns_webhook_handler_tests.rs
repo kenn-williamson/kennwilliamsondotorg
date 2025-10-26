@@ -41,7 +41,8 @@ async fn test_parse_hard_bounce_notification() {
             "bouncedRecipients": [
                 {"emailAddress": "bounce@example.com", "status": "5.1.1", "diagnosticCode": "smtp; 550 5.1.1 user unknown"}
             ],
-            "timestamp": "2025-10-03T12:00:00.000Z"
+            "timestamp": "2025-10-03T12:00:00.000Z",
+            "feedbackId": "test-feedback-id-123"
         },
         "mail": {
             "messageId": "msg-123",
@@ -92,7 +93,8 @@ async fn test_parse_soft_bounce_notification() {
             "bouncedRecipients": [
                 {"emailAddress": "softbounce@example.com", "status": "4.2.2", "diagnosticCode": "mailbox full"}
             ],
-            "timestamp": "2025-10-03T12:00:00.000Z"
+            "timestamp": "2025-10-03T12:00:00.000Z",
+            "feedbackId": "test-feedback-id-456"
         },
         "mail": {
             "messageId": "msg-456",
@@ -169,7 +171,8 @@ async fn test_soft_bounce_threshold_creates_suppression() {
             "bouncedRecipients": [
                 {"emailAddress": "repeated@example.com"}
             ],
-            "timestamp": "2025-10-03T12:00:00.000Z"
+            "timestamp": "2025-10-03T12:00:00.000Z",
+            "feedbackId": "test-feedback-id-789"
         },
         "mail": {"messageId": "msg-789", "source": "noreply@kennwilliamson.org"}
     }"#;
@@ -274,7 +277,8 @@ async fn test_duplicate_bounce_notification_updates_count() {
             "bounceType": "Permanent",
             "bounceSubType": "General",
             "bouncedRecipients": [{"emailAddress": "existing@example.com"}],
-            "timestamp": "2025-10-03T12:00:00.000Z"
+            "timestamp": "2025-10-03T12:00:00.000Z",
+            "feedbackId": "test-feedback-id-999"
         },
         "mail": {"messageId": "msg-999", "source": "noreply@kennwilliamson.org"}
     }"#;
