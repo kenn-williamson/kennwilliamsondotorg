@@ -2,6 +2,32 @@
 
 ## Major Milestones
 
+### Email Forwarding Infrastructure (October 2025)
+**Achievement**: Production-ready catch-all email forwarding system with spam filtering and automatic cleanup.
+
+**Key Deliverables**:
+- **AWS Lambda Email Forwarder**: Node.js Lambda function with spam/virus filtering and automatic email organization
+- **SES Integration**: Complete AWS SES configuration with receipt rules and MX records for `kennwilliamson.org`
+- **S3 Email Storage**: Organized storage with automatic subdirectory categorization (forwarded/spam/virus)
+- **Lifecycle Policies**: Automatic cleanup (30 days for clean, 90 days for spam/virus) with zero maintenance
+- **Catch-All Forwarding**: Any email to `*@kennwilliamson.org` forwards to `kenn@seqtek.com`
+- **Subject Line Enhancement**: Forwarded emails show original subject + sender for easy filtering
+
+**Technical Implementation**:
+- Lambda function with AWS SDK v3 (latest versions: S3 3.917.0, SES 3.916.0)
+- IAM roles with least-privilege permissions (S3 read/write, SES send)
+- Route 53 MX records pointing to SES inbound SMTP
+- SES spam/virus scanning with Lambda-based filtering logic
+- S3 lifecycle policies for cost-effective storage management (~$0.01/month)
+- Infrastructure-as-code approach with CLI deployment (ready for Terraform migration)
+
+**Design Decisions**:
+- **From Address**: `forwarded@kennwilliamson.org` (avoids SPF/DKIM issues)
+- **Subject Format**: `{original_subject} from {original_sender}` (clear at a glance)
+- **Storage Organization**: Subdirectories by verdict (forwarded/spam/virus) for easy review
+- **Retention Strategy**: 30 days for clean (redundant), 90 days for spam/virus (false positive review)
+- **Deployment Method**: Zip upload (appropriate for single function, can migrate to Terraform later)
+
 ### Full-Stack Application Complete
 **Achievement**: End-to-end functional web application with hot reload development environment.
 

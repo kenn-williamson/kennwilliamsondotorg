@@ -1,0 +1,8 @@
+# Dependencies
+node_modules/
+
+# Lambda deployment package
+function.zip
+
+# Logs
+*.log
