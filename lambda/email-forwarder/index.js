@@ -38,6 +38,14 @@ exports.handler = async (event) => {
             const bucket = record.s3.bucket.name;
             const key = decodeURIComponent(record.s3.object.key.replace(/\+/g, ' '));
 
+            // Skip emails already in subdirectories (forwarded/spam/virus)
+            // Only process emails directly in emails/ folder
+            const keyParts = key.split('/');
+            if (keyParts.length > 2) {
+                console.log(`Skipping already-processed email: ${key}`);
+                continue;
+            }
+
             console.log(`Processing email from s3://${bucket}/${key}`);
 
             // Get the email from S3
@@ -153,33 +161,47 @@ function extractHeader(email, headerName) {
  * Modify email headers for forwarding
  */
 function modifyEmailHeaders(emailData, { forwardTo, fromEmail, originalTo, originalFrom }) {
-    // Split headers and body
+    // Split headers and body (email format uses blank line separator)
     const parts = emailData.split(/\r?\n\r?\n/);
     let headers = parts[0];
     const body = parts.slice(1).join('\n\n');
 
-    // Extract original subject
+    // Extract original subject (handles multi-line headers)
     const originalSubject = extractHeader(emailData, 'Subject');
 
     // Remove headers that would cause issues with forwarding
-    headers = headers.replace(/^Return-Path:.*$/mi, '');
-    headers = headers.replace(/^Sender:.*$/mi, '');
-    headers = headers.replace(/^Message-ID:.*$/mi, '');
-    headers = headers.replace(/^DKIM-Signature:.*$/mi, '');
+    // Note: These regexes handle multi-line headers (folded with CRLF + whitespace)
+    headers = removeHeader(headers, 'Return-Path');
+    headers = removeHeader(headers, 'Sender');
+    headers = removeHeader(headers, 'Message-ID');
+    headers = removeHeader(headers, 'DKIM-Signature');
+    headers = removeHeader(headers, 'To');
+    headers = removeHeader(headers, 'From');
+    headers = removeHeader(headers, 'Subject');
 
-    // Replace To and From headers
-    headers = headers.replace(/^To:.*$/mi, `To: ${forwardTo}`);
-    headers = headers.replace(/^From:.*$/mi, `From: ${fromEmail}`);
-
-    // Modify subject to include original sender
+    // Build new headers (simple, single-line format)
     const newSubject = `${originalSubject} from ${originalFrom}`;
-    headers = headers.replace(/^Subject:.*$/mi, `Subject: ${newSubject}`);
 
-    // Add forwarding information headers (for filtering/debugging)
-    headers += `\nX-Original-To: ${originalTo}`;
-    headers += `\nX-Original-From: ${originalFrom}`;
-    headers += `\nX-Forwarded-By: AWS Lambda Email Forwarder`;
+    // Prepend essential headers at the top
+    const newHeaders = [
+        `From: ${fromEmail}`,
+        `To: ${forwardTo}`,
+        `Subject: ${newSubject}`,
+        headers.trim(), // Remaining original headers
+        `X-Original-To: ${originalTo}`,
+        `X-Original-From: ${originalFrom}`,
+        `X-Forwarded-By: AWS Lambda Email Forwarder`
+    ].filter(h => h).join('\n');
 
-    // Reconstruct email
-    return `${headers}\n\n${body}`;
+    // Reconstruct email with proper blank line separator
+    return `${newHeaders}\n\n${body}`;
+}
+
+/**
+ * Remove a header (including multi-line/folded headers)
+ */
+function removeHeader(headers, headerName) {
+    // Match header and any continuation lines (lines starting with whitespace)
+    const regex = new RegExp(`^${headerName}:.*(?:\r?\n[ \t].*)*`, 'gmi');
+    return headers.replace(regex, '');
 }
