@@ -31,11 +31,12 @@ use crate::events::handlers::{
     AccessRequestRejectedEmailHandler, PasswordChangedEmailHandler,
     PhraseSuggestionApprovedEmailHandler, PhraseSuggestionEmailNotificationHandler,
     PhraseSuggestionRejectedEmailHandler, ProfileUpdatedEmailHandler,
+    UserRegisteredEmailHandler,
 };
 use crate::events::types::{
     AccessRequestApprovedEvent, AccessRequestCreatedEvent, AccessRequestRejectedEvent,
     PasswordChangedEvent, PhraseSuggestionApprovedEvent, PhraseSuggestionCreatedEvent,
-    PhraseSuggestionRejectedEvent, ProfileUpdatedEvent,
+    PhraseSuggestionRejectedEvent, ProfileUpdatedEvent, UserRegisteredEvent,
 };
 use crate::events::{EventBus, EventPublisher};
 
@@ -257,6 +258,25 @@ impl ServiceContainer {
             event_bus
                 .register_handler::<ProfileUpdatedEvent>(Box::new(profile_updated_handler))
                 .expect("Failed to register ProfileUpdatedEmailHandler");
+
+            // Create email service for UserRegisteredEmailHandler
+            let user_registered_email_service: Arc<dyn super::email::EmailService> = Arc::new(
+                SesEmailService::with_suppression(
+                    from_email.clone(),
+                    reply_to_email.clone(),
+                    Box::new(PostgresEmailSuppressionRepository::new(pool.clone())),
+                )
+            );
+
+            // Register UserRegisteredEmailHandler
+            let user_registered_handler = UserRegisteredEmailHandler::new(
+                Arc::new(PostgresVerificationTokenRepository::new(pool.clone())),
+                user_registered_email_service,
+                url.clone(),
+            );
+            event_bus
+                .register_handler::<UserRegisteredEvent>(Box::new(user_registered_handler))
+                .expect("Failed to register UserRegisteredEmailHandler");
 
             log::info!("EventBus configured with email notification handlers");
         } else {

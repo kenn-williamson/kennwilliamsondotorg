@@ -9,4 +9,4 @@ pub use access_request::{
 pub use phrase_suggestion::{
     PhraseSuggestionApprovedEvent, PhraseSuggestionCreatedEvent, PhraseSuggestionRejectedEvent,
 };
-pub use security_notification::{PasswordChangedEvent, ProfileUpdatedEvent};
+pub use security_notification::{PasswordChangedEvent, ProfileUpdatedEvent, UserRegisteredEvent};

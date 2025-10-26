@@ -36,11 +36,12 @@ export const SOCIAL_SHARE_CONFIG = {
   },
 } as const
 
-export type ShareImageKey = 'homepage' | 'personal' | 'professional' | 'timer'
+export type ShareImageKey = 'homepage' | 'personal' | 'professional' | 'timer' | 'project'
 
 export const SHARE_IMAGES: Record<ShareImageKey, string> = {
   homepage: '/images/homepage-share.jpg',
   personal: '/images/personal-share.jpg',
   professional: '/images/professional-share.jpg',
   timer: '/images/timer-share.jpg',
+  project: '/images/project-share.jpg',
 }

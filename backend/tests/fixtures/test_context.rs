@@ -248,12 +248,30 @@ impl TestContextBuilder {
         use backend::services::incident_timer::IncidentTimerService;
         use backend::services::phrase::PhraseService;
         use backend::services::admin::{AccessRequestModerationService, UserManagementService, PhraseModerationService, StatsService};
+        use backend::events::event_bus::InMemoryEventBus;
+        use backend::events::{EventBus, EventPublisher};
+        use backend::events::handlers::UserRegisteredEmailHandler;
+        use backend::events::types::UserRegisteredEvent;
 
         let test_container = TestContainer::builder().build().await.expect("Failed to create test container");
         let jwt_secret = "test-jwt-secret-for-api-tests".to_string();
 
         // Create mock email service for testing
         let email_service = Arc::new(MockEmailService::new());
+
+        // Create event bus and register UserRegisteredEmailHandler
+        let mut event_bus = InMemoryEventBus::new();
+
+        let user_registered_handler = UserRegisteredEmailHandler::new(
+            Arc::new(PostgresVerificationTokenRepository::new(test_container.pool.clone())),
+            email_service.clone(),
+            "https://localhost",
+        );
+        event_bus
+            .register_handler::<UserRegisteredEvent>(Box::new(user_registered_handler))
+            .expect("Failed to register UserRegisteredEmailHandler");
+
+        let event_publisher: Arc<dyn EventPublisher> = Arc::new(event_bus);
 
         // Create mock OAuth service for testing
         use backend::services::auth::oauth::MockGoogleOAuthService;
@@ -273,6 +291,7 @@ impl TestContextBuilder {
             .email_service(Box::new(email_service.as_ref().clone()))
             .google_oauth_service(Box::new(mock_oauth))
             .pkce_storage(Box::new(backend::repositories::mocks::MockPkceStorage::new()))
+            .event_publisher(event_publisher)
             .jwt_secret(jwt_secret.clone())
             .build());
 

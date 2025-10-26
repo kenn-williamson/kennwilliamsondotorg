@@ -4,6 +4,77 @@ use serde::Serialize;
 use std::any::Any;
 use uuid::Uuid;
 
+/// Event emitted when a new user registers
+///
+/// This event triggers a verification email to the user.
+#[derive(Clone, Debug, Serialize)]
+pub struct UserRegisteredEvent {
+    /// ID of the newly registered user
+    pub user_id: Uuid,
+
+    /// Email address of the user
+    pub user_email: String,
+
+    /// Display name of the user (for email personalization)
+    pub user_display_name: String,
+
+    /// When this event occurred
+    pub occurred_at: DateTime<Utc>,
+
+    /// Optional correlation ID for tracing
+    pub correlation_id: Option<String>,
+}
+
+impl UserRegisteredEvent {
+    /// Create a new UserRegisteredEvent
+    ///
+    /// # Arguments
+    /// * `user_id` - ID of the newly registered user
+    /// * `user_email` - Email address of the user
+    /// * `user_display_name` - Display name for personalization
+    pub fn new(
+        user_id: Uuid,
+        user_email: impl Into<String>,
+        user_display_name: impl Into<String>,
+    ) -> Self {
+        Self {
+            user_id,
+            user_email: user_email.into(),
+            user_display_name: user_display_name.into(),
+            occurred_at: Utc::now(),
+            correlation_id: None,
+        }
+    }
+
+    /// Create a new event with correlation ID
+    pub fn with_correlation_id(mut self, correlation_id: impl Into<String>) -> Self {
+        self.correlation_id = Some(correlation_id.into());
+        self
+    }
+}
+
+impl DomainEvent for UserRegisteredEvent {
+    fn event_type(&self) -> &'static str {
+        "user.registered"
+    }
+
+    fn occurred_at(&self) -> DateTime<Utc> {
+        self.occurred_at
+    }
+
+    fn correlation_id(&self) -> Option<&str> {
+        self.correlation_id.as_deref()
+    }
+
+    fn as_any(&self) -> &dyn Any {
+        self
+    }
+
+    fn clone_boxed(&self) -> Box<dyn DomainEvent> {
+        Box::new(self.clone())
+    }
+}
+
 /// Event emitted when a user changes their password
 ///
 /// This event triggers a security notification email to the user.
@@ -147,6 +218,60 @@ impl DomainEvent for ProfileUpdatedEvent {
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    #[test]
+    fn test_user_registered_event() {
+        let user_id = Uuid::new_v4();
+        let event = UserRegisteredEvent::new(
+            user_id,
+            "test@example.com",
+            "Test User",
+        );
+
+        assert_eq!(event.user_id, user_id);
+        assert_eq!(event.user_email, "test@example.com");
+        assert_eq!(event.user_display_name, "Test User");
+        assert_eq!(event.event_type(), "user.registered");
+        assert!(event.correlation_id.is_none());
+    }
+
+    #[test]
+    fn test_user_registered_with_correlation_id() {
+        let event = UserRegisteredEvent::new(
+            Uuid::new_v4(),
+            "test@example.com",
+            "Test User",
+        )
+        .with_correlation_id("test-correlation-id");
+
+        assert_eq!(event.correlation_id(), Some("test-correlation-id"));
+    }
+
+    #[test]
+    fn test_user_registered_event_is_cloneable() {
+        let event = UserRegisteredEvent::new(
+            Uuid::new_v4(),
+            "test@example.com",
+            "Test User",
+        );
+        let cloned = event.clone();
+        assert_eq!(event.user_id, cloned.user_id);
+        assert_eq!(event.user_email, cloned.user_email);
+        assert_eq!(event.user_display_name, cloned.user_display_name);
+    }
+
+    #[test]
+    fn test_user_registered_event_is_serializable() {
+        let event = UserRegisteredEvent::new(
+            Uuid::new_v4(),
+            "test@example.com",
+            "Test User",
+        );
+        let json = serde_json::to_string(&event).expect("Failed to serialize");
+        assert!(json.contains("user_id"));
+        assert!(json.contains("test@example.com"));
+        assert!(json.contains("Test User"));
+    }
 
     #[test]
     fn test_password_changed_event() {

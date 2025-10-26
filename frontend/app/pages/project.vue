@@ -1049,7 +1049,7 @@ useHead({
 // Social media sharing
 useSocialShare({
   title: 'Intelligence Augmentation in Practice - Building KennWilliamson.org',
-  imageKey: 'technical'
+  imageKey: 'project'
 })
 </script>
 

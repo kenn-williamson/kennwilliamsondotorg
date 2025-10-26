@@ -7,6 +7,7 @@ use backend::repositories::traits::email_suppression_repository::{
 };
 use backend::services::email::ses_email_service::SesEmailService;
 use backend::services::email::EmailService;
+use backend::services::email::templates::{Email, EmailTemplate, VerificationEmailTemplate};
 
 #[tokio::test]
 async fn test_send_verification_email_succeeds_when_not_suppressed() {
@@ -18,15 +19,26 @@ async fn test_send_verification_email_succeeds_when_not_suppressed() {
         Box::new(suppression_repo),
     );
 
-    // When: Sending to a non-suppressed email
-    let result = email_service
-        .send_verification_email(
-            "clean@example.com",
-            Some("Test User"),
-            "test-token-123",
-            "https://localhost",
-        )
-        .await;
+    // When: Sending to a non-suppressed email using template
+    let template = VerificationEmailTemplate::new(
+        "Test User",
+        "test-token-123",
+        "https://localhost",
+    );
+
+    let html_body = template.render_html().unwrap();
+    let text_body = template.render_plain_text();
+    let subject = template.subject();
+
+    let email = Email::builder()
+        .to("clean@example.com")
+        .subject(subject)
+        .text_body(text_body)
+        .html_body(html_body)
+        .build()
+        .unwrap();
+
+    let result = email_service.send_email(email).await;
 
     // Then: Email should either succeed OR fail with AWS error (NOT suppression error)
     // Note: May succeed if AWS credentials are configured, or fail if not
@@ -60,15 +72,26 @@ async fn test_send_verification_email_blocked_when_transactional_suppressed() {
         Box::new(suppression_repo),
     );
 
-    // When: Sending verification email to suppressed address
-    let result = email_service
-        .send_verification_email(
-            "bounced@example.com",
-            Some("Test User"),
-            "test-token-123",
-            "https://localhost",
-        )
-        .await;
+    // When: Sending verification email to suppressed address using template
+    let template = VerificationEmailTemplate::new(
+        "Test User",
+        "test-token-123",
+        "https://localhost",
+    );
+
+    let html_body = template.render_html().unwrap();
+    let text_body = template.render_plain_text();
+    let subject = template.subject();
+
+    let email = Email::builder()
+        .to("bounced@example.com")
+        .subject(subject)
+        .text_body(text_body)
+        .html_body(html_body)
+        .build()
+        .unwrap();
+
+    let result = email_service.send_email(email).await;
 
     // Then: Email should be blocked with suppression error
     assert!(result.is_err());
@@ -103,15 +126,26 @@ async fn test_send_verification_email_allowed_when_only_marketing_suppressed() {
         Box::new(suppression_repo),
     );
 
-    // When: Sending verification email (transactional) to marketing-only suppressed address
-    let result = email_service
-        .send_verification_email(
-            "unsubscribed@example.com",
-            Some("Test User"),
-            "test-token-123",
-            "https://localhost",
-        )
-        .await;
+    // When: Sending verification email (transactional) to marketing-only suppressed address using template
+    let template = VerificationEmailTemplate::new(
+        "Test User",
+        "test-token-123",
+        "https://localhost",
+    );
+
+    let html_body = template.render_html().unwrap();
+    let text_body = template.render_plain_text();
+    let subject = template.subject();
+
+    let email = Email::builder()
+        .to("unsubscribed@example.com")
+        .subject(subject)
+        .text_body(text_body)
+        .html_body(html_body)
+        .build()
+        .unwrap();
+
+    let result = email_service.send_email(email).await;
 
     // Then: Email should be allowed (transactional emails bypass marketing suppression)
     // Note: May succeed if AWS credentials are configured, or fail with AWS error (NOT suppression)
@@ -145,15 +179,26 @@ async fn test_suppression_check_happens_before_ses_call() {
         Box::new(suppression_repo),
     );
 
-    // When: Attempting to send to suppressed email
-    let result = email_service
-        .send_verification_email(
-            "complaint@example.com",
-            Some("Test User"),
-            "test-token-123",
-            "https://localhost",
-        )
-        .await;
+    // When: Attempting to send to suppressed email using template
+    let template = VerificationEmailTemplate::new(
+        "Test User",
+        "test-token-123",
+        "https://localhost",
+    );
+
+    let html_body = template.render_html().unwrap();
+    let text_body = template.render_plain_text();
+    let subject = template.subject();
+
+    let email = Email::builder()
+        .to("complaint@example.com")
+        .subject(subject)
+        .text_body(text_body)
+        .html_body(html_body)
+        .build()
+        .unwrap();
+
+    let result = email_service.send_email(email).await;
 
     // Then: Should fail with suppression error, NOT AWS error
     // This proves suppression check happens before SES API call
@@ -176,15 +221,26 @@ async fn test_email_service_without_suppression_repository_still_works() {
         Box::new(suppression_repo),
     );
 
-    // When: Sending verification email
-    let result = email_service
-        .send_verification_email(
-            "any@example.com",
-            Some("Test User"),
-            "test-token-123",
-            "https://localhost",
-        )
-        .await;
+    // When: Sending verification email using template
+    let template = VerificationEmailTemplate::new(
+        "Test User",
+        "test-token-123",
+        "https://localhost",
+    );
+
+    let html_body = template.render_html().unwrap();
+    let text_body = template.render_plain_text();
+    let subject = template.subject();
+
+    let email = Email::builder()
+        .to("any@example.com")
+        .subject(subject)
+        .text_body(text_body)
+        .html_body(html_body)
+        .build()
+        .unwrap();
+
+    let result = email_service.send_email(email).await;
 
     // Then: Should either succeed OR fail with AWS error (NOT suppression error)
     // This ensures backwards compatibility - code with suppression repo still works

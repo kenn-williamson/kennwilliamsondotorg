@@ -143,7 +143,7 @@ mod tests {
         };
 
         let service = GoogleOAuthService::new(config).unwrap();
-        let result = service.get_authorization_url().await;
+        let result = service.get_authorization_url(None).await;
 
         assert!(result.is_ok());
         let (url, csrf_token, verifier) = result.unwrap();

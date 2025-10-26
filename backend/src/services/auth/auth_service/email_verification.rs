@@ -50,10 +50,27 @@ impl AuthService {
         // Store hashed token in database
         verification_repo.create_token(&token_data).await?;
 
-        // Send verification email with plain token
-        email_service
-            .send_verification_email(&user.email, Some(&user.display_name), &token, frontend_url)
-            .await?;
+        // Build and send verification email using template
+        use crate::services::email::templates::{Email, EmailTemplate, VerificationEmailTemplate};
+
+        let template = VerificationEmailTemplate::new(
+            &user.display_name,
+            &token,
+            frontend_url,
+        );
+
+        let html_body = template.render_html()?;
+        let text_body = template.render_plain_text();
+        let subject = template.subject();
+
+        let email = Email::builder()
+            .to(&user.email)
+            .subject(subject)
+            .text_body(text_body)
+            .html_body(html_body)
+            .build()?;
+
+        email_service.send_email(email).await?;
 
         Ok(SendVerificationEmailResponse {
             message: "Verification email sent. Please check your inbox.".to_string(),

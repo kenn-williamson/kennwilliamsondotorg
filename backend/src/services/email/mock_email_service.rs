@@ -107,76 +107,6 @@ impl EmailService for MockEmailService {
 
         Ok(())
     }
-
-    async fn send_verification_email(
-        &self,
-        to_email: &str,
-        to_name: Option<&str>,
-        verification_token: &str,
-        frontend_url: &str,
-    ) -> Result<()> {
-        // Use the new template system for consistency
-        use super::templates::{VerificationEmailTemplate, EmailTemplate};
-
-        let template = VerificationEmailTemplate::new(
-            to_name.unwrap_or("User"),
-            verification_token,
-            frontend_url,
-        );
-
-        let html_body = template.render_html()?;
-        let text_body = template.render_plain_text();
-        let subject = template.subject();
-
-        let email = Email {
-            to: vec![to_email.to_string()],
-            subject,
-            text_body,
-            html_body: Some(html_body),
-            reply_to: None,
-        };
-
-        self.sent_emails.lock().unwrap().push(email);
-
-        log::info!("Mock verification email sent to: {}", to_email);
-
-        Ok(())
-    }
-
-    async fn send_password_reset_email(
-        &self,
-        to_email: &str,
-        to_name: Option<&str>,
-        reset_token: &str,
-        frontend_url: &str,
-    ) -> Result<()> {
-        // Use the new template system for consistency
-        use super::templates::{PasswordResetEmailTemplate, EmailTemplate};
-
-        let template = PasswordResetEmailTemplate::new(
-            to_name.unwrap_or("User"),
-            reset_token,
-            frontend_url,
-        );
-
-        let html_body = template.render_html()?;
-        let text_body = template.render_plain_text();
-        let subject = template.subject();
-
-        let email = Email {
-            to: vec![to_email.to_string()],
-            subject,
-            text_body,
-            html_body: Some(html_body),
-            reply_to: None,
-        };
-
-        self.sent_emails.lock().unwrap().push(email);
-
-        log::info!("Mock password reset email sent to: {}", to_email);
-
-        Ok(())
-    }
 }
 
 #[cfg(test)]
@@ -184,24 +114,36 @@ mod tests {
     use super::*;
 
     #[tokio::test]
-    async fn test_mock_email_service() {
+    async fn test_mock_email_service_with_template() {
+        use crate::services::email::templates::{VerificationEmailTemplate, EmailTemplate};
+
         let service = MockEmailService::new();
 
-        service
-            .send_verification_email(
-                "test@example.com",
-                Some("Test User"),
-                "test-token-123",
-                "https://example.com",
-            )
-            .await
+        // Use template pattern directly (matches new approach)
+        let template = VerificationEmailTemplate::new(
+            "Test User",
+            "test-token-123",
+            "https://example.com",
+        );
+
+        let html_body = template.render_html().unwrap();
+        let text_body = template.render_plain_text();
+        let subject = template.subject();
+
+        let email = Email::builder()
+            .to("test@example.com")
+            .subject(subject)
+            .text_body(text_body)
+            .html_body(html_body)
+            .build()
             .unwrap();
+
+        service.send_email(email).await.unwrap();
 
         assert_eq!(service.count(), 1);
 
         let emails = service.get_sent_emails();
         assert_eq!(emails[0].to, vec!["test@example.com"]);
-        // Updated to match new template-based subject
         assert!(emails[0].subject.contains("Verify"));
         assert!(emails[0].subject.contains("Email Address"));
         assert!(emails[0].text_body.contains("test-token-123"));

@@ -1673,16 +1673,15 @@ mod tests {
 
         let (_url, csrf_token) = result.unwrap();
 
-        // Verify that the redirect was encoded in the stored state
-        // We'll verify this by checking the PKCE storage has the enhanced state
-        let pkce_storage = service.pkce_storage.as_ref().unwrap();
-
-        // Build the expected state key
+        // Verify that the redirect was encoded in the csrf_token
+        // The returned csrf_token.secret() should contain the enhanced state (csrf|encoded_redirect)
         let encoded_redirect = base64_engine.encode(redirect.unwrap().as_bytes());
-        let expected_state = format!("{}|{}", csrf_token.secret(), encoded_redirect);
+        assert!(csrf_token.secret().contains('|'), "State should contain redirect separator");
+        assert!(csrf_token.secret().contains(&encoded_redirect), "State should contain encoded redirect");
 
-        // Try to retrieve with the enhanced state (should work)
-        let verifier = pkce_storage.retrieve_and_delete_pkce(&expected_state).await;
+        // Verify PKCE storage works with the enhanced state
+        let pkce_storage = service.pkce_storage.as_ref().unwrap();
+        let verifier = pkce_storage.retrieve_and_delete_pkce(csrf_token.secret()).await;
         assert!(verifier.is_ok());
         assert!(verifier.unwrap().is_some());
     }

@@ -48,10 +48,23 @@ impl AuthService {
             // Store hashed token in database
             password_reset_repo.create_token(&token_data).await?;
 
-            // Send password reset email with plain token
-            email_service
-                .send_password_reset_email(&user.email, Some(&user.display_name), &token, frontend_url)
-                .await?;
+            // Send password reset email using template
+            use crate::services::email::templates::{Email, EmailTemplate, PasswordResetEmailTemplate};
+
+            let template = PasswordResetEmailTemplate::new(&user.display_name, &token, frontend_url);
+
+            let html_body = template.render_html()?;
+            let text_body = template.render_plain_text();
+            let subject = template.subject();
+
+            let email = Email::builder()
+                .to(&user.email)
+                .subject(subject)
+                .text_body(text_body)
+                .html_body(html_body)
+                .build()?;
+
+            email_service.send_email(email).await?;
         }
 
         // Return same response regardless of whether user exists (security)

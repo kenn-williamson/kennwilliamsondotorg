@@ -1,15 +1,15 @@
 use crate::events::types::{
     AccessRequestApprovedEvent, AccessRequestCreatedEvent, AccessRequestRejectedEvent,
     PasswordChangedEvent, PhraseSuggestionApprovedEvent, PhraseSuggestionCreatedEvent,
-    PhraseSuggestionRejectedEvent, ProfileUpdatedEvent,
+    PhraseSuggestionRejectedEvent, ProfileUpdatedEvent, UserRegisteredEvent,
 };
 use crate::events::EventHandler;
-use crate::repositories::traits::{AdminRepository, UserRepository};
+use crate::repositories::traits::{AdminRepository, UserRepository, VerificationTokenRepository};
 use crate::services::email::templates::{
     AccessRequestApprovedTemplate, AccessRequestNotificationTemplate,
     AccessRequestRejectedTemplate, Email, EmailTemplate, PasswordChangedEmailTemplate,
     PhraseSuggestionApprovedTemplate, PhraseSuggestionNotificationTemplate,
-    PhraseSuggestionRejectedTemplate, ProfileUpdatedEmailTemplate,
+    PhraseSuggestionRejectedTemplate, ProfileUpdatedEmailTemplate, VerificationEmailTemplate,
 };
 use crate::services::email::EmailService;
 use anyhow::Result;
@@ -884,4 +884,115 @@ impl EventHandler<ProfileUpdatedEvent> for ProfileUpdatedEmailHandler {
     fn handler_name(&self) -> &'static str {
         "ProfileUpdatedEmailHandler"
     }
+}
+
+/// Email notification handler for user registered events
+///
+/// Sends verification email to the user when they register.
+pub struct UserRegisteredEmailHandler {
+    verification_token_repository: Arc<dyn VerificationTokenRepository>,
+    email_service: Arc<dyn EmailService>,
+    frontend_url: String,
+}
+
+impl UserRegisteredEmailHandler {
+    /// Create a new UserRegisteredEmailHandler
+    ///
+    /// # Arguments
+    /// * `verification_token_repository` - Repository for storing verification tokens
+    /// * `email_service` - Service for sending emails
+    /// * `frontend_url` - Base URL for frontend links
+    pub fn new(
+        verification_token_repository: Arc<dyn VerificationTokenRepository>,
+        email_service: Arc<dyn EmailService>,
+        frontend_url: impl Into<String>,
+    ) -> Self {
+        Self {
+            verification_token_repository,
+            email_service,
+            frontend_url: frontend_url.into(),
+        }
+    }
+}
+
+#[async_trait]
+impl EventHandler<UserRegisteredEvent> for UserRegisteredEmailHandler {
+    async fn handle(&self, event: &UserRegisteredEvent) -> Result<()> {
+        log::info!(
+            "Handling UserRegisteredEvent for user '{}' ({})",
+            event.user_display_name,
+            event.user_email
+        );
+
+        // Generate secure verification token
+        let token = generate_verification_token();
+        let token_hash = hash_verification_token(&token);
+
+        // Create token data with 24-hour expiration
+        use chrono::{Duration, Utc};
+        use crate::repositories::traits::verification_token_repository::CreateVerificationTokenData;
+
+        let expires_at = Utc::now() + Duration::hours(24);
+        let token_data = CreateVerificationTokenData {
+            user_id: event.user_id,
+            token_hash,
+            expires_at,
+        };
+
+        // Store hashed token in database
+        self.verification_token_repository
+            .create_token(&token_data)
+            .await?;
+
+        // Build email template
+        let template = VerificationEmailTemplate::new(
+            &event.user_display_name,
+            &token,
+            &self.frontend_url,
+        );
+
+        // Render template
+        let html_body = template.render_html()?;
+        let text_body = template.render_plain_text();
+        let subject = template.subject();
+
+        // Build email
+        let email = Email::builder()
+            .to(&event.user_email)
+            .subject(subject)
+            .text_body(text_body)
+            .html_body(html_body)
+            .build()?;
+
+        // Send email
+        self.email_service.send_email(email).await?;
+
+        log::info!(
+            "Sent verification email to user '{}' ({})",
+            event.user_display_name,
+            event.user_email
+        );
+
+        Ok(())
+    }
+
+    fn handler_name(&self) -> &'static str {
+        "UserRegisteredEmailHandler"
+    }
+}
+
+/// Generate a secure random verification token (32 bytes = 256 bits)
+fn generate_verification_token() -> String {
+    use rand::Rng;
+    let mut token_bytes = [0u8; 32];
+    rand::rng().fill(&mut token_bytes);
+    hex::encode(token_bytes)
+}
+
+/// Hash verification token using SHA-256 for storage
+fn hash_verification_token(token: &str) -> String {
+    use sha2::{Digest, Sha256};
+    let mut hasher = Sha256::new();
+    hasher.update(token.as_bytes());
+    hex::encode(hasher.finalize())
 }
