@@ -11,6 +11,7 @@ pub struct SesEmailService {
     from_email: String,
     reply_to_email: Option<String>,
     suppression_repo: Option<Box<dyn EmailSuppressionRepository>>,
+    configuration_set_name: Option<String>,
 }
 
 impl SesEmailService {
@@ -20,11 +21,13 @@ impl SesEmailService {
         from_email: String,
         reply_to_email: Option<String>,
         suppression_repo: Box<dyn EmailSuppressionRepository>,
+        configuration_set_name: Option<String>,
     ) -> Self {
         Self {
             from_email,
             reply_to_email,
             suppression_repo: Some(suppression_repo),
+            configuration_set_name,
         }
     }
 
@@ -126,6 +129,11 @@ impl EmailService for SesEmailService {
             email_request = email_request.reply_to_addresses(reply_to);
         } else if let Some(reply_to) = &self.reply_to_email {
             email_request = email_request.reply_to_addresses(reply_to);
+        }
+
+        // Add configuration set if specified (for bounce/complaint tracking)
+        if let Some(config_set) = &self.configuration_set_name {
+            email_request = email_request.configuration_set_name(config_set);
         }
 
         email_request.send().await

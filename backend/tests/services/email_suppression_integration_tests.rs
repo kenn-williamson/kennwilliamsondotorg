@@ -17,6 +17,7 @@ async fn test_send_verification_email_succeeds_when_not_suppressed() {
         "noreply@kennwilliamson.org".to_string(),
         Some("support@kennwilliamson.org".to_string()),
         Box::new(suppression_repo),
+        None, // No configuration set needed for tests
     );
 
     // When: Sending to a non-suppressed email using template
@@ -70,6 +71,7 @@ async fn test_send_verification_email_blocked_when_transactional_suppressed() {
         "noreply@kennwilliamson.org".to_string(),
         Some("support@kennwilliamson.org".to_string()),
         Box::new(suppression_repo),
+        None, // No configuration set needed for tests
     );
 
     // When: Sending verification email to suppressed address using template
@@ -124,6 +126,7 @@ async fn test_send_verification_email_allowed_when_only_marketing_suppressed() {
         "noreply@kennwilliamson.org".to_string(),
         Some("support@kennwilliamson.org".to_string()),
         Box::new(suppression_repo),
+        None, // No configuration set needed for tests
     );
 
     // When: Sending verification email (transactional) to marketing-only suppressed address using template
@@ -177,6 +180,7 @@ async fn test_suppression_check_happens_before_ses_call() {
         "noreply@kennwilliamson.org".to_string(),
         Some("support@kennwilliamson.org".to_string()),
         Box::new(suppression_repo),
+        None, // No configuration set needed for tests
     );
 
     // When: Attempting to send to suppressed email using template
@@ -219,6 +223,7 @@ async fn test_email_service_without_suppression_repository_still_works() {
         "noreply@kennwilliamson.org".to_string(),
         Some("support@kennwilliamson.org".to_string()),
         Box::new(suppression_repo),
+        None, // No configuration set needed for tests
     );
 
     // When: Sending verification email using template

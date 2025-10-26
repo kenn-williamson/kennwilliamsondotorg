@@ -75,23 +75,27 @@ impl ServiceContainer {
         let from_email = std::env::var("SES_FROM_EMAIL")
             .unwrap_or_else(|_| "noreply@kennwilliamson.org".to_string());
         let reply_to_email = std::env::var("SES_REPLY_TO_EMAIL").ok();
+        let configuration_set_name = std::env::var("SES_CONFIGURATION_SET_NAME").ok();
         let frontend_url = std::env::var("FRONTEND_URL").ok();
 
         // Log configuration warnings
         if frontend_url.is_none() {
             log::warn!("FRONTEND_URL not set - email notifications will be disabled");
         }
+        if configuration_set_name.is_none() {
+            log::warn!("SES_CONFIGURATION_SET_NAME not set - bounce/complaint tracking disabled");
+        }
 
-        // Clone email config before moving (needed for multiple email service instances)
-        let from_email_for_auth = from_email.clone();
-        let reply_to_email_for_auth = reply_to_email.clone();
-
-        // Create email service with suppression checking
+        // Create single shared email service instance with suppression checking
+        // This Arc<dyn EmailService> will be reused across all event handlers and services
         let suppression_repo = Box::new(PostgresEmailSuppressionRepository::new(pool.clone()));
-        let email_service = SesEmailService::with_suppression(
-            from_email_for_auth,
-            reply_to_email_for_auth,
-            suppression_repo,
+        let email_service: Arc<dyn super::email::EmailService> = Arc::new(
+            SesEmailService::with_suppression(
+                from_email.clone(),
+                reply_to_email.clone(),
+                suppression_repo,
+                configuration_set_name.clone(),
+            )
         );
 
         // Create Google OAuth service (optional - only if env vars present)
@@ -106,14 +110,8 @@ impl ServiceContainer {
 
         // Register event handlers if email dependencies are configured
         if let Some(url) = frontend_url.as_ref() {
-            // Create email service for AccessRequestEmailHandler
-            let access_request_email_service: Arc<dyn super::email::EmailService> = Arc::new(
-                SesEmailService::with_suppression(
-                    from_email.clone(),
-                    reply_to_email.clone(),
-                    Box::new(PostgresEmailSuppressionRepository::new(pool.clone())),
-                )
-            );
+            // Reuse shared email service instance
+            let access_request_email_service = Arc::clone(&email_service);
 
             // Register AccessRequestEmailNotificationHandler
             let access_request_handler = AccessRequestEmailNotificationHandler::new(
@@ -125,14 +123,8 @@ impl ServiceContainer {
                 .register_handler::<AccessRequestCreatedEvent>(Box::new(access_request_handler))
                 .expect("Failed to register AccessRequestEmailNotificationHandler");
 
-            // Create email service for PhraseSuggestionEmailHandler
-            let phrase_suggestion_email_service: Arc<dyn super::email::EmailService> = Arc::new(
-                SesEmailService::with_suppression(
-                    from_email.clone(),
-                    reply_to_email.clone(),
-                    Box::new(PostgresEmailSuppressionRepository::new(pool.clone())),
-                )
-            );
+            // Reuse shared email service instance
+            let phrase_suggestion_email_service = Arc::clone(&email_service);
 
             // Register PhraseSuggestionEmailNotificationHandler
             let phrase_suggestion_handler = PhraseSuggestionEmailNotificationHandler::new(
@@ -145,14 +137,8 @@ impl ServiceContainer {
                 .register_handler::<PhraseSuggestionCreatedEvent>(Box::new(phrase_suggestion_handler))
                 .expect("Failed to register PhraseSuggestionEmailNotificationHandler");
 
-            // Create email service for AccessRequestApprovedEmailHandler
-            let approved_email_service: Arc<dyn super::email::EmailService> = Arc::new(
-                SesEmailService::with_suppression(
-                    from_email.clone(),
-                    reply_to_email.clone(),
-                    Box::new(PostgresEmailSuppressionRepository::new(pool.clone())),
-                )
-            );
+            // Reuse shared email service instance
+            let approved_email_service = Arc::clone(&email_service);
 
             // Register AccessRequestApprovedEmailHandler
             let approved_handler = AccessRequestApprovedEmailHandler::new(
@@ -164,14 +150,8 @@ impl ServiceContainer {
                 .register_handler::<AccessRequestApprovedEvent>(Box::new(approved_handler))
                 .expect("Failed to register AccessRequestApprovedEmailHandler");
 
-            // Create email service for AccessRequestRejectedEmailHandler
-            let rejected_email_service: Arc<dyn super::email::EmailService> = Arc::new(
-                SesEmailService::with_suppression(
-                    from_email.clone(),
-                    reply_to_email.clone(),
-                    Box::new(PostgresEmailSuppressionRepository::new(pool.clone())),
-                )
-            );
+            // Reuse shared email service instance
+            let rejected_email_service = Arc::clone(&email_service);
 
             // Register AccessRequestRejectedEmailHandler
             let rejected_handler = AccessRequestRejectedEmailHandler::new(
@@ -183,14 +163,8 @@ impl ServiceContainer {
                 .register_handler::<AccessRequestRejectedEvent>(Box::new(rejected_handler))
                 .expect("Failed to register AccessRequestRejectedEmailHandler");
 
-            // Create email service for PhraseSuggestionApprovedEmailHandler
-            let phrase_approved_email_service: Arc<dyn super::email::EmailService> = Arc::new(
-                SesEmailService::with_suppression(
-                    from_email.clone(),
-                    reply_to_email.clone(),
-                    Box::new(PostgresEmailSuppressionRepository::new(pool.clone())),
-                )
-            );
+            // Reuse shared email service instance
+            let phrase_approved_email_service = Arc::clone(&email_service);
 
             // Register PhraseSuggestionApprovedEmailHandler
             let phrase_approved_handler = PhraseSuggestionApprovedEmailHandler::new(
@@ -202,14 +176,8 @@ impl ServiceContainer {
                 .register_handler::<PhraseSuggestionApprovedEvent>(Box::new(phrase_approved_handler))
                 .expect("Failed to register PhraseSuggestionApprovedEmailHandler");
 
-            // Create email service for PhraseSuggestionRejectedEmailHandler
-            let phrase_rejected_email_service: Arc<dyn super::email::EmailService> = Arc::new(
-                SesEmailService::with_suppression(
-                    from_email.clone(),
-                    reply_to_email.clone(),
-                    Box::new(PostgresEmailSuppressionRepository::new(pool.clone())),
-                )
-            );
+            // Reuse shared email service instance
+            let phrase_rejected_email_service = Arc::clone(&email_service);
 
             // Register PhraseSuggestionRejectedEmailHandler
             let phrase_rejected_handler = PhraseSuggestionRejectedEmailHandler::new(
@@ -221,14 +189,8 @@ impl ServiceContainer {
                 .register_handler::<PhraseSuggestionRejectedEvent>(Box::new(phrase_rejected_handler))
                 .expect("Failed to register PhraseSuggestionRejectedEmailHandler");
 
-            // Create email service for PasswordChangedEmailHandler
-            let password_changed_email_service: Arc<dyn super::email::EmailService> = Arc::new(
-                SesEmailService::with_suppression(
-                    from_email.clone(),
-                    reply_to_email.clone(),
-                    Box::new(PostgresEmailSuppressionRepository::new(pool.clone())),
-                )
-            );
+            // Reuse shared email service instance
+            let password_changed_email_service = Arc::clone(&email_service);
 
             // Register PasswordChangedEmailHandler
             let password_changed_handler = PasswordChangedEmailHandler::new(
@@ -240,14 +202,8 @@ impl ServiceContainer {
                 .register_handler::<PasswordChangedEvent>(Box::new(password_changed_handler))
                 .expect("Failed to register PasswordChangedEmailHandler");
 
-            // Create email service for ProfileUpdatedEmailHandler
-            let profile_updated_email_service: Arc<dyn super::email::EmailService> = Arc::new(
-                SesEmailService::with_suppression(
-                    from_email.clone(),
-                    reply_to_email.clone(),
-                    Box::new(PostgresEmailSuppressionRepository::new(pool.clone())),
-                )
-            );
+            // Reuse shared email service instance
+            let profile_updated_email_service = Arc::clone(&email_service);
 
             // Register ProfileUpdatedEmailHandler
             let profile_updated_handler = ProfileUpdatedEmailHandler::new(
@@ -259,14 +215,8 @@ impl ServiceContainer {
                 .register_handler::<ProfileUpdatedEvent>(Box::new(profile_updated_handler))
                 .expect("Failed to register ProfileUpdatedEmailHandler");
 
-            // Create email service for UserRegisteredEmailHandler
-            let user_registered_email_service: Arc<dyn super::email::EmailService> = Arc::new(
-                SesEmailService::with_suppression(
-                    from_email.clone(),
-                    reply_to_email.clone(),
-                    Box::new(PostgresEmailSuppressionRepository::new(pool.clone())),
-                )
-            );
+            // Reuse shared email service instance
+            let user_registered_email_service = Arc::clone(&email_service);
 
             // Register UserRegisteredEmailHandler
             let user_registered_handler = UserRegisteredEmailHandler::new(
@@ -306,7 +256,12 @@ impl ServiceContainer {
                 pool.clone(),
             )))
             .phrase_repository(Box::new(PostgresPhraseRepository::new(pool.clone())))
-            .email_service(Box::new(email_service))
+            .email_service(Box::new(SesEmailService::with_suppression(
+                from_email.clone(),
+                reply_to_email.clone(),
+                Box::new(PostgresEmailSuppressionRepository::new(pool.clone())),
+                configuration_set_name.clone(),
+            )))
             .pkce_storage(Box::new(pkce_storage))
             .event_publisher(Arc::clone(&event_publisher))
             .jwt_secret(jwt_secret.clone());
@@ -357,6 +312,7 @@ impl ServiceContainer {
                     from_email.clone(),
                     reply_to_email.clone(),
                     Box::new(PostgresEmailSuppressionRepository::new(pool.clone())),
+                    configuration_set_name.clone(),
                 )))
                 .with_frontend_url(url);
         }
