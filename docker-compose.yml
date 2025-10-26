@@ -11,12 +11,19 @@ services:
       - ./backups:/backups
     ports:
       - "5432:5432"  # Remove in production
+    shm_size: 256mb  # Shared memory for parallel queries
     healthcheck:
       test: ["CMD-SHELL", "pg_isready -U ${DB_USER:-postgres}"]
       interval: 30s
       timeout: 10s
       retries: 3
     restart: unless-stopped
+    deploy:
+      resources:
+        limits:
+          memory: 800m
+        reservations:
+          memory: 400m
     logging:
       driver: "json-file"
       options:
@@ -131,6 +138,12 @@ services:
       - backend
       - redis
     restart: unless-stopped
+    deploy:
+      resources:
+        limits:
+          memory: 100m
+        reservations:
+          memory: 50m
     logging:
       driver: "json-file"
       options:
@@ -154,6 +167,12 @@ services:
       postgres:
         condition: service_healthy
     restart: "no"
+    deploy:
+      resources:
+        limits:
+          memory: 100m
+        reservations:
+          memory: 50m
 
   # SSL Certificate Management
   certbot:
