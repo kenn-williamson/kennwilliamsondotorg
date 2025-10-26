@@ -16,6 +16,7 @@ pub struct SnsMessage {
     pub topic_arn: String,
     pub message: String,
     pub timestamp: String,
+    pub signature_version: String,
     pub signature: String,
     #[serde(rename = "SigningCertURL")]
     pub signing_cert_url: String,
