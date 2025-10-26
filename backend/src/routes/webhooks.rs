@@ -8,10 +8,22 @@ use sqlx::PgPool;
 /// Handle AWS SNS webhook notifications for SES bounces and complaints
 #[post("/webhooks/ses")]
 async fn handle_ses_webhook(
-    body: web::Json<SnsMessage>,
+    body: String,
     pool: web::Data<PgPool>,
 ) -> HttpResponse {
-    let sns_message = body.into_inner();
+    // Log raw body to see what AWS is actually sending
+    log::info!("SNS webhook received body: {}", body);
+
+    // Deserialize the SNS message
+    let sns_message: SnsMessage = match serde_json::from_str(&body) {
+        Ok(msg) => msg,
+        Err(e) => {
+            log::error!("Failed to deserialize SNS message: {}", e);
+            return HttpResponse::BadRequest().json(serde_json::json!({
+                "error": "Invalid SNS message format"
+            }));
+        }
+    };
 
     // Create SNS handler with suppression repository
     let suppression_repo = Box::new(PostgresEmailSuppressionRepository::new(pool.get_ref().clone()));
