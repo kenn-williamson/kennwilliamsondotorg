@@ -1,13 +1,13 @@
 use actix_web::{web, HttpMessage, HttpRequest, HttpResponse, Result};
 
 use crate::models::api::CreateAccessRequestRequest;
-use crate::repositories::traits::UserRepository;
 use crate::services::admin::AccessRequestModerationService;
+use crate::services::auth::AuthService;
 
 /// Create a new access request (user-facing, requires authentication)
 pub async fn create_access_request(
     access_request_moderation_service: web::Data<AccessRequestModerationService>,
-    user_repository: web::Data<dyn UserRepository>,
+    auth_service: web::Data<AuthService>,
     req: HttpRequest,
     request: web::Json<CreateAccessRequestRequest>,
 ) -> Result<HttpResponse> {
@@ -15,7 +15,7 @@ pub async fn create_access_request(
     let user_id = req.extensions().get::<uuid::Uuid>().cloned().unwrap();
 
     // Fetch user details for email notification
-    let user = match user_repository.find_by_id(user_id).await {
+    let user = match auth_service.get_current_user(user_id).await {
         Ok(Some(user)) => user,
         Ok(None) => {
             log::error!("User not found: {}", user_id);
