@@ -34,7 +34,7 @@ async fn test_parse_sns_subscription_confirmation() {
 async fn test_parse_hard_bounce_notification() {
     // Given: SNS bounce notification with hard bounce
     let bounce_message = r#"{
-        "notificationType": "Bounce",
+        "eventType": "Bounce",
         "bounce": {
             "bounceType": "Permanent",
             "bounceSubType": "General",
@@ -86,7 +86,7 @@ async fn test_parse_hard_bounce_notification() {
 async fn test_parse_soft_bounce_notification() {
     // Given: SNS bounce notification with soft bounce
     let bounce_message = r#"{
-        "notificationType": "Bounce",
+        "eventType": "Bounce",
         "bounce": {
             "bounceType": "Transient",
             "bounceSubType": "MailboxFull",
@@ -164,7 +164,7 @@ async fn test_soft_bounce_threshold_creates_suppression() {
 
     // When: Processing 3rd soft bounce
     let bounce_message = r#"{
-        "notificationType": "Bounce",
+        "eventType": "Bounce",
         "bounce": {
             "bounceType": "Transient",
             "bounceSubType": "MailboxFull",
@@ -208,7 +208,7 @@ async fn test_soft_bounce_threshold_creates_suppression() {
 async fn test_parse_complaint_notification() {
     // Given: SNS complaint notification
     let complaint_message = r#"{
-        "notificationType": "Complaint",
+        "eventType": "Complaint",
         "complaint": {
             "complainedRecipients": [
                 {"emailAddress": "spam@example.com"}
@@ -272,7 +272,7 @@ async fn test_duplicate_bounce_notification_updates_count() {
 
     // When: Receiving another bounce notification for same email
     let bounce_message = r#"{
-        "notificationType": "Bounce",
+        "eventType": "Bounce",
         "bounce": {
             "bounceType": "Permanent",
             "bounceSubType": "General",

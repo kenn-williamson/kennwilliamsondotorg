@@ -29,7 +29,7 @@ pub struct SnsMessage {
 #[derive(Debug, Clone, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub struct SesNotification {
-    pub notification_type: String,
+    pub event_type: String,
     #[serde(skip_serializing_if = "Option::is_none")]
     pub bounce: Option<BounceDetails>,
     #[serde(skip_serializing_if = "Option::is_none")]
@@ -125,13 +125,13 @@ impl SnsHandler {
         let ses_notification: SesNotification = serde_json::from_str(&sns_message.message)
             .context("Failed to parse SES notification from SNS message")?;
 
-        match ses_notification.notification_type.as_str() {
+        match ses_notification.event_type.as_str() {
             "Bounce" => self.handle_bounce(ses_notification).await,
             "Complaint" => self.handle_complaint(ses_notification).await,
             _ => {
                 log::warn!(
                     "Unknown SES notification type: {}",
-                    ses_notification.notification_type
+                    ses_notification.event_type
                 );
                 Ok(())
             }

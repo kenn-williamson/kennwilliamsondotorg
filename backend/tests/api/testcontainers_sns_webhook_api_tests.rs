@@ -53,7 +53,7 @@ async fn test_hard_bounce_notification_creates_suppression() {
         "MessageId": "bounce-msg-123",
         "TopicArn": "arn:aws:sns:us-east-1:123456789:ses-bounces",
         "Message": serde_json::json!({
-            "notificationType": "Bounce",
+            "eventType": "Bounce",
             "bounce": {
                 "bounceType": "Permanent",
                 "bounceSubType": "General",
@@ -64,7 +64,8 @@ async fn test_hard_bounce_notification_creates_suppression() {
                         "diagnosticCode": "smtp; 550 5.1.1 user unknown"
                     }
                 ],
-                "timestamp": "2025-10-03T12:00:00.000Z"
+                "timestamp": "2025-10-03T12:00:00.000Z",
+                "feedbackId": "test-feedback-id-123"
             },
             "mail": {
                 "messageId": "msg-123",
@@ -114,7 +115,7 @@ async fn test_complaint_notification_creates_suppression() {
         "MessageId": "complaint-msg-123",
         "TopicArn": "arn:aws:sns:us-east-1:123456789:ses-complaints",
         "Message": serde_json::json!({
-            "notificationType": "Complaint",
+            "eventType": "Complaint",
             "complaint": {
                 "complainedRecipients": [
                     {"emailAddress": "spam@example.com"}
@@ -171,14 +172,15 @@ async fn test_soft_bounce_notification_tracks_count() {
         "MessageId": "soft-bounce-msg-123",
         "TopicArn": "arn:aws:sns:us-east-1:123456789:ses-bounces",
         "Message": serde_json::json!({
-            "notificationType": "Bounce",
+            "eventType": "Bounce",
             "bounce": {
                 "bounceType": "Transient",
                 "bounceSubType": "MailboxFull",
                 "bouncedRecipients": [
                     {"emailAddress": "softbounce@example.com"}
                 ],
-                "timestamp": "2025-10-03T12:00:00.000Z"
+                "timestamp": "2025-10-03T12:00:00.000Z",
+                "feedbackId": "test-feedback-id-soft"
             },
             "mail": {
                 "messageId": "msg-soft-123",
@@ -288,11 +290,12 @@ async fn test_webhook_idempotent_duplicate_notifications() {
         "MessageId": "duplicate-msg-123",
         "TopicArn": "arn:aws:sns:us-east-1:123456789:ses-bounces",
         "Message": serde_json::json!({
-            "notificationType": "Bounce",
+            "eventType": "Bounce",
             "bounce": {
                 "bounceType": "Permanent",
                 "bouncedRecipients": [{"emailAddress": "duplicate@example.com"}],
-                "timestamp": "2025-10-03T12:00:00.000Z"
+                "timestamp": "2025-10-03T12:00:00.000Z",
+                "feedbackId": "test-feedback-id-duplicate"
             },
             "mail": {"messageId": "msg-dup", "source": "noreply@kennwilliamson.org"}
         }).to_string(),
