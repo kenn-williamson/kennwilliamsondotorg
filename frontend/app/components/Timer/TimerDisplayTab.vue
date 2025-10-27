@@ -52,9 +52,17 @@ const isSharing = ref(false)
 await useAsyncData('user-timers', () => incidentTimerStore.loadUserTimers())
 
 // Start timers after hydration (client-side only)
-onMounted(() => {
+onMounted(async () => {
+  // Use nextTick to ensure all reactive state updates are processed before starting timer
+  await nextTick()
   console.log('🔄 Starting timers after hydration in TimerDisplayTab...')
   incidentTimerStore.startLiveTimerUpdates()
+})
+
+// Stop timers when tab is switched away or component unmounts
+onUnmounted(() => {
+  console.log('⏹️ Stopping timers in TimerDisplayTab unmount')
+  incidentTimerStore.stopLiveTimerUpdates()
 })
 
 // latestTimer is now provided by the store via storeToRefs

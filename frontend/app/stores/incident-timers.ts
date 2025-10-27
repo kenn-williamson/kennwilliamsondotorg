@@ -65,8 +65,8 @@ export const useIncidentTimerStore = defineStore('incident-timers', () => {
   const clearPublicTimer = () => {
     publicTimer.value = null
     publicTimerUserSlug.value = null
-    // Reset breakdown to zero when clearing public timer
-    activeTimerBreakdown.value = { years: 0, months: 0, weeks: 0, days: 0, hours: 0, minutes: 0, seconds: 0 }
+    // Don't reset breakdown - let timer callback recalculate from user's timer naturally
+    // This prevents the "00 seconds" bug when navigating back to incidents page
   }
 
   const clearAllData = () => {

@@ -135,22 +135,8 @@ const { activeTab, setActiveTab } = useTabs<IncidentTabId>(
   INCIDENT_TABS.default
 )
 
-// Client-side lifecycle hooks
-onMounted(() => {
-  // Clear public timer when navigating away
-  incidentTimerStore.clearPublicTimerOnNavigation()
-
-  // Start live timer updates on client-side
-  if (user.value) {
-    incidentTimerStore.startLiveTimerUpdates()
-  }
-})
-
-onUnmounted(() => {
-  if (user.value) {
-    incidentTimerStore.stopLiveTimerUpdates()
-  }
-})
+// Note: Timer lifecycle is managed by individual components (TimerDisplayTab, public timer page)
+// not by this parent component. This ensures timers only run when data is loaded.
 </script>
 
 <style scoped>

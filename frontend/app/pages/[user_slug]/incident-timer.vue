@@ -110,9 +110,18 @@ const { activeTimerBreakdown } = storeToRefs(incidentTimerStore)
 const timeBreakdown = computed(() => activeTimerBreakdown.value)
 
 // Start timers after hydration (client-side only)
-onMounted(() => {
+onMounted(async () => {
+  // Use nextTick to ensure all reactive state updates are processed before starting timer
+  // This prevents race conditions where timer starts before publicTimer is fully hydrated
+  await nextTick()
   console.log('🔄 Starting timers after hydration in public timer page...')
   incidentTimerStore.startLiveTimerUpdates()
+})
+
+// Clean up when leaving the public timer page
+onBeforeUnmount(() => {
+  console.log('🧹 Clearing public timer state before unmount')
+  incidentTimerStore.clearPublicTimer()
 })
 
 onUnmounted(() => {
