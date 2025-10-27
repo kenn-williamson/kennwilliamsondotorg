@@ -5,7 +5,9 @@ use std::sync::Arc;
 use crate::repositories::mocks::{
     MockAccessRequestRepository, MockAdminRepository, MockIncidentTimerRepository,
     MockPasswordResetTokenRepository, MockPhraseRepository, MockPkceStorage,
-    MockRefreshTokenRepository, MockUserRepository, MockVerificationTokenRepository,
+    MockRefreshTokenRepository, MockUserCredentialsRepository, MockUserExternalLoginRepository,
+    MockUserPreferencesRepository, MockUserProfileRepository, MockUserRepository,
+    MockVerificationTokenRepository,
 };
 use crate::repositories::postgres::{
     postgres_access_request_repository::PostgresAccessRequestRepository,
@@ -47,7 +49,7 @@ use super::auth::AuthService;
 use super::cleanup::CleanupService;
 #[cfg(feature = "mocks")]
 use super::email::MockEmailService;
-use super::email::SesEmailService;
+use super::email::{SesEmailService, SuppressionGuard};
 use super::incident_timer::IncidentTimerService;
 use super::phrase::PhraseService;
 #[cfg(feature = "mocks")]
@@ -89,13 +91,13 @@ impl ServiceContainer {
         // Create single shared email service instance with suppression checking
         // This Arc<dyn EmailService> will be reused across all event handlers and services
         let suppression_repo = Box::new(PostgresEmailSuppressionRepository::new(pool.clone()));
+        let ses_service = SesEmailService::new(
+            from_email.clone(),
+            reply_to_email.clone(),
+            configuration_set_name.clone(),
+        );
         let email_service: Arc<dyn super::email::EmailService> = Arc::new(
-            SesEmailService::with_suppression(
-                from_email.clone(),
-                reply_to_email.clone(),
-                suppression_repo,
-                configuration_set_name.clone(),
-            )
+            SuppressionGuard::new(Box::new(ses_service), suppression_repo)
         );
 
         // Create Google OAuth service (optional - only if env vars present)
@@ -256,11 +258,13 @@ impl ServiceContainer {
                 pool.clone(),
             )))
             .phrase_repository(Box::new(PostgresPhraseRepository::new(pool.clone())))
-            .email_service(Box::new(SesEmailService::with_suppression(
-                from_email.clone(),
-                reply_to_email.clone(),
+            .email_service(Box::new(SuppressionGuard::new(
+                Box::new(SesEmailService::new(
+                    from_email.clone(),
+                    reply_to_email.clone(),
+                    configuration_set_name.clone(),
+                )),
                 Box::new(PostgresEmailSuppressionRepository::new(pool.clone())),
-                configuration_set_name.clone(),
             )))
             .pkce_storage(Box::new(pkce_storage))
             .event_publisher(Arc::clone(&event_publisher))
@@ -308,11 +312,13 @@ impl ServiceContainer {
         if let Some(url) = frontend_url.as_ref() {
             access_request_builder = access_request_builder
                 .with_admin_repository(Box::new(PostgresAdminRepository::new(pool.clone())))
-                .with_email_service(Box::new(SesEmailService::with_suppression(
-                    from_email.clone(),
-                    reply_to_email.clone(),
+                .with_email_service(Box::new(SuppressionGuard::new(
+                    Box::new(SesEmailService::new(
+                        from_email.clone(),
+                        reply_to_email.clone(),
+                        configuration_set_name.clone(),
+                    )),
                     Box::new(PostgresEmailSuppressionRepository::new(pool.clone())),
-                    configuration_set_name.clone(),
                 )))
                 .with_frontend_url(url);
         }
@@ -360,6 +366,10 @@ impl ServiceContainer {
         let auth_service = Arc::new(
             AuthService::builder()
                 .user_repository(Box::new(MockUserRepository::new()))
+                .credentials_repository(Box::new(MockUserCredentialsRepository::new()))
+                .external_login_repository(Box::new(MockUserExternalLoginRepository::new()))
+                .profile_repository(Box::new(MockUserProfileRepository::new()))
+                .preferences_repository(Box::new(MockUserPreferencesRepository::new()))
                 .refresh_token_repository(Box::new(MockRefreshTokenRepository::new()))
                 .verification_token_repository(Box::new(MockVerificationTokenRepository::new()))
                 .incident_timer_repository(Box::new(MockIncidentTimerRepository::new()))

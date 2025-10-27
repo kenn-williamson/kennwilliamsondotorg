@@ -1,32 +1,53 @@
-use anyhow::{Context, Result, anyhow};
+use anyhow::{Context, Result};
 use async_trait::async_trait;
 use aws_sdk_sesv2::{types::{Body, Content, Destination, EmailContent, Message}, Client};
 
 use super::{Email, EmailService};
-use crate::models::db::EmailType;
-use crate::repositories::traits::email_suppression_repository::EmailSuppressionRepository;
 
 /// AWS SES email service implementation
+///
+/// This service handles email delivery via AWS Simple Email Service (SES).
+/// It does NOT check suppression lists - wrap with SuppressionGuard for that functionality.
+///
+/// # Example
+///
+/// ```rust,no_run
+/// use backend::services::email::{SesEmailService, SuppressionGuard};
+/// use backend::repositories::postgres::postgres_email_suppression_repository::PostgresEmailSuppressionRepository;
+///
+/// // Production: Wrap with SuppressionGuard
+/// # fn example() {
+/// # let from_email = "test@example.com".to_string();
+/// # let reply_to = None;
+/// # let config_set = None;
+/// # let pool = todo!();
+/// let ses = SesEmailService::new(from_email, reply_to, config_set);
+/// let suppression_repo = Box::new(PostgresEmailSuppressionRepository::new(pool));
+/// let guarded = SuppressionGuard::new(Box::new(ses), suppression_repo);
+/// # }
+/// ```
 pub struct SesEmailService {
     from_email: String,
     reply_to_email: Option<String>,
-    suppression_repo: Option<Box<dyn EmailSuppressionRepository>>,
     configuration_set_name: Option<String>,
 }
 
 impl SesEmailService {
-
-    /// Create a new SES email service with suppression checking
-    pub fn with_suppression(
+    /// Create a new SES email service
+    ///
+    /// # Arguments
+    ///
+    /// * `from_email` - The "From" email address for all emails
+    /// * `reply_to_email` - Optional "Reply-To" email address
+    /// * `configuration_set_name` - Optional SES configuration set for bounce/complaint tracking
+    pub fn new(
         from_email: String,
         reply_to_email: Option<String>,
-        suppression_repo: Box<dyn EmailSuppressionRepository>,
         configuration_set_name: Option<String>,
     ) -> Self {
         Self {
             from_email,
             reply_to_email,
-            suppression_repo: Some(suppression_repo),
             configuration_set_name,
         }
     }
@@ -36,35 +57,13 @@ impl SesEmailService {
         let config = aws_config::load_from_env().await;
         Client::new(&config)
     }
-
 }
 
 #[async_trait]
 impl EmailService for SesEmailService {
     async fn send_email(&self, email: Email) -> Result<()> {
-        // Check suppression list for all recipients (if repository is available)
-        if let Some(ref suppression_repo) = self.suppression_repo {
-            for recipient in &email.to {
-                let is_suppressed = suppression_repo
-                    .is_email_suppressed(recipient, EmailType::Transactional)
-                    .await
-                    .context("Failed to check email suppression status")?;
-
-                if is_suppressed {
-                    log::warn!(
-                        "Email blocked by suppression list: {} (transactional)",
-                        recipient
-                    );
-                    return Err(anyhow!(
-                        "Email address {} is suppressed and cannot receive emails",
-                        recipient
-                    ));
-                }
-            }
-        }
-
         log::info!(
-            "SES email service: Sending email '{}' to {} recipient(s)",
+            "Sending email via AWS SES: '{}' to {} recipient(s)",
             email.subject,
             email.to.len()
         );

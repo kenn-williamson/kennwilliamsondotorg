@@ -39,7 +39,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed } from 'vue'
+import { ref } from 'vue'
 import { storeToRefs } from 'pinia'
 import { useIncidentTimerStore } from '~/stores/incident-timers'
 import SteamClock from '~/components/Steampunk/SteamClock.vue'
@@ -64,8 +64,6 @@ onUnmounted(() => {
   console.log('⏹️ Stopping timers in TimerDisplayTab unmount')
   incidentTimerStore.stopLiveTimerUpdates()
 })
-
-// latestTimer is now provided by the store via storeToRefs
 
 const shareTimer = async () => {
   if (!latestTimer.value) return
