@@ -337,8 +337,8 @@
     </p>
 
     <p>
-      <strong>Metro Christian Academy (5th through 9th grade):</strong> I attended Metro
-      Christian from fifth through ninth grade. The bullying continued, though I
+      <strong>Metro Christian Academy (6th through 9th grade):</strong> I attended Metro
+      Christian from sixth through ninth grade. The bullying continued, though I
       eventually found a few good friends. My best friend from that period was Corry
       Kemendo, who I met in middle school.
     </p>
