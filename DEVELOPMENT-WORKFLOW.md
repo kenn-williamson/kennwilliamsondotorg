@@ -96,35 +96,80 @@ cd backend && cargo test -- --test-threads=4
 
 ## Release & Deployment Workflow
 
-### Creating a Release
+### Automated Release Process (Release-Please)
 
-**Pattern**: Trunk-based development with tag-triggered deployments
+**Pattern**: Conventional commits trigger automated versioning and releases
 
-1. **Ensure main is clean and CI passed**:
+#### How It Works
+
+1. **Develop with Conventional Commits**:
    ```bash
-   git checkout main
-   git pull origin main
-   # Check GitHub Actions - ensure all CI checks passed
+   git commit -m "feat: add user dashboard"
+   git commit -m "fix: resolve login bug"
+   git commit -m "feat!: breaking API change"
+   git push origin master
    ```
 
-2. **Create semantic version tag**:
-   ```bash
-   # Semantic versioning: vMAJOR.MINOR.PATCH
-   git tag v1.0.0  # Major.Minor.Patch
-   git push origin v1.0.0
-   ```
+2. **Release-Please Creates/Updates PR Automatically**:
+   - Bot creates PR titled: "chore: release vX.Y.Z"
+   - PR shows auto-generated CHANGELOG
+   - Includes all commits since last release
+   - Version calculated from conventional commits
+   - PR updates with each new commit
 
-3. **Monitor deployment**:
+3. **Release When Ready**:
+   - Review the Release PR on GitHub
+   - Check version number is correct
+   - Review CHANGELOG and included commits
+   - **Merge PR when ready to deploy**
+
+4. **Automatic Deployment**:
+   - Merge triggers tag creation (e.g., v1.0.0)
+   - Tag triggers CD pipeline automatically
    - GitHub Actions → "CD Pipeline - Deploy to Production"
    - Watch build-and-push job (~5-10 minutes)
    - Watch deploy job (~2-5 minutes)
    - Verify at https://kennwilliamson.org
+
+### Conventional Commit Format
+
+**Format**: `<type>: <description>`
+
+**Types and Version Bumps**:
+- **feat**: New feature → MINOR version bump (v1.1.0)
+- **fix**: Bug fix → PATCH version bump (v1.0.1)
+- **feat!**: Breaking change → MAJOR version bump (v2.0.0)
+- **BREAKING CHANGE**: In commit body → MAJOR version bump
+- **docs**, **chore**, **style**, **refactor**: No version bump
+
+**Examples**:
+```bash
+feat: add Google OAuth login          # v1.1.0
+fix: resolve timer display bug        # v1.0.1
+feat!: change API response format     # v2.0.0
+docs: update README                   # no version bump
+
+# Breaking change in body
+feat: new authentication system
+
+BREAKING CHANGE: JWT token format changed  # v2.0.0
+```
 
 ### Semantic Versioning Guidelines
 
 - **MAJOR** (v2.0.0): Breaking changes, API changes, database schema incompatibilities
 - **MINOR** (v1.1.0): New features, backwards-compatible enhancements
 - **PATCH** (v1.0.1): Bug fixes, small improvements, security patches
+
+### Manual Release (Alternative)
+
+**If Release-Please is down or you need immediate release**:
+```bash
+# Manually create tag
+git tag v1.0.0
+git push origin v1.0.0
+# CD pipeline triggers automatically
+```
 
 ### Rollback Process
 

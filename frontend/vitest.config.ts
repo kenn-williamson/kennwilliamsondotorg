@@ -7,8 +7,8 @@ export default defineConfig({
     globals: true,
     setupFiles: ['./test/setup.ts'],
     coverage: {
-      provider: 'istanbul',
-      reporter: ['text', 'html', 'json'],
+      provider: 'v8',
+      reporter: ['text', 'html', 'lcov'],
       include: [
         'app/composables/**/*.ts',
         'app/services/**/*.ts',

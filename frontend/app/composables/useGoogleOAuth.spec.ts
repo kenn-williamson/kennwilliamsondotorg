@@ -20,6 +20,11 @@ vi.mock('#app/composables/router', () => ({
 // Also mock for direct imports
 ;(globalThis as any).useRouter = mockUseRouter as any
 
+// Mock useRoute
+const mockRoute = { query: {} }
+const mockUseRoute = vi.fn(() => mockRoute)
+;(globalThis as any).useRoute = mockUseRoute as any
+
 // Mock useUserSession
 const mockRefreshSession = vi.fn()
 const mockUseUserSession = vi.fn(() => ({
@@ -37,6 +42,7 @@ describe('useGoogleOAuth', () => {
   beforeEach(() => {
     vi.clearAllMocks()
     window.location.href = ''
+    mockRoute.query = {} // Clear route query
   })
 
   describe('initiateOAuth', () => {

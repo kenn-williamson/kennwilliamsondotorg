@@ -412,19 +412,79 @@ npm run test:coverage
 
 ## Release Process
 
-### Creating a Release
+### Automated Releases with Release-Please
 
-1. **Ensure main is clean**:
+**Decision**: Use Release-Please for automated semantic versioning based on conventional commits.
+
+**Why**:
+- **Automatic version calculation**: No manual version decisions
+- **CHANGELOG generation**: Auto-generated from commit messages
+- **Review before release**: PR-based workflow gives control
+- **Professional process**: Industry-standard release automation
+
+#### How It Works
+
+1. **Develop with Conventional Commits**:
    ```bash
-   git checkout main
-   git pull origin main
+   git commit -m "feat: add user dashboard"
+   git commit -m "fix: resolve login bug"
+   git push origin master
+   ```
+
+2. **Release-Please Bot Creates PR**:
+   - Triggered automatically on push to master
+   - Creates/updates PR titled: "chore: release vX.Y.Z"
+   - Calculates version from conventional commits:
+     - `feat:` → MINOR bump (v1.1.0)
+     - `fix:` → PATCH bump (v1.0.1)
+     - `feat!:` or `BREAKING CHANGE:` → MAJOR bump (v2.0.0)
+   - Generates CHANGELOG from commits
+   - Updates PR with each new commit
+
+3. **Review Release PR**:
+   - Check version number is correct
+   - Review CHANGELOG and included commits
+   - Verify CI passed on all commits
+   - **Merge when ready to deploy**
+
+4. **Merge Triggers Deployment**:
+   - Merge creates git tag (e.g., v1.0.0)
+   - Tag triggers CD Pipeline automatically
+   - Deployment proceeds as normal
+
+#### Conventional Commit Format
+
+**Format**: `<type>: <description>`
+
+**Version Bumps**:
+- `feat:` → MINOR (v1.1.0)
+- `fix:` → PATCH (v1.0.1)
+- `feat!:` → MAJOR (v2.0.0)
+- `BREAKING CHANGE:` in body → MAJOR
+- `docs:`, `chore:`, `style:`, `refactor:` → No bump
+
+**Examples**:
+```bash
+feat: add Google OAuth login          # v1.1.0
+fix: resolve timer display bug        # v1.0.1
+feat!: change API response format     # v2.0.0
+docs: update README                   # no version change
+```
+
+### Manual Release (Fallback)
+
+**If Release-Please is unavailable**:
+
+1. **Ensure master is clean**:
+   ```bash
+   git checkout master
+   git pull origin master
    ```
 
 2. **Verify CI passed**:
    - Check GitHub Actions for latest commit
-   - Ensure all tests passed
 
-3. **Create semantic version tag**:
+3. **Create semantic version tag manually**:
    ```bash
    git tag v1.0.0  # Major.Minor.Patch
    git push origin v1.0.0
