@@ -4,11 +4,13 @@ use async_trait::async_trait;
 #[cfg(feature = "mocks")]
 pub mod mock_email_service;
 pub mod ses_email_service;
+pub mod suppression_guard;
 pub mod templates;
 
 #[cfg(feature = "mocks")]
 pub use mock_email_service::MockEmailService;
 pub use ses_email_service::SesEmailService;
+pub use suppression_guard::SuppressionGuard;
 pub use templates::{Email, EmailTemplate};
 
 /// Generic email service trait for sending emails

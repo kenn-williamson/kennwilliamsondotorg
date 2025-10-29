@@ -39,7 +39,7 @@ impl AccessRequestNotificationTemplate {
         frontend_url: &str,
     ) -> Self {
         let frontend_base = frontend_url.trim_end_matches('/');
-        let admin_panel_url = format!("{}/admin/access-requests", frontend_base);
+        let admin_panel_url = format!("{}/admin?tab=access-requests", frontend_base);
 
         Self {
             user_display_name: user_display_name.into(),
@@ -111,7 +111,7 @@ mod tests {
         assert!(html.contains("John Doe"));
         assert!(html.contains("moderator"));
         assert!(html.contains("I need access to moderate content."));
-        assert!(html.contains("https://kennwilliamson.org/admin/access-requests"));
+        assert!(html.contains("https://kennwilliamson.org/admin?tab=access-requests"));
     }
 
     #[test]
@@ -128,7 +128,7 @@ mod tests {
         assert!(text.contains("Jane Smith"));
         assert!(text.contains("admin"));
         assert!(text.contains("Need admin access for testing."));
-        assert!(text.contains("https://kennwilliamson.org/admin/access-requests"));
+        assert!(text.contains("https://kennwilliamson.org/admin?tab=access-requests"));
     }
 
     #[test]
@@ -177,7 +177,7 @@ mod tests {
         // Should trim trailing slash from frontend_url
         assert_eq!(
             template.admin_panel_url,
-            "https://example.com/admin/access-requests"
+            "https://example.com/admin?tab=access-requests"
         );
     }
 

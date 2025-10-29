@@ -34,7 +34,7 @@ impl PhraseSuggestionNotificationTemplate {
         frontend_url: &str,
     ) -> Self {
         let frontend_base = frontend_url.trim_end_matches('/');
-        let admin_panel_url = format!("{}/admin/phrases", frontend_base);
+        let admin_panel_url = format!("{}/admin?tab=suggestions", frontend_base);
 
         Self {
             user_display_name: user_display_name.into(),
@@ -95,7 +95,7 @@ mod tests {
 
         assert!(html.contains("Jane Doe"));
         assert!(html.contains("Time is an illusion"));
-        assert!(html.contains("https://kennwilliamson.org/admin/phrases"));
+        assert!(html.contains("https://kennwilliamson.org/admin?tab=suggestions"));
         assert!(html.contains("Review Suggestion"));
     }
 
@@ -111,7 +111,7 @@ mod tests {
 
         assert!(text.contains("John Smith"));
         assert!(text.contains("Don't panic!"));
-        assert!(text.contains("https://kennwilliamson.org/admin/phrases"));
+        assert!(text.contains("https://kennwilliamson.org/admin?tab=suggestions"));
     }
 
     #[test]

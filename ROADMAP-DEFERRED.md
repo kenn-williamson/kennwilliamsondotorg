@@ -207,17 +207,6 @@ This document contains features, optimizations, and architectural improvements t
 
 ## Developer Experience (Deferred)
 
-### CI/CD Pipeline
-**Deferred Reason**: Manual deployment sufficient for current development pace
-**Future Trigger**: Team growth or frequent deployment needs
-
-**Components**:
-- GitHub Actions workflow automation
-- Automated testing (unit, integration, e2e)
-- Blue-green deployment strategy
-- Automated rollback capabilities
-- Environment promotion pipelines
-
 ### Advanced Testing
 **Deferred Reason**: Current test coverage adequate for example project
 **Future Trigger**: Production deployment requiring comprehensive testing
