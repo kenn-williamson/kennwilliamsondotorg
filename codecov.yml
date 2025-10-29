@@ -1,0 +1,51 @@
+# Codecov Configuration
+# Documentation: https://docs.codecov.com/docs/codecov-yaml
+
+coverage:
+  status:
+    # Project coverage - overall coverage for the entire project
+    project:
+      default:
+        target: auto  # Automatically determine target based on previous commits
+        threshold: 1%  # Allow 1% decrease without failing
+        informational: true  # Don't block PRs based on coverage changes
+
+    # Patch coverage - coverage for changed lines in PRs
+    patch:
+      default:
+        target: 80%  # Aim for 80% coverage on new/changed code
+        threshold: 5%  # Allow some flexibility
+        informational: true  # Don't block PRs, just inform
+
+# PR comment configuration
+comment:
+  layout: "header, diff, flags, files, footer"
+  behavior: default  # Update existing comment instead of creating new ones
+  require_changes: false  # Always post comment, even if no coverage changes
+
+# Flag configuration for backend and frontend
+flags:
+  backend:
+    paths:
+      - backend/
+    carryforward: true  # Use previous coverage if current upload fails
+
+  frontend:
+    paths:
+      - frontend/
+    carryforward: true
+
+# Files and paths to ignore
+ignore:
+  - "frontend/node_modules/**"
+  - "backend/target/**"
+  - "**/*.test.ts"
+  - "**/*.spec.ts"
+  - "**/tests/**"
+  - "**/*.d.ts"
+  - "frontend/.nuxt/**"
+  - "frontend/.output/**"
+  - "migrations/**"
+  - "nginx/**"
+  - "scripts/**"
+  - "*.md"

@@ -243,6 +243,103 @@ npm test -- <test_file>
 npm test -- --run
 ```
 
+## Code Coverage
+
+### Generating Coverage Reports Locally
+
+**Backend Coverage** (using cargo-tarpaulin):
+```bash
+cd backend
+
+# Install tarpaulin (one-time setup)
+cargo install cargo-tarpaulin
+
+# Generate HTML coverage report
+cargo tarpaulin --out Html --output-dir target/tarpaulin --all-features
+
+# Open report in browser
+# macOS: open target/tarpaulin/index.html
+# Linux: xdg-open target/tarpaulin/index.html
+# WSL: explorer.exe target/tarpaulin/index.html
+
+# Generate LCOV format (for CI/Codecov)
+cargo tarpaulin --out Lcov --output-dir coverage/ --all-features
+```
+
+**Frontend Coverage** (using Vitest + coverage-v8):
+```bash
+cd frontend
+
+# Generate coverage report (already configured)
+npm run test:coverage
+
+# Open report in browser
+# macOS: open coverage/index.html
+# Linux: xdg-open coverage/index.html
+# WSL: explorer.exe coverage/index.html
+
+# Coverage config in vitest.config.ts
+# Includes: composables, services, stores, utils, shared
+# Excludes: components, pages, layouts, tests
+```
+
+### Coverage in CI/CD
+
+**Automated on Pull Requests:**
+- Backend: cargo-tarpaulin generates LCOV
+- Frontend: Vitest generates LCOV
+- Codecov uploads both reports
+- PR comments show coverage changes
+
+**Codecov Dashboard:**
+- Overall project coverage trends
+- Per-file coverage breakdown
+- Diff coverage (changed lines only)
+- Sunburst visualization
+
+**Configuration:**
+- CI workflow: `.github/workflows/ci.yml`
+- Codecov config: `codecov.yml`
+- See `IMPLEMENTATION-CICD.md` for details
+
+### Coverage Philosophy
+
+**What we measure:**
+- Line coverage (which lines executed during tests)
+- Focused on business logic (services, composables, stores, utils)
+
+**What we don't measure:**
+- Branch coverage (not supported by tarpaulin)
+- UI components (excluded from frontend coverage)
+- Pages and layouts (excluded)
+- Test files themselves
+
+**Coverage targets:**
+- Backend: 70%+ overall, 80%+ for public APIs
+- Frontend: 70%+ for business logic
+- Diff coverage: 80%+ for new/changed code
+- **Status**: Informational (doesn't block PRs)
+
+**Why informational only:**
+- Encourage good testing without blocking velocity
+- Coverage is a guide, not a gate
+- Focus on meaningful tests, not 100% coverage
+
+### Coverage Artifacts
+
+**Gitignored** (see `.gitignore`):
+```
+coverage/                    # Root coverage directory
+frontend/coverage/           # Frontend coverage reports
+backend/coverage/            # Backend LCOV files
+backend/target/tarpaulin/    # Backend HTML reports
+*.lcov                       # LCOV format files
+```
+
+**CI Artifacts** (30-day retention):
+- Backend coverage: `backend/coverage/lcov.info`
+- Frontend coverage: `frontend/coverage/lcov.info`
+
 ## Test Infrastructure Decisions
 
 ### Backend Test Utilities

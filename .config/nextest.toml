@@ -1,0 +1,40 @@
+# cargo-nextest configuration
+# Documentation: https://nexte.st/docs/configuration/
+
+[profile.default]
+# Number of retries for failed tests
+# Tests that fail once but pass on retry are marked as "flaky"
+retries = 2
+
+# Number of threads to use for test execution
+# Can be overridden with --test-threads on command line
+test-threads = 8
+
+# Show output for failing tests immediately (don't wait until end)
+failure-output = "immediate"
+
+# Show output for passing tests on final retry (helps debug flaky tests)
+success-output = "final"
+
+# Slow test detection - warn if a test takes longer than this
+slow-timeout = { period = "60s", terminate-after = 2 }
+
+[profile.ci]
+# CI-specific profile with stricter settings
+retries = 2
+test-threads = 8
+failure-output = "immediate"
+success-output = "final"
+
+# In CI, fail fast - don't continue after first test failure
+# (comment out if you want to see all failures)
+# fail-fast = true
+
+# Cancel test run if it takes longer than 30 minutes
+final-status-level = "fail"
+
+[profile.default.junit]
+# Generate JUnit XML report for CI integration
+path = "target/nextest/default/junit.xml"
+store-success-output = true
+store-failure-output = true

@@ -94,6 +94,73 @@ cd backend && cargo test -- --test-threads=4
 - **Connection**: `postgresql://postgres:password@localhost:5432/kennwilliamson_test`
 - **Isolation**: Complete separation from development data
 
+## Release & Deployment Workflow
+
+### Creating a Release
+
+**Pattern**: Trunk-based development with tag-triggered deployments
+
+1. **Ensure main is clean and CI passed**:
+   ```bash
+   git checkout main
+   git pull origin main
+   # Check GitHub Actions - ensure all CI checks passed
+   ```
+
+2. **Create semantic version tag**:
+   ```bash
+   # Semantic versioning: vMAJOR.MINOR.PATCH
+   git tag v1.0.0  # Major.Minor.Patch
+   git push origin v1.0.0
+   ```
+
+3. **Monitor deployment**:
+   - GitHub Actions → "CD Pipeline - Deploy to Production"
+   - Watch build-and-push job (~5-10 minutes)
+   - Watch deploy job (~2-5 minutes)
+   - Verify at https://kennwilliamson.org
+
+### Semantic Versioning Guidelines
+
+- **MAJOR** (v2.0.0): Breaking changes, API changes, database schema incompatibilities
+- **MINOR** (v1.1.0): New features, backwards-compatible enhancements
+- **PATCH** (v1.0.1): Bug fixes, small improvements, security patches
+
+### Rollback Process
+
+**Option 1: Rollback Script (Fastest)**:
+```bash
+# On production server
+ssh <ec2-host>
+cd /home/<user>/app
+export GITHUB_USER=<your-github-username>
+./scripts/rollback.sh v1.0.0  # Specify version to rollback to
+```
+
+**Option 2: Re-tag Previous Commit**:
+```bash
+# On local machine
+git checkout <previous-commit-hash>
+git tag v1.0.1  # New tag for rollback version
+git push origin v1.0.1
+# CD pipeline deploys previous code as new version
+```
+
+### CI/CD Status Checks
+
+**Before Merging PRs**:
+- ✅ Backend tests passed (cargo test + clippy + audit)
+- ✅ Frontend tests passed (vitest + TypeScript + npm audit)
+- ✅ Docker builds passed (both backend and frontend)
+
+**Before Creating Release Tag**:
+- ✅ All CI checks passed on main
+- ✅ Code reviewed (if team grows)
+- ✅ Manual testing completed
+- ✅ Database migrations tested locally
+
+**See IMPLEMENTATION-CICD.md for complete CI/CD architecture and troubleshooting**
+
 ## Access Points
 - **Main App**: https://localhost
 - **Backend API**: http://localhost:8080/backend/

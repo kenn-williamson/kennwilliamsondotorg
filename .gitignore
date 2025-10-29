@@ -28,6 +28,17 @@ logs/
 target/
 # Note: Cargo.lock should be committed for applications, ignored for libraries
 
+# Code Coverage
+coverage/
+*.lcov
+*.profraw
+*.profdata
+frontend/coverage/
+backend/coverage/
+backend/target/llvm-cov/
+backend/cobertura.xml
+backend/tarpaulin-report.html
+
 # Docker
 .docker/
 
