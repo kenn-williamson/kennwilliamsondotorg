@@ -56,10 +56,10 @@ jobs:
           workdir: backend
           cache-on-failure: true
 
-      - name: Install cargo-tarpaulin
+      - name: Install cargo-llvm-cov and cargo-nextest
         uses: taiki-e/install-action@v2
         with:
-          tool: cargo-tarpaulin
+          tool: cargo-llvm-cov,cargo-nextest
 
       - name: Install cargo-audit
         uses: taiki-e/install-action@v2
@@ -95,7 +95,7 @@ jobs:
 
       - name: Run tests with coverage
         working-directory: backend
-        run: cargo tarpaulin --out Lcov --output-dir coverage/ --all-features
+        run: cargo llvm-cov nextest --profile ci --lcov --output-path coverage/lcov.info --all-features
         env:
           DATABASE_URL: postgres://testuser:testpass@localhost:5432/testdb
           REDIS_URL: redis://localhost:6379

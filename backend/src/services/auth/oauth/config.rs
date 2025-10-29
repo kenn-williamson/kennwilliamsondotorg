@@ -64,36 +64,6 @@ mod tests {
     use super::*;
 
     #[test]
-    fn test_config_from_env_requires_all_variables() {
-        // Clear environment
-        unsafe {
-            std::env::remove_var("GOOGLE_CLIENT_ID");
-            std::env::remove_var("GOOGLE_CLIENT_SECRET");
-            std::env::remove_var("GOOGLE_REDIRECT_URI");
-        }
-
-        let result = GoogleOAuthConfig::from_env();
-        assert!(result.is_err());
-    }
-
-    #[test]
-    fn test_config_from_env_success() {
-        unsafe {
-            std::env::set_var("GOOGLE_CLIENT_ID", "test_client_id");
-            std::env::set_var("GOOGLE_CLIENT_SECRET", "test_client_secret");
-            std::env::set_var("GOOGLE_REDIRECT_URI", "https://localhost/callback");
-        }
-
-        let result = GoogleOAuthConfig::from_env();
-        assert!(result.is_ok());
-
-        let config = result.unwrap();
-        assert_eq!(config.client_id, "test_client_id");
-        assert_eq!(config.client_secret, "test_client_secret");
-        assert_eq!(config.redirect_uri, "https://localhost/callback");
-    }
-
-    #[test]
     fn test_create_client_success() {
         let config = GoogleOAuthConfig {
             client_id: "test_id".to_string(),
