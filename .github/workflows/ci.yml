@@ -95,7 +95,9 @@ jobs:
 
       - name: Run tests with coverage
         working-directory: backend
-        run: cargo llvm-cov nextest --profile ci --lcov --output-path coverage/lcov.info --all-features
+        run: |
+          mkdir -p coverage
+          cargo llvm-cov nextest --profile ci --lcov --output-path coverage/lcov.info --all-features
         env:
           DATABASE_URL: postgres://testuser:testpass@localhost:5432/testdb
           REDIS_URL: redis://localhost:6379
