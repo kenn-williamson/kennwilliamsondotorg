@@ -59,13 +59,10 @@ impl TestContainer {
             }
             // Clean up the previous container if it exists
             if let Some(old_container) = current_container.take() {
-                println!("🧹 Cleaning up previous container...");
                 // The container will be automatically cleaned up when dropped
                 drop(old_container);
                 tokio::time::sleep(tokio::time::Duration::from_secs(1)).await; // Brief pause
             }
-
-            println!("🚀 Starting PostgreSQL container...");
 
             // Create a fresh image configuration for each attempt
             let image = GenericImage::new("ghcr.io/fboulnois/pg_uuidv7", "1.6.0")
@@ -78,7 +75,7 @@ impl TestContainer {
             let container = match image.start().await {
                 Ok(container) => container,
                 Err(e) => {
-                    println!("❌ Failed to start container: {}", e);
+                    eprintln!("❌ Failed to start container: {}", e);
                     tokio::time::sleep(tokio::time::Duration::from_secs(2)).await;
                     continue;
                 }
@@ -87,7 +84,7 @@ impl TestContainer {
             let port = match container.get_host_port_ipv4(5432).await {
                 Ok(port) => port,
                 Err(e) => {
-                    println!("❌ Failed to get port: {}", e);
+                    eprintln!("❌ Failed to get port: {}", e);
                     // Store container for cleanup
                     current_container = Some(Box::new(container));
                     tokio::time::sleep(tokio::time::Duration::from_secs(2)).await;
@@ -119,7 +116,7 @@ impl TestContainer {
                     });
                 },
                 Err(e) => {
-                    println!("❌ Database setup failed: {}", e);
+                    eprintln!("❌ Database setup failed: {}", e);
                     // Store container for cleanup on next iteration
                     current_container = Some(Box::new(container));
                     tokio::time::sleep(tokio::time::Duration::from_secs(2)).await;
@@ -137,7 +134,6 @@ impl TestContainer {
 
         loop {
             attempt += 1;
-            println!("🔍 Database readiness check attempt {}", attempt);
 
             match sqlx::postgres::PgPoolOptions::new()
                 .max_connections(5)
@@ -150,27 +146,25 @@ impl TestContainer {
                     // Test the connection
                     match sqlx::query("SELECT 1").fetch_one(&pool).await {
                         Ok(_) => {
-                            println!("✅ Database is ready!");
                             return Ok(pool);
                         },
-                        Err(e) => {
-                            println!("⚠️  Connection established but query failed: {}", e);
+                        Err(_e) => {
+                            // Query failed, will retry
                         }
                     }
                 },
-                Err(e) => {
-                    println!("❌ Connection failed: {}", e);
+                Err(_e) => {
+                    // Connection failed, will retry
                 }
             }
 
             // If we've tried 5 times, signal that we need to restart the container
             if attempt % attempts_per_container == 0 {
-                println!("🔄 Container appears unresponsive after {} attempts, will restart...", attempt);
+                eprintln!("⚠️  Database unresponsive after {} attempts, restarting container...", attempt);
                 return Err(anyhow::anyhow!("Container restart needed after {} attempts", attempt));
             }
 
             let delay = std::cmp::min(1 << (attempt % attempts_per_container), 8); // Exponential backoff, max 8 seconds
-            println!("⏳ Waiting {}s before retry...", delay);
             tokio::time::sleep(tokio::time::Duration::from_secs(delay)).await;
         }
     }
