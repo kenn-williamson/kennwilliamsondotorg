@@ -389,7 +389,7 @@ async fn test_verify_email_success() {
         .expect("Failed to extract verification token from email");
 
     // Verify email with the token
-    let mut resp = ctx.server.get(&format!("/backend/public/auth/verify-email?token={}", verification_token))
+    let mut resp = ctx.server.get(format!("/backend/public/auth/verify-email?token={}", verification_token))
         .send()
         .await
         .unwrap();

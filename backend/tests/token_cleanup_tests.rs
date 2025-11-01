@@ -16,9 +16,9 @@ async fn test_cleanup_expired_refresh_tokens() {
 
     // Create a test user
     let user = backend::test_utils::UserBuilder::new()
-        .with_email(&fixtures::unique_test_email())
+        .with_email(fixtures::unique_test_email())
         .with_display_name("Cleanup Test User")
-        .with_slug(&fixtures::unique_test_slug())
+        .with_slug(fixtures::unique_test_slug())
         .with_password("password123")
         .persist(pool)
         .await
@@ -75,9 +75,9 @@ async fn test_cleanup_expired_verification_tokens() {
 
     // Create a test user
     let user = backend::test_utils::UserBuilder::new()
-        .with_email(&fixtures::unique_test_email())
+        .with_email(fixtures::unique_test_email())
         .with_display_name("Verification Cleanup Test User")
-        .with_slug(&fixtures::unique_test_slug())
+        .with_slug(fixtures::unique_test_slug())
         .with_password("password123")
         .persist(pool)
         .await
@@ -147,9 +147,9 @@ async fn test_cleanup_both_token_types() {
 
     // Create a test user
     let user = backend::test_utils::UserBuilder::new()
-        .with_email(&fixtures::unique_test_email())
+        .with_email(fixtures::unique_test_email())
         .with_display_name("Both Tokens Cleanup Test User")
-        .with_slug(&fixtures::unique_test_slug())
+        .with_slug(fixtures::unique_test_slug())
         .with_password("password123")
         .persist(pool)
         .await
@@ -253,9 +253,9 @@ async fn test_cleanup_no_expired_tokens() {
 
     // Create a test user
     let user = backend::test_utils::UserBuilder::new()
-        .with_email(&fixtures::unique_test_email())
+        .with_email(fixtures::unique_test_email())
         .with_display_name("No Expired Tokens Test User")
-        .with_slug(&fixtures::unique_test_slug())
+        .with_slug(fixtures::unique_test_slug())
         .with_password("password123")
         .persist(pool)
         .await

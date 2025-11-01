@@ -9,8 +9,8 @@ use uuid::Uuid;
 // Uses UserBuilder pattern for resilient test fixtures
 async fn create_test_user(pool: &sqlx::PgPool) -> backend::models::db::User {
     UserBuilder::new()
-        .with_email(&format!("test-{}@example.com", Uuid::new_v4()))
-        .with_slug(&format!("test-{}", Uuid::new_v4()))
+        .with_email(format!("test-{}@example.com", Uuid::new_v4()))
+        .with_slug(format!("test-{}", Uuid::new_v4()))
         .with_password("temp_hash")
         .persist(pool)
         .await
@@ -155,7 +155,7 @@ async fn test_is_provider_linked() {
 
     // Not linked initially
     let is_linked = repo.is_provider_linked(user.id, "google").await.unwrap();
-    assert_eq!(is_linked, false);
+    assert!(!is_linked);
 
     // Create login
     repo.create(CreateExternalLogin {
@@ -168,7 +168,7 @@ async fn test_is_provider_linked() {
 
     // Now linked
     let is_linked = repo.is_provider_linked(user.id, "google").await.unwrap();
-    assert_eq!(is_linked, true);
+    assert!(is_linked);
 }
 
 // Note: delete() method removed - CASCADE handles deletion when user is deleted

@@ -97,8 +97,8 @@ async fn test_refresh_token_complete_flow() {
     assert_eq!(login_resp.status().as_u16(), 200);
     
     let login_data: serde_json::Value = login_resp.json().await.unwrap();
-    assert!(login_data["refresh_token"].as_str().unwrap().len() > 0);
-    assert!(login_data["token"].as_str().unwrap().len() > 0);
+    assert!(!login_data["refresh_token"].as_str().unwrap().is_empty());
+    assert!(!login_data["token"].as_str().unwrap().is_empty());
 }
 
 /// Test refresh token expiration handling
@@ -109,9 +109,9 @@ async fn test_refresh_token_expiration() {
     
     // Create a user
     let user = backend::test_utils::UserBuilder::new()
-        .with_email(&fixtures::unique_test_email())
+        .with_email(fixtures::unique_test_email())
         .with_display_name("Expiry Test User")
-        .with_slug(&fixtures::unique_test_slug())
+        .with_slug(fixtures::unique_test_slug())
         .with_password("password123")
         .persist(&ctx.pool)
         .await

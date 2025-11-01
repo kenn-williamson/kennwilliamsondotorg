@@ -2,9 +2,6 @@ use serde_json::json;
 use uuid::Uuid;
 use crate::fixtures::TestContext;
 
-#[path = "../fixtures/mod.rs"]
-mod fixtures;
-
 // ============================================================================
 // ACCOUNT DELETION TESTS - TDD Phase 1 (Red Phase)
 // ============================================================================
@@ -348,7 +345,7 @@ async fn create_test_user_data(ctx: &TestContext, user_id: Uuid) {
         .unwrap();
 
     // Create phrase exclusion
-    let phrase_id = create_test_phrase(&ctx).await;
+    let phrase_id = create_test_phrase(ctx).await;
     sqlx::query("INSERT INTO user_excluded_phrases (user_id, phrase_id) VALUES ($1, $2)")
         .bind(user_id)
         .bind(phrase_id)
@@ -374,7 +371,7 @@ async fn create_comprehensive_test_data(ctx: &TestContext, user_id: Uuid) {
     for i in 1..=3 {
         IncidentTimerBuilder::new()
             .with_user_id(user_id)
-            .with_notes(&format!("Test timer {}", i))
+            .with_notes(format!("Test timer {}", i))
             .persist(&ctx.pool)
             .await
             .unwrap();
@@ -382,7 +379,7 @@ async fn create_comprehensive_test_data(ctx: &TestContext, user_id: Uuid) {
 
     // Create multiple phrase exclusions
     for _i in 1..=2 {
-        let phrase_id = create_test_phrase(&ctx).await;
+        let phrase_id = create_test_phrase(ctx).await;
         sqlx::query("INSERT INTO user_excluded_phrases (user_id, phrase_id) VALUES ($1, $2)")
             .bind(user_id)
             .bind(phrase_id)
@@ -395,7 +392,7 @@ async fn create_comprehensive_test_data(ctx: &TestContext, user_id: Uuid) {
     for i in 1..=2 {
         RefreshTokenBuilder::new()
             .with_user_id(user_id)
-            .with_token_hash(&format!("test_token_hash_{}", i))
+            .with_token_hash(format!("test_token_hash_{}", i))
             .expires_in_days(30)
             .persist(&ctx.pool)
             .await
@@ -409,7 +406,7 @@ async fn create_user_phrases(ctx: &TestContext, user_id: Uuid) {
 
     for i in 1..=3 {
         PhraseBuilder::new()
-            .with_text(&format!("User phrase {}", i))
+            .with_text(format!("User phrase {}", i))
             .with_created_by(user_id)
             .persist(&ctx.pool)
             .await
@@ -423,7 +420,7 @@ async fn create_phrase_suggestions(ctx: &TestContext, user_id: Uuid) {
 
     for i in 1..=2 {
         PhraseSuggestionBuilder::new()
-            .with_text(&format!("Suggested phrase {}", i))
+            .with_text(format!("Suggested phrase {}", i))
             .with_user_id(user_id)
             .pending()
             .persist(&ctx.pool)
@@ -436,7 +433,7 @@ async fn create_phrase_suggestions(ctx: &TestContext, user_id: Uuid) {
 async fn create_test_phrase(ctx: &TestContext) -> Uuid {
     use backend::test_utils::PhraseBuilder;
 
-    let system_user_id = get_system_user_id(&ctx).await;
+    let system_user_id = get_system_user_id(ctx).await;
 
     let phrase = PhraseBuilder::new()
         .with_text("Test phrase for exclusion")
@@ -550,7 +547,7 @@ async fn verify_all_data_deleted(ctx: &TestContext, user_id: Uuid) {
 
 /// Verify phrases are reassigned to system user
 async fn verify_phrases_reassigned(ctx: &TestContext, user_id: Uuid) {
-    let system_user_id = get_system_user_id(&ctx).await;
+    let system_user_id = get_system_user_id(ctx).await;
     
     // Check that no phrases are still owned by the deleted user
     let user_phrase_count = sqlx::query_scalar::<_, i64>(

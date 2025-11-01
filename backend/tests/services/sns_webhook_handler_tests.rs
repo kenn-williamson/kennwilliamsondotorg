@@ -1,6 +1,5 @@
 /// Phase 3 Unit Tests: SNS Webhook Message Handling
 /// Tests the logic for parsing and processing SNS notifications (bounces, complaints)
-
 use backend::services::webhooks::sns_handler::{SnsHandler, SnsMessage};
 use backend::repositories::mocks::MockEmailSuppressionRepository;
 use backend::repositories::traits::email_suppression_repository::EmailSuppressionRepository;

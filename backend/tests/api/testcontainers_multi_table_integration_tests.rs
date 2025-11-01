@@ -63,8 +63,8 @@ async fn test_registration_creates_all_required_tables() {
     .await
     .unwrap();
     assert_eq!(prefs.0, user_id);
-    assert_eq!(prefs.1, true, "Default timer_is_public should be true for backward compatibility");
-    assert_eq!(prefs.2, true, "Default timer_show_in_list should be true for backward compatibility");
+    assert!(prefs.1, "Default timer_is_public should be true for backward compatibility");
+    assert!(prefs.2, "Default timer_show_in_list should be true for backward compatibility");
 
     // Verify profile created in user_profiles table (optional, may be null fields)
     let profile = sqlx::query_as::<_, (Uuid, Option<String>)>(

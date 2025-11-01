@@ -400,8 +400,8 @@ mod tests {
             .with(
                 eq(user_id),
                 mockall::predicate::function(|updates: &UserUpdates| {
-                    updates.display_name == "New Name".to_string()
-                        && updates.slug == "new-slug".to_string()
+                    updates.display_name == "New Name"
+                        && updates.slug == "new-slug"
                 }),
             )
             .returning(move |_, _| Ok(updated_user.clone()));

@@ -11,7 +11,7 @@ impl IncidentTimerService {
         user_id: Uuid,
         data: CreateIncidentTimer,
     ) -> Result<crate::models::db::IncidentTimer> {
-        let reset_timestamp = data.reset_timestamp.unwrap_or_else(|| chrono::Utc::now());
+        let reset_timestamp = data.reset_timestamp.unwrap_or_else(chrono::Utc::now);
 
         // Validate that reset_timestamp is not in the future
         validate_timestamp(&reset_timestamp)?;

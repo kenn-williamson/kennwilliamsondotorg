@@ -262,7 +262,7 @@ async fn test_update_timer_success() {
         "notes": "Updated notes"
     });
     
-    let mut resp = ctx.server.put(&format!("/backend/protected/incident-timers/{}", timer_id))
+    let mut resp = ctx.server.put(format!("/backend/protected/incident-timers/{}", timer_id))
         .insert_header(("Authorization", format!("Bearer {}", token)))
         .send_json(&update_request_body)
         .await
@@ -324,7 +324,7 @@ async fn test_update_timer_not_found() {
         "notes": "Updated notes"
     });
     
-    let mut resp = ctx.server.put(&format!("/backend/protected/incident-timers/{}", fake_timer_id))
+    let mut resp = ctx.server.put(format!("/backend/protected/incident-timers/{}", fake_timer_id))
         .insert_header(("Authorization", format!("Bearer {}", token)))
         .send_json(&update_request_body)
         .await
@@ -346,7 +346,7 @@ async fn test_update_timer_unauthorized() {
         "notes": "Updated notes"
     });
     
-    let mut resp = ctx.server.put(&format!("/backend/protected/incident-timers/{}", fake_timer_id))
+    let mut resp = ctx.server.put(format!("/backend/protected/incident-timers/{}", fake_timer_id))
         .send_json(&update_request_body)
         .await
         .unwrap();
@@ -409,7 +409,7 @@ async fn test_delete_timer_success() {
     let timer_id = create_body.get("id").unwrap().as_str().unwrap();
     
     // Delete the timer
-    let mut resp = ctx.server.delete(&format!("/backend/protected/incident-timers/{}", timer_id))
+    let mut resp = ctx.server.delete(format!("/backend/protected/incident-timers/{}", timer_id))
         .insert_header(("Authorization", format!("Bearer {}", token)))
         .send()
         .await
@@ -476,7 +476,7 @@ async fn test_delete_timer_not_found() {
     // Try to delete a non-existent timer
     let fake_timer_id = "01234567-89ab-cdef-0123-456789abcdef";
     
-    let mut resp = ctx.server.delete(&format!("/backend/protected/incident-timers/{}", fake_timer_id))
+    let mut resp = ctx.server.delete(format!("/backend/protected/incident-timers/{}", fake_timer_id))
         .insert_header(("Authorization", format!("Bearer {}", token)))
         .send()
         .await
@@ -495,7 +495,7 @@ async fn test_delete_timer_unauthorized() {
     
     let fake_timer_id = "01234567-89ab-cdef-0123-456789abcdef";
     
-    let mut resp = ctx.server.delete(&format!("/backend/protected/incident-timers/{}", fake_timer_id))
+    let mut resp = ctx.server.delete(format!("/backend/protected/incident-timers/{}", fake_timer_id))
         .send()
         .await
         .unwrap();
@@ -560,7 +560,7 @@ async fn test_get_public_timer_success() {
     assert_eq!(create_resp.status(), 201);
     
     // Get the public timer
-    let mut resp = ctx.server.get(&format!("/backend/public/{}/incident-timer", user_slug))
+    let mut resp = ctx.server.get(format!("/backend/public/{}/incident-timer", user_slug))
         .send()
         .await
         .unwrap();
@@ -588,7 +588,7 @@ async fn test_get_public_timer_not_found() {
     // Try to get a timer for a non-existent user
     let fake_slug = "non-existent-user";
     
-    let mut resp = ctx.server.get(&format!("/backend/public/{}/incident-timer", fake_slug))
+    let mut resp = ctx.server.get(format!("/backend/public/{}/incident-timer", fake_slug))
         .send()
         .await
         .unwrap();
@@ -626,7 +626,7 @@ async fn test_get_public_timer_no_timers() {
     let user_slug = user.get("slug").unwrap().as_str().unwrap();
     
     // Try to get the public timer (should be 404 since no timers exist)
-    let mut resp = ctx.server.get(&format!("/backend/public/{}/incident-timer", user_slug))
+    let mut resp = ctx.server.get(format!("/backend/public/{}/incident-timer", user_slug))
         .send()
         .await
         .unwrap();

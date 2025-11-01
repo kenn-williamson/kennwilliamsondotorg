@@ -52,12 +52,15 @@ impl<E: DomainEvent + 'static> TypeErasedHandler for TypedHandlerWrapper<E> {
 /// This prevents resource exhaustion while maintaining high throughput.
 ///
 /// # Thread Safety
+/// Type alias for handler storage to reduce complexity
+type HandlerMap = Arc<RwLock<HashMap<TypeId, Vec<Arc<dyn TypeErasedHandler>>>>>;
+
 /// Uses RwLock for handler storage (many reads, rare writes at startup).
 /// All handlers must be Send + Sync for cross-thread execution.
 pub struct InMemoryEventBus {
     /// Handler storage: TypeId -> Vec<Arc<dyn TypeErasedHandler>>
     /// Handlers are type-erased to allow storage of different types in same HashMap
-    handlers: Arc<RwLock<HashMap<TypeId, Vec<Arc<dyn TypeErasedHandler>>>>>,
+    handlers: HandlerMap,
 
     /// Semaphore to limit concurrent handler executions
     /// Prevents resource exhaustion under high event load
@@ -188,7 +191,7 @@ impl EventBus for InMemoryEventBus {
 
         handlers_map
             .entry(event_type_id)
-            .or_insert_with(Vec::new)
+            .or_default()
             .push(handler_arc);
 
         log::info!(

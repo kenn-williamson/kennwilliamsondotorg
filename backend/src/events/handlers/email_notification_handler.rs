@@ -355,191 +355,6 @@ impl EventHandler<AccessRequestRejectedEvent> for AccessRequestRejectedEmailHand
     }
 }
 
-#[cfg(test)]
-mod tests {
-    use super::*;
-    use crate::events::EventHandler;
-    use crate::repositories::mocks::{MockAdminRepository, MockUserRepository};
-    use crate::services::email::MockEmailService;
-    use crate::test_utils::UserBuilder;
-    use uuid::Uuid;
-
-    #[tokio::test]
-    async fn test_access_request_handler_sends_emails() {
-        // Setup mocks
-        let mut mock_admin_repo = MockAdminRepository::new();
-        let mock_email_service = MockEmailService::new();
-
-        // Configure expectations
-        mock_admin_repo
-            .expect_get_admin_emails()
-            .times(1)
-            .returning(|| Ok(vec!["admin@example.com".to_string()]));
-
-        // Clone for verification
-        let email_service_clone = mock_email_service.clone();
-
-        // Create handler
-        let handler = AccessRequestEmailNotificationHandler::new(
-            Arc::new(mock_admin_repo),
-            Arc::new(mock_email_service),
-            "https://kennwilliamson.org",
-        );
-
-        // Create event
-        let event = AccessRequestCreatedEvent::new(
-            Uuid::new_v4(),
-            "user@example.com",
-            "Test User",
-            "I need access",
-            "trusted-contact",
-        );
-
-        // Handle event
-        let result = handler.handle(&event).await;
-        assert!(result.is_ok());
-
-        // Verify email was sent
-        assert_eq!(email_service_clone.count(), 1);
-        let sent_emails = email_service_clone.get_sent_emails();
-        assert_eq!(sent_emails[0].to, vec!["admin@example.com"]);
-        assert!(sent_emails[0].subject.contains("Access Request"));
-    }
-
-    #[tokio::test]
-    async fn test_access_request_handler_no_admins() {
-        // Setup mocks
-        let mut mock_admin_repo = MockAdminRepository::new();
-        let mock_email_service = MockEmailService::new();
-
-        // Configure expectations - no admins
-        mock_admin_repo
-            .expect_get_admin_emails()
-            .times(1)
-            .returning(|| Ok(vec![]));
-
-        let email_service_clone = mock_email_service.clone();
-
-        // Create handler
-        let handler = AccessRequestEmailNotificationHandler::new(
-            Arc::new(mock_admin_repo),
-            Arc::new(mock_email_service),
-            "https://kennwilliamson.org",
-        );
-
-        // Create event
-        let event = AccessRequestCreatedEvent::new(
-            Uuid::new_v4(),
-            "user@example.com",
-            "Test User",
-            "I need access",
-            "trusted-contact",
-        );
-
-        // Handle event
-        let result = handler.handle(&event).await;
-        assert!(result.is_ok());
-
-        // Verify no email was sent
-        assert_eq!(email_service_clone.count(), 0);
-    }
-
-    #[tokio::test]
-    async fn test_phrase_suggestion_handler_sends_emails() {
-        // Setup mocks
-        let mut mock_admin_repo = MockAdminRepository::new();
-        let mut mock_user_repo = MockUserRepository::new();
-        let mock_email_service = MockEmailService::new();
-
-        // Configure expectations
-        mock_admin_repo
-            .expect_get_admin_emails()
-            .times(1)
-            .returning(|| Ok(vec!["admin@example.com".to_string()]));
-
-        // Configure user repository to return user details
-        mock_user_repo
-            .expect_find_by_id()
-            .times(1)
-            .returning(|_| {
-                Ok(Some(crate::test_utils::UserBuilder::new()
-                    .with_display_name("Test User")
-                    .build()))
-            });
-
-        // Clone for verification
-        let email_service_clone = mock_email_service.clone();
-
-        // Create handler
-        let handler = PhraseSuggestionEmailNotificationHandler::new(
-            Arc::new(mock_admin_repo),
-            Arc::new(mock_user_repo),
-            Arc::new(mock_email_service),
-            "https://kennwilliamson.org",
-        );
-
-        // Create event
-        let event = PhraseSuggestionCreatedEvent::new(
-            Uuid::new_v4(),
-            "Time is an illusion",
-        );
-
-        // Handle event
-        let result = handler.handle(&event).await;
-        assert!(result.is_ok());
-
-        // Verify email was sent
-        assert_eq!(email_service_clone.count(), 1);
-        let sent_emails = email_service_clone.get_sent_emails();
-        assert_eq!(sent_emails[0].to, vec!["admin@example.com"]);
-        assert!(sent_emails[0].subject.contains("Phrase Suggestion"));
-    }
-
-    #[tokio::test]
-    async fn test_phrase_suggestion_handler_no_admins() {
-        // Setup mocks
-        let mut mock_admin_repo = MockAdminRepository::new();
-        let mut mock_user_repo = MockUserRepository::new();
-        let mock_email_service = MockEmailService::new();
-
-        // Configure expectations
-        let user_id = Uuid::new_v4();
-
-        mock_user_repo
-            .expect_find_by_id()
-            .times(1)
-            .returning(|_| Ok(Some(UserBuilder::new().build())));
-
-        mock_admin_repo
-            .expect_get_admin_emails()
-            .times(1)
-            .returning(|| Ok(vec![]));
-
-        let email_service_clone = mock_email_service.clone();
-
-        // Create handler
-        let handler = PhraseSuggestionEmailNotificationHandler::new(
-            Arc::new(mock_admin_repo),
-            Arc::new(mock_user_repo),
-            Arc::new(mock_email_service),
-            "https://kennwilliamson.org",
-        );
-
-        // Create event
-        let event = PhraseSuggestionCreatedEvent::new(
-            user_id,
-            "Test phrase",
-        );
-
-        // Handle event
-        let result = handler.handle(&event).await;
-        assert!(result.is_ok());
-
-        // Verify no email was sent
-        assert_eq!(email_service_clone.count(), 0);
-    }
-}
-
 /// Email notification handler for phrase suggestion approved events
 ///
 /// Sends email notification to the user when their phrase suggestion is approved.
@@ -995,4 +810,189 @@ fn hash_verification_token(token: &str) -> String {
     let mut hasher = Sha256::new();
     hasher.update(token.as_bytes());
     hex::encode(hasher.finalize())
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use crate::events::EventHandler;
+    use crate::repositories::mocks::{MockAdminRepository, MockUserRepository};
+    use crate::services::email::MockEmailService;
+    use crate::test_utils::UserBuilder;
+    use uuid::Uuid;
+
+    #[tokio::test]
+    async fn test_access_request_handler_sends_emails() {
+        // Setup mocks
+        let mut mock_admin_repo = MockAdminRepository::new();
+        let mock_email_service = MockEmailService::new();
+
+        // Configure expectations
+        mock_admin_repo
+            .expect_get_admin_emails()
+            .times(1)
+            .returning(|| Ok(vec!["admin@example.com".to_string()]));
+
+        // Clone for verification
+        let email_service_clone = mock_email_service.clone();
+
+        // Create handler
+        let handler = AccessRequestEmailNotificationHandler::new(
+            Arc::new(mock_admin_repo),
+            Arc::new(mock_email_service),
+            "https://kennwilliamson.org",
+        );
+
+        // Create event
+        let event = AccessRequestCreatedEvent::new(
+            Uuid::new_v4(),
+            "user@example.com",
+            "Test User",
+            "I need access",
+            "trusted-contact",
+        );
+
+        // Handle event
+        let result = handler.handle(&event).await;
+        assert!(result.is_ok());
+
+        // Verify email was sent
+        assert_eq!(email_service_clone.count(), 1);
+        let sent_emails = email_service_clone.get_sent_emails();
+        assert_eq!(sent_emails[0].to, vec!["admin@example.com"]);
+        assert!(sent_emails[0].subject.contains("Access Request"));
+    }
+
+    #[tokio::test]
+    async fn test_access_request_handler_no_admins() {
+        // Setup mocks
+        let mut mock_admin_repo = MockAdminRepository::new();
+        let mock_email_service = MockEmailService::new();
+
+        // Configure expectations - no admins
+        mock_admin_repo
+            .expect_get_admin_emails()
+            .times(1)
+            .returning(|| Ok(vec![]));
+
+        let email_service_clone = mock_email_service.clone();
+
+        // Create handler
+        let handler = AccessRequestEmailNotificationHandler::new(
+            Arc::new(mock_admin_repo),
+            Arc::new(mock_email_service),
+            "https://kennwilliamson.org",
+        );
+
+        // Create event
+        let event = AccessRequestCreatedEvent::new(
+            Uuid::new_v4(),
+            "user@example.com",
+            "Test User",
+            "I need access",
+            "trusted-contact",
+        );
+
+        // Handle event
+        let result = handler.handle(&event).await;
+        assert!(result.is_ok());
+
+        // Verify no email was sent
+        assert_eq!(email_service_clone.count(), 0);
+    }
+
+    #[tokio::test]
+    async fn test_phrase_suggestion_handler_sends_emails() {
+        // Setup mocks
+        let mut mock_admin_repo = MockAdminRepository::new();
+        let mut mock_user_repo = MockUserRepository::new();
+        let mock_email_service = MockEmailService::new();
+
+        // Configure expectations
+        mock_admin_repo
+            .expect_get_admin_emails()
+            .times(1)
+            .returning(|| Ok(vec!["admin@example.com".to_string()]));
+
+        // Configure user repository to return user details
+        mock_user_repo
+            .expect_find_by_id()
+            .times(1)
+            .returning(|_| {
+                Ok(Some(crate::test_utils::UserBuilder::new()
+                    .with_display_name("Test User")
+                    .build()))
+            });
+
+        // Clone for verification
+        let email_service_clone = mock_email_service.clone();
+
+        // Create handler
+        let handler = PhraseSuggestionEmailNotificationHandler::new(
+            Arc::new(mock_admin_repo),
+            Arc::new(mock_user_repo),
+            Arc::new(mock_email_service),
+            "https://kennwilliamson.org",
+        );
+
+        // Create event
+        let event = PhraseSuggestionCreatedEvent::new(
+            Uuid::new_v4(),
+            "Time is an illusion",
+        );
+
+        // Handle event
+        let result = handler.handle(&event).await;
+        assert!(result.is_ok());
+
+        // Verify email was sent
+        assert_eq!(email_service_clone.count(), 1);
+        let sent_emails = email_service_clone.get_sent_emails();
+        assert_eq!(sent_emails[0].to, vec!["admin@example.com"]);
+        assert!(sent_emails[0].subject.contains("Phrase Suggestion"));
+    }
+
+    #[tokio::test]
+    async fn test_phrase_suggestion_handler_no_admins() {
+        // Setup mocks
+        let mut mock_admin_repo = MockAdminRepository::new();
+        let mut mock_user_repo = MockUserRepository::new();
+        let mock_email_service = MockEmailService::new();
+
+        // Configure expectations
+        let user_id = Uuid::new_v4();
+
+        mock_user_repo
+            .expect_find_by_id()
+            .times(1)
+            .returning(|_| Ok(Some(UserBuilder::new().build())));
+
+        mock_admin_repo
+            .expect_get_admin_emails()
+            .times(1)
+            .returning(|| Ok(vec![]));
+
+        let email_service_clone = mock_email_service.clone();
+
+        // Create handler
+        let handler = PhraseSuggestionEmailNotificationHandler::new(
+            Arc::new(mock_admin_repo),
+            Arc::new(mock_user_repo),
+            Arc::new(mock_email_service),
+            "https://kennwilliamson.org",
+        );
+
+        // Create event
+        let event = PhraseSuggestionCreatedEvent::new(
+            user_id,
+            "Test phrase",
+        );
+
+        // Handle event
+        let result = handler.handle(&event).await;
+        assert!(result.is_ok());
+
+        // Verify no email was sent
+        assert_eq!(email_service_clone.count(), 0);
+    }
 }

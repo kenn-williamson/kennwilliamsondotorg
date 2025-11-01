@@ -279,7 +279,7 @@ mod tests {
         assert!(result.is_ok());
 
         let response = result.unwrap();
-        assert_eq!(response.email_verified, true);
+        assert!(response.email_verified);
 
         Ok(())
     }

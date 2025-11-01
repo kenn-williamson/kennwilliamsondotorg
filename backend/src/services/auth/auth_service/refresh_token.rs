@@ -221,7 +221,7 @@ mod tests {
         assert!(!response.refresh_token.is_empty());
         assert_eq!(response.user.email, "test@example.com");
         assert_eq!(response.user.roles, vec!["user"]);
-        assert_eq!(response.user.email_verified, false);
+        assert!(!response.user.email_verified);
 
         Ok(())
     }

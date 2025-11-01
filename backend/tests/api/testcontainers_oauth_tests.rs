@@ -7,7 +7,7 @@ use backend::test_utils::UserBuilder;
 async fn create_email_password_user(pool: &PgPool, email: &str, verified: bool) -> Uuid {
     let user = UserBuilder::new()
         .with_email(email)
-        .with_slug(&format!("test-{}", Uuid::new_v4()))
+        .with_slug(format!("test-{}", Uuid::new_v4()))
         .with_display_name("Test User")
         .with_password("$2b$12$test_hash")
         .persist(pool)
@@ -28,7 +28,7 @@ async fn create_oauth_user(pool: &PgPool, google_user_id: &str, email: &str) -> 
     let user = UserBuilder::new()
         .oauth(google_user_id, "Real Name")
         .with_email(email)
-        .with_slug(&format!("oauth-{}", Uuid::new_v4()))
+        .with_slug(format!("oauth-{}", Uuid::new_v4()))
         .with_display_name("OAuth User")
         .persist(pool)
         .await

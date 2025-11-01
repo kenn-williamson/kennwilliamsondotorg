@@ -26,6 +26,12 @@ pub struct PhraseServiceBuilder {
     event_bus: Option<Arc<dyn EventPublisher>>,
 }
 
+impl Default for PhraseServiceBuilder {
+    fn default() -> Self {
+        Self::new()
+    }
+}
+
 impl PhraseServiceBuilder {
     pub fn new() -> Self {
         Self {

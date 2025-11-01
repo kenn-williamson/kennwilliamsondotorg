@@ -333,14 +333,13 @@ fn parse_state_parameter(state: &str) -> (String, Option<String>) {
 
     if let Some((csrf, encoded_redirect)) = state.split_once('|') {
         // Attempt to decode the redirect URL
-        if let Ok(decoded_bytes) = base64_engine.decode(encoded_redirect) {
-            if let Ok(redirect) = String::from_utf8(decoded_bytes) {
+        if let Ok(decoded_bytes) = base64_engine.decode(encoded_redirect)
+            && let Ok(redirect) = String::from_utf8(decoded_bytes) {
                 // Validate the redirect URL before returning
                 if validate_redirect_url(&redirect) {
                     return (csrf.to_string(), Some(redirect));
                 }
             }
-        }
         // If decoding or validation failed, return None for redirect
         return (csrf.to_string(), None);
     }
@@ -1515,7 +1514,7 @@ mod tests {
     fn test_parse_state_parameter_without_redirect() {
         let state = "csrf-token-only";
 
-        let (csrf, redirect) = parse_state_parameter(&state);
+        let (csrf, redirect) = parse_state_parameter(state);
 
         assert_eq!(csrf, "csrf-token-only");
         assert_eq!(redirect, None);
@@ -1540,7 +1539,7 @@ mod tests {
         // Invalid base64 should not crash, just return None for redirect
         let state = "csrf-token|invalid-base64!!!";
 
-        let (csrf, redirect) = parse_state_parameter(&state);
+        let (csrf, redirect) = parse_state_parameter(state);
 
         assert_eq!(csrf, "csrf-token");
         // Invalid base64 should result in None
@@ -1580,8 +1579,8 @@ mod tests {
         let mock_oauth = MockGoogleOAuthService::new();
         let service = create_test_auth_service_with_mock_oauth(mock_oauth);
 
-        let redirect = Some("/profile".to_string());
-        let result = service.google_oauth_url(redirect.clone()).await;
+        let redirect_url = "/profile".to_string();
+        let result = service.google_oauth_url(Some(redirect_url.clone())).await;
 
         assert!(result.is_ok());
 
@@ -1589,7 +1588,7 @@ mod tests {
 
         // Verify that the redirect was encoded in the csrf_token
         // The returned csrf_token.secret() should contain the enhanced state (csrf|encoded_redirect)
-        let encoded_redirect = base64_engine.encode(redirect.unwrap().as_bytes());
+        let encoded_redirect = base64_engine.encode(redirect_url.as_bytes());
         assert!(csrf_token.secret().contains('|'), "State should contain redirect separator");
         assert!(csrf_token.secret().contains(&encoded_redirect), "State should contain encoded redirect");
 

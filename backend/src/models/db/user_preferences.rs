@@ -54,8 +54,8 @@ mod tests {
         let prefs = UserPreferences::default_for_user(user_id);
 
         assert_eq!(prefs.user_id, user_id);
-        assert_eq!(prefs.timer_is_public, false);
-        assert_eq!(prefs.timer_show_in_list, false);
+        assert!(!prefs.timer_is_public);
+        assert!(!prefs.timer_show_in_list);
     }
 
     #[test]
@@ -68,8 +68,8 @@ mod tests {
             updated_at: Utc::now(),
         };
 
-        assert_eq!(prefs.timer_is_public, true);
-        assert_eq!(prefs.timer_show_in_list, true);
+        assert!(prefs.timer_is_public);
+        assert!(prefs.timer_show_in_list);
     }
 
     #[test]
@@ -85,8 +85,8 @@ mod tests {
         };
 
         // Model allows it (validation happens in service layer)
-        assert_eq!(prefs.timer_is_public, false);
-        assert_eq!(prefs.timer_show_in_list, true);
+        assert!(!prefs.timer_is_public);
+        assert!(prefs.timer_show_in_list);
         // Note: This invalid state is allowed at model level
         // but should be caught by service layer validation
     }

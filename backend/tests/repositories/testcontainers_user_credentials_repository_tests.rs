@@ -5,8 +5,8 @@ use uuid::Uuid;
 
 async fn create_test_user_with_credentials(pool: &sqlx::PgPool) -> backend::models::db::User {
     UserBuilder::new()
-        .with_email(&format!("test-{}@example.com", Uuid::new_v4()))
-        .with_slug(&format!("test-{}", Uuid::new_v4()))
+        .with_email(format!("test-{}@example.com", Uuid::new_v4()))
+        .with_slug(format!("test-{}", Uuid::new_v4()))
         .with_password("test_password")
         .persist(pool)
         .await
@@ -76,10 +76,10 @@ async fn test_has_password() {
         .unwrap();
 
     let has_password = repo.has_password(oauth_user.id).await.unwrap();
-    assert_eq!(has_password, false);
+    assert!(!has_password);
 
     // User with password
     let pwd_user = create_test_user_with_credentials(&test_container.pool).await;
     let has_password = repo.has_password(pwd_user.id).await.unwrap();
-    assert_eq!(has_password, true);
+    assert!(has_password);
 }

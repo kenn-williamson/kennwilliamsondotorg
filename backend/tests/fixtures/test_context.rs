@@ -30,6 +30,12 @@ pub struct TestContainerBuilder {
     // Future: could add configuration options here
 }
 
+impl Default for TestContainerBuilder {
+    fn default() -> Self {
+        Self::new()
+    }
+}
+
 impl TestContainerBuilder {
     pub fn new() -> Self {
         Self {}
@@ -192,6 +198,12 @@ pub struct TestContextBuilder {
 }
 
 #[allow(dead_code)]
+impl Default for TestContextBuilder {
+    fn default() -> Self {
+        Self::new()
+    }
+}
+
 impl TestContextBuilder {
     pub fn new() -> Self {
         Self {
@@ -201,18 +213,21 @@ impl TestContextBuilder {
     }
 
     /// Configure with Redis URL for rate limiting tests
+    #[allow(dead_code)]
     pub fn with_redis(mut self, url: String) -> Self {
         self.redis_url = Some(url);
         self
     }
 
     /// Configure with OAuth service for OAuth tests
+    #[allow(dead_code)]
     pub fn with_oauth(mut self, oauth_service: backend::services::auth::oauth::MockGoogleOAuthService) -> Self {
         self.oauth_service = Some(oauth_service);
         self
     }
 
     /// Build the test context with all dependencies
+    #[allow(dead_code)]
     pub async fn build(self) -> TestContext {
         use backend::services::container::ServiceContainer;
         use backend::routes;
@@ -268,8 +283,7 @@ impl TestContextBuilder {
         let event_publisher: Arc<dyn EventPublisher> = Arc::new(event_bus);
 
         // Create mock OAuth service for testing
-        use backend::services::auth::oauth::MockGoogleOAuthService;
-        let mock_oauth = self.oauth_service.unwrap_or_else(|| MockGoogleOAuthService::new());
+        let mock_oauth = self.oauth_service.unwrap_or_default();
 
         let auth_service = Arc::new(AuthService::builder()
             .user_repository(Box::new(PostgresUserRepository::new(test_container.pool.clone())))

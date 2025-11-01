@@ -63,7 +63,7 @@ pub async fn rate_limit_middleware(
                 "Looking for type: {}",
                 std::any::type_name::<Data<dyn RateLimitServiceTrait>>()
             );
-            return Ok(next.call(req).await?);
+            return next.call(req).await;
         }
     };
 
@@ -76,7 +76,7 @@ pub async fn rate_limit_middleware(
         Some(config) => config,
         None => {
             log::debug!("No rate limit config for endpoint: {}", endpoint_type);
-            return Ok(next.call(req).await?);
+            return next.call(req).await;
         }
     };
 
@@ -123,7 +123,7 @@ pub async fn admin_rate_limit_middleware(
         Some(service) => service,
         None => {
             log::error!("Admin rate limit service not found in app data");
-            return Ok(next.call(req).await?);
+            return next.call(req).await;
         }
     };
 

@@ -40,6 +40,12 @@ pub struct AccessRequestModerationServiceBuilder {
     event_bus: Option<Arc<dyn EventPublisher>>,
 }
 
+impl Default for AccessRequestModerationServiceBuilder {
+    fn default() -> Self {
+        Self::new()
+    }
+}
+
 impl AccessRequestModerationServiceBuilder {
     pub fn new() -> Self {
         Self {

@@ -9,8 +9,8 @@ use uuid::Uuid;
 // Uses UserBuilder pattern for resilient test fixtures
 async fn create_test_user(pool: &sqlx::PgPool) -> backend::models::db::User {
     UserBuilder::new()
-        .with_email(&format!("test-{}@example.com", Uuid::new_v4()))
-        .with_slug(&format!("test-{}", Uuid::new_v4()))
+        .with_email(format!("test-{}@example.com", Uuid::new_v4()))
+        .with_slug(format!("test-{}", Uuid::new_v4()))
         .with_password("temp_hash")
         .persist(pool)
         .await

@@ -9,9 +9,7 @@ use backend::services::auth::jwt::JwtService;
 use sqlx::PgPool;
 use uuid::Uuid;
 
-#[path = "fixtures/mod.rs"]
 mod fixtures;
-
 use fixtures::TestContainer;
 
 /// Fixture helper: Create a test admin user with admin role
@@ -23,10 +21,10 @@ async fn create_test_admin(pool: &PgPool) -> (User, String) {
     let user_id = Uuid::new_v4();
     let user = UserBuilder::new()
         .with_id(user_id)
-        .with_email(&format!("admin-{}@test.com", user_id))
+        .with_email(format!("admin-{}@test.com", user_id))
         .with_password(password)
         .with_display_name("Admin User")
-        .with_slug(&format!("admin-{}", user_id))
+        .with_slug(format!("admin-{}", user_id))
         .persist(pool)
         .await
         .expect("Failed to create admin user");
@@ -49,10 +47,10 @@ async fn create_test_user(pool: &PgPool) -> User {
     let user_id = Uuid::new_v4();
     UserBuilder::new()
         .with_id(user_id)
-        .with_email(&format!("user-{}@test.com", user_id))
+        .with_email(format!("user-{}@test.com", user_id))
         .with_password("Test123!@#")
         .with_display_name("Test User")
-        .with_slug(&format!("user-{}", user_id))
+        .with_slug(format!("user-{}", user_id))
         .persist(pool)
         .await
         .expect("Failed to create test user")
@@ -73,7 +71,7 @@ fn generate_admin_jwt(admin_id: Uuid) -> String {
         .without_password()
         .build();
 
-    jwt_service.generate_token(&user, &vec!["user".to_string(), "admin".to_string()]).unwrap()
+    jwt_service.generate_token(&user, &["user".to_string(), "admin".to_string()]).unwrap()
 }
 
 #[tokio::test]

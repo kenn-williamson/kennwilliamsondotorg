@@ -5,7 +5,7 @@ use uuid::Uuid;
 
 async fn create_test_user_with_prefs(pool: &sqlx::PgPool) -> backend::models::db::User {
     UserBuilder::new()
-        .with_email(&format!("test-{}@example.com", Uuid::new_v4()))
+        .with_email(format!("test-{}@example.com", Uuid::new_v4()))
         .persist(pool)
         .await
         .expect("Failed to create test user with preferences")
@@ -26,7 +26,7 @@ async fn test_find_by_user_id() {
     assert!(found.is_some());
     let prefs = found.unwrap();
     assert_eq!(prefs.user_id, user.id);
-    assert_eq!(prefs.timer_is_public, false);
+    assert!(!prefs.timer_is_public);
 }
 
 #[tokio::test]
@@ -60,8 +60,8 @@ async fn test_update_timer_is_public() {
 
     // Verify update
     let updated = repo.find_by_user_id(user.id).await.unwrap().unwrap();
-    assert_eq!(updated.timer_is_public, true);
-    assert_eq!(updated.timer_show_in_list, false);
+    assert!(updated.timer_is_public);
+    assert!(!updated.timer_show_in_list);
 }
 
 #[tokio::test]
@@ -81,8 +81,8 @@ async fn test_update_timer_show_in_list() {
 
     // Verify update
     let updated = repo.find_by_user_id(user.id).await.unwrap().unwrap();
-    assert_eq!(updated.timer_is_public, true);
-    assert_eq!(updated.timer_show_in_list, true);
+    assert!(updated.timer_is_public);
+    assert!(updated.timer_show_in_list);
 }
 
 #[tokio::test]
@@ -101,8 +101,8 @@ async fn test_update_timer_settings_both() {
         .unwrap();
 
     let updated = repo.find_by_user_id(user.id).await.unwrap().unwrap();
-    assert_eq!(updated.timer_is_public, true);
-    assert_eq!(updated.timer_show_in_list, true);
+    assert!(updated.timer_is_public);
+    assert!(updated.timer_show_in_list);
 
     // Disable both settings
     repo.update_timer_settings(user.id, false, false)
@@ -110,6 +110,6 @@ async fn test_update_timer_settings_both() {
         .unwrap();
 
     let updated = repo.find_by_user_id(user.id).await.unwrap().unwrap();
-    assert_eq!(updated.timer_is_public, false);
-    assert_eq!(updated.timer_show_in_list, false);
+    assert!(!updated.timer_is_public);
+    assert!(!updated.timer_show_in_list);
 }

@@ -17,5 +17,4 @@ pub async fn create_test_jwt_token(user: &backend::models::db::user::User) -> Re
     // For simplicity in tests: include both email-verified and admin roles
     // Real production code fetches roles from DB
     jwt_service.generate_token(user, &["email-verified".to_string(), "admin".to_string()])
-        .map_err(|e| e.into())
 }

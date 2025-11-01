@@ -135,7 +135,7 @@ impl UserManagementService {
                     .await?;
                 let admin_count = all_users
                     .iter()
-                    .filter(|u| u.roles.as_ref().map_or(false, |r| r.contains(&"admin".to_string())))
+                    .filter(|u| u.roles.as_ref().is_some_and(|r| r.contains(&"admin".to_string())))
                     .count();
 
                 if admin_count <= 1 {

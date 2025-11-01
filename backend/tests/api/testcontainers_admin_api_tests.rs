@@ -139,7 +139,7 @@ async fn test_get_users_success() {
     assert!(body.is_array());
     
     let users = body.as_array().unwrap();
-    assert!(users.len() >= 1); // At least the admin user
+    assert!(!users.is_empty()); // At least the admin user
 }
 
 #[actix_web::test]
@@ -188,9 +188,9 @@ async fn test_deactivate_user_success() {
     
     // Create a regular user to deactivate
     let regular_user = backend::test_utils::UserBuilder::new()
-        .with_email(&crate::fixtures::unique_test_email())
+        .with_email(crate::fixtures::unique_test_email())
         .with_display_name("Regular User")
-        .with_slug(&crate::fixtures::unique_test_slug())
+        .with_slug(crate::fixtures::unique_test_slug())
         .with_password("password123")
         .persist(&ctx.pool)
         .await
@@ -198,7 +198,7 @@ async fn test_deactivate_user_success() {
     
     let token = crate::fixtures::create_test_jwt_token(&admin_user).await.unwrap();
     
-    let mut resp = ctx.server.post(&format!("/backend/protected/admin/users/{}/deactivate", regular_user.id))
+    let mut resp = ctx.server.post(format!("/backend/protected/admin/users/{}/deactivate", regular_user.id))
         .insert_header(("Authorization", format!("Bearer {}", token)))
         .send()
         .await
@@ -233,9 +233,9 @@ async fn test_activate_user_success() {
     
     // Create a regular user to activate
     let regular_user = backend::test_utils::UserBuilder::new()
-        .with_email(&crate::fixtures::unique_test_email())
+        .with_email(crate::fixtures::unique_test_email())
         .with_display_name("Regular User")
-        .with_slug(&crate::fixtures::unique_test_slug())
+        .with_slug(crate::fixtures::unique_test_slug())
         .with_password("password123")
         .persist(&ctx.pool)
         .await
@@ -243,7 +243,7 @@ async fn test_activate_user_success() {
     
     let token = crate::fixtures::create_test_jwt_token(&admin_user).await.unwrap();
     
-    let mut resp = ctx.server.post(&format!("/backend/protected/admin/users/{}/activate", regular_user.id))
+    let mut resp = ctx.server.post(format!("/backend/protected/admin/users/{}/activate", regular_user.id))
         .insert_header(("Authorization", format!("Bearer {}", token)))
         .send()
         .await
@@ -278,9 +278,9 @@ async fn test_reset_user_password_success() {
     
     // Create a regular user to reset password
     let regular_user = backend::test_utils::UserBuilder::new()
-        .with_email(&crate::fixtures::unique_test_email())
+        .with_email(crate::fixtures::unique_test_email())
         .with_display_name("Regular User")
-        .with_slug(&crate::fixtures::unique_test_slug())
+        .with_slug(crate::fixtures::unique_test_slug())
         .with_password("password123")
         .persist(&ctx.pool)
         .await
@@ -288,7 +288,7 @@ async fn test_reset_user_password_success() {
     
     let token = crate::fixtures::create_test_jwt_token(&admin_user).await.unwrap();
     
-    let mut resp = ctx.server.post(&format!("/backend/protected/admin/users/{}/reset-password", regular_user.id))
+    let mut resp = ctx.server.post(format!("/backend/protected/admin/users/{}/reset-password", regular_user.id))
         .insert_header(("Authorization", format!("Bearer {}", token)))
         .send()
         .await
@@ -323,9 +323,9 @@ async fn test_promote_user_to_admin_success() {
     
     // Create a regular user to promote
     let regular_user = backend::test_utils::UserBuilder::new()
-        .with_email(&crate::fixtures::unique_test_email())
+        .with_email(crate::fixtures::unique_test_email())
         .with_display_name("Regular User")
-        .with_slug(&crate::fixtures::unique_test_slug())
+        .with_slug(crate::fixtures::unique_test_slug())
         .with_password("password123")
         .persist(&ctx.pool)
         .await
@@ -333,7 +333,7 @@ async fn test_promote_user_to_admin_success() {
     
     let token = crate::fixtures::create_test_jwt_token(&admin_user).await.unwrap();
     
-    let mut resp = ctx.server.post(&format!("/backend/protected/admin/users/{}/promote", regular_user.id))
+    let mut resp = ctx.server.post(format!("/backend/protected/admin/users/{}/promote", regular_user.id))
         .insert_header(("Authorization", format!("Bearer {}", token)))
         .send()
         .await
@@ -479,7 +479,7 @@ async fn test_deactivate_nonexistent_user() {
     
     // Try to deactivate a nonexistent user
     let nonexistent_id = Uuid::new_v4();
-    let mut resp = ctx.server.post(&format!("/backend/protected/admin/users/{}/deactivate", nonexistent_id))
+    let mut resp = ctx.server.post(format!("/backend/protected/admin/users/{}/deactivate", nonexistent_id))
         .insert_header(("Authorization", format!("Bearer {}", token)))
         .send()
         .await

@@ -1,5 +1,3 @@
-#![cfg(feature = "mocks")]
-
 pub mod mock_access_request_repository;
 pub mod mock_admin_repository;
 pub mod mock_email_suppression_repository;

@@ -28,6 +28,12 @@ struct MockState {
     pub mock_access_token: Option<String>,
 }
 
+impl Default for MockGoogleOAuthService {
+    fn default() -> Self {
+        Self::new()
+    }
+}
+
 impl MockGoogleOAuthService {
     #[allow(dead_code)] // Testing infrastructure API
     pub fn new() -> Self {
@@ -69,12 +75,6 @@ impl MockGoogleOAuthService {
     pub fn with_access_token(self, token: String) -> Self {
         self.state.lock().unwrap().mock_access_token = Some(token);
         self
-    }
-}
-
-impl Default for MockGoogleOAuthService {
-    fn default() -> Self {
-        Self::new()
     }
 }
 

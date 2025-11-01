@@ -12,6 +12,12 @@ pub struct MockRateLimitService {
     pub last_endpoint: Option<String>,
 }
 
+impl Default for MockRateLimitService {
+    fn default() -> Self {
+        Self::new()
+    }
+}
+
 impl MockRateLimitService {
     pub fn new() -> Self {
         Self {

@@ -552,7 +552,7 @@ pub async fn get_public_timer_list(
 ) -> ActixResult<HttpResponse> {
     // Extract pagination params with defaults
     let page = query.page.unwrap_or(1).max(1);
-    let page_size = query.page_size.unwrap_or(20).min(100).max(1); // Max 100, min 1
+    let page_size = query.page_size.unwrap_or(20).clamp(1, 100); // Max 100, min 1
     let offset = (page - 1) * page_size;
 
     // Extract search parameter (optional)

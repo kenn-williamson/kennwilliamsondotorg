@@ -1,6 +1,5 @@
 /// Phase 2 TDD Tests: Email Service Suppression Integration
 /// These tests verify that the SuppressionGuard checks the suppression list before sending emails
-
 use backend::repositories::mocks::MockEmailSuppressionRepository;
 use backend::repositories::traits::email_suppression_repository::{
     CreateSuppressionData, EmailSuppressionRepository,

@@ -117,8 +117,6 @@ impl SnsHandler {
         Self { suppression_repo }
     }
 
-    /// Get the message type from SNS message
-
     /// Handle SNS notification (bounce or complaint)
     pub async fn handle_notification(&self, sns_message: &SnsMessage) -> Result<()> {
         // Parse the nested SES notification from the SNS message
@@ -198,7 +196,7 @@ impl SnsHandler {
                     let data = CreateSuppressionData {
                         email: email.to_string(),
                         suppression_type: "bounce".to_string(),
-                        reason: Some(format!("Soft bounce threshold reached (3+ bounces)")),
+                        reason: Some("Soft bounce threshold reached (3+ bounces)".to_string()),
                         suppress_transactional: true,
                         suppress_marketing: true,
                     };

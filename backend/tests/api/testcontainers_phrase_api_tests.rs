@@ -167,7 +167,7 @@ async fn test_exclude_phrase_success() {
         .unwrap();
     
     // Now test excluding a phrase
-    let mut resp = ctx.server.post(&format!("/backend/protected/phrases/exclude/{}", phrase_id))
+    let mut resp = ctx.server.post(format!("/backend/protected/phrases/exclude/{}", phrase_id))
         .insert_header(("Authorization", format!("Bearer {}", token)))
         .send()
         .await
@@ -194,7 +194,7 @@ async fn test_exclude_phrase_unauthorized() {
         .await
         .unwrap();
     
-    let mut resp = ctx.server.post(&format!("/backend/protected/phrases/exclude/{}", phrase_id))
+    let mut resp = ctx.server.post(format!("/backend/protected/phrases/exclude/{}", phrase_id))
         .send()
         .await
         .unwrap();
@@ -241,7 +241,7 @@ async fn test_remove_phrase_exclusion_success() {
         .unwrap();
     
     // First exclude the phrase
-    let mut exclude_resp = ctx.server.post(&format!("/backend/protected/phrases/exclude/{}", phrase_id))
+    let mut exclude_resp = ctx.server.post(format!("/backend/protected/phrases/exclude/{}", phrase_id))
         .insert_header(("Authorization", format!("Bearer {}", token)))
         .send()
         .await
@@ -250,7 +250,7 @@ async fn test_remove_phrase_exclusion_success() {
     assert!(exclude_resp.status().is_success());
     
     // Now test removing the exclusion
-    let mut resp = ctx.server.delete(&format!("/backend/protected/phrases/exclude/{}", phrase_id))
+    let mut resp = ctx.server.delete(format!("/backend/protected/phrases/exclude/{}", phrase_id))
         .insert_header(("Authorization", format!("Bearer {}", token)))
         .send()
         .await
@@ -277,7 +277,7 @@ async fn test_remove_phrase_exclusion_unauthorized() {
         .await
         .unwrap();
     
-    let mut resp = ctx.server.delete(&format!("/backend/protected/phrases/exclude/{}", phrase_id))
+    let mut resp = ctx.server.delete(format!("/backend/protected/phrases/exclude/{}", phrase_id))
         .send()
         .await
         .unwrap();
@@ -398,7 +398,7 @@ async fn test_get_public_phrase_success() {
     assert!(register_resp.status().is_success());
     
     // Now test getting a public phrase by slug
-    let mut resp = ctx.server.get(&format!("/backend/public/{}/phrase", slug))
+    let mut resp = ctx.server.get(format!("/backend/public/{}/phrase", slug))
         .send()
         .await
         .unwrap();
