@@ -2,7 +2,7 @@ use actix_cors::Cors;
 use actix_web::{web, App, HttpServer};
 use backend::routes;
 use backend::services;
-use dotenv::dotenv;
+use dotenvy::dotenv;
 use sqlx::PgPool;
 use std::env;
 

@@ -1,0 +1,21 @@
+# Cargo audit configuration for kennwilliamsondotorg backend
+#
+# This file documents which security advisories we are intentionally ignoring
+# and the rationale for each decision.
+
+[advisories]
+# List of advisory IDs to ignore
+ignore = [
+    # RUSTSEC-2023-0071: RSA Marvin Attack vulnerability
+    # Reason: This vulnerability is in the rsa crate, which is only used by sqlx-mysql.
+    # Our project exclusively uses PostgreSQL (see Cargo.toml: features = ["postgres"]).
+    # The MySQL feature is not enabled, so this dependency path exists in Cargo.lock
+    # but is never compiled or used in our binary.
+    "RUSTSEC-2023-0071",
+
+    # RUSTSEC-2025-0111: tokio-tar PAX extended headers parsing vulnerability
+    # Reason: This vulnerability is in tokio-tar, which is only used by testcontainers.
+    # testcontainers is a dev-dependency used exclusively for integration tests.
+    # It is never included in production builds and poses no risk to deployed code.
+    "RUSTSEC-2025-0111",
+]
