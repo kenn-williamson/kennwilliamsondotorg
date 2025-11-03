@@ -58,20 +58,108 @@ Production deployment architecture and decisions for AWS EC2 with Docker Compose
 
 ## Deployment Strategy
 
-### Git-Based Deployment
-**Pattern**: SSH + git pull + docker compose
+### Automated CI/CD Pipeline
+**Pattern**: GitHub Actions → GHCR → Git-based deployment
 
-**Why:**
-- Simple and reliable
-- Version controlled
-- Easy rollback (git checkout)
-- No complex CD pipeline needed
+**Architecture:**
+1. **CI (Continuous Integration)**: On pull requests
+   - Run linters (Clippy, Prettier)
+   - Execute test suite (~620 tests)
+   - Build Docker images (smoke test)
+   - Generate code coverage reports
 
-**Future:**
-- Could add GitHub Actions
-- Blue-green deployment
-- Automated testing
-- When traffic justifies complexity
+2. **CD (Continuous Deployment)**: On version tags (`v*.*.*`)
+   - Build production Docker images
+   - Push to GitHub Container Registry (GHCR)
+   - SSH to EC2 instance
+   - Git checkout specific tag
+   - Pull pre-built images from GHCR
+   - Deploy via docker-compose
+   - Run database migrations
+   - Health check verification
+   - Auto-rollback on failure
+
+**Why Registry-Based:**
+- Fast deployments (pre-built images)
+- Consistent builds (built once, deployed many times)
+- Can rollback to any tagged version instantly
+- Free container registry (GHCR included with GitHub)
+- No build resources needed on production server
+
+**Why Git Checkout on Server:**
+- Deployment scripts versioned with code
+- Easy manual inspection/debugging
+- docker-compose.production.yml stays in sync
+- Can see deployed version: `git describe`
+- Simple rollback: `git checkout v1.0.0`
+
+**Trade-offs:**
+- More complex than manual deployment
+- Requires GitHub Secrets setup
+- Depends on GitHub/GHCR availability
+- Worth it: Enables safe, repeatable deployments
+
+**See Also:**
+- [GITHUB-SECRETS-SETUP.md](docs/GITHUB-SECRETS-SETUP.md) - Configure deployment credentials
+- `.github/workflows/ci.yml` - CI pipeline definition
+- `.github/workflows/deploy.yml` - CD pipeline definition
+
+### How to Deploy
+
+**Trigger Deployment:**
+```bash
+# Tag a new version (semantic versioning)
+git tag v1.0.0
+git push origin v1.0.0
+
+# GitHub Actions automatically:
+# 1. Builds images
+# 2. Pushes to GHCR
+# 3. Deploys to production
+```
+
+**Deployment Process (Automated):**
+1. GitHub Actions detects version tag
+2. Builds 3 Docker images:
+   - `ghcr.io/kenn/kennwilliamsondotorg-backend:v1.0.0`
+   - `ghcr.io/kenn/kennwilliamsondotorg-frontend:v1.0.0`
+   - `ghcr.io/kenn/kennwilliamsondotorg-migrations:v1.0.0`
+3. Pushes images to GitHub Container Registry
+4. SSHs to EC2 instance at `/opt/kennwilliamson/kennwilliamsondotorg`
+5. Runs `git fetch --tags && git checkout -f v1.0.0`
+6. Executes `scripts/deploy-from-registry.sh`:
+   - Pulls tagged images from GHCR
+   - Stops old containers gracefully
+   - Starts new containers
+   - Runs database migrations
+   - Cleans up old images
+7. Waits 30 seconds for stabilization
+8. Health checks backend and frontend endpoints
+9. If failure: Auto-rollback to previous tag
+
+**Monitor Deployment:**
+```bash
+# Watch GitHub Actions progress
+https://github.com/YOUR_USERNAME/kennwilliamsondotorg/actions
+
+# Or SSH to server and watch logs
+ssh ubuntu@kennwilliamson.org
+cd /opt/kennwilliamson/kennwilliamsondotorg
+docker-compose -f docker-compose.production.yml logs -f
+```
+
+**Manual Rollback (if needed):**
+```bash
+# SSH to server
+ssh ubuntu@kennwilliamson.org
+cd /opt/kennwilliamson/kennwilliamsondotorg
+
+# Rollback to previous version
+git checkout v0.9.0
+export VERSION=v0.9.0
+export GITHUB_USER=kenn
+./scripts/deploy-from-registry.sh
+```
 
 ### Environment Management
 **Decision**: Separate .env files per environment
@@ -139,12 +227,48 @@ Production deployment architecture and decisions for AWS EC2 with Docker Compose
 ## Automation Scripts
 
 ### Deployment Script
-**Script**: `scripts/deploy.sh`
+**Script**: `scripts/deploy-from-registry.sh`
 
-**Why:**
-- Repeatable process
-- No manual steps
-- Documented procedure
+**What it does:**
+- Validates VERSION and GITHUB_USER environment variables
+- Checks for `.env.production` file
+- Authenticates with GHCR (if GITHUB_TOKEN provided)
+- Pulls tagged Docker images
+- Stops existing containers gracefully (30s timeout)
+- Starts new containers
+- Waits for health stabilization
+- Runs database migrations
+- Cleans up old images
+
+**Why registry-based:**
+- Fast deployments (pre-built images)
+- Consistent builds across environments
+- No compilation on production server
+- Easy rollback to any version
+
+**Used by:**
+- GitHub Actions CD pipeline (automated)
+- Manual deployment (if needed)
+- Rollback procedures
+
+### Rollback Script
+**Script**: `scripts/rollback.sh`
+
+**Usage:**
+```bash
+./scripts/rollback.sh v1.0.0
+```
+
+**What it does:**
+- Validates version format (semantic versioning)
+- Checks out specified git tag
+- Redeploys using `deploy-from-registry.sh`
+- Logs rollback to `deployment-history.log`
+
+**Why separate script:**
+- Emergency rollback capability
+- Clear rollback procedure
+- Audit trail of version changes
 
 ### SSL Management
 **Script**: `scripts/ssl-manager.sh`
@@ -193,32 +317,77 @@ Production deployment architecture and decisions for AWS EC2 with Docker Compose
 
 ## Rollback Strategy
 
-**Git-based rollback:**
+### Automatic Rollback (GitHub Actions)
+**When**: Deployment health checks fail
+
+**Process:**
+1. Detect failure in health check step
+2. Query git tags for previous version
+3. `git checkout` previous tag
+4. Re-run `deploy-from-registry.sh` with previous version
+5. Log failure for investigation
+
+**Why automatic:**
+- Minimize downtime
+- No manual intervention needed
+- Safe default behavior
+
+### Manual Rollback
+**Script**: `scripts/rollback.sh v1.0.0`
+
+**When to use:**
+- Issue discovered after deployment succeeds
+- Need specific version (not just previous)
+- Testing older versions
+
+**Process:**
 ```bash
-git checkout <previous-commit>
-docker-compose --env-file .env.production up -d --build
+# SSH to server
+ssh ubuntu@kennwilliamson.org
+cd /opt/kennwilliamson/kennwilliamsondotorg
+
+# Use rollback script
+./scripts/rollback.sh v1.0.0
+
+# Or manual steps:
+git checkout v1.0.0
+export VERSION=v1.0.0
+export GITHUB_USER=kenn
+./scripts/deploy-from-registry.sh
 ```
 
-**Why this works:**
-- Git is source of truth
-- Quick revert
-- Database migrations need manual handling
+### Database Migration Rollback
+**Important**: Database migrations are **NOT automatically rolled back**
 
-**Future improvement:**
-- Automated database rollback
-- Blue-green deployment
-- Health check before switching
+**Why:**
+- Data integrity risk
+- Migrations may be irreversible (e.g., DROP COLUMN)
+- Requires human judgment
 
-## Future Enhancements
+**If rollback needed:**
+1. Review migration files in `backend/migrations/`
+2. Write compensating migration if needed
+3. Test thoroughly in development
+4. Apply manually or via new deployment
 
-**When to add:**
-- CI/CD: When team grows
-- Auto-scaling: When traffic increases
-- Load balancer: When adding instances
-- Monitoring: When compliance requires
+**Prevention:**
+- Write reversible migrations when possible
+- Use feature flags for schema changes
+- Test migrations in staging environment
 
-**Current approach sufficient for:**
-- Single developer
-- Example project portfolio
-- Known traffic patterns
-- Manual deployment acceptable
+## Current Implementation Status
+
+**Implemented:**
+- ✅ CI/CD Pipeline (GitHub Actions)
+- ✅ Automated testing on PRs
+- ✅ Registry-based deployment (GHCR)
+- ✅ Automated health checks
+- ✅ Auto-rollback on failure
+- ✅ Tag-based versioning
+- ✅ Database migration automation
+
+**Why this is sufficient:**
+- Solo developer portfolio project
+- Personal website with known traffic
+- Budget-conscious deployment
+- CI/CD provides production safety without operational overhead

@@ -96,17 +96,18 @@ jobs:
           chmod 600 ~/.ssh/deploy_key
           ssh-keyscan -H ${{ secrets.EC2_HOST }} >> ~/.ssh/known_hosts
 
-      - name: Copy deployment files to server
-        run: |
-          scp -i ~/.ssh/deploy_key \
-            docker-compose.production.yml \
-            scripts/deploy-from-registry.sh \
-            ${{ secrets.EC2_USER }}@${{ secrets.EC2_HOST }}:/home/${{ secrets.EC2_USER }}/app/
-
       - name: Deploy application
         run: |
           ssh -i ~/.ssh/deploy_key ${{ secrets.EC2_USER }}@${{ secrets.EC2_HOST }} << 'EOF'
-            cd /home/${{ secrets.EC2_USER }}/app
+            cd /opt/kennwilliamson/kennwilliamsondotorg
+
+            # Fetch latest tags from GitHub
+            echo "📥 Fetching latest tags..."
+            git fetch --tags
+
+            # Checkout the version to deploy (force to handle any local changes)
+            echo "🔄 Checking out version ${{ needs.build-and-push.outputs.version }}..."
+            git checkout -f ${{ needs.build-and-push.outputs.version }}
 
             # Set version to deploy
             export VERSION=${{ needs.build-and-push.outputs.version }}
@@ -116,13 +117,14 @@ jobs:
             chmod +x scripts/deploy-from-registry.sh
 
             # Run deployment
+            echo "🚀 Running deployment script..."
             ./scripts/deploy-from-registry.sh
           EOF
 
       - name: Verify deployment health
         run: |
           ssh -i ~/.ssh/deploy_key ${{ secrets.EC2_USER }}@${{ secrets.EC2_HOST }} << 'EOF'
-            cd /home/${{ secrets.EC2_USER }}/app
+            cd /opt/kennwilliamson/kennwilliamsondotorg
 
             # Wait for services to be healthy
             echo "⏳ Waiting for services to stabilize..."
@@ -150,25 +152,31 @@ jobs:
             echo "🎉 Deployment verification successful!"
           EOF
 
-      - name: Cleanup SSH key
-        if: always()
-        run: rm -f ~/.ssh/deploy_key
-
       - name: Rollback on failure
         if: failure()
         run: |
           ssh -i ~/.ssh/deploy_key ${{ secrets.EC2_USER }}@${{ secrets.EC2_HOST }} << 'EOF'
-            cd /home/${{ secrets.EC2_USER }}/app
-            echo "❌ Deployment failed, initiating rollback..."
+            cd /opt/kennwilliamson/kennwilliamsondotorg
+            echo "❌ Deployment failed, checking for previous version..."
 
-            # Use the rollback script if it exists
-            if [ -f scripts/rollback.sh ]; then
-              chmod +x scripts/rollback.sh
-              ./scripts/rollback.sh
+            # Get the previous tag for rollback
+            PREVIOUS_TAG=$(git tag --sort=-version:refname | grep -E '^v[0-9]+\.[0-9]+\.[0-9]+$' | sed -n '2p')
+
+            if [ -n "$PREVIOUS_TAG" ]; then
+              echo "🔄 Rolling back to $PREVIOUS_TAG..."
+              git checkout -f "$PREVIOUS_TAG"
+              export VERSION="$PREVIOUS_TAG"
+              export GITHUB_USER=${{ github.repository_owner }}
+              ./scripts/deploy-from-registry.sh
+              echo "✅ Rolled back to $PREVIOUS_TAG"
             else
-              echo "⚠️ Rollback script not found, manual intervention required"
+              echo "⚠️ No previous version found for rollback, manual intervention required"
             fi
           EOF
+
+      - name: Cleanup SSH key
+        if: always()
+        run: rm -f ~/.ssh/deploy_key
 
   notify:
     name: Notify Deployment Status
