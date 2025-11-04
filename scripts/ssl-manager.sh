@@ -106,12 +106,12 @@ create_fake_certificates() {
     # Create directory structure
     mkdir -p "/etc/letsencrypt/live/$DOMAIN_NAME"
     
-    # Generate self-signed certificate
+    # Generate self-signed certificate (includes www subdomain)
     openssl req -x509 -nodes -days 365 -newkey rsa:2048 \
         -keyout "/etc/letsencrypt/live/$DOMAIN_NAME/privkey.pem" \
         -out "/etc/letsencrypt/live/$DOMAIN_NAME/fullchain.pem" \
         -subj "/C=US/ST=State/L=City/O=Organization/CN=$DOMAIN_NAME" \
-        -addext "subjectAltName=DNS:$DOMAIN_NAME"
+        -addext "subjectAltName=DNS:$DOMAIN_NAME,DNS:www.$DOMAIN_NAME"
     
     if [ $? -eq 0 ]; then
         success "Temporary self-signed certificates created"
@@ -148,13 +148,13 @@ generate_certificates() {
     cd "$PROJECT_ROOT"
     docker-compose --env-file .env.production stop nginx
     
-    # Generate certificates using standalone mode
+    # Generate certificates using standalone mode (includes www subdomain)
     certbot certonly \
         --standalone \
         --non-interactive \
         --agree-tos \
         --email "$CERTBOT_EMAIL" \
-        --domains "$DOMAIN_NAME" \
+        --domains "$DOMAIN_NAME,www.$DOMAIN_NAME" \
         --cert-path /etc/letsencrypt/live/"$DOMAIN_NAME"/fullchain.pem \
         --key-path /etc/letsencrypt/live/"$DOMAIN_NAME"/privkey.pem
     
