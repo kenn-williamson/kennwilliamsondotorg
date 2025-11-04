@@ -757,7 +757,85 @@
               </div>
             </section>
 
-            <!-- Section 8: Course Corrections & What We Learned -->
+            <!-- Section 8: CI/CD Pipeline ---->
+            <section id="ci-cd" class="mb-12 scroll-mt-24">
+              <h2 class="section-heading">CI/CD Pipeline</h2>
+
+              <p class="text-nautical-800 leading-relaxed mb-6">
+                Automated build, test, and deployment pipeline using GitHub Actions. Every push triggers tests. Every tag triggers production deployment to AWS.
+              </p>
+
+              <div class="mb-8">
+                <h3 class="subsection-heading">GitHub Actions Workflows</h3>
+
+                <div class="space-y-6">
+                  <div class="border-l-4 border-primary-500 pl-4 bg-primary-50 p-4 rounded-r-lg">
+                    <h4 class="text-lg font-bold text-primary-800 mb-2">Continuous Integration (CI)</h4>
+                    <p class="text-sm text-nautical-700 mb-3">
+                      Runs on every push and pull request. Validates code quality before merge.
+                    </p>
+                    <ul class="text-sm text-nautical-700 space-y-1">
+                      <li>• <strong>Backend:</strong> Rust compilation, Clippy linting (all warnings denied), cargo test suite (600+ tests)</li>
+                      <li>• <strong>Frontend:</strong> TypeScript compilation, Vitest suite (175+ tests), build verification</li>
+                      <li>• <strong>Parallel execution:</strong> Backend and frontend jobs run concurrently for speed</li>
+                      <li>• <strong>Fast feedback:</strong> Catches issues within minutes of push</li>
+                    </ul>
+                  </div>
+
+                  <div class="border-l-4 border-accent-500 pl-4 bg-accent-50/30 p-4 rounded-r-lg">
+                    <h4 class="text-lg font-bold text-primary-800 mb-2">Continuous Deployment (CD)</h4>
+                    <p class="text-sm text-nautical-700 mb-3">
+                      Triggers on semantic version tags (v1.0.0, v1.2.3, etc.). Fully automated production deployment.
+                    </p>
+                    <ul class="text-sm text-nautical-700 space-y-1">
+                      <li>• <strong>Build & Push:</strong> Docker images built for backend, frontend, and migrations. Pushed to GitHub Container Registry (GHCR) with version tags</li>
+                      <li>• <strong>Git LFS:</strong> Large assets (images, videos) checked out during build for inclusion in frontend image</li>
+                      <li>• <strong>Deployment:</strong> SSH into AWS EC2, pull images from GHCR, run database migrations, restart services with new version</li>
+                      <li>• <strong>Health Checks:</strong> Robust 3-tier verification (nginx proxy → direct access → inside container) with verbose logging on failure</li>
+                      <li>• <strong>Automatic Rollback:</strong> On health check failure, automatically rolls back to previous version tag</li>
+                    </ul>
+                  </div>
+
+                  <div class="border-l-4 border-primary-600 pl-4 bg-sky-50 p-4 rounded-r-lg">
+                    <h4 class="text-lg font-bold text-primary-800 mb-2">Automated Releases (release-please)</h4>
+                    <p class="text-sm text-nautical-700 mb-3">
+                      Conventional commits drive automatic versioning and changelog generation.
+                    </p>
+                    <ul class="text-sm text-nautical-700 space-y-1">
+                      <li>• <strong>Semantic versioning:</strong> <code class="bg-nautical-100 px-1 text-xs">feat:</code> bumps minor, <code class="bg-nautical-100 px-1 text-xs">fix:</code> bumps patch, <code class="bg-nautical-100 px-1 text-xs">BREAKING CHANGE:</code> bumps major</li>
+                      <li>• <strong>Automatic changelog:</strong> Generated from conventional commits with links to PRs and commits</li>
+                      <li>• <strong>Release PR workflow:</strong> Bot creates PR with version bump and changelog updates, merge triggers release</li>
+                      <li>• <strong>GitHub releases:</strong> Automatic creation with release notes, triggering CD pipeline</li>
+                    </ul>
+                  </div>
+                </div>
+              </div>
+
+              <div class="mb-8">
+                <h3 class="subsection-heading">Deployment Security</h3>
+
+                <div class="grid md:grid-cols-2 gap-4">
+                  <div class="infra-card">
+                    <h4 class="font-bold text-primary-700 mb-2">Dynamic IP Whitelisting</h4>
+                    <p class="text-sm text-nautical-700">GitHub Actions runner IP dynamically added to EC2 security group for deployment, then automatically removed. No permanent SSH access from internet.</p>
+                  </div>
+                  <div class="infra-card">
+                    <h4 class="font-bold text-primary-700 mb-2">Secrets Management</h4>
+                    <p class="text-sm text-nautical-700">GitHub Secrets for AWS credentials, SSH keys, and EC2 configuration. No credentials in repository. Production secrets separate from development.</p>
+                  </div>
+                  <div class="infra-card">
+                    <h4 class="font-bold text-primary-700 mb-2">Container Registry Authentication</h4>
+                    <p class="text-sm text-nautical-700">GitHub Container Registry with automatic authentication. Public images for easy deployment. Version tagging for rollback capability.</p>
+                  </div>
+                  <div class="infra-card">
+                    <h4 class="font-bold text-primary-700 mb-2">Health-Checked Deployments</h4>
+                    <p class="text-sm text-nautical-700">30-second downtime during container restart. Robust health checks verify services before declaring success. Automatic rollback on failure minimizes prolonged outages.</p>
+                  </div>
+                </div>
+              </div>
+            </section>
+
+            <!-- Section 9: Course Corrections & What We Learned -->
             <section id="course-corrections" class="scroll-mt-24">
               <h2 class="section-heading">Course Corrections & What We Learned</h2>
 
@@ -996,6 +1074,7 @@ const sections = [
   { id: 'security', title: 'Security & Compliance' },
   { id: 'testing', title: 'Testing Strategy' },
   { id: 'infrastructure', title: 'Infrastructure' },
+  { id: 'ci-cd', title: 'CI/CD Pipeline' },
   { id: 'course-corrections', title: 'Course Corrections' },
   { id: 'ia-demonstration', title: 'What This Demonstrates' }
 ]
