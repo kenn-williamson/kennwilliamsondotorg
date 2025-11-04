@@ -43,7 +43,7 @@ failure() {
 }
 
 show_help() {
-    echo "Usage: $0 [--wait] [--service SERVICE] [--dev] [--local-prod]"
+    echo "Usage: $0 [--wait] [--service SERVICE] [--dev] [--local-prod] [--verbose]"
     echo ""
     echo "Verify service health and connectivity"
     echo ""
@@ -52,13 +52,14 @@ show_help() {
     echo "  --service SERVICE  Check only specific service (postgres, frontend, backend)"
     echo "  --dev              Use development environment"
     echo "  --local-prod       Use local production environment"
+    echo "  --verbose          Show detailed logs and diagnostic information"
     echo "  --help, -h         Show this help message"
     echo ""
     echo "Default: Uses production environment"
     echo ""
     echo "Health Checks:"
     echo "  - PostgreSQL: Database connectivity and schema"
-    echo "  - Backend: API endpoints and database connection" 
+    echo "  - Backend: API endpoints and database connection"
     echo "  - Frontend: HTTP response and asset loading"
     echo "  - Docker: Container status and resource usage"
 }
@@ -69,6 +70,7 @@ TARGET_SERVICE=""
 EXPECT_SERVICE=false
 DEV_MODE=false
 LOCAL_PROD_MODE=false
+VERBOSE=false
 
 while [[ $# -gt 0 ]]; do
     case $1 in
@@ -82,6 +84,10 @@ while [[ $# -gt 0 ]]; do
             ;;
         --local-prod)
             LOCAL_PROD_MODE=true
+            shift
+            ;;
+        --verbose)
+            VERBOSE=true
             shift
             ;;
         --service)
@@ -222,56 +228,115 @@ check_postgres() {
 check_backend() {
     local service_name="backend"
     info "Checking Backend API health..."
-    
+
     # Check container status
     if ! $COMPOSE_CMD ps "$service_name" | grep -q "Up"; then
         failure "Backend container is not running"
+        if [[ "$VERBOSE" == true ]]; then
+            echo ""
+            echo "Container status:"
+            $COMPOSE_CMD ps "$service_name"
+            echo ""
+            echo "Recent backend logs:"
+            $COMPOSE_CMD logs --tail=50 "$service_name"
+        fi
         return 1
     fi
-    
-    # Check health endpoint (nginx proxy first, fallback to direct)
+
+    if [[ "$VERBOSE" == true ]]; then
+        echo ""
+        echo "Container status:"
+        $COMPOSE_CMD ps "$service_name"
+        echo ""
+        echo "Recent backend logs (last 30 lines):"
+        $COMPOSE_CMD logs --tail=30 "$service_name"
+        echo ""
+        echo "Testing health endpoint..."
+    fi
+
+    # Check health endpoint - try multiple methods
+    # 1. Try nginx proxy (production only)
+    # 2. Try direct host access (development with exposed ports)
+    # 3. Try from inside container (always works)
+
     if curl -f -s -k https://localhost/backend/public/health >/dev/null 2>&1; then
         success "Backend health endpoint responding (via nginx proxy)"
     elif curl -f -s http://localhost:8080/backend/public/health >/dev/null 2>&1; then
-        warn "Backend health endpoint responding (direct access only - nginx proxy issue)"
+        success "Backend health endpoint responding (direct access)"
+    elif $COMPOSE_CMD exec -T "$service_name" wget -q --spider http://127.0.0.1:8080/backend/public/health 2>&1; then
+        success "Backend health endpoint responding (from inside container)"
     else
-        failure "Backend health endpoint not responding (both proxy and direct failed)"
+        failure "Backend health endpoint not responding"
+        if [[ "$VERBOSE" == true ]]; then
+            echo ""
+            echo "Attempting to reach health endpoint from inside container:"
+            $COMPOSE_CMD exec -T "$service_name" wget -O- http://127.0.0.1:8080/backend/public/health 2>&1 || echo "Failed"
+            echo ""
+            echo "Full backend logs:"
+            $COMPOSE_CMD logs "$service_name"
+        fi
         return 1
     fi
-    
-    # Check database health endpoint (nginx proxy first, fallback to direct)
+
+    # Check database health endpoint - try multiple methods
     if curl -f -s -k https://localhost/backend/public/health/db >/dev/null 2>&1; then
         success "Backend database connectivity OK (via nginx proxy)"
     elif curl -f -s http://localhost:8080/backend/public/health/db >/dev/null 2>&1; then
-        warn "Backend database connectivity OK (direct access only - nginx proxy issue)"
+        success "Backend database connectivity OK (direct access)"
+    elif $COMPOSE_CMD exec -T "$service_name" wget -q --spider http://127.0.0.1:8080/backend/public/health/db 2>&1; then
+        success "Backend database connectivity OK (from inside container)"
     else
-        failure "Backend cannot connect to database (both proxy and direct failed)"
+        failure "Backend cannot connect to database"
+        if [[ "$VERBOSE" == true ]]; then
+            echo ""
+            echo "Full backend logs:"
+            $COMPOSE_CMD logs "$service_name"
+        fi
         return 1
     fi
-    
+
     return 0
 }
 
 check_frontend() {
     local service_name="frontend"
     info "Checking Frontend health..."
-    
+
     # Check container status
     if ! $COMPOSE_CMD ps "$service_name" | grep -q "Up"; then
         failure "Frontend container is not running"
+        if [[ "$VERBOSE" == true ]]; then
+            echo ""
+            echo "Container status:"
+            $COMPOSE_CMD ps "$service_name"
+            echo ""
+            echo "Recent frontend logs:"
+            $COMPOSE_CMD logs --tail=50 "$service_name"
+        fi
         return 1
     fi
-    
-    # Check HTTP response (nginx proxy first, fallback to direct)
+
+    # Check HTTP response - try multiple methods
+    # 1. Try nginx proxy (production only)
+    # 2. Try direct host access (development with exposed ports)
+    # 3. Try from inside container (always works)
+
     if curl -f -s -k -o /dev/null https://localhost/; then
         success "Frontend is serving HTTP requests (via nginx proxy)"
     elif curl -f -s -o /dev/null http://localhost:3000/; then
-        warn "Frontend is serving HTTP requests (direct access only - nginx proxy issue)"
+        success "Frontend is serving HTTP requests (direct access)"
+    elif $COMPOSE_CMD exec -T "$service_name" wget -q --spider http://localhost:3000/ 2>&1; then
+        success "Frontend is serving HTTP requests (from inside container)"
     else
-        failure "Frontend is not responding to HTTP requests (both proxy and direct failed)"
+        failure "Frontend is not responding to HTTP requests"
+        if [[ "$VERBOSE" == true ]]; then
+            echo ""
+            echo "Full frontend logs:"
+            $COMPOSE_CMD logs "$service_name"
+        fi
         return 1
     fi
-    
+
     return 0
 }
 

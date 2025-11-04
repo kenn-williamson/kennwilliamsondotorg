@@ -163,26 +163,17 @@ jobs:
           ssh -i ~/.ssh/deploy_key ${{ secrets.EC2_USER }}@${{ secrets.EC2_HOST }} << 'EOF'
             cd /opt/kennwilliamson/kennwilliamsondotorg
 
-            # Wait for services to be healthy
+            # Wait for services to stabilize
             echo "⏳ Waiting for services to stabilize..."
             sleep 30
 
-            # Check service health
-            docker-compose -f docker-compose.production.yml --env-file .env.production ps
-
-            # Check backend health endpoint
-            if docker-compose -f docker-compose.production.yml --env-file .env.production exec -T backend wget -q --spider http://localhost:8080/backend/public/health; then
-              echo "✅ Backend health check passed"
-            else
-              echo "❌ Backend health check failed"
-              exit 1
-            fi
-
-            # Check frontend health (homepage loads)
-            if docker-compose -f docker-compose.production.yml --env-file .env.production exec -T frontend wget -q --spider http://localhost:3000/; then
-              echo "✅ Frontend health check passed"
-            else
-              echo "❌ Frontend health check failed"
+            # Run health check with wait mode
+            echo "🏥 Running health checks..."
+            chmod +x scripts/health-check.sh
+            if ! ./scripts/health-check.sh --wait; then
+              echo ""
+              echo "❌ Health check failed. Re-running with verbose output for debugging..."
+              ./scripts/health-check.sh --verbose
               exit 1
             fi
 
