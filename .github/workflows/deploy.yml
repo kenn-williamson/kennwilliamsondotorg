@@ -23,6 +23,8 @@ jobs:
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
+        with:
+          lfs: true
 
       - name: Extract version from tag
         id: version
@@ -100,6 +102,8 @@ jobs:
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
+        with:
+          lfs: true
 
       - name: Configure AWS credentials
         uses: aws-actions/configure-aws-credentials@v4
@@ -174,8 +178,8 @@ jobs:
               exit 1
             fi
 
-            # Check frontend health endpoint
-            if docker-compose -f docker-compose.production.yml --env-file .env.production exec -T frontend wget -q --spider http://localhost:3000/api/health; then
+            # Check frontend health (homepage loads)
+            if docker-compose -f docker-compose.production.yml --env-file .env.production exec -T frontend wget -q --spider http://localhost:3000/; then
               echo "✅ Frontend health check passed"
             else
               echo "❌ Frontend health check failed"
