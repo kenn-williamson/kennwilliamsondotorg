@@ -61,10 +61,10 @@ jobs:
         with:
           tool: cargo-llvm-cov,cargo-nextest
 
-      - name: Install cargo-audit
+      - name: Install cargo-audit and sqlx-cli
         uses: taiki-e/install-action@v2
         with:
-          tool: cargo-audit
+          tool: cargo-audit,sqlx-cli
 
       - name: Set up test environment
         working-directory: backend
@@ -88,9 +88,7 @@ jobs:
 
       - name: Run database migrations
         working-directory: backend
-        run: |
-          cargo install sqlx-cli --no-default-features --features postgres
-          sqlx migrate run
+        run: sqlx migrate run
         env:
           DATABASE_URL: postgres://testuser:testpass@localhost:5432/testdb
 
@@ -161,6 +159,7 @@ jobs:
   docker-build:
     name: Docker Build Validation
     runs-on: ubuntu-latest
+    if: github.event_name == 'pull_request'  # Only run on PRs, not master pushes
 
     steps:
       - name: Checkout code
@@ -228,10 +227,19 @@ jobs:
     steps:
       - name: Check CI status
         run: |
+          # docker-build is skipped on master pushes, so check if it ran
+          DOCKER_RESULT="${{ needs.docker-build.result }}"
+
           if [ "${{ needs.backend-tests.result }}" != "success" ] || \
-             [ "${{ needs.frontend-tests.result }}" != "success" ] || \
-             [ "${{ needs.docker-build.result }}" != "success" ]; then
+             [ "${{ needs.frontend-tests.result }}" != "success" ]; then
             echo "❌ CI pipeline failed"
             exit 1
           fi
+
+          # Only check docker-build if it ran (on PRs)
+          if [ "$DOCKER_RESULT" != "" ] && [ "$DOCKER_RESULT" != "success" ] && [ "$DOCKER_RESULT" != "skipped" ]; then
+            echo "❌ Docker build failed"
+            exit 1
+          fi
+
           echo "✅ CI pipeline passed"

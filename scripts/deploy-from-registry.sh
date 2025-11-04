@@ -37,15 +37,15 @@ fi
 
 # Pull latest images from registry
 echo "📥 Pulling Docker images from registry..."
-docker-compose -f docker-compose.production.yml pull
+docker-compose -f docker-compose.production.yml --env-file .env.production pull
 
 # Stop existing containers gracefully
 echo "🛑 Stopping existing containers..."
-docker-compose -f docker-compose.production.yml down --timeout 30
+docker-compose -f docker-compose.production.yml --env-file .env.production down --timeout 30
 
 # Start new containers
 echo "▶️ Starting containers..."
-docker-compose -f docker-compose.production.yml up -d
+docker-compose -f docker-compose.production.yml --env-file .env.production up -d
 
 # Wait for services to be healthy
 echo "🏥 Waiting for services to be healthy..."
@@ -53,11 +53,11 @@ sleep 30
 
 # Check service health
 echo "✅ Checking service health..."
-docker-compose -f docker-compose.production.yml ps
+docker-compose -f docker-compose.production.yml --env-file .env.production ps
 
 # Run database migrations
 echo "🗃️ Running database migrations..."
-docker-compose -f docker-compose.production.yml run --rm migrations || echo "⚠️ Migration failed or already applied"
+docker-compose -f docker-compose.production.yml --env-file .env.production run --rm migrations || echo "⚠️ Migration failed or already applied"
 
 # Cleanup old images to save disk space
 echo "🧹 Cleaning up old Docker images..."

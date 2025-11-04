@@ -47,8 +47,12 @@ jobs:
           tags: |
             ${{ env.IMAGE_PREFIX }}/kennwilliamsondotorg-backend:${{ steps.version.outputs.version }}
             ${{ env.IMAGE_PREFIX }}/kennwilliamsondotorg-backend:latest
-          cache-from: type=gha
-          cache-to: type=gha,mode=max
+          cache-from: |
+            type=registry,ref=${{ env.IMAGE_PREFIX }}/kennwilliamsondotorg-backend:buildcache
+            type=gha
+          cache-to: |
+            type=registry,ref=${{ env.IMAGE_PREFIX }}/kennwilliamsondotorg-backend:buildcache,mode=max
+            type=gha,mode=max
           platforms: linux/amd64
 
       - name: Build and push frontend image
@@ -60,8 +64,12 @@ jobs:
           tags: |
             ${{ env.IMAGE_PREFIX }}/kennwilliamsondotorg-frontend:${{ steps.version.outputs.version }}
             ${{ env.IMAGE_PREFIX }}/kennwilliamsondotorg-frontend:latest
-          cache-from: type=gha
-          cache-to: type=gha,mode=max
+          cache-from: |
+            type=registry,ref=${{ env.IMAGE_PREFIX }}/kennwilliamsondotorg-frontend:buildcache
+            type=gha
+          cache-to: |
+            type=registry,ref=${{ env.IMAGE_PREFIX }}/kennwilliamsondotorg-frontend:buildcache,mode=max
+            type=gha,mode=max
           platforms: linux/amd64
 
       - name: Build and push migrations image
@@ -73,8 +81,12 @@ jobs:
           tags: |
             ${{ env.IMAGE_PREFIX }}/kennwilliamsondotorg-migrations:${{ steps.version.outputs.version }}
             ${{ env.IMAGE_PREFIX }}/kennwilliamsondotorg-migrations:latest
-          cache-from: type=gha
-          cache-to: type=gha,mode=max
+          cache-from: |
+            type=registry,ref=${{ env.IMAGE_PREFIX }}/kennwilliamsondotorg-migrations:buildcache
+            type=gha
+          cache-to: |
+            type=registry,ref=${{ env.IMAGE_PREFIX }}/kennwilliamsondotorg-migrations:buildcache,mode=max
+            type=gha,mode=max
           platforms: linux/amd64
 
   deploy:
@@ -152,10 +164,10 @@ jobs:
             sleep 30
 
             # Check service health
-            docker-compose -f docker-compose.production.yml ps
+            docker-compose -f docker-compose.production.yml --env-file .env.production ps
 
             # Check backend health endpoint
-            if docker-compose -f docker-compose.production.yml exec -T backend wget -q --spider http://localhost:8080/health; then
+            if docker-compose -f docker-compose.production.yml --env-file .env.production exec -T backend wget -q --spider http://localhost:8080/health; then
               echo "✅ Backend health check passed"
             else
               echo "❌ Backend health check failed"
@@ -163,7 +175,7 @@ jobs:
             fi
 
             # Check frontend health endpoint
-            if docker-compose -f docker-compose.production.yml exec -T frontend wget -q --spider http://localhost:3000/api/health; then
+            if docker-compose -f docker-compose.production.yml --env-file .env.production exec -T frontend wget -q --spider http://localhost:3000/api/health; then
               echo "✅ Frontend health check passed"
             else
               echo "❌ Frontend health check failed"
