@@ -1,0 +1,25 @@
+# Cargo configuration for faster builds
+# Documentation: https://doc.rust-lang.org/cargo/reference/config.html
+
+[build]
+# Use lld linker for faster linking times
+# lld is 2-3x faster than the default GNU linker
+#
+# Installation:
+#   Ubuntu/Debian: sudo apt-get install lld
+#   macOS: brew install llvm
+#   GitHub Actions: Install via apt-get (see ci.yml workflow)
+#
+# If lld is not installed, comment out the rustflags below
+# and Rust will use the default system linker
+rustflags = ["-C", "link-arg=-fuse-ld=lld"]
+
+[target.x86_64-unknown-linux-gnu]
+# Linux-specific: use lld linker (works with default gcc linker driver)
+rustflags = ["-C", "link-arg=-fuse-ld=lld"]
+
+[target.x86_64-apple-darwin]
+# macOS-specific: use zld if installed (faster than ld64)
+# Install with: brew install michaeleisel/zld/zld
+# Comment out this section if zld is not installed
+rustflags = ["-C", "link-arg=-fuse-ld=/usr/local/bin/zld"]
