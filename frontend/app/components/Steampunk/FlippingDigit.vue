@@ -156,7 +156,7 @@ onMounted(() => {
 
 .card__bottom::after {
   display: block;
-  margin-top: -0.45em;
+  transform: translateY(-100%);
   text-align: center;
   line-height: 0.45em;
 }

@@ -89,11 +89,10 @@ const tooltipClasses = computed(() => {
   transition: all 0.2s ease;
   font-weight: 500;
   background: linear-gradient(to right, #dbeafe, transparent);
-  padding: 0 0.25rem;
-  margin: 0 -0.25rem;
+  padding: 0.125rem 0.25rem;
   border-radius: 0.25rem;
   color: #1e40af; /* primary-800 for better visibility */
-  display: inline;
+  display: inline-block;
 }
 
 .steampunk-tooltip-trigger:hover {
