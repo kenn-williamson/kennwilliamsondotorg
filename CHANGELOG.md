@@ -1,5 +1,13 @@
 # Changelog
 
+## [1.0.3](https://github.com/kenn-williamson/kennwilliamsondotorg/compare/v1.0.2...v1.0.3) (2025-11-05)
+
+
+### Bug Fixes
+
+* **ssl:** add ECDSA cipher support and www subdomain to certificates ([8918591](https://github.com/kenn-williamson/kennwilliamsondotorg/commit/8918591c081647e03b647878fa865f7a675a312a))
+* **ui:** remove negative margin hacks for consistent cross-browser rendering ([d8437d1](https://github.com/kenn-williamson/kennwilliamsondotorg/commit/d8437d1a8b36ac278e9c201f1085ab5271977062))
+
 ## [1.0.2](https://github.com/kenn-williamson/kennwilliamsondotorg/compare/v1.0.1...v1.0.2) (2025-11-04)
 
 
