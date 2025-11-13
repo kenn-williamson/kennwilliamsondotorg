@@ -139,12 +139,13 @@
       found a reading of the Gospel that made sense of contradictions I'd struggled with
       my whole life. I'm now what you'd call a
       <SteampunkTooltip
-        text="Tolstoyan Christian anarchism combines radical Christianity with rejection of state violence. It's based on taking Jesus' Sermon on the Mount literally—turn the other cheek, love your enemies, resist not evil. Christianity and the state are incompatible because the state relies on violence."
+        text="Christian Voluntarism means I believe all human relationships should be voluntary—no coercion in politics, economics, or faith. It combines taking Jesus seriously (the Sermon on the Mount isn't optional) with rejection of state violence. I'm theologically orthodox (I affirm the creeds and read the Church Fathers), politically libertarian, and practically pacifist. Christianity and state coercion are incompatible."
         placement="top"
       >
-        <span>Tolstoyan Christian Anarchist</span> </SteampunkTooltip
-      >, which sounds radical but means I think Jesus meant what he said about turning
-      the other cheek and loving your enemies.
+        <span>Christian Voluntaryist</span> </SteampunkTooltip
+      >, which sounds abstract but means I think Jesus meant what he said about turning
+      the other cheek and loving your enemies—and that we should build communities on
+      voluntary commitment, not violence or coercion.
     </p>
 
     <p>

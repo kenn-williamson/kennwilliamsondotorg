@@ -106,7 +106,7 @@
     </p>
 
     <p>
-      This is where my Christian anarchism comes in. I think the answer is to stop
+      This is where my Christian Voluntarism comes in. I think the answer is to stop
       trying to use violence, whether directly or through state institutions, to impose
       our will on others. Focus on your own life. Work on the plank in your own eye.
       Love your neighbors. Build community. Stop trying to control people.

@@ -350,18 +350,19 @@
       violence onto Him.
     </p>
 
-    <h2>Tolstoyan Christian Anarchism: What It Actually Means</h2>
+    <h2>Christian Voluntarism: What It Actually Means</h2>
 
     <p>This is where people start thinking I'm crazy, but bear with me.</p>
 
     <p>
-      I describe myself as a Tolstoyan Christian Anarchist. That sounds radical, but
+      I describe myself as a Christian Voluntaryist. That sounds abstract, but
       it's simply taking Jesus seriously when He says to turn the other cheek and love
-      your enemies.
+      your enemies—and applying this to all human relationships.
     </p>
 
     <p>
-      <strong>Christian Anarchism</strong> doesn't mean chaos. It means refusing to use
+      <strong>Christian Voluntarism</strong> means I believe all human relationships should be
+      voluntary: no coercion in politics, economics, or faith. It means refusing to use
       violence, even state-sanctioned violence, to impose your will on others. It means
       focusing on the plank in your own eye instead of the speck in your brother's eye.
       It means recognizing that most of human history has been about people using
@@ -370,10 +371,13 @@
     </p>
 
     <p>
-      <strong>Tolstoy</strong> articulated this vision brilliantly: true Christianity is
-      fundamentally non-violent. When Jesus says "resist not evil," He means it. When He
-      says to love your enemies and pray for those who persecute you, He's not being
-      metaphorical.
+      I'm theologically orthodox (I affirm the creeds and read the Church Fathers),
+      politically libertarian (I accept Rothbardian voluntarism, markets, and property rights),
+      and practically pacifist. <strong>Tolstoy</strong> articulated the pacifist vision brilliantly:
+      true Christianity is fundamentally non-violent. When Jesus says "resist not evil," He means it.
+      When He says to love your enemies and pray for those who persecute you, He's not being
+      metaphorical. I share his pacifism and emphasis on personal transformation, though I differ
+      from him theologically and economically.
     </p>
 
     <p>
@@ -385,8 +389,9 @@
     </p>
 
     <p>
-      Christian anarchism says: stop scapegoating. Stop using violence. Work on
-      yourself. Love people. Trust God.
+      Christian Voluntarism says: stop scapegoating. Stop using violence. Work on
+      yourself. Love people. Trust God. Build communities based on voluntary commitment
+      rather than coercion.
     </p>
 
     <p>
@@ -395,14 +400,16 @@
     </p>
 
     <SteampunkAccordion
-      title="Recommended Reading on Christian Anarchism"
+      title="Recommended Reading on Christian Voluntarism and Pacifism"
       variant="gold"
     >
       <div class="space-y-3">
         <p>
           <strong><em>The Kingdom of God Is Within You</em></strong> by Leo Tolstoy -
-          Foundational text for Christian anarchism arguing for radical non-resistance
-          to evil and rejection of state authority.
+          Influential text on Christian pacifism arguing for radical non-resistance
+          to evil and rejection of state authority. While Tolstoy's theological and economic
+          views differ from orthodox Christian Voluntarism, his articulation of Christian
+          non-violence remains profound.
           <a
             href="https://theanarchistlibrary.org/library/leo-tolstoy-the-kingdom-of-god-is-within-you"
             target="_blank"
@@ -415,7 +422,7 @@
         <p>
           <strong>Writings of Dorothy Day</strong> - Catholic Worker Movement founder
           who lived out radical hospitality and pacifism. Her autobiography and articles
-          demonstrate Christian anarchism in practice.
+          demonstrate voluntary Christian community and non-violence in practice.
           <a
             href="https://www.catholicworker.org/dorothyday/"
             target="_blank"
@@ -427,8 +434,8 @@
 
         <p>
           <strong><em>Anarchy and Christianity</em></strong> by Jacques Ellul -
-          Theological exploration of how Christian anarchism differs from political
-          anarchism and why Christianity and the state are incompatible.
+          Theological exploration of Christian non-coercion, how it differs from political
+          anarchism, and why Christianity and state violence are incompatible.
           <a
             href="https://theanarchistlibrary.org/library/jacques-ellul-anarchy-christianity-en"
             target="_blank"
@@ -545,7 +552,7 @@ useHead({
     {
       name: "description",
       content:
-        "Mimetic theory, the non-sacrificial reading of the Gospel, and what Christian anarchism actually means.",
+        "Mimetic theory, the non-sacrificial reading of the Gospel, and what Christian Voluntarism actually means.",
     },
   ],
 });
