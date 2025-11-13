@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.1.0](https://github.com/kenn-williamson/kennwilliamsondotorg/compare/v1.0.3...v1.1.0) (2025-11-13)
+
+
+### Features
+
+* update terminology from 'Christian Anarchism' to 'Christian Voluntarism' for clarity and consistency ([8a24544](https://github.com/kenn-williamson/kennwilliamsondotorg/commit/8a2454483a6a65841168ca96d0ece166e9d7f4c6))
+
 ## [1.0.3](https://github.com/kenn-williamson/kennwilliamsondotorg/compare/v1.0.2...v1.0.3) (2025-11-05)
 
 
