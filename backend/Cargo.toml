@@ -31,7 +31,10 @@ async-trait = "0.1"
 mockall = "0.13.1"
 redis = "0.32.5"
 aws-config = { version = "1.8.7", features = ["behavior-version-latest"] }
+aws-sdk-s3 = "1.112"
 aws-sdk-sesv2 = "1.98.0"
+image = "0.25"
+rss = "2.0"
 reqwest = { version = "0.12.23", features = ["json"] }
 oauth2 = { version = "5.0", features = ["reqwest"] }
 base64 = "0.22"
