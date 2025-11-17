@@ -1,5 +1,6 @@
 pub mod admin;
 pub mod auth;
+pub mod blog;
 pub mod cleanup;
 pub mod container;
 pub mod email;

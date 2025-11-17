@@ -17,7 +17,9 @@ pub mod verification_token_repository;
 
 pub use access_request_repository::AccessRequestRepository;
 pub use admin_repository::AdminRepository;
-pub use blog_repository::BlogRepository;
+pub use blog_repository::{
+    BlogPostFilters, BlogPostList, BlogRepository, CreateBlogPost, TagCount, UpdateBlogPost,
+};
 pub use image_storage::{ImageStorage, ImageUrls};
 pub use incident_timer_repository::IncidentTimerRepository;
 pub use password_reset_token_repository::PasswordResetTokenRepository;

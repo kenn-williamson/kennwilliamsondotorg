@@ -1601,78 +1601,48 @@ async fn test_create_post() {
 
 ---
 
-### Phase 3: Backend Service Layer (TDD with Mocks)
+### Phase 3: Backend Service Layer (TDD with Mocks) ✅ COMPLETE
 
 **Pattern**: Write unit test → Implement business logic → Refactor
 
-#### 3.1 Write Service Tests (RED)
-**File**: `backend/src/services/blog_service.rs` (inline `#[cfg(test)]` module)
+#### 3.1 Service Implementation ✅ COMPLETE
 
-**Test cases** (each follows RED → GREEN cycle):
-1. `test_create_post_auto_generates_slug` - No slug provided → slugified title
-2. `test_create_post_handles_slug_collision` - Existing slug → append "-2"
-3. `test_create_post_generates_excerpt` - No excerpt → first 160 chars
-4. `test_create_post_sets_published_at` - Status "published" → timestamp set
-5. `test_delete_post_removes_s3_images` - Delete post → S3 cleanup called
-6. `test_update_post_preserves_published_at` - Edit published post → date unchanged
-7. `test_upload_image_validates_file_size` - >5MB → error
-8. `test_upload_image_sanitizes_filename` - Path traversal → cleaned
-9. `test_upload_image_validates_mime_type` - Invalid image → error
+**Files Created:**
+1. `backend/src/services/blog/mod.rs` - BlogService with builder pattern
+2. `backend/src/services/blog/utils.rs` - Helper functions (slugify, strip markdown, truncate)
+3. `backend/src/services/blog/create.rs` - Create/publish operations + 6 tests
+4. `backend/src/services/blog/read.rs` - Get/list/search operations + 6 tests
+5. `backend/src/services/blog/update.rs` - Update operations + 4 tests
+6. `backend/src/services/blog/delete.rs` - Delete operations + 4 tests
+7. `backend/src/models/api/blog.rs` - API request/response models
 
-**TDD Cycle Example**:
-```rust
-#[cfg(test)]
-mod tests {
-    use super::*;
-    use crate::repositories::mocks::MockBlogRepository;
-    use mockall::predicate::*;
+**Test Coverage: 47/47 tests passing** ✅
+- 6 create operation tests (slug generation, collision handling, excerpt generation, publish timestamp, validation)
+- 6 read operation tests (get by ID/slug, list, search, tags)
+- 4 update operation tests (preserve published_at, set on publish, validation, not found)
+- 4 delete operation tests (remove images, without image, not found, graceful failure)
+- 10 utility function tests (slugify, strip markdown, truncate text)
+- 17 test builder tests (BlogPostBuilder validation)
 
-    // Step 1: RED
-    #[tokio::test]
-    async fn test_create_post_handles_slug_collision() {
-        let mut mock_repo = MockBlogRepository::new();
+**Business Logic Implemented:**
+1. ✅ Auto-generates slug from title if not provided
+2. ✅ Handles slug collisions (appends "-2", "-3", etc.)
+3. ✅ Auto-generates excerpt from first 160 chars
+4. ✅ Sets `published_at` timestamp when status is "published"
+5. ✅ Preserves `published_at` for already-published posts on update
+6. ✅ Cleans up S3 images on post deletion (via ImageStorage trait)
+7. ✅ Validates title (not empty) and status (draft/published)
 
-        // First slug check returns existing post (collision)
-        mock_repo
-            .expect_get_post_by_slug()
-            .with(eq("test-post"))
-            .returning(|_| Ok(Some(BlogPostBuilder::new().build())));
+**Code Quality:**
+- ✅ `cargo test --lib blog` → 47/47 passing (< 0.01s)
+- ✅ `cargo clippy --lib` → no warnings
+- ✅ `cargo fmt --all` → properly formatted
+- ✅ Follows TDD methodology (RED → GREEN → REFACTOR)
+- ✅ Dependency injection with trait abstractions
+- ✅ Builder pattern for service construction
+- ✅ Matches existing project service patterns
 
-        // Second check with "-2" suffix returns None (available)
-        mock_repo
-            .expect_get_post_by_slug()
-            .with(eq("test-post-2"))
-            .returning(|_| Ok(None));
-
-        mock_repo
-            .expect_create_post()
-            .withf(|post| post.slug == "test-post-2")
-            .returning(|post| Ok(BlogPostBuilder::new().with_slug(&post.slug).build()));
-
-        let service = BlogService::new(Arc::new(mock_repo), s3_client);
-        let result = service.create_post(/* slug: "test-post" */).await;
-
-        assert!(result.is_ok());
-        assert_eq!(result.unwrap().slug, "test-post-2");
-    }
-
-    // Run: cargo test --lib test_create_post_handles_slug_collision
-    // Result: ❌ Compilation error (service doesn't have ensure_unique_slug method)
-
-    // Step 2: GREEN - Implement ensure_unique_slug in service
-    // (See Service Layer section above)
-
-    // Run: cargo test --lib test_create_post_handles_slug_collision
-    // Result: ✅ Pass
-}
-```
-
-#### 3.2 Implement Service (GREEN)
-**File**: `backend/src/services/blog_service.rs`
-
-Implement methods to make each test pass (see Service Layer section above for full implementation).
-
-**Validation**: `cargo test --lib blog_service` → All tests pass
+**Note:** Image upload validation tests (file size, filename sanitization, MIME type) deferred to Phase 4 (API layer) where multipart form data handling occurs
 
 ---
 
