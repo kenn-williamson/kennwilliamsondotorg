@@ -406,8 +406,24 @@ impl TestContextBuilder {
             )),
         ));
 
+        // Create blog service for API testing
+        use backend::repositories::mocks::MockImageStorage;
+        use backend::repositories::postgres::postgres_blog_repository::PostgresBlogRepository;
+        use backend::services::blog::BlogService;
+
+        let blog_service = Arc::new(
+            BlogService::builder()
+                .with_repository(Box::new(PostgresBlogRepository::new(
+                    test_container.pool.clone(),
+                )))
+                .with_image_storage(Box::new(MockImageStorage::new()))
+                .build()
+                .expect("Failed to build BlogService"),
+        );
+
         let container = ServiceContainer {
             auth_service,
+            blog_service,
             incident_timer_service,
             phrase_service,
             admin_service,
@@ -424,6 +440,7 @@ impl TestContextBuilder {
             App::new()
                 .app_data(web::Data::new(pool_clone.clone()))
                 .app_data(web::Data::from(container.auth_service.clone()))
+                .app_data(web::Data::from(container.blog_service.clone()))
                 .app_data(web::Data::from(container.incident_timer_service.clone()))
                 .app_data(web::Data::from(container.phrase_service.clone()))
                 .app_data(web::Data::from(container.admin_service.clone()))

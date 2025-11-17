@@ -3,15 +3,16 @@ use std::sync::Arc;
 
 #[cfg(feature = "mocks")]
 use crate::repositories::mocks::{
-    MockAccessRequestRepository, MockAdminRepository, MockIncidentTimerRepository,
-    MockPasswordResetTokenRepository, MockPhraseRepository, MockPkceStorage,
-    MockRefreshTokenRepository, MockUserCredentialsRepository, MockUserExternalLoginRepository,
-    MockUserPreferencesRepository, MockUserProfileRepository, MockUserRepository,
-    MockVerificationTokenRepository,
+    MockAccessRequestRepository, MockAdminRepository, MockBlogRepository, MockImageStorage,
+    MockIncidentTimerRepository, MockPasswordResetTokenRepository, MockPhraseRepository,
+    MockPkceStorage, MockRefreshTokenRepository, MockUserCredentialsRepository,
+    MockUserExternalLoginRepository, MockUserPreferencesRepository, MockUserProfileRepository,
+    MockUserRepository, MockVerificationTokenRepository,
 };
 use crate::repositories::postgres::{
     postgres_access_request_repository::PostgresAccessRequestRepository,
     postgres_admin_repository::PostgresAdminRepository,
+    postgres_blog_repository::PostgresBlogRepository,
     postgres_email_suppression_repository::PostgresEmailSuppressionRepository,
     postgres_incident_timer_repository::PostgresIncidentTimerRepository,
     postgres_password_reset_token_repository::PostgresPasswordResetTokenRepository,
@@ -45,6 +46,7 @@ use super::admin::{
     AccessRequestModerationService, PhraseModerationService, StatsService, UserManagementService,
 };
 use super::auth::AuthService;
+use super::blog::BlogService;
 use super::cleanup::CleanupService;
 #[cfg(feature = "mocks")]
 use super::email::MockEmailService;
@@ -59,6 +61,7 @@ use crate::middleware::rate_limiter::{RateLimitServiceTrait, RedisRateLimitServi
 pub struct ServiceContainer {
     // Core services
     pub auth_service: Arc<AuthService>,
+    pub blog_service: Arc<BlogService>,
     pub incident_timer_service: Arc<IncidentTimerService>,
     pub phrase_service: Arc<PhraseService>,
     pub admin_service: Arc<UserManagementService>,
@@ -357,8 +360,33 @@ impl ServiceContainer {
             Box::new(PostgresPasswordResetTokenRepository::new(pool.clone())),
         ));
 
+        // Create blog service with PostgreSQL repository
+        // Note: MockImageStorage used even in production for Phase 4
+        // TODO: Implement S3ImageStorage and use here in Phase 5
+        #[cfg(feature = "mocks")]
+        let blog_service = Arc::new(
+            BlogService::builder()
+                .with_repository(Box::new(PostgresBlogRepository::new(pool.clone())))
+                .with_image_storage(Box::new(MockImageStorage::new()))
+                .build()
+                .expect("Failed to build BlogService"),
+        );
+
+        #[cfg(not(feature = "mocks"))]
+        let blog_service = {
+            // When mocks feature is not enabled, we still need an ImageStorage
+            // Use the mock one directly from the mod (will need to make it public or create a stub)
+            // For now, this will cause a compile error - Phase 5 will implement S3ImageStorage
+            compile_error!("S3ImageStorage not yet implemented - Phase 5 requirement");
+            Arc::new(BlogService::builder()
+                .with_repository(Box::new(PostgresBlogRepository::new(pool.clone())))
+                .build()
+                .expect("Failed to build BlogService"))
+        };
+
         Self {
             auth_service,
+            blog_service,
             incident_timer_service,
             phrase_service,
             admin_service,
@@ -428,8 +456,18 @@ impl ServiceContainer {
             Box::new(MockPasswordResetTokenRepository::new()),
         ));
 
+        // For testing, use mock blog service
+        let blog_service = Arc::new(
+            BlogService::builder()
+                .with_repository(Box::new(MockBlogRepository::new()))
+                .with_image_storage(Box::new(MockImageStorage::new()))
+                .build()
+                .expect("Failed to build BlogService"),
+        );
+
         Self {
             auth_service,
+            blog_service,
             incident_timer_service,
             phrase_service,
             admin_service,

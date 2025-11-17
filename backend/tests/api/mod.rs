@@ -2,6 +2,7 @@ pub mod oauth_routes_tests;
 pub mod testcontainers_account_deletion_tests;
 pub mod testcontainers_admin_api_tests;
 pub mod testcontainers_auth_api_tests;
+pub mod testcontainers_blog_api_tests;
 pub mod testcontainers_health_api_tests;
 pub mod testcontainers_incident_timer_api_tests;
 pub mod testcontainers_multi_table_integration_tests;

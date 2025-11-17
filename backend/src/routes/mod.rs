@@ -1,6 +1,7 @@
 pub mod access_request;
 pub mod admin;
 pub mod auth;
+pub mod blog;
 pub mod health;
 pub mod incident_timers;
 pub mod phrases;
@@ -49,7 +50,15 @@ pub fn configure_app_routes(cfg: &mut web::ServiceConfig) {
                             "/{user_slug}/phrase",
                             web::get().to(phrases::get_random_phrase_for_user),
                         )
-                        .route("/public-timers", web::get().to(auth::get_public_timer_list)),
+                        .route("/public-timers", web::get().to(auth::get_public_timer_list))
+                        // Blog public routes
+                        .service(
+                            web::scope("/blog")
+                                .route("/posts", web::get().to(blog::get_published_posts))
+                                .route("/posts/{slug}", web::get().to(blog::get_post_by_slug))
+                                .route("/tags", web::get().to(blog::get_all_tags))
+                                .route("/search", web::get().to(blog::search_posts)),
+                        ),
                 )
                 // Protected routes (with auth and rate limiting middleware)
                 .service(
@@ -169,6 +178,13 @@ pub fn configure_app_routes(cfg: &mut web::ServiceConfig) {
                                 .service(
                                     web::resource("/access-requests/{id}/reject")
                                         .route(web::post().to(admin::reject_access_request)),
+                                )
+                                // Blog admin routes
+                                .service(
+                                    web::scope("/blog")
+                                        .route("/posts", web::post().to(blog::create_post))
+                                        .route("/posts/{id}", web::put().to(blog::update_post))
+                                        .route("/posts/{id}", web::delete().to(blog::delete_post)),
                                 ),
                         ),
                 ),

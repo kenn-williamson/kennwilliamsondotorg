@@ -95,3 +95,12 @@ impl From<BlogPost> for BlogPostResponse {
         }
     }
 }
+
+impl From<crate::repositories::traits::TagCount> for TagResponse {
+    fn from(tag_count: crate::repositories::traits::TagCount) -> Self {
+        TagResponse {
+            tag: tag_count.tag,
+            count: tag_count.count,
+        }
+    }
+}
