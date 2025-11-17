@@ -135,7 +135,11 @@ impl UserManagementService {
                     .await?;
                 let admin_count = all_users
                     .iter()
-                    .filter(|u| u.roles.as_ref().is_some_and(|r| r.contains(&"admin".to_string())))
+                    .filter(|u| {
+                        u.roles
+                            .as_ref()
+                            .is_some_and(|r| r.contains(&"admin".to_string()))
+                    })
                     .count();
 
                 if admin_count <= 1 {
@@ -179,7 +183,7 @@ impl UserManagementService {
 
 /// Generate a random password for admin reset
 fn generate_random_password() -> String {
-    use rand::{distr::Alphanumeric, Rng};
+    use rand::{Rng, distr::Alphanumeric};
     rand::rng()
         .sample_iter(&Alphanumeric)
         .take(12)

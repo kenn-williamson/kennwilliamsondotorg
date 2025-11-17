@@ -115,16 +115,13 @@ mod tests {
 
     #[tokio::test]
     async fn test_mock_email_service_with_template() {
-        use crate::services::email::templates::{VerificationEmailTemplate, EmailTemplate};
+        use crate::services::email::templates::{EmailTemplate, VerificationEmailTemplate};
 
         let service = MockEmailService::new();
 
         // Use template pattern directly (matches new approach)
-        let template = VerificationEmailTemplate::new(
-            "Test User",
-            "test-token-123",
-            "https://example.com",
-        );
+        let template =
+            VerificationEmailTemplate::new("Test User", "test-token-123", "https://example.com");
 
         let html_body = template.render_html().unwrap();
         let text_body = template.render_plain_text();

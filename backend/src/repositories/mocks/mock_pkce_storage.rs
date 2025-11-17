@@ -165,10 +165,7 @@ mod tests {
 
         // Store one that expires immediately and one that doesn't
         storage.store_pkce("expired", "verifier1", 0).await.unwrap();
-        storage
-            .store_pkce("valid", "verifier2", 300)
-            .await
-            .unwrap();
+        storage.store_pkce("valid", "verifier2", 300).await.unwrap();
 
         // Cleanup
         storage.cleanup_expired();

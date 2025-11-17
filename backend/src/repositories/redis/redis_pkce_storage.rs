@@ -19,8 +19,8 @@ impl RedisPkceStorage {
     /// # Arguments
     /// * `redis_url` - Redis connection URL (e.g., "redis://localhost:6379")
     pub fn new(redis_url: &str) -> Result<Self> {
-        let client = Client::open(redis_url)
-            .context("Failed to create Redis client for PKCE storage")?;
+        let client =
+            Client::open(redis_url).context("Failed to create Redis client for PKCE storage")?;
         Ok(Self {
             redis_client: client,
         })
@@ -51,7 +51,11 @@ impl PkceStorage for RedisPkceStorage {
             .expire(&key, ttl_seconds as i64)
             .context("Failed to set TTL on PKCE verifier")?;
 
-        log::debug!("Stored PKCE verifier for state {} with TTL {}s", state, ttl_seconds);
+        log::debug!(
+            "Stored PKCE verifier for state {} with TTL {}s",
+            state,
+            ttl_seconds
+        );
 
         Ok(())
     }
@@ -77,7 +81,10 @@ impl PkceStorage for RedisPkceStorage {
 
             log::debug!("Retrieved and deleted PKCE verifier for state {}", state);
         } else {
-            log::warn!("No PKCE verifier found for state {} (expired or invalid)", state);
+            log::warn!(
+                "No PKCE verifier found for state {} (expired or invalid)",
+                state
+            );
         }
 
         Ok(verifier)

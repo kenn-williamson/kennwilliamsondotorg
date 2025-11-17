@@ -65,7 +65,6 @@ impl UserCredentialsRepository for PostgresUserCredentialsRepository {
         Ok(())
     }
 
-
     async fn has_password(&self, user_id: Uuid) -> Result<bool> {
         let result: Option<bool> = sqlx::query_scalar(
             r#"

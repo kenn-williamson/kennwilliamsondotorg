@@ -173,7 +173,6 @@ impl UserResponse {
     }
 }
 
-
 #[derive(Debug, Serialize)]
 pub struct SendVerificationEmailResponse {
     pub message: String,

@@ -189,9 +189,11 @@ mod tests {
 
         // Assert
         assert!(result.is_err());
-        assert!(result
-            .unwrap_err()
-            .to_string()
-            .contains("Phrase repo error"));
+        assert!(
+            result
+                .unwrap_err()
+                .to_string()
+                .contains("Phrase repo error")
+        );
     }
 }

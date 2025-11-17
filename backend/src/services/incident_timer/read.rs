@@ -213,6 +213,9 @@ mod tests {
 
         // Verify - should return None (not found) for private timers
         assert!(result.is_ok());
-        assert!(result.unwrap().is_none(), "Private timer should not be accessible");
+        assert!(
+            result.unwrap().is_none(),
+            "Private timer should not be accessible"
+        );
     }
 }

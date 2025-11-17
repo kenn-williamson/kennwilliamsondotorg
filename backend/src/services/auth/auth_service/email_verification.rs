@@ -1,4 +1,4 @@
-use anyhow::{anyhow, Result};
+use anyhow::{Result, anyhow};
 use chrono::{Duration, Utc};
 use rand::Rng;
 use sha2::{Digest, Sha256};
@@ -53,11 +53,7 @@ impl AuthService {
         // Build and send verification email using template
         use crate::services::email::templates::{Email, EmailTemplate, VerificationEmailTemplate};
 
-        let template = VerificationEmailTemplate::new(
-            &user.display_name,
-            &token,
-            frontend_url,
-        );
+        let template = VerificationEmailTemplate::new(&user.display_name, &token, frontend_url);
 
         let html_body = template.render_html()?;
         let text_body = template.render_plain_text();

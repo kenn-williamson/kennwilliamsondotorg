@@ -1,5 +1,5 @@
 use super::AuthService;
-use anyhow::{anyhow, Result};
+use anyhow::{Result, anyhow};
 use oauth2::{CsrfToken, PkceCodeVerifier};
 
 use crate::models::api::user::AuthResponse;
@@ -12,7 +12,7 @@ impl AuthService {
     /// Optional redirect parameter is encoded into the state for post-auth redirect
     /// Returns: (auth_url, csrf_token) - verifier is stored internally
     pub async fn google_oauth_url(&self, redirect: Option<String>) -> Result<(String, CsrfToken)> {
-        use base64::{engine::general_purpose::STANDARD as base64_engine, Engine as _};
+        use base64::{Engine as _, engine::general_purpose::STANDARD as base64_engine};
 
         let oauth_service = self
             .google_oauth_service
@@ -41,7 +41,9 @@ impl AuthService {
         };
 
         // Generate OAuth URL with PKCE challenge and custom state (if we have redirect)
-        let (auth_url, csrf_token, pkce_verifier) = oauth_service.get_authorization_url(enhanced_state.clone()).await?;
+        let (auth_url, csrf_token, pkce_verifier) = oauth_service
+            .get_authorization_url(enhanced_state.clone())
+            .await?;
 
         // Store PKCE verifier with the state that Google will return (5 minute TTL)
         // This is either the enhanced state or the plain csrf token
@@ -63,11 +65,7 @@ impl AuthService {
     /// 1. Check if external login exists (provider + provider_user_id) → Login existing user
     /// 2. Check if email exists → Link OAuth to account + Add email-verified role (trust OAuth)
     /// 3. Otherwise → Create new OAuth user with all tables (user, external_login, profile, preferences)
-    pub async fn google_oauth_callback(
-        &self,
-        code: String,
-        state: String,
-    ) -> Result<AuthResponse> {
+    pub async fn google_oauth_callback(&self, code: String, state: String) -> Result<AuthResponse> {
         // Ensure OAuth service is configured
         let oauth_service = self
             .google_oauth_service
@@ -187,11 +185,7 @@ impl AuthService {
         let base_slug = if let Some(name) = &google_user_info.name {
             generate_slug_from_display_name(name)
         } else {
-            let email_local = google_user_info
-                .email
-                .split('@')
-                .next()
-                .unwrap_or("user");
+            let email_local = google_user_info.email.split('@').next().unwrap_or("user");
             generate_slug_from_display_name(email_local)
         };
 
@@ -274,7 +268,11 @@ impl AuthService {
     }
 
     /// Helper: Generate AuthResponse with tokens and optional redirect URL
-    async fn generate_auth_response(&self, user: User, redirect_url: Option<String>) -> Result<AuthResponse> {
+    async fn generate_auth_response(
+        &self,
+        user: User,
+        redirect_url: Option<String>,
+    ) -> Result<AuthResponse> {
         // Get user roles
         let roles = self.user_repository.get_user_roles(user.id).await?;
 
@@ -311,7 +309,7 @@ impl AuthService {
 
 /// Generate refresh token string
 fn generate_refresh_token_string() -> String {
-    use rand::{rng, Rng};
+    use rand::{Rng, rng};
     let mut token_bytes = [0u8; 32]; // 256 bits
     rng().fill(&mut token_bytes);
     hex::encode(token_bytes)
@@ -329,17 +327,18 @@ fn hash_token(token: &str) -> String {
 /// Format: {csrf_token}|{base64_encoded_redirect}
 /// Returns: (csrf_token, optional_redirect_url)
 fn parse_state_parameter(state: &str) -> (String, Option<String>) {
-    use base64::{engine::general_purpose::STANDARD as base64_engine, Engine as _};
+    use base64::{Engine as _, engine::general_purpose::STANDARD as base64_engine};
 
     if let Some((csrf, encoded_redirect)) = state.split_once('|') {
         // Attempt to decode the redirect URL
         if let Ok(decoded_bytes) = base64_engine.decode(encoded_redirect)
-            && let Ok(redirect) = String::from_utf8(decoded_bytes) {
-                // Validate the redirect URL before returning
-                if validate_redirect_url(&redirect) {
-                    return (csrf.to_string(), Some(redirect));
-                }
+            && let Ok(redirect) = String::from_utf8(decoded_bytes)
+        {
+            // Validate the redirect URL before returning
+            if validate_redirect_url(&redirect) {
+                return (csrf.to_string(), Some(redirect));
             }
+        }
         // If decoding or validation failed, return None for redirect
         return (csrf.to_string(), None);
     }
@@ -370,8 +369,8 @@ mod tests {
     use crate::models::oauth::GoogleUserInfo;
     use crate::repositories::mocks::{
         MockPkceStorage, MockRefreshTokenRepository, MockUserCredentialsRepository,
-        MockUserExternalLoginRepository, MockUserPreferencesRepository,
-        MockUserProfileRepository, MockUserRepository, MockVerificationTokenRepository,
+        MockUserExternalLoginRepository, MockUserPreferencesRepository, MockUserProfileRepository,
+        MockUserRepository, MockVerificationTokenRepository,
     };
     use crate::repositories::traits::pkce_storage::PkceStorage;
     use crate::services::auth::oauth::MockGoogleOAuthService;
@@ -382,9 +381,7 @@ mod tests {
     const TEST_STATE: &str = "test-state-token";
     const TEST_VERIFIER: &str = "test-verifier";
 
-    fn create_test_auth_service_with_mock_oauth(
-        mock_oauth: MockGoogleOAuthService,
-    ) -> AuthService {
+    fn create_test_auth_service_with_mock_oauth(mock_oauth: MockGoogleOAuthService) -> AuthService {
         create_test_auth_service_with_mocks(
             mock_oauth,
             MockUserRepository::new(),
@@ -472,9 +469,7 @@ mod tests {
                 updated_at: chrono::Utc::now(),
             })
         });
-        user_repo
-            .expect_add_role_to_user()
-            .returning(|_, _| Ok(()));
+        user_repo.expect_add_role_to_user().returning(|_, _| Ok(()));
         user_repo
             .expect_get_user_roles()
             .returning(|_| Ok(vec!["user".to_string(), "email-verified".to_string()]));
@@ -609,16 +604,14 @@ mod tests {
     // Helper to create mock token repo
     fn mock_token_repo() -> MockRefreshTokenRepository {
         let mut token_repo = MockRefreshTokenRepository::new();
-        token_repo
-            .expect_create_token()
-            .returning(|_| {
-                Ok(crate::test_utils::RefreshTokenBuilder::new()
-                    .with_token_hash("hash")
-                    .without_device_info()
-                    .expires_at(chrono::Utc::now() + chrono::Duration::days(7))
-                    .never_used()
-                    .build())
-            });
+        token_repo.expect_create_token().returning(|_| {
+            Ok(crate::test_utils::RefreshTokenBuilder::new()
+                .with_token_hash("hash")
+                .without_device_info()
+                .expires_at(chrono::Utc::now() + chrono::Duration::days(7))
+                .never_used()
+                .build())
+        });
         token_repo
     }
 
@@ -778,7 +771,8 @@ mod tests {
         let mock_oauth = MockGoogleOAuthService::new().with_exchange_failure();
         let user_repo = MockUserRepository::new();
         let token_repo = mock_token_repo();
-        let service = create_test_auth_service_with_stored_pkce(mock_oauth, user_repo, token_repo).await;
+        let service =
+            create_test_auth_service_with_stored_pkce(mock_oauth, user_repo, token_repo).await;
 
         let result = service
             .google_oauth_callback("auth_code".to_string(), TEST_STATE.to_string())
@@ -1075,13 +1069,13 @@ mod tests {
 
     #[tokio::test]
     async fn test_phase4c_new_oauth_user_creates_all_tables() {
+        use crate::models::db::user_external_login::UserExternalLogin;
+        use crate::models::db::user_preferences::UserPreferences;
+        use crate::models::db::user_profile::UserProfile;
         use crate::repositories::mocks::{
             MockUserExternalLoginRepository, MockUserPreferencesRepository,
             MockUserProfileRepository,
         };
-        use crate::models::db::user_external_login::UserExternalLogin;
-        use crate::models::db::user_profile::UserProfile;
-        use crate::models::db::user_preferences::UserPreferences;
 
         let user_info = GoogleUserInfo {
             given_name: None,
@@ -1112,23 +1106,23 @@ mod tests {
                 updated_at: chrono::Utc::now(),
             })
         });
-        external_login_repo.expect_find_by_user_id().returning(|user_id| {
-            Ok(vec![UserExternalLogin {
-                id: Uuid::new_v4(),
-                user_id,
-                provider: "google".to_string(),
-                provider_user_id: "new_oauth_123".to_string(),
-                linked_at: chrono::Utc::now(),
-                created_at: chrono::Utc::now(),
-                updated_at: chrono::Utc::now(),
-            }])
-        });
+        external_login_repo
+            .expect_find_by_user_id()
+            .returning(|user_id| {
+                Ok(vec![UserExternalLogin {
+                    id: Uuid::new_v4(),
+                    user_id,
+                    provider: "google".to_string(),
+                    provider_user_id: "new_oauth_123".to_string(),
+                    linked_at: chrono::Utc::now(),
+                    created_at: chrono::Utc::now(),
+                    updated_at: chrono::Utc::now(),
+                }])
+            });
 
         // Mock user repository - no existing user
         let mut user_repo = MockUserRepository::new();
-        user_repo
-            .expect_find_by_email()
-            .returning(|_| Ok(None));
+        user_repo.expect_find_by_email().returning(|_| Ok(None));
         user_repo.expect_slug_exists().returning(|_| Ok(false));
         user_repo.expect_create_user().returning(|data| {
             Ok(User {
@@ -1141,9 +1135,7 @@ mod tests {
                 updated_at: chrono::Utc::now(),
             })
         });
-        user_repo
-            .expect_add_role_to_user()
-            .returning(|_, _| Ok(()));
+        user_repo.expect_add_role_to_user().returning(|_, _| Ok(()));
         user_repo
             .expect_get_user_roles()
             .returning(|_| Ok(vec!["user".to_string(), "email-verified".to_string()]));
@@ -1237,8 +1229,8 @@ mod tests {
 
     #[tokio::test]
     async fn test_phase4c_existing_external_login() {
-        use crate::repositories::mocks::MockUserExternalLoginRepository;
         use crate::models::db::user_external_login::UserExternalLogin;
+        use crate::repositories::mocks::MockUserExternalLoginRepository;
 
         let user_id = Uuid::new_v4();
         let user_info = GoogleUserInfo {
@@ -1269,17 +1261,19 @@ mod tests {
                     updated_at: chrono::Utc::now(),
                 }))
             });
-        external_login_repo.expect_find_by_user_id().returning(move |_| {
-            Ok(vec![UserExternalLogin {
-                id: Uuid::new_v4(),
-                user_id,
-                provider: "google".to_string(),
-                provider_user_id: "existing_oauth_123".to_string(),
-                linked_at: chrono::Utc::now(),
-                created_at: chrono::Utc::now(),
-                updated_at: chrono::Utc::now(),
-            }])
-        });
+        external_login_repo
+            .expect_find_by_user_id()
+            .returning(move |_| {
+                Ok(vec![UserExternalLogin {
+                    id: Uuid::new_v4(),
+                    user_id,
+                    provider: "google".to_string(),
+                    provider_user_id: "existing_oauth_123".to_string(),
+                    linked_at: chrono::Utc::now(),
+                    created_at: chrono::Utc::now(),
+                    updated_at: chrono::Utc::now(),
+                }])
+            });
 
         // Mock user repository - return user by ID
         let mut user_repo = MockUserRepository::new();
@@ -1325,11 +1319,11 @@ mod tests {
 
     #[tokio::test]
     async fn test_phase4c_link_to_any_account_and_verify() {
+        use crate::models::db::user_external_login::UserExternalLogin;
+        use crate::models::db::user_profile::UserProfile;
         use crate::repositories::mocks::{
             MockUserExternalLoginRepository, MockUserProfileRepository,
         };
-        use crate::models::db::user_external_login::UserExternalLogin;
-        use crate::models::db::user_profile::UserProfile;
 
         let user_id = Uuid::new_v4();
         let user_info = GoogleUserInfo {
@@ -1361,17 +1355,19 @@ mod tests {
                 updated_at: chrono::Utc::now(),
             })
         });
-        external_login_repo.expect_find_by_user_id().returning(move |_| {
-            Ok(vec![UserExternalLogin {
-                id: Uuid::new_v4(),
-                user_id,
-                provider: "google".to_string(),
-                provider_user_id: "link_oauth_123".to_string(),
-                linked_at: chrono::Utc::now(),
-                created_at: chrono::Utc::now(),
-                updated_at: chrono::Utc::now(),
-            }])
-        });
+        external_login_repo
+            .expect_find_by_user_id()
+            .returning(move |_| {
+                Ok(vec![UserExternalLogin {
+                    id: Uuid::new_v4(),
+                    user_id,
+                    provider: "google".to_string(),
+                    provider_user_id: "link_oauth_123".to_string(),
+                    linked_at: chrono::Utc::now(),
+                    created_at: chrono::Utc::now(),
+                    updated_at: chrono::Utc::now(),
+                }])
+            });
 
         // Existing user with email (may or may not be verified)
         let mut user_repo = MockUserRepository::new();
@@ -1497,7 +1493,7 @@ mod tests {
 
     #[test]
     fn test_parse_state_parameter_with_redirect() {
-        use base64::{engine::general_purpose::STANDARD as base64_engine, Engine as _};
+        use base64::{Engine as _, engine::general_purpose::STANDARD as base64_engine};
 
         // Encode redirect URL
         let redirect_url = "/profile";
@@ -1522,7 +1518,7 @@ mod tests {
 
     #[test]
     fn test_parse_state_parameter_with_special_characters() {
-        use base64::{engine::general_purpose::STANDARD as base64_engine, Engine as _};
+        use base64::{Engine as _, engine::general_purpose::STANDARD as base64_engine};
 
         let redirect_url = "/profile?tab=security&foo=bar";
         let encoded_redirect = base64_engine.encode(redirect_url.as_bytes());
@@ -1566,7 +1562,9 @@ mod tests {
 
         // Other protocols
         assert!(!validate_redirect_url("javascript:alert(1)"));
-        assert!(!validate_redirect_url("data:text/html,<script>alert(1)</script>"));
+        assert!(!validate_redirect_url(
+            "data:text/html,<script>alert(1)</script>"
+        ));
 
         // Empty string
         assert!(!validate_redirect_url(""));
@@ -1574,7 +1572,7 @@ mod tests {
 
     #[tokio::test]
     async fn test_oauth_url_with_redirect() {
-        use base64::{engine::general_purpose::STANDARD as base64_engine, Engine as _};
+        use base64::{Engine as _, engine::general_purpose::STANDARD as base64_engine};
 
         let mock_oauth = MockGoogleOAuthService::new();
         let service = create_test_auth_service_with_mock_oauth(mock_oauth);
@@ -1589,12 +1587,20 @@ mod tests {
         // Verify that the redirect was encoded in the csrf_token
         // The returned csrf_token.secret() should contain the enhanced state (csrf|encoded_redirect)
         let encoded_redirect = base64_engine.encode(redirect_url.as_bytes());
-        assert!(csrf_token.secret().contains('|'), "State should contain redirect separator");
-        assert!(csrf_token.secret().contains(&encoded_redirect), "State should contain encoded redirect");
+        assert!(
+            csrf_token.secret().contains('|'),
+            "State should contain redirect separator"
+        );
+        assert!(
+            csrf_token.secret().contains(&encoded_redirect),
+            "State should contain encoded redirect"
+        );
 
         // Verify PKCE storage works with the enhanced state
         let pkce_storage = service.pkce_storage.as_ref().unwrap();
-        let verifier = pkce_storage.retrieve_and_delete_pkce(csrf_token.secret()).await;
+        let verifier = pkce_storage
+            .retrieve_and_delete_pkce(csrf_token.secret())
+            .await;
         assert!(verifier.is_ok());
         assert!(verifier.unwrap().is_some());
     }
@@ -1615,14 +1621,16 @@ mod tests {
 
         // Verify PKCE storage works with plain csrf token
         let pkce_storage = service.pkce_storage.as_ref().unwrap();
-        let verifier = pkce_storage.retrieve_and_delete_pkce(csrf_token.secret()).await;
+        let verifier = pkce_storage
+            .retrieve_and_delete_pkce(csrf_token.secret())
+            .await;
         assert!(verifier.is_ok());
         assert!(verifier.unwrap().is_some());
     }
 
     #[tokio::test]
     async fn test_oauth_callback_extracts_redirect() {
-        use base64::{engine::general_purpose::STANDARD as base64_engine, Engine as _};
+        use base64::{Engine as _, engine::general_purpose::STANDARD as base64_engine};
 
         let redirect_url = "/profile";
         let encoded_redirect = base64_engine.encode(redirect_url.as_bytes());
@@ -1709,7 +1717,7 @@ mod tests {
 
     #[tokio::test]
     async fn test_oauth_callback_validates_redirect_url() {
-        use base64::{engine::general_purpose::STANDARD as base64_engine, Engine as _};
+        use base64::{Engine as _, engine::general_purpose::STANDARD as base64_engine};
 
         // Try with an invalid redirect (protocol-relative URL)
         let invalid_redirect = "//evil.com";

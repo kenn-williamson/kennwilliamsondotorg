@@ -1,4 +1,4 @@
-use actix_web::{web, HttpMessage, HttpRequest, HttpResponse, Result};
+use actix_web::{HttpMessage, HttpRequest, HttpResponse, Result, web};
 
 use crate::models::api::CreateAccessRequestRequest;
 use crate::services::admin::AccessRequestModerationService;

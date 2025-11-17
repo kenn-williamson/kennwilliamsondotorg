@@ -1,8 +1,8 @@
 use crate::models::db::user::{User, UserWithRoles};
-use chrono::{DateTime, Utc};
-use uuid::Uuid;
-use sqlx::PgPool;
 use anyhow::Result;
+use chrono::{DateTime, Utc};
+use sqlx::PgPool;
+use uuid::Uuid;
 
 /// Builder for creating User instances in tests with sensible defaults.
 ///
@@ -75,7 +75,9 @@ impl UserBuilder {
 
         User {
             id,
-            email: self.email.unwrap_or_else(|| format!("test-{}@example.com", id)),
+            email: self
+                .email
+                .unwrap_or_else(|| format!("test-{}@example.com", id)),
             display_name: self.display_name.unwrap_or("Test User".to_string()),
             slug,
             active: self.active.unwrap_or(true),
@@ -93,7 +95,9 @@ impl UserBuilder {
 
         UserWithRoles {
             id,
-            email: self.email.unwrap_or_else(|| format!("test-{}@example.com", id)),
+            email: self
+                .email
+                .unwrap_or_else(|| format!("test-{}@example.com", id)),
             display_name: self.display_name.unwrap_or("Test User".to_string()),
             slug,
             active: self.active.unwrap_or(true),
@@ -111,7 +115,9 @@ impl UserBuilder {
 
         // Generate defaults
         let id = self.id.unwrap_or_else(Uuid::new_v4);
-        let email = self.email.unwrap_or_else(|| format!("test-{}@example.com", id));
+        let email = self
+            .email
+            .unwrap_or_else(|| format!("test-{}@example.com", id));
         let display_name = self.display_name.unwrap_or("Test User".to_string());
         let slug = self.slug.unwrap_or_else(|| format!("test-user-{}", id));
 
@@ -119,7 +125,7 @@ impl UserBuilder {
         let user = sqlx::query_as::<_, User>(
             "INSERT INTO users (email, display_name, slug)
              VALUES ($1, $2, $3)
-             RETURNING *"
+             RETURNING *",
         )
         .bind(&email)
         .bind(&display_name)
@@ -133,12 +139,12 @@ impl UserBuilder {
             let hash = if password.starts_with("$2b$") {
                 password
             } else {
-                bcrypt::hash(password, 4)?  // Low cost for tests
+                bcrypt::hash(password, 4)? // Low cost for tests
             };
 
             sqlx::query(
                 "INSERT INTO user_credentials (user_id, password_hash)
-                 VALUES ($1, $2)"
+                 VALUES ($1, $2)",
             )
             .bind(user.id)
             .bind(hash)
@@ -150,7 +156,7 @@ impl UserBuilder {
         if let Some(Some(google_id)) = self.google_user_id {
             sqlx::query(
                 "INSERT INTO user_external_logins (user_id, provider, provider_user_id, linked_at)
-                 VALUES ($1, 'google', $2, NOW())"
+                 VALUES ($1, 'google', $2, NOW())",
             )
             .bind(user.id)
             .bind(google_id)
@@ -162,7 +168,7 @@ impl UserBuilder {
         if let Some(Some(real_name)) = self.real_name {
             sqlx::query(
                 "INSERT INTO user_profiles (user_id, real_name)
-                 VALUES ($1, $2)"
+                 VALUES ($1, $2)",
             )
             .bind(user.id)
             .bind(real_name)
@@ -176,7 +182,7 @@ impl UserBuilder {
 
         sqlx::query(
             "INSERT INTO user_preferences (user_id, timer_is_public, timer_show_in_list)
-             VALUES ($1, $2, $3)"
+             VALUES ($1, $2, $3)",
         )
         .bind(user.id)
         .bind(timer_public)
@@ -303,7 +309,11 @@ impl UserBuilder {
     }
 
     /// Create an OAuth user (no password, has Google ID and real name)
-    pub fn oauth(mut self, google_user_id: impl Into<String>, real_name: impl Into<String>) -> Self {
+    pub fn oauth(
+        mut self,
+        google_user_id: impl Into<String>,
+        real_name: impl Into<String>,
+    ) -> Self {
         self.password_hash = Some(None);
         self.google_user_id = Some(Some(google_user_id.into()));
         self.real_name = Some(Some(real_name.into()));
@@ -314,15 +324,12 @@ impl UserBuilder {
     /// Note: This only sets the user fields. You still need to add the
     /// "admin" role separately if testing role-based access.
     pub fn admin(self) -> Self {
-        self.with_display_name("Admin User")
-            .with_slug("admin-user")
+        self.with_display_name("Admin User").with_slug("admin-user")
     }
 
     /// Create a password user ready to persist
     pub fn password_user(email: impl Into<String>, password: impl Into<String>) -> Self {
-        Self::new()
-            .with_email(email)
-            .with_password(password)
+        Self::new().with_email(email).with_password(password)
     }
 
     /// Create an OAuth user ready to persist
@@ -337,7 +344,7 @@ impl UserBuilder {
     pub fn hybrid_user(
         email: impl Into<String>,
         password: impl Into<String>,
-        google_id: impl Into<String>
+        google_id: impl Into<String>,
     ) -> Self {
         Self::new()
             .with_email(email)
@@ -368,9 +375,7 @@ mod tests {
 
     #[test]
     fn test_builder_with_custom_email() {
-        let user = UserBuilder::new()
-            .with_email("custom@example.com")
-            .build();
+        let user = UserBuilder::new().with_email("custom@example.com").build();
 
         assert_eq!(user.email, "custom@example.com");
     }
@@ -399,9 +404,7 @@ mod tests {
 
     #[test]
     fn test_builder_public_timer() {
-        let user = UserBuilder::new()
-            .with_public_timer(true, true)
-            .build();
+        let user = UserBuilder::new().with_public_timer(true, true).build();
 
         // Note: Timer preferences are stored in user_preferences table, not in User model
         assert!(!user.email.is_empty());
@@ -409,9 +412,7 @@ mod tests {
 
     #[test]
     fn test_builder_inactive_user() {
-        let user = UserBuilder::new()
-            .inactive()
-            .build();
+        let user = UserBuilder::new().inactive().build();
 
         assert!(!user.active);
     }
@@ -419,18 +420,14 @@ mod tests {
     #[test]
     fn test_builder_specific_id() {
         let id = Uuid::new_v4();
-        let user = UserBuilder::new()
-            .with_id(id)
-            .build();
+        let user = UserBuilder::new().with_id(id).build();
 
         assert_eq!(user.id, id);
     }
 
     #[test]
     fn test_builder_without_password() {
-        let user = UserBuilder::new()
-            .without_password()
-            .build();
+        let user = UserBuilder::new().without_password().build();
 
         // Note: Password is stored in user_credentials table, not in User model
         assert!(!user.email.is_empty());

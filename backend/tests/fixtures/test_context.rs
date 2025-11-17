@@ -3,15 +3,14 @@
 // Provides TestContext (full application with services) and TestContainer (just database)
 // for different levels of integration testing.
 
+use anyhow::Result;
 use sqlx::PgPool;
 use std::sync::Arc;
 use testcontainers::{
+    GenericImage, ImageExt,
     core::{IntoContainerPort, WaitFor},
     runners::AsyncRunner,
-    GenericImage,
-    ImageExt,
 };
-use anyhow::Result;
 
 // ============================================================================
 // TEST CONTAINER - Database-only fixture
@@ -61,7 +60,10 @@ impl TestContainer {
         loop {
             total_attempts += 1;
             if total_attempts > max_total_attempts {
-                return Err(anyhow::anyhow!("Failed to setup database after {} total attempts (3 containers × 5 attempts each)", max_total_attempts));
+                return Err(anyhow::anyhow!(
+                    "Failed to setup database after {} total attempts (3 containers × 5 attempts each)",
+                    max_total_attempts
+                ));
             }
             // Clean up the previous container if it exists
             if let Some(old_container) = current_container.take() {
@@ -73,7 +75,9 @@ impl TestContainer {
             // Create a fresh image configuration for each attempt
             let image = GenericImage::new("ghcr.io/fboulnois/pg_uuidv7", "1.6.0")
                 .with_exposed_port(5432.tcp())
-                .with_wait_for(WaitFor::message_on_stdout("database system is ready to accept connections"))
+                .with_wait_for(WaitFor::message_on_stdout(
+                    "database system is ready to accept connections",
+                ))
                 .with_env_var("POSTGRES_DB", "testdb")
                 .with_env_var("POSTGRES_USER", "postgres")
                 .with_env_var("POSTGRES_PASSWORD", "postgres");
@@ -98,7 +102,10 @@ impl TestContainer {
                 }
             };
 
-            let connection_string = format!("postgres://postgres:postgres@127.0.0.1:{}/testdb?sslmode=disable", port);
+            let connection_string = format!(
+                "postgres://postgres:postgres@127.0.0.1:{}/testdb?sslmode=disable",
+                port
+            );
 
             // Try to connect with restart logic (tries 5 times, then signals restart)
             match Self::wait_for_database_ready_with_restart(&connection_string).await {
@@ -120,7 +127,7 @@ impl TestContainer {
                         pool,
                         connection_string,
                     });
-                },
+                }
                 Err(e) => {
                     eprintln!("❌ Database setup failed: {}", e);
                     // Store container for cleanup on next iteration
@@ -132,9 +139,7 @@ impl TestContainer {
     }
 
     /// Wait for database to be ready with container restart logic
-    async fn wait_for_database_ready_with_restart(
-        connection_string: &str
-    ) -> Result<PgPool> {
+    async fn wait_for_database_ready_with_restart(connection_string: &str) -> Result<PgPool> {
         let mut attempt = 0;
         let attempts_per_container = 5; // Try 5 times before restarting container
 
@@ -153,12 +158,12 @@ impl TestContainer {
                     match sqlx::query("SELECT 1").fetch_one(&pool).await {
                         Ok(_) => {
                             return Ok(pool);
-                        },
+                        }
                         Err(_e) => {
                             // Query failed, will retry
                         }
                     }
-                },
+                }
                 Err(_e) => {
                     // Connection failed, will retry
                 }
@@ -166,8 +171,14 @@ impl TestContainer {
 
             // If we've tried 5 times, signal that we need to restart the container
             if attempt % attempts_per_container == 0 {
-                eprintln!("⚠️  Database unresponsive after {} attempts, restarting container...", attempt);
-                return Err(anyhow::anyhow!("Container restart needed after {} attempts", attempt));
+                eprintln!(
+                    "⚠️  Database unresponsive after {} attempts, restarting container...",
+                    attempt
+                );
+                return Err(anyhow::anyhow!(
+                    "Container restart needed after {} attempts",
+                    attempt
+                ));
             }
 
             let delay = std::cmp::min(1 << (attempt % attempts_per_container), 8); // Exponential backoff, max 8 seconds
@@ -221,7 +232,10 @@ impl TestContextBuilder {
 
     /// Configure with OAuth service for OAuth tests
     #[allow(dead_code)]
-    pub fn with_oauth(mut self, oauth_service: backend::services::auth::oauth::MockGoogleOAuthService) -> Self {
+    pub fn with_oauth(
+        mut self,
+        oauth_service: backend::services::auth::oauth::MockGoogleOAuthService,
+    ) -> Self {
         self.oauth_service = Some(oauth_service);
         self
     }
@@ -229,40 +243,46 @@ impl TestContextBuilder {
     /// Build the test context with all dependencies
     #[allow(dead_code)]
     pub async fn build(self) -> TestContext {
-        use backend::services::container::ServiceContainer;
-        use backend::routes;
-        use backend::middleware::rate_limiter::{MockRateLimitService, RedisRateLimitService};
-        use actix_web::{web, App};
         use actix_test;
-        use std::sync::Arc;
+        use actix_web::{App, web};
+        use backend::middleware::rate_limiter::{MockRateLimitService, RedisRateLimitService};
         use backend::repositories::postgres::postgres_user_repository::PostgresUserRepository;
+        use backend::routes;
+        use backend::services::container::ServiceContainer;
+        use std::sync::Arc;
 
         // Set FRONTEND_URL for tests (needed for email verification)
         unsafe {
             std::env::set_var("FRONTEND_URL", "https://localhost");
         }
-        use backend::repositories::postgres::postgres_refresh_token_repository::PostgresRefreshTokenRepository;
-        use backend::repositories::postgres::postgres_verification_token_repository::PostgresVerificationTokenRepository;
-        use backend::repositories::postgres::postgres_incident_timer_repository::PostgresIncidentTimerRepository;
-        use backend::repositories::postgres::postgres_phrase_repository::PostgresPhraseRepository;
+        use backend::events::event_bus::InMemoryEventBus;
+        use backend::events::handlers::UserRegisteredEmailHandler;
+        use backend::events::types::UserRegisteredEvent;
+        use backend::events::{EventBus, EventPublisher};
+        use backend::repositories::postgres::postgres_access_request_repository::PostgresAccessRequestRepository;
         use backend::repositories::postgres::postgres_admin_repository::PostgresAdminRepository;
+        use backend::repositories::postgres::postgres_incident_timer_repository::PostgresIncidentTimerRepository;
+        use backend::repositories::postgres::postgres_password_reset_token_repository::PostgresPasswordResetTokenRepository;
+        use backend::repositories::postgres::postgres_phrase_repository::PostgresPhraseRepository;
+        use backend::repositories::postgres::postgres_refresh_token_repository::PostgresRefreshTokenRepository;
         use backend::repositories::postgres::postgres_user_credentials_repository::PostgresUserCredentialsRepository;
         use backend::repositories::postgres::postgres_user_external_login_repository::PostgresUserExternalLoginRepository;
-        use backend::repositories::postgres::postgres_user_profile_repository::PostgresUserProfileRepository;
         use backend::repositories::postgres::postgres_user_preferences_repository::PostgresUserPreferencesRepository;
-        use backend::repositories::postgres::postgres_password_reset_token_repository::PostgresPasswordResetTokenRepository;
-        use backend::repositories::postgres::postgres_access_request_repository::PostgresAccessRequestRepository;
+        use backend::repositories::postgres::postgres_user_profile_repository::PostgresUserProfileRepository;
+        use backend::repositories::postgres::postgres_verification_token_repository::PostgresVerificationTokenRepository;
+        use backend::services::admin::{
+            AccessRequestModerationService, PhraseModerationService, StatsService,
+            UserManagementService,
+        };
         use backend::services::auth::AuthService;
         use backend::services::email::MockEmailService;
         use backend::services::incident_timer::IncidentTimerService;
         use backend::services::phrase::PhraseService;
-        use backend::services::admin::{AccessRequestModerationService, UserManagementService, PhraseModerationService, StatsService};
-        use backend::events::event_bus::InMemoryEventBus;
-        use backend::events::{EventBus, EventPublisher};
-        use backend::events::handlers::UserRegisteredEmailHandler;
-        use backend::events::types::UserRegisteredEvent;
 
-        let test_container = TestContainer::builder().build().await.expect("Failed to create test container");
+        let test_container = TestContainer::builder()
+            .build()
+            .await
+            .expect("Failed to create test container");
         let jwt_secret = "test-jwt-secret-for-api-tests".to_string();
 
         // Create mock email service for testing
@@ -272,7 +292,9 @@ impl TestContextBuilder {
         let mut event_bus = InMemoryEventBus::new();
 
         let user_registered_handler = UserRegisteredEmailHandler::new(
-            Arc::new(PostgresVerificationTokenRepository::new(test_container.pool.clone())),
+            Arc::new(PostgresVerificationTokenRepository::new(
+                test_container.pool.clone(),
+            )),
             email_service.clone(),
             "https://localhost",
         );
@@ -285,64 +307,103 @@ impl TestContextBuilder {
         // Create mock OAuth service for testing
         let mock_oauth = self.oauth_service.unwrap_or_default();
 
-        let auth_service = Arc::new(AuthService::builder()
-            .user_repository(Box::new(PostgresUserRepository::new(test_container.pool.clone())))
-            .refresh_token_repository(Box::new(PostgresRefreshTokenRepository::new(test_container.pool.clone())))
-            .verification_token_repository(Box::new(PostgresVerificationTokenRepository::new(test_container.pool.clone())))
-            .password_reset_token_repository(Box::new(PostgresPasswordResetTokenRepository::new(test_container.pool.clone())))
-            .incident_timer_repository(Box::new(PostgresIncidentTimerRepository::new(test_container.pool.clone())))
-            .phrase_repository(Box::new(PostgresPhraseRepository::new(test_container.pool.clone())))
-            .credentials_repository(Box::new(PostgresUserCredentialsRepository::new(test_container.pool.clone())))
-            .external_login_repository(Box::new(PostgresUserExternalLoginRepository::new(test_container.pool.clone())))
-            .profile_repository(Box::new(PostgresUserProfileRepository::new(test_container.pool.clone())))
-            .preferences_repository(Box::new(PostgresUserPreferencesRepository::new(test_container.pool.clone())))
-            .email_service(Box::new(email_service.as_ref().clone()))
-            .google_oauth_service(Box::new(mock_oauth))
-            .pkce_storage(Box::new(backend::repositories::mocks::MockPkceStorage::new()))
-            .event_publisher(event_publisher)
-            .jwt_secret(jwt_secret.clone())
-            .build());
+        let auth_service = Arc::new(
+            AuthService::builder()
+                .user_repository(Box::new(PostgresUserRepository::new(
+                    test_container.pool.clone(),
+                )))
+                .refresh_token_repository(Box::new(PostgresRefreshTokenRepository::new(
+                    test_container.pool.clone(),
+                )))
+                .verification_token_repository(Box::new(PostgresVerificationTokenRepository::new(
+                    test_container.pool.clone(),
+                )))
+                .password_reset_token_repository(Box::new(
+                    PostgresPasswordResetTokenRepository::new(test_container.pool.clone()),
+                ))
+                .incident_timer_repository(Box::new(PostgresIncidentTimerRepository::new(
+                    test_container.pool.clone(),
+                )))
+                .phrase_repository(Box::new(PostgresPhraseRepository::new(
+                    test_container.pool.clone(),
+                )))
+                .credentials_repository(Box::new(PostgresUserCredentialsRepository::new(
+                    test_container.pool.clone(),
+                )))
+                .external_login_repository(Box::new(PostgresUserExternalLoginRepository::new(
+                    test_container.pool.clone(),
+                )))
+                .profile_repository(Box::new(PostgresUserProfileRepository::new(
+                    test_container.pool.clone(),
+                )))
+                .preferences_repository(Box::new(PostgresUserPreferencesRepository::new(
+                    test_container.pool.clone(),
+                )))
+                .email_service(Box::new(email_service.as_ref().clone()))
+                .google_oauth_service(Box::new(mock_oauth))
+                .pkce_storage(Box::new(
+                    backend::repositories::mocks::MockPkceStorage::new(),
+                ))
+                .event_publisher(event_publisher)
+                .jwt_secret(jwt_secret.clone())
+                .build(),
+        );
 
-        let incident_timer_service = Arc::new(IncidentTimerService::new(
-            Box::new(PostgresIncidentTimerRepository::new(test_container.pool.clone()))
-        ));
+        let incident_timer_service = Arc::new(IncidentTimerService::new(Box::new(
+            PostgresIncidentTimerRepository::new(test_container.pool.clone()),
+        )));
 
-        let phrase_service = Arc::new(PhraseService::new(
-            Box::new(PostgresPhraseRepository::new(test_container.pool.clone()))
-        ));
+        let phrase_service = Arc::new(PhraseService::new(Box::new(PostgresPhraseRepository::new(
+            test_container.pool.clone(),
+        ))));
 
         let admin_service = Arc::new(UserManagementService::new(
             Box::new(PostgresUserRepository::new(test_container.pool.clone())),
-            Box::new(PostgresRefreshTokenRepository::new(test_container.pool.clone())),
+            Box::new(PostgresRefreshTokenRepository::new(
+                test_container.pool.clone(),
+            )),
             Box::new(PostgresAdminRepository::new(test_container.pool.clone())),
         ));
 
-        let phrase_moderation_service = Arc::new(PhraseModerationService::new(
-            Box::new(PostgresPhraseRepository::new(test_container.pool.clone()))
-        ));
+        let phrase_moderation_service = Arc::new(PhraseModerationService::new(Box::new(
+            PostgresPhraseRepository::new(test_container.pool.clone()),
+        )));
 
-        let access_request_moderation_service = Arc::new(AccessRequestModerationService::new(
-            Box::new(PostgresAccessRequestRepository::new(test_container.pool.clone()))
-        ));
+        let access_request_moderation_service =
+            Arc::new(AccessRequestModerationService::new(Box::new(
+                PostgresAccessRequestRepository::new(test_container.pool.clone()),
+            )));
 
         let stats_service = Arc::new(StatsService::new(
             Box::new(PostgresPhraseRepository::new(test_container.pool.clone())),
             Box::new(PostgresAdminRepository::new(test_container.pool.clone())),
-            Box::new(PostgresAccessRequestRepository::new(test_container.pool.clone())),
+            Box::new(PostgresAccessRequestRepository::new(
+                test_container.pool.clone(),
+            )),
         ));
 
         // Use Redis or mock rate limiter depending on configuration
-        let rate_limit_service: Arc<dyn backend::middleware::rate_limiter::RateLimitServiceTrait> = if let Some(redis_url) = self.redis_url {
-            Arc::new(RedisRateLimitService::new(&redis_url).expect("Failed to create Redis rate limiter"))
-        } else {
-            Arc::new(MockRateLimitService::new())
-        };
+        let rate_limit_service: Arc<dyn backend::middleware::rate_limiter::RateLimitServiceTrait> =
+            if let Some(redis_url) = self.redis_url {
+                Arc::new(
+                    RedisRateLimitService::new(&redis_url)
+                        .expect("Failed to create Redis rate limiter"),
+                )
+            } else {
+                Arc::new(MockRateLimitService::new())
+            };
 
         // Create cleanup service
         let cleanup_service = Arc::new(backend::services::cleanup::CleanupService::new(
-            Box::new(PostgresRefreshTokenRepository::new(test_container.pool.clone())),
-            Box::new(PostgresVerificationTokenRepository::new(test_container.pool.clone())),
-            Box::new(PostgresPasswordResetTokenRepository::new(test_container.pool.clone())),
+            Box::new(PostgresRefreshTokenRepository::new(
+                test_container.pool.clone(),
+            )),
+            Box::new(PostgresVerificationTokenRepository::new(
+                test_container.pool.clone(),
+            )),
+            Box::new(PostgresPasswordResetTokenRepository::new(
+                test_container.pool.clone(),
+            )),
         ));
 
         let container = ServiceContainer {
@@ -367,7 +428,9 @@ impl TestContextBuilder {
                 .app_data(web::Data::from(container.phrase_service.clone()))
                 .app_data(web::Data::from(container.admin_service.clone()))
                 .app_data(web::Data::from(container.phrase_moderation_service.clone()))
-                .app_data(web::Data::from(container.access_request_moderation_service.clone()))
+                .app_data(web::Data::from(
+                    container.access_request_moderation_service.clone(),
+                ))
                 .app_data(web::Data::from(container.stats_service.clone()))
                 .app_data(web::Data::from(container.rate_limit_service.clone()))
                 .configure(routes::configure_app_routes)
@@ -414,7 +477,11 @@ impl TestContext {
 
     /// Create an unverified user (without email-verified role)
     /// Uses UserBuilder pattern for resilient test fixtures
-    pub async fn create_unverified_user(&self, email: &str, slug: &str) -> backend::models::db::User {
+    pub async fn create_unverified_user(
+        &self,
+        email: &str,
+        slug: &str,
+    ) -> backend::models::db::User {
         use backend::test_utils::UserBuilder;
 
         UserBuilder::new()
@@ -429,7 +496,12 @@ impl TestContext {
 
     /// Create an OAuth user (with Google ID and email-verified role)
     /// Uses UserBuilder pattern for resilient test fixtures
-    pub async fn create_oauth_user(&self, email: &str, slug: &str, google_user_id: &str) -> backend::models::db::User {
+    pub async fn create_oauth_user(
+        &self,
+        email: &str,
+        slug: &str,
+        google_user_id: &str,
+    ) -> backend::models::db::User {
         use backend::test_utils::UserBuilder;
 
         let user = UserBuilder::new()
@@ -462,12 +534,10 @@ impl TestContext {
 
     /// Get all users with a specific email
     pub async fn get_users_by_email(&self, email: &str) -> Vec<backend::models::db::User> {
-        sqlx::query_as::<_, backend::models::db::User>(
-            "SELECT * FROM users WHERE email = $1"
-        )
-        .bind(email)
-        .fetch_all(&self.pool)
-        .await
-        .unwrap()
+        sqlx::query_as::<_, backend::models::db::User>("SELECT * FROM users WHERE email = $1")
+            .bind(email)
+            .fetch_all(&self.pool)
+            .await
+            .unwrap()
     }
 }

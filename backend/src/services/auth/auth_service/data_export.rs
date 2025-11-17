@@ -3,10 +3,9 @@ use chrono::Utc;
 use uuid::Uuid;
 
 use crate::models::api::data_export::{
-    AuthenticationExport, ExternalLoginExport, IncidentTimerExportData,
-    PasswordResetExportData, PhraseExclusionExportData, PhraseSuggestionExportData,
-    PreferencesExport, ProfileExport, SessionExportData, UserDataExport, UserExportData,
-    VerificationTokenExportData,
+    AuthenticationExport, ExternalLoginExport, IncidentTimerExportData, PasswordResetExportData,
+    PhraseExclusionExportData, PhraseSuggestionExportData, PreferencesExport, ProfileExport,
+    SessionExportData, UserDataExport, UserExportData, VerificationTokenExportData,
 };
 
 // Add the export_user_data method to AuthService
@@ -42,18 +41,19 @@ impl AuthService {
         };
 
         // 2. NEW: Get authentication details (from user_credentials)
-        let (has_password, password_last_changed) = if let Some(creds_repo) = &self.credentials_repository {
-            let has_pwd = creds_repo.has_password(user_id).await.unwrap_or(false);
-            let last_changed = creds_repo
-                .find_by_user_id(user_id)
-                .await
-                .ok()
-                .flatten()
-                .map(|c| c.password_updated_at);
-            (has_pwd, last_changed)
-        } else {
-            (false, None)
-        };
+        let (has_password, password_last_changed) =
+            if let Some(creds_repo) = &self.credentials_repository {
+                let has_pwd = creds_repo.has_password(user_id).await.unwrap_or(false);
+                let last_changed = creds_repo
+                    .find_by_user_id(user_id)
+                    .await
+                    .ok()
+                    .flatten()
+                    .map(|c| c.password_updated_at);
+                (has_pwd, last_changed)
+            } else {
+                (false, None)
+            };
 
         let authentication = AuthenticationExport {
             has_password,
@@ -180,24 +180,26 @@ impl AuthService {
             .collect();
 
         // Get verification history
-        let verification_history = if let Some(verification_repo) = &self.verification_token_repository {
-            verification_repo
-                .find_by_user_id(user_id)
-                .await?
-                .into_iter()
-                .map(|token| VerificationTokenExportData {
-                    id: token.id,
-                    expires_at: token.expires_at,
-                    created_at: token.created_at,
-                })
-                .collect()
-        } else {
-            Vec::new()
-        };
+        let verification_history =
+            if let Some(verification_repo) = &self.verification_token_repository {
+                verification_repo
+                    .find_by_user_id(user_id)
+                    .await?
+                    .into_iter()
+                    .map(|token| VerificationTokenExportData {
+                        id: token.id,
+                        expires_at: token.expires_at,
+                        created_at: token.created_at,
+                    })
+                    .collect()
+            } else {
+                Vec::new()
+            };
 
         // NEW: Get password reset history (for transparency)
         // Note: password_reset_token_repository already exists in AuthService
-        let password_reset_history = if let Some(reset_repo) = &self.password_reset_token_repository {
+        let password_reset_history = if let Some(reset_repo) = &self.password_reset_token_repository
+        {
             reset_repo
                 .find_by_user_id(user_id)
                 .await
@@ -241,7 +243,9 @@ impl AuthService {
 #[cfg(test)]
 mod tests {
     use crate::models::db::{
-        incident_timer::IncidentTimer, phrase::PhraseSuggestion, refresh_token::RefreshToken,
+        incident_timer::IncidentTimer,
+        phrase::PhraseSuggestion,
+        refresh_token::RefreshToken,
         user::{User, VerificationToken},
     };
     use crate::repositories::mocks::{
@@ -305,24 +309,27 @@ mod tests {
         // Test that export returns properly structured JSON
         // Verify all required fields are present
         // Verify sensitive data is excluded
-        
+
         let user_id = Uuid::new_v4();
         let user = create_test_user_with_id(user_id);
-        
+
         // Create mock repositories
         let mut user_repo = MockUserRepository::new();
-        user_repo.expect_find_by_id()
+        user_repo
+            .expect_find_by_id()
             .with(mockall::predicate::eq(user_id))
             .times(1)
             .returning(move |_| Ok(Some(user.clone())));
-        
-        user_repo.expect_get_user_roles()
+
+        user_repo
+            .expect_get_user_roles()
             .with(mockall::predicate::eq(user_id))
             .times(1)
             .returning(|_| Ok(vec!["user".to_string(), "email-verified".to_string()]));
 
         let mut refresh_token_repo = MockRefreshTokenRepository::new();
-        refresh_token_repo.expect_find_by_user_id()
+        refresh_token_repo
+            .expect_find_by_user_id()
             .with(mockall::predicate::eq(user_id))
             .times(1)
             .returning(|_| Ok(vec![]));
@@ -337,7 +344,7 @@ mod tests {
         // Test export
         let result = auth_service.export_user_data(user_id).await;
         assert!(result.is_ok());
-        
+
         let export_data = result.unwrap();
 
         // Verify structure
@@ -373,24 +380,27 @@ mod tests {
         // - created_at, updated_at, active status
         // - roles (converted from user_roles)
         // Excludes: password_hash
-        
+
         let user_id = Uuid::new_v4();
         let user = create_test_user_with_id(user_id);
-        
+
         // Create mock repositories
         let mut user_repo = MockUserRepository::new();
-        user_repo.expect_find_by_id()
+        user_repo
+            .expect_find_by_id()
             .with(mockall::predicate::eq(user_id))
             .times(1)
             .returning(move |_| Ok(Some(user.clone())));
-        
-        user_repo.expect_get_user_roles()
+
+        user_repo
+            .expect_get_user_roles()
             .with(mockall::predicate::eq(user_id))
             .times(1)
             .returning(|_| Ok(vec!["user".to_string()]));
 
         let mut refresh_token_repo = MockRefreshTokenRepository::new();
-        refresh_token_repo.expect_find_by_user_id()
+        refresh_token_repo
+            .expect_find_by_user_id()
             .with(mockall::predicate::eq(user_id))
             .times(1)
             .returning(|_| Ok(vec![]));
@@ -405,9 +415,9 @@ mod tests {
         // Test export
         let result = auth_service.export_user_data(user_id).await;
         assert!(result.is_ok());
-        
+
         let export_data = result.unwrap();
-        
+
         // Verify profile data
         assert_eq!(export_data.user.email, "test@example.com");
         assert_eq!(export_data.user.display_name, "Test User");
@@ -415,7 +425,7 @@ mod tests {
         assert!(export_data.user.active);
         assert!(!export_data.user.email_verified); // No email-verified role
         assert_eq!(export_data.user.roles, vec!["user"]);
-        
+
         // Verify timestamps are present
         assert!(export_data.user.created_at <= Utc::now());
         assert!(export_data.user.updated_at <= Utc::now());
@@ -426,32 +436,36 @@ mod tests {
         // Test that all user's incident timers are exported
         // Verify structure: id, reset_timestamp, notes, created_at, updated_at
         // Verify only current user's timers are included
-        
+
         let user_id = Uuid::new_v4();
         let user = create_test_user_with_id(user_id);
         let timer = create_test_incident_timer(user_id);
-        
+
         // Create mock repositories
         let mut user_repo = MockUserRepository::new();
-        user_repo.expect_find_by_id()
+        user_repo
+            .expect_find_by_id()
             .with(mockall::predicate::eq(user_id))
             .times(1)
             .returning(move |_| Ok(Some(user.clone())));
-        
-        user_repo.expect_get_user_roles()
+
+        user_repo
+            .expect_get_user_roles()
             .with(mockall::predicate::eq(user_id))
             .times(1)
             .returning(|_| Ok(vec!["user".to_string()]));
 
         let mut refresh_token_repo = MockRefreshTokenRepository::new();
-        refresh_token_repo.expect_find_by_user_id()
+        refresh_token_repo
+            .expect_find_by_user_id()
             .with(mockall::predicate::eq(user_id))
             .times(1)
             .returning(|_| Ok(vec![]));
 
         let mut timer_repo = MockIncidentTimerRepository::new();
         let timer_clone = timer.clone();
-        timer_repo.expect_find_by_user_id()
+        timer_repo
+            .expect_find_by_user_id()
             .with(mockall::predicate::eq(user_id))
             .times(1)
             .returning(move |_| Ok(vec![timer_clone.clone()]));
@@ -467,9 +481,9 @@ mod tests {
         // Test export
         let result = auth_service.export_user_data(user_id).await;
         assert!(result.is_ok());
-        
+
         let export_data = result.unwrap();
-        
+
         // Verify incident timers
         assert_eq!(export_data.incident_timers.len(), 1);
         let exported_timer = &export_data.incident_timers[0];
@@ -485,37 +499,42 @@ mod tests {
         // Test phrase suggestions export
         // Test phrase exclusions export (with phrase text)
         // Verify proper structure and user isolation
-        
+
         let user_id = Uuid::new_v4();
         let user = create_test_user_with_id(user_id);
         let suggestion = create_test_phrase_suggestion(user_id);
-        
+
         // Create mock repositories
         let mut user_repo = MockUserRepository::new();
-        user_repo.expect_find_by_id()
+        user_repo
+            .expect_find_by_id()
             .with(mockall::predicate::eq(user_id))
             .times(1)
             .returning(move |_| Ok(Some(user.clone())));
-        
-        user_repo.expect_get_user_roles()
+
+        user_repo
+            .expect_get_user_roles()
             .with(mockall::predicate::eq(user_id))
             .times(1)
             .returning(|_| Ok(vec!["user".to_string()]));
 
         let mut refresh_token_repo = MockRefreshTokenRepository::new();
-        refresh_token_repo.expect_find_by_user_id()
+        refresh_token_repo
+            .expect_find_by_user_id()
             .with(mockall::predicate::eq(user_id))
             .times(1)
             .returning(|_| Ok(vec![]));
 
         let mut phrase_repo = MockPhraseRepository::new();
         let suggestion_clone = suggestion.clone();
-        phrase_repo.expect_get_user_suggestions()
+        phrase_repo
+            .expect_get_user_suggestions()
             .with(mockall::predicate::eq(user_id))
             .times(1)
             .returning(move |_| Ok(vec![suggestion_clone.clone()]));
-        
-        phrase_repo.expect_get_user_excluded_phrases()
+
+        phrase_repo
+            .expect_get_user_excluded_phrases()
             .with(mockall::predicate::eq(user_id))
             .times(1)
             .returning(|_| Ok(vec![]));
@@ -531,9 +550,9 @@ mod tests {
         // Test export
         let result = auth_service.export_user_data(user_id).await;
         assert!(result.is_ok());
-        
+
         let export_data = result.unwrap();
-        
+
         // Verify phrase suggestions
         assert_eq!(export_data.phrase_suggestions.len(), 1);
         let exported_suggestion = &export_data.phrase_suggestions[0];
@@ -542,7 +561,7 @@ mod tests {
         assert_eq!(exported_suggestion.phrase_text, suggestion.phrase_text);
         assert_eq!(exported_suggestion.status, suggestion.status);
         assert_eq!(exported_suggestion.admin_reason, suggestion.admin_reason);
-        
+
         // Verify phrase exclusions (empty in this test)
         assert_eq!(export_data.phrase_exclusions.len(), 0);
     }
@@ -551,34 +570,38 @@ mod tests {
     async fn test_export_session_data() {
         // Test refresh tokens export (device info, timestamps)
         // Test verification tokens export
-        
+
         let user_id = Uuid::new_v4();
         let user = create_test_user_with_id(user_id);
         let refresh_token = create_test_refresh_token(user_id);
         let verification_token = create_test_verification_token(user_id);
-        
+
         // Create mock repositories
         let mut user_repo = MockUserRepository::new();
-        user_repo.expect_find_by_id()
+        user_repo
+            .expect_find_by_id()
             .with(mockall::predicate::eq(user_id))
             .times(1)
             .returning(move |_| Ok(Some(user.clone())));
-        
-        user_repo.expect_get_user_roles()
+
+        user_repo
+            .expect_get_user_roles()
             .with(mockall::predicate::eq(user_id))
             .times(1)
             .returning(|_| Ok(vec!["user".to_string()]));
 
         let mut refresh_token_repo = MockRefreshTokenRepository::new();
         let refresh_token_clone = refresh_token.clone();
-        refresh_token_repo.expect_find_by_user_id()
+        refresh_token_repo
+            .expect_find_by_user_id()
             .with(mockall::predicate::eq(user_id))
             .times(1)
             .returning(move |_| Ok(vec![refresh_token_clone.clone()]));
 
         let mut verification_repo = MockVerificationTokenRepository::new();
         let verification_token_clone = verification_token.clone();
-        verification_repo.expect_find_by_user_id()
+        verification_repo
+            .expect_find_by_user_id()
             .with(mockall::predicate::eq(user_id))
             .times(1)
             .returning(move |_| Ok(vec![verification_token_clone.clone()]));
@@ -594,9 +617,9 @@ mod tests {
         // Test export
         let result = auth_service.export_user_data(user_id).await;
         assert!(result.is_ok());
-        
+
         let export_data = result.unwrap();
-        
+
         // Verify active sessions (refresh tokens)
         assert_eq!(export_data.active_sessions.len(), 1);
         let exported_session = &export_data.active_sessions[0];
@@ -605,37 +628,46 @@ mod tests {
         assert_eq!(exported_session.created_at, refresh_token.created_at);
         assert_eq!(exported_session.last_used_at, refresh_token.last_used_at);
         assert_eq!(exported_session.expires_at, refresh_token.expires_at);
-        
+
         // Verify verification history
         assert_eq!(export_data.verification_history.len(), 1);
         let exported_verification = &export_data.verification_history[0];
         assert_eq!(exported_verification.id, verification_token.id);
-        assert_eq!(exported_verification.expires_at, verification_token.expires_at);
-        assert_eq!(exported_verification.created_at, verification_token.created_at);
+        assert_eq!(
+            exported_verification.expires_at,
+            verification_token.expires_at
+        );
+        assert_eq!(
+            exported_verification.created_at,
+            verification_token.created_at
+        );
     }
 
     #[tokio::test]
     async fn test_export_empty_user_data() {
         // Test user with minimal data (no timers, suggestions, etc.)
         // Verify empty arrays are returned
-        
+
         let user_id = Uuid::new_v4();
         let user = create_test_user_with_id(user_id);
-        
+
         // Create mock repositories
         let mut user_repo = MockUserRepository::new();
-        user_repo.expect_find_by_id()
+        user_repo
+            .expect_find_by_id()
             .with(mockall::predicate::eq(user_id))
             .times(1)
             .returning(move |_| Ok(Some(user.clone())));
-        
-        user_repo.expect_get_user_roles()
+
+        user_repo
+            .expect_get_user_roles()
             .with(mockall::predicate::eq(user_id))
             .times(1)
             .returning(|_| Ok(vec!["user".to_string()]));
 
         let mut refresh_token_repo = MockRefreshTokenRepository::new();
-        refresh_token_repo.expect_find_by_user_id()
+        refresh_token_repo
+            .expect_find_by_user_id()
             .with(mockall::predicate::eq(user_id))
             .times(1)
             .returning(|_| Ok(vec![]));
@@ -650,16 +682,16 @@ mod tests {
         // Test export
         let result = auth_service.export_user_data(user_id).await;
         assert!(result.is_ok());
-        
+
         let export_data = result.unwrap();
-        
+
         // Verify empty arrays for optional data
         assert_eq!(export_data.incident_timers.len(), 0);
         assert_eq!(export_data.phrase_suggestions.len(), 0);
         assert_eq!(export_data.phrase_exclusions.len(), 0);
         assert_eq!(export_data.active_sessions.len(), 0);
         assert_eq!(export_data.verification_history.len(), 0);
-        
+
         // Verify user data is still present
         assert_eq!(export_data.user.id, user_id);
         assert_eq!(export_data.user.email, "test@example.com");
@@ -672,21 +704,24 @@ mod tests {
 
         let user_id = Uuid::new_v4();
         let user = create_test_user_with_id(user_id);
-        
+
         // Create mock repositories
         let mut user_repo = MockUserRepository::new();
-        user_repo.expect_find_by_id()
+        user_repo
+            .expect_find_by_id()
             .with(mockall::predicate::eq(user_id))
             .times(1)
             .returning(move |_| Ok(Some(user.clone())));
-        
-        user_repo.expect_get_user_roles()
+
+        user_repo
+            .expect_get_user_roles()
             .with(mockall::predicate::eq(user_id))
             .times(1)
             .returning(|_| Ok(vec!["user".to_string(), "email-verified".to_string()]));
 
         let mut refresh_token_repo = MockRefreshTokenRepository::new();
-        refresh_token_repo.expect_find_by_user_id()
+        refresh_token_repo
+            .expect_find_by_user_id()
             .with(mockall::predicate::eq(user_id))
             .times(1)
             .returning(|_| Ok(vec![]));
@@ -701,9 +736,9 @@ mod tests {
         // Test export
         let result = auth_service.export_user_data(user_id).await;
         assert!(result.is_ok());
-        
+
         let export_data = result.unwrap();
-        
+
         // Verify OAuth user data
         assert_eq!(export_data.user.id, user_id);
         assert_eq!(export_data.user.email, "test@example.com");
@@ -719,15 +754,13 @@ mod tests {
     #[tokio::test]
     async fn test_export_includes_all_new_tables() {
         // Test that export includes data from all new authentication tables
+        use crate::models::db::{
+            user_credentials::UserCredentials, user_external_login::UserExternalLogin,
+            user_preferences::UserPreferences, user_profile::UserProfile,
+        };
         use crate::repositories::mocks::{
             MockUserCredentialsRepository, MockUserExternalLoginRepository,
             MockUserPreferencesRepository, MockUserProfileRepository,
-        };
-        use crate::models::db::{
-            user_credentials::UserCredentials,
-            user_external_login::UserExternalLogin,
-            user_preferences::UserPreferences,
-            user_profile::UserProfile,
         };
 
         let user_id = Uuid::new_v4();
@@ -851,10 +884,10 @@ mod tests {
     #[tokio::test]
     async fn test_export_oauth_only_user_no_password() {
         // Test OAuth-only user (no credentials)
+        use crate::models::db::user_external_login::UserExternalLogin;
         use crate::repositories::mocks::{
             MockUserCredentialsRepository, MockUserExternalLoginRepository,
         };
-        use crate::models::db::user_external_login::UserExternalLogin;
 
         let user_id = Uuid::new_v4();
         let user = create_test_user_with_id(user_id);
@@ -875,9 +908,7 @@ mod tests {
         // Mock credentials repository - no password
         let mut creds_repo = MockUserCredentialsRepository::new();
         creds_repo.expect_has_password().returning(|_| Ok(false));
-        creds_repo
-            .expect_find_by_user_id()
-            .returning(|_| Ok(None));
+        creds_repo.expect_find_by_user_id().returning(|_| Ok(None));
 
         // Mock external login repository
         let mut ext_repo = MockUserExternalLoginRepository::new();
@@ -919,8 +950,8 @@ mod tests {
     #[tokio::test]
     async fn test_export_multiple_oauth_providers() {
         // Test user with multiple OAuth providers
-        use crate::repositories::mocks::MockUserExternalLoginRepository;
         use crate::models::db::user_external_login::UserExternalLogin;
+        use crate::repositories::mocks::MockUserExternalLoginRepository;
 
         let user_id = Uuid::new_v4();
         let user = create_test_user_with_id(user_id);
@@ -989,15 +1020,13 @@ mod tests {
     #[tokio::test]
     async fn test_export_valid_json_serialization() {
         // Test that export can be serialized to valid JSON
+        use crate::models::db::{
+            user_credentials::UserCredentials, user_external_login::UserExternalLogin,
+            user_preferences::UserPreferences, user_profile::UserProfile,
+        };
         use crate::repositories::mocks::{
             MockUserCredentialsRepository, MockUserExternalLoginRepository,
             MockUserPreferencesRepository, MockUserProfileRepository,
-        };
-        use crate::models::db::{
-            user_credentials::UserCredentials,
-            user_external_login::UserExternalLogin,
-            user_preferences::UserPreferences,
-            user_profile::UserProfile,
         };
 
         let user_id = Uuid::new_v4();

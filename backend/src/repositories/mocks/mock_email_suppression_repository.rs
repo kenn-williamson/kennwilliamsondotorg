@@ -1,4 +1,4 @@
-use anyhow::{anyhow, Result};
+use anyhow::{Result, anyhow};
 use async_trait::async_trait;
 use chrono::{DateTime, Utc};
 use std::collections::HashMap;
@@ -33,10 +33,7 @@ impl Default for MockEmailSuppressionRepository {
 
 #[async_trait]
 impl EmailSuppressionRepository for MockEmailSuppressionRepository {
-    async fn create_suppression(
-        &self,
-        data: &CreateSuppressionData,
-    ) -> Result<EmailSuppression> {
+    async fn create_suppression(&self, data: &CreateSuppressionData) -> Result<EmailSuppression> {
         let mut suppressions = self.suppressions.lock().unwrap();
 
         // Check for duplicate email
@@ -80,11 +77,7 @@ impl EmailSuppressionRepository for MockEmailSuppressionRepository {
         }
     }
 
-    async fn increment_bounce_count(
-        &self,
-        email: &str,
-        bounced_at: DateTime<Utc>,
-    ) -> Result<()> {
+    async fn increment_bounce_count(&self, email: &str, bounced_at: DateTime<Utc>) -> Result<()> {
         let mut suppressions = self.suppressions.lock().unwrap();
 
         if let Some(suppression) = suppressions.get_mut(email) {
@@ -151,7 +144,12 @@ mod tests {
         // Second creation with same email should fail
         let result2 = repo.create_suppression(&data).await;
         assert!(result2.is_err());
-        assert!(result2.unwrap_err().to_string().contains("already suppressed"));
+        assert!(
+            result2
+                .unwrap_err()
+                .to_string()
+                .contains("already suppressed")
+        );
     }
 
     #[tokio::test]
@@ -274,7 +272,11 @@ mod tests {
             .unwrap();
 
         // Verify count incremented
-        let suppression = repo.find_by_email("bounce@example.com").await.unwrap().unwrap();
+        let suppression = repo
+            .find_by_email("bounce@example.com")
+            .await
+            .unwrap()
+            .unwrap();
         assert_eq!(suppression.bounce_count, 1);
         assert!(suppression.last_bounce_at.is_some());
 
@@ -283,7 +285,11 @@ mod tests {
             .await
             .unwrap();
 
-        let suppression = repo.find_by_email("bounce@example.com").await.unwrap().unwrap();
+        let suppression = repo
+            .find_by_email("bounce@example.com")
+            .await
+            .unwrap()
+            .unwrap();
         assert_eq!(suppression.bounce_count, 2);
     }
 

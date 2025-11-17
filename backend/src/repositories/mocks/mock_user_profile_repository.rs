@@ -4,9 +4,7 @@ use mockall::mock;
 use uuid::Uuid;
 
 use crate::models::db::user_profile::UserProfile;
-use crate::repositories::traits::user_profile_repository::{
-    UpdateProfile, UserProfileRepository,
-};
+use crate::repositories::traits::user_profile_repository::{UpdateProfile, UserProfileRepository};
 
 // Generate mock for UserProfileRepository trait
 mock! {

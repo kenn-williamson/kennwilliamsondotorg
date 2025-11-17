@@ -30,6 +30,5 @@ pub struct EmailSuppression {
 pub enum EmailType {
     Transactional, // Verification, password reset, security alerts
     #[allow(dead_code)] // Planned for future marketing features
-    Marketing,     // Newsletters, announcements, promotional
+    Marketing, // Newsletters, announcements, promotional
 }
-

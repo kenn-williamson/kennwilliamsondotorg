@@ -7,8 +7,12 @@ use std::sync::atomic::{AtomicU64, Ordering};
 pub fn unique_test_email() -> String {
     static COUNTER: AtomicU64 = AtomicU64::new(0);
     let counter = COUNTER.fetch_add(1, Ordering::SeqCst);
-    format!("test_{}_{}@test.com",
-        std::time::SystemTime::now().duration_since(std::time::UNIX_EPOCH).unwrap().as_secs(),
+    format!(
+        "test_{}_{}@test.com",
+        std::time::SystemTime::now()
+            .duration_since(std::time::UNIX_EPOCH)
+            .unwrap()
+            .as_secs(),
         counter
     )
 }
@@ -18,8 +22,12 @@ pub fn unique_test_email() -> String {
 pub fn unique_test_slug() -> String {
     static COUNTER: AtomicU64 = AtomicU64::new(0);
     let counter = COUNTER.fetch_add(1, Ordering::SeqCst);
-    format!("test-user-{}-{}",
-        std::time::SystemTime::now().duration_since(std::time::UNIX_EPOCH).unwrap().as_secs(),
+    format!(
+        "test-user-{}-{}",
+        std::time::SystemTime::now()
+            .duration_since(std::time::UNIX_EPOCH)
+            .unwrap()
+            .as_secs(),
         counter
     )
 }
@@ -33,5 +41,11 @@ pub fn test_password_hash() -> String {
 /// Generates a unique test phrase
 #[allow(dead_code)]
 pub fn unique_test_phrase() -> String {
-    format!("Test phrase {}", std::time::SystemTime::now().duration_since(std::time::UNIX_EPOCH).unwrap().as_secs())
+    format!(
+        "Test phrase {}",
+        std::time::SystemTime::now()
+            .duration_since(std::time::UNIX_EPOCH)
+            .unwrap()
+            .as_secs()
+    )
 }

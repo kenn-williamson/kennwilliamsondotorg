@@ -8,19 +8,21 @@ use crate::fixtures::TestContext;
 #[actix_web::test]
 async fn test_health_endpoint_success() {
     let ctx = TestContext::builder().build().await;
-    
-    let mut resp = ctx.server.get("/backend/public/health")
+
+    let mut resp = ctx
+        .server
+        .get("/backend/public/health")
         .send()
         .await
         .unwrap();
-    
+
     println!("Health response status: {}", resp.status());
     if !resp.status().is_success() {
         let body: serde_json::Value = resp.json().await.unwrap();
         println!("Health error response: {:?}", body);
     }
     assert!(resp.status().is_success());
-    
+
     let body: serde_json::Value = resp.json().await.unwrap();
     assert_eq!(body.get("status").unwrap(), "healthy");
     assert_eq!(body.get("service").unwrap(), "kennwilliamson-backend");
@@ -30,19 +32,21 @@ async fn test_health_endpoint_success() {
 #[actix_web::test]
 async fn test_health_db_endpoint_success() {
     let ctx = TestContext::builder().build().await;
-    
-    let mut resp = ctx.server.get("/backend/public/health/db")
+
+    let mut resp = ctx
+        .server
+        .get("/backend/public/health/db")
         .send()
         .await
         .unwrap();
-    
+
     println!("Health DB response status: {}", resp.status());
     if !resp.status().is_success() {
         let body: serde_json::Value = resp.json().await.unwrap();
         println!("Health DB error response: {:?}", body);
     }
     assert!(resp.status().is_success());
-    
+
     let body: serde_json::Value = resp.json().await.unwrap();
     assert_eq!(body.get("status").unwrap(), "healthy");
     assert_eq!(body.get("database").unwrap(), "connected");
@@ -54,16 +58,20 @@ async fn test_health_db_endpoint_success() {
 #[allow(unused_mut)]
 async fn test_health_endpoints_are_public() {
     let ctx = TestContext::builder().build().await;
-    
+
     // Test basic health endpoint without authentication
-    let mut resp = ctx.server.get("/backend/public/health")
+    let mut resp = ctx
+        .server
+        .get("/backend/public/health")
         .send()
         .await
         .unwrap();
     assert!(resp.status().is_success());
-    
+
     // Test database health endpoint without authentication
-    let mut resp = ctx.server.get("/backend/public/health/db")
+    let mut resp = ctx
+        .server
+        .get("/backend/public/health/db")
         .send()
         .await
         .unwrap();
@@ -73,21 +81,23 @@ async fn test_health_endpoints_are_public() {
 #[actix_web::test]
 async fn test_health_endpoints_response_format() {
     let ctx = TestContext::builder().build().await;
-    
+
     // Test basic health endpoint response format
-    let mut resp = ctx.server.get("/backend/public/health")
+    let mut resp = ctx
+        .server
+        .get("/backend/public/health")
         .send()
         .await
         .unwrap();
-    
+
     assert!(resp.status().is_success());
     let body: serde_json::Value = resp.json().await.unwrap();
-    
+
     // Verify all required fields are present
     assert!(body.get("status").is_some());
     assert!(body.get("service").is_some());
     assert!(body.get("version").is_some());
-    
+
     // Verify no unexpected fields
     let keys: Vec<String> = body.as_object().unwrap().keys().cloned().collect();
     assert_eq!(keys.len(), 3);
@@ -99,22 +109,24 @@ async fn test_health_endpoints_response_format() {
 #[actix_web::test]
 async fn test_health_db_endpoint_response_format() {
     let ctx = TestContext::builder().build().await;
-    
+
     // Test database health endpoint response format
-    let mut resp = ctx.server.get("/backend/public/health/db")
+    let mut resp = ctx
+        .server
+        .get("/backend/public/health/db")
         .send()
         .await
         .unwrap();
-    
+
     assert!(resp.status().is_success());
     let body: serde_json::Value = resp.json().await.unwrap();
-    
+
     // Verify all required fields are present
     assert!(body.get("status").is_some());
     assert!(body.get("database").is_some());
     assert!(body.get("service").is_some());
     assert!(body.get("version").is_some());
-    
+
     // Verify no unexpected fields
     let keys: Vec<String> = body.as_object().unwrap().keys().cloned().collect();
     assert_eq!(keys.len(), 4);

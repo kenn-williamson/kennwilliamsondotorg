@@ -2,8 +2,8 @@ use anyhow::Result;
 use rand::Rng;
 use uuid::Uuid;
 
-use super::slug::{generate_slug, is_valid_slug};
 use super::AuthService;
+use super::slug::{generate_slug, is_valid_slug};
 use crate::events::types::ProfileUpdatedEvent;
 use crate::models::api::{
     ProfileUpdateRequest, SlugPreviewRequest, SlugPreviewResponse, SlugValidationRequest,
@@ -76,7 +76,10 @@ impl AuthService {
         request: ProfileUpdateRequest,
     ) -> Result<UserResponse> {
         // Fetch current user to capture old values for event notification
-        let old_user = self.user_repository.find_by_id(user_id).await?
+        let old_user = self
+            .user_repository
+            .find_by_id(user_id)
+            .await?
             .ok_or_else(|| anyhow::anyhow!("User not found"))?;
 
         // Validate slug format - only check for excluded characters
@@ -143,7 +146,10 @@ impl AuthService {
         }
 
         // Get updated user and build response
-        let user = self.user_repository.find_by_id(user_id).await?
+        let user = self
+            .user_repository
+            .find_by_id(user_id)
+            .await?
             .ok_or_else(|| anyhow::anyhow!("User not found"))?;
         let roles = self.user_repository.get_user_roles(user.id).await?;
         let user_response = self.build_user_response_with_details(user, roles).await?;
@@ -167,10 +173,10 @@ impl AuthService {
 #[cfg(test)]
 mod tests {
     use super::*;
+    use crate::models::db::User;
     use crate::repositories::mocks::mock_refresh_token_repository::MockRefreshTokenRepository;
     use crate::repositories::mocks::mock_user_preferences_repository::MockUserPreferencesRepository;
     use crate::repositories::mocks::mock_user_repository::MockUserRepository;
-    use crate::models::db::User;
     use anyhow::Result;
     use chrono::Utc;
     use mockall::predicate::eq;
@@ -400,8 +406,7 @@ mod tests {
             .with(
                 eq(user_id),
                 mockall::predicate::function(|updates: &UserUpdates| {
-                    updates.display_name == "New Name"
-                        && updates.slug == "new-slug"
+                    updates.display_name == "New Name" && updates.slug == "new-slug"
                 }),
             )
             .returning(move |_, _| Ok(updated_user.clone()));
@@ -456,10 +461,12 @@ mod tests {
         );
         let result = auth_service.update_profile(user_id, request).await;
         assert!(result.is_err());
-        assert!(result
-            .unwrap_err()
-            .to_string()
-            .contains("Invalid slug format"));
+        assert!(
+            result
+                .unwrap_err()
+                .to_string()
+                .contains("Invalid slug format")
+        );
 
         Ok(())
     }
@@ -489,10 +496,12 @@ mod tests {
         );
         let result = auth_service.update_profile(user_id, request).await;
         assert!(result.is_err());
-        assert!(result
-            .unwrap_err()
-            .to_string()
-            .contains("Invalid slug format"));
+        assert!(
+            result
+                .unwrap_err()
+                .to_string()
+                .contains("Invalid slug format")
+        );
 
         Ok(())
     }
@@ -522,10 +531,12 @@ mod tests {
         );
         let result = auth_service.update_profile(user_id, request).await;
         assert!(result.is_err());
-        assert!(result
-            .unwrap_err()
-            .to_string()
-            .contains("Invalid slug format"));
+        assert!(
+            result
+                .unwrap_err()
+                .to_string()
+                .contains("Invalid slug format")
+        );
 
         Ok(())
     }
@@ -555,10 +566,12 @@ mod tests {
         );
         let result = auth_service.update_profile(user_id, request).await;
         assert!(result.is_err());
-        assert!(result
-            .unwrap_err()
-            .to_string()
-            .contains("Invalid slug format"));
+        assert!(
+            result
+                .unwrap_err()
+                .to_string()
+                .contains("Invalid slug format")
+        );
 
         Ok(())
     }
@@ -588,10 +601,12 @@ mod tests {
         );
         let result = auth_service.update_profile(user_id, request).await;
         assert!(result.is_err());
-        assert!(result
-            .unwrap_err()
-            .to_string()
-            .contains("Invalid slug format"));
+        assert!(
+            result
+                .unwrap_err()
+                .to_string()
+                .contains("Invalid slug format")
+        );
 
         Ok(())
     }
@@ -627,10 +642,12 @@ mod tests {
         );
         let result = auth_service.update_profile(user_id, request).await;
         assert!(result.is_err());
-        assert!(result
-            .unwrap_err()
-            .to_string()
-            .contains("Slug already taken"));
+        assert!(
+            result
+                .unwrap_err()
+                .to_string()
+                .contains("Slug already taken")
+        );
 
         Ok(())
     }
@@ -776,13 +793,12 @@ mod tests {
             .build();
 
         // Try to set show_in_list=true but is_public=false (should fail)
-        let result = auth_service.update_timer_privacy(user_id, false, true).await;
+        let result = auth_service
+            .update_timer_privacy(user_id, false, true)
+            .await;
 
         assert!(result.is_err());
-        assert!(result
-            .unwrap_err()
-            .to_string()
-            .contains("not public"));
+        assert!(result.unwrap_err().to_string().contains("not public"));
 
         Ok(())
     }
@@ -826,7 +842,9 @@ mod tests {
             .jwt_secret("test-secret".to_string())
             .build();
 
-        let result = auth_service.update_timer_privacy(user_id, false, false).await;
+        let result = auth_service
+            .update_timer_privacy(user_id, false, false)
+            .await;
         assert!(result.is_ok());
 
         Ok(())
@@ -871,7 +889,9 @@ mod tests {
             .jwt_secret("test-secret".to_string())
             .build();
 
-        let result = auth_service.update_timer_privacy(user_id, true, false).await;
+        let result = auth_service
+            .update_timer_privacy(user_id, true, false)
+            .await;
         assert!(result.is_ok());
 
         Ok(())

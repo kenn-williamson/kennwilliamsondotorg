@@ -21,10 +21,7 @@ impl PostgresEmailSuppressionRepository {
 
 #[async_trait]
 impl EmailSuppressionRepository for PostgresEmailSuppressionRepository {
-    async fn create_suppression(
-        &self,
-        data: &CreateSuppressionData,
-    ) -> Result<EmailSuppression> {
+    async fn create_suppression(&self, data: &CreateSuppressionData) -> Result<EmailSuppression> {
         let suppression = sqlx::query_as!(
             EmailSuppression,
             r#"
@@ -88,44 +85,36 @@ impl EmailSuppressionRepository for PostgresEmailSuppressionRepository {
 
     async fn is_email_suppressed(&self, email: &str, email_type: EmailType) -> Result<bool> {
         let result = match email_type {
-            EmailType::Transactional => {
-                sqlx::query!(
-                    r#"
+            EmailType::Transactional => sqlx::query!(
+                r#"
                     SELECT suppress_transactional
                     FROM email_suppressions
                     WHERE email = $1
                     "#,
-                    email
-                )
-                .fetch_optional(&self.pool)
-                .await?
-                .map(|row| row.suppress_transactional)
-                .unwrap_or(false)
-            }
-            EmailType::Marketing => {
-                sqlx::query!(
-                    r#"
+                email
+            )
+            .fetch_optional(&self.pool)
+            .await?
+            .map(|row| row.suppress_transactional)
+            .unwrap_or(false),
+            EmailType::Marketing => sqlx::query!(
+                r#"
                     SELECT suppress_marketing
                     FROM email_suppressions
                     WHERE email = $1
                     "#,
-                    email
-                )
-                .fetch_optional(&self.pool)
-                .await?
-                .map(|row| row.suppress_marketing)
-                .unwrap_or(false)
-            }
+                email
+            )
+            .fetch_optional(&self.pool)
+            .await?
+            .map(|row| row.suppress_marketing)
+            .unwrap_or(false),
         };
 
         Ok(result)
     }
 
-    async fn increment_bounce_count(
-        &self,
-        email: &str,
-        bounced_at: DateTime<Utc>,
-    ) -> Result<()> {
+    async fn increment_bounce_count(&self, email: &str, bounced_at: DateTime<Utc>) -> Result<()> {
         sqlx::query!(
             r#"
             UPDATE email_suppressions

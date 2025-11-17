@@ -1,6 +1,9 @@
 use anyhow::{Context, Result};
 use async_trait::async_trait;
-use aws_sdk_sesv2::{types::{Body, Content, Destination, EmailContent, Message}, Client};
+use aws_sdk_sesv2::{
+    Client,
+    types::{Body, Content, Destination, EmailContent, Message},
+};
 
 use super::{Email, EmailService};
 
@@ -112,9 +115,7 @@ impl EmailService for SesEmailService {
             .body(body)
             .build();
 
-        let email_content = EmailContent::builder()
-            .simple(message)
-            .build();
+        let email_content = EmailContent::builder().simple(message).build();
 
         // Build and send email request
         let mut email_request = ses_client
@@ -135,7 +136,9 @@ impl EmailService for SesEmailService {
             email_request = email_request.configuration_set_name(config_set);
         }
 
-        email_request.send().await
+        email_request
+            .send()
+            .await
             .context("Failed to send email via AWS SES")?;
 
         log::info!(
@@ -147,4 +150,3 @@ impl EmailService for SesEmailService {
         Ok(())
     }
 }
-

@@ -1,4 +1,6 @@
-use crate::repositories::traits::{PasswordResetTokenRepository, RefreshTokenRepository, VerificationTokenRepository};
+use crate::repositories::traits::{
+    PasswordResetTokenRepository, RefreshTokenRepository, VerificationTokenRepository,
+};
 use anyhow::Result;
 use std::sync::Arc;
 
@@ -25,9 +27,18 @@ impl CleanupService {
     /// Clean up expired tokens from refresh_tokens, verification_tokens, and password_reset_tokens tables
     /// Returns the total number of tokens deleted
     pub async fn cleanup_expired_tokens(&self) -> Result<u64> {
-        let refresh_count = self.refresh_token_repository.cleanup_expired_tokens().await?;
-        let verification_count = self.verification_token_repository.delete_expired_tokens().await?;
-        let password_reset_count = self.password_reset_token_repository.delete_expired_tokens().await?;
+        let refresh_count = self
+            .refresh_token_repository
+            .cleanup_expired_tokens()
+            .await?;
+        let verification_count = self
+            .verification_token_repository
+            .delete_expired_tokens()
+            .await?;
+        let password_reset_count = self
+            .password_reset_token_repository
+            .delete_expired_tokens()
+            .await?;
 
         let total = refresh_count + verification_count + password_reset_count;
 
@@ -144,7 +155,10 @@ mod tests {
             unimplemented!()
         }
 
-        async fn find_by_token_hash(&self, _token_hash: &str) -> Result<Option<PasswordResetToken>> {
+        async fn find_by_token_hash(
+            &self,
+            _token_hash: &str,
+        ) -> Result<Option<PasswordResetToken>> {
             unimplemented!()
         }
 
@@ -190,7 +204,13 @@ mod tests {
         );
 
         // Service should be created successfully
-        assert!(service.refresh_token_repository.cleanup_expired_tokens().await.is_ok());
+        assert!(
+            service
+                .refresh_token_repository
+                .cleanup_expired_tokens()
+                .await
+                .is_ok()
+        );
     }
 
     #[tokio::test]
@@ -268,10 +288,12 @@ mod tests {
 
         let result = service.cleanup_expired_tokens().await;
         assert!(result.is_err());
-        assert!(result
-            .unwrap_err()
-            .to_string()
-            .contains("Mock refresh token cleanup failed"));
+        assert!(
+            result
+                .unwrap_err()
+                .to_string()
+                .contains("Mock refresh token cleanup failed")
+        );
     }
 
     #[tokio::test]
@@ -297,10 +319,12 @@ mod tests {
 
         let result = service.cleanup_expired_tokens().await;
         assert!(result.is_err());
-        assert!(result
-            .unwrap_err()
-            .to_string()
-            .contains("Mock verification token cleanup failed"));
+        assert!(
+            result
+                .unwrap_err()
+                .to_string()
+                .contains("Mock verification token cleanup failed")
+        );
     }
 
     #[tokio::test]
@@ -326,9 +350,11 @@ mod tests {
 
         let result = service.cleanup_expired_tokens().await;
         assert!(result.is_err());
-        assert!(result
-            .unwrap_err()
-            .to_string()
-            .contains("Mock password reset token cleanup failed"));
+        assert!(
+            result
+                .unwrap_err()
+                .to_string()
+                .contains("Mock password reset token cleanup failed")
+        );
     }
 }

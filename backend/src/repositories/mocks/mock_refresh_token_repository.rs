@@ -129,9 +129,11 @@ mod tests {
         // Test error handling
         let result = mock_repo.find_by_token("error_token").await;
         assert!(result.is_err());
-        assert!(result
-            .unwrap_err()
-            .to_string()
-            .contains("Database connection failed"));
+        assert!(
+            result
+                .unwrap_err()
+                .to_string()
+                .contains("Database connection failed")
+        );
     }
 }

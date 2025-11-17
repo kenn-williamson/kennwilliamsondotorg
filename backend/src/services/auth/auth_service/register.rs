@@ -1,8 +1,8 @@
 use anyhow::Result;
-use bcrypt::{hash, DEFAULT_COST};
+use bcrypt::{DEFAULT_COST, hash};
 
-use super::slug::generate_slug;
 use super::AuthService;
+use super::slug::generate_slug;
 use crate::models::api::{AuthResponse, CreateUserRequest};
 use crate::models::db::refresh_token::CreateRefreshToken;
 use crate::repositories::traits::refresh_token_repository::RefreshTokenRepository;
@@ -44,11 +44,7 @@ impl AuthService {
         if let Some(event_publisher) = &self.event_publisher {
             use crate::events::types::UserRegisteredEvent;
 
-            let event = UserRegisteredEvent::new(
-                user.id,
-                &user.email,
-                &user.display_name,
-            );
+            let event = UserRegisteredEvent::new(user.id, &user.email, &user.display_name);
 
             // Fire-and-forget event publishing (box for type erasure)
             if let Err(e) = event_publisher.publish(Box::new(event)).await {
@@ -112,7 +108,7 @@ async fn create_refresh_token(
 
 /// Generate refresh token string
 fn generate_refresh_token_string() -> String {
-    use rand::{rng, Rng};
+    use rand::{Rng, rng};
     let mut token_bytes = [0u8; 32]; // 256 bits
     rng().fill(&mut token_bytes);
     hex::encode(token_bytes)
@@ -324,8 +320,8 @@ mod tests {
         };
 
         // Create event bus to track events
-        use crate::events::event_bus::InMemoryEventBus;
         use crate::events::EventPublisher;
+        use crate::events::event_bus::InMemoryEventBus;
         use std::sync::Arc;
 
         let event_bus = InMemoryEventBus::new();

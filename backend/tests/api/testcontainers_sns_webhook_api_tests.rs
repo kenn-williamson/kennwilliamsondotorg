@@ -22,7 +22,8 @@ async fn test_sns_subscription_confirmation_endpoint() {
     });
 
     // When: Posting subscription confirmation to webhook
-    let mut resp = ctx.server
+    let mut resp = ctx
+        .server
         .post("/backend/webhooks/ses")
         .send_json(&subscription_payload)
         .await
@@ -79,7 +80,8 @@ async fn test_hard_bounce_notification_creates_suppression() {
     });
 
     // When: Posting bounce notification to webhook
-    let resp = ctx.server
+    let resp = ctx
+        .server
         .post("/backend/webhooks/ses")
         .send_json(&bounce_payload)
         .await
@@ -89,13 +91,12 @@ async fn test_hard_bounce_notification_creates_suppression() {
     assert!(resp.status().is_success());
 
     // And: Should create suppression in database
-    let suppression: Option<backend::models::db::EmailSuppression> = sqlx::query_as(
-        "SELECT * FROM email_suppressions WHERE email = $1"
-    )
-    .bind("hardbounce@example.com")
-    .fetch_optional(&ctx.pool)
-    .await
-    .unwrap();
+    let suppression: Option<backend::models::db::EmailSuppression> =
+        sqlx::query_as("SELECT * FROM email_suppressions WHERE email = $1")
+            .bind("hardbounce@example.com")
+            .fetch_optional(&ctx.pool)
+            .await
+            .unwrap();
 
     assert!(suppression.is_some());
     let suppression = suppression.unwrap();
@@ -136,7 +137,8 @@ async fn test_complaint_notification_creates_suppression() {
     });
 
     // When: Posting complaint notification to webhook
-    let resp = ctx.server
+    let resp = ctx
+        .server
         .post("/backend/webhooks/ses")
         .send_json(&complaint_payload)
         .await
@@ -146,13 +148,12 @@ async fn test_complaint_notification_creates_suppression() {
     assert!(resp.status().is_success());
 
     // And: Should create suppression in database
-    let suppression: Option<backend::models::db::EmailSuppression> = sqlx::query_as(
-        "SELECT * FROM email_suppressions WHERE email = $1"
-    )
-    .bind("spam@example.com")
-    .fetch_optional(&ctx.pool)
-    .await
-    .unwrap();
+    let suppression: Option<backend::models::db::EmailSuppression> =
+        sqlx::query_as("SELECT * FROM email_suppressions WHERE email = $1")
+            .bind("spam@example.com")
+            .fetch_optional(&ctx.pool)
+            .await
+            .unwrap();
 
     assert!(suppression.is_some());
     let suppression = suppression.unwrap();
@@ -194,7 +195,8 @@ async fn test_soft_bounce_notification_tracks_count() {
     });
 
     // When: Posting soft bounce notification to webhook
-    let resp = ctx.server
+    let resp = ctx
+        .server
         .post("/backend/webhooks/ses")
         .send_json(&soft_bounce_payload)
         .await
@@ -204,18 +206,20 @@ async fn test_soft_bounce_notification_tracks_count() {
     assert!(resp.status().is_success());
 
     // And: Should track bounce but NOT suppress yet
-    let suppression: Option<backend::models::db::EmailSuppression> = sqlx::query_as(
-        "SELECT * FROM email_suppressions WHERE email = $1"
-    )
-    .bind("softbounce@example.com")
-    .fetch_optional(&ctx.pool)
-    .await
-    .unwrap();
+    let suppression: Option<backend::models::db::EmailSuppression> =
+        sqlx::query_as("SELECT * FROM email_suppressions WHERE email = $1")
+            .bind("softbounce@example.com")
+            .fetch_optional(&ctx.pool)
+            .await
+            .unwrap();
 
     // First soft bounce should track but not suppress
     if let Some(suppression) = suppression {
         assert_eq!(suppression.bounce_count, 1);
-        assert!(!suppression.suppress_transactional, "First soft bounce should not suppress");
+        assert!(
+            !suppression.suppress_transactional,
+            "First soft bounce should not suppress"
+        );
     }
 }
 
@@ -232,7 +236,8 @@ async fn test_malformed_sns_message_returns_400() {
     });
 
     // When: Posting malformed message to webhook
-    let resp = ctx.server
+    let resp = ctx
+        .server
         .post("/backend/webhooks/ses")
         .send_json(&malformed_payload)
         .await
@@ -262,7 +267,8 @@ async fn test_webhook_endpoint_requires_no_authentication() {
     });
 
     // When: Posting without Authorization header (AWS SNS doesn't send auth)
-    let resp = ctx.server
+    let resp = ctx
+        .server
         .post("/backend/webhooks/ses")
         .send_json(&subscription_payload)
         .await
@@ -306,13 +312,15 @@ async fn test_webhook_idempotent_duplicate_notifications() {
     });
 
     // When: Posting same notification twice
-    let resp1 = ctx.server
+    let resp1 = ctx
+        .server
         .post("/backend/webhooks/ses")
         .send_json(&bounce_payload)
         .await
         .unwrap();
 
-    let resp2 = ctx.server
+    let resp2 = ctx
+        .server
         .post("/backend/webhooks/ses")
         .send_json(&bounce_payload)
         .await
@@ -323,13 +331,11 @@ async fn test_webhook_idempotent_duplicate_notifications() {
     assert!(resp2.status().is_success());
 
     // And: Should only have one suppression entry
-    let count: i64 = sqlx::query_scalar(
-        "SELECT COUNT(*) FROM email_suppressions WHERE email = $1"
-    )
-    .bind("duplicate@example.com")
-    .fetch_one(&ctx.pool)
-    .await
-    .unwrap();
+    let count: i64 = sqlx::query_scalar("SELECT COUNT(*) FROM email_suppressions WHERE email = $1")
+        .bind("duplicate@example.com")
+        .fetch_one(&ctx.pool)
+        .await
+        .unwrap();
 
     assert_eq!(count, 1, "Should not create duplicate suppression entries");
 }

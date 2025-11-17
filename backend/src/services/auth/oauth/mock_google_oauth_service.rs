@@ -1,4 +1,4 @@
-use anyhow::{anyhow, Result};
+use anyhow::{Result, anyhow};
 use async_trait::async_trait;
 use oauth2::{CsrfToken, PkceCodeVerifier};
 use std::sync::{Arc, Mutex};
@@ -80,7 +80,10 @@ impl MockGoogleOAuthService {
 
 #[async_trait]
 impl GoogleOAuthServiceTrait for MockGoogleOAuthService {
-    async fn get_authorization_url(&self, custom_state: Option<String>) -> Result<(String, CsrfToken, PkceCodeVerifier)> {
+    async fn get_authorization_url(
+        &self,
+        custom_state: Option<String>,
+    ) -> Result<(String, CsrfToken, PkceCodeVerifier)> {
         let state = self.state.lock().unwrap();
         if state.url_should_fail {
             return Err(anyhow!("Mock URL generation failure"));
@@ -131,16 +134,19 @@ impl GoogleOAuthServiceTrait for MockGoogleOAuthService {
             return Err(anyhow!("Mock user info fetch failure"));
         }
 
-        Ok(state.mock_user_info.clone().unwrap_or_else(|| GoogleUserInfo {
-            sub: "mock_google_user_id".to_string(),
-            email: "mock@example.com".to_string(),
-            name: Some("Mock User".to_string()),
-            email_verified: Some(true),
-            picture: Some("https://example.com/mock_user.jpg".to_string()),
-            given_name: Some("Mock".to_string()),
-            family_name: Some("User".to_string()),
-            locale: Some("en".to_string()),
-        }))
+        Ok(state
+            .mock_user_info
+            .clone()
+            .unwrap_or_else(|| GoogleUserInfo {
+                sub: "mock_google_user_id".to_string(),
+                email: "mock@example.com".to_string(),
+                name: Some("Mock User".to_string()),
+                email_verified: Some(true),
+                picture: Some("https://example.com/mock_user.jpg".to_string()),
+                given_name: Some("Mock".to_string()),
+                family_name: Some("User".to_string()),
+                locale: Some("en".to_string()),
+            }))
     }
 }
 
@@ -158,7 +164,10 @@ mod tests {
 
         // Test token exchange
         let result = mock
-            .exchange_code_for_token("code".to_string(), PkceCodeVerifier::new("verifier".to_string()))
+            .exchange_code_for_token(
+                "code".to_string(),
+                PkceCodeVerifier::new("verifier".to_string()),
+            )
             .await;
         assert!(result.is_ok());
 
@@ -175,10 +184,14 @@ mod tests {
             .with_user_info_failure();
 
         assert!(mock.get_authorization_url(None).await.is_err());
-        assert!(mock
-            .exchange_code_for_token("code".to_string(), PkceCodeVerifier::new("verifier".to_string()))
+        assert!(
+            mock.exchange_code_for_token(
+                "code".to_string(),
+                PkceCodeVerifier::new("verifier".to_string())
+            )
             .await
-            .is_err());
+            .is_err()
+        );
         assert!(mock.get_user_info("token").await.is_err());
     }
 

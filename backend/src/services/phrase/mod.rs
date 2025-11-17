@@ -51,7 +51,8 @@ impl PhraseServiceBuilder {
     }
 
     pub fn build(self) -> Result<PhraseService> {
-        let repository = self.repository
+        let repository = self
+            .repository
             .ok_or_else(|| anyhow::anyhow!("PhraseRepository is required"))?;
 
         Ok(PhraseService {
@@ -192,7 +193,8 @@ impl PhraseService {
         request: PhraseSuggestionRequest,
     ) -> anyhow::Result<crate::models::db::PhraseSuggestion> {
         // Submit suggestion to repository
-        let suggestion = suggestions::submit_phrase_suggestion(&self.repository, user_id, request).await?;
+        let suggestion =
+            suggestions::submit_phrase_suggestion(&self.repository, user_id, request).await?;
 
         // Emit domain event if EventBus is configured
         if let Some(event_bus) = &self.event_bus {
@@ -205,7 +207,10 @@ impl PhraseService {
             if let Err(e) = event_bus.publish(Box::new(event)).await {
                 log::error!("Failed to publish PhraseSuggestionCreatedEvent: {}", e);
             } else {
-                log::debug!("Published PhraseSuggestionCreatedEvent for user_id {}", user_id);
+                log::debug!(
+                    "Published PhraseSuggestionCreatedEvent for user_id {}",
+                    user_id
+                );
             }
         }
 

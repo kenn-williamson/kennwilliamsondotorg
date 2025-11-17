@@ -124,11 +124,8 @@ mod tests {
 
     #[test]
     fn test_password_changed_email_subject() {
-        let template = PasswordChangedEmailTemplate::new(
-            "Test User",
-            "Now",
-            "https://kennwilliamson.org",
-        );
+        let template =
+            PasswordChangedEmailTemplate::new("Test User", "Now", "https://kennwilliamson.org");
 
         let subject = template.subject();
 
@@ -140,11 +137,7 @@ mod tests {
 
     #[test]
     fn test_password_reset_url_construction() {
-        let template = PasswordChangedEmailTemplate::new(
-            "User",
-            "Now",
-            "https://example.com/",
-        );
+        let template = PasswordChangedEmailTemplate::new("User", "Now", "https://example.com/");
 
         // Should trim trailing slash from frontend_url
         assert_eq!(

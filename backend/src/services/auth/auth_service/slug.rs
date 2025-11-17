@@ -196,10 +196,12 @@ mod tests {
         for input in invalid_inputs {
             let result = generate_slug(input, &mock_repo).await;
             assert!(result.is_err());
-            assert!(result
-                .unwrap_err()
-                .to_string()
-                .contains("Display name must contain at least one letter or number"));
+            assert!(
+                result
+                    .unwrap_err()
+                    .to_string()
+                    .contains("Display name must contain at least one letter or number")
+            );
         }
 
         // Test database error
@@ -211,10 +213,12 @@ mod tests {
 
         let result = generate_slug("John Doe", &mock_repo).await;
         assert!(result.is_err());
-        assert!(result
-            .unwrap_err()
-            .to_string()
-            .contains("Database connection failed"));
+        assert!(
+            result
+                .unwrap_err()
+                .to_string()
+                .contains("Database connection failed")
+        );
 
         Ok(())
     }

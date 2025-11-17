@@ -1,17 +1,17 @@
+use crate::events::EventHandler;
 use crate::events::types::{
     AccessRequestApprovedEvent, AccessRequestCreatedEvent, AccessRequestRejectedEvent,
     PasswordChangedEvent, PhraseSuggestionApprovedEvent, PhraseSuggestionCreatedEvent,
     PhraseSuggestionRejectedEvent, ProfileUpdatedEvent, UserRegisteredEvent,
 };
-use crate::events::EventHandler;
 use crate::repositories::traits::{AdminRepository, UserRepository, VerificationTokenRepository};
+use crate::services::email::EmailService;
 use crate::services::email::templates::{
     AccessRequestApprovedTemplate, AccessRequestNotificationTemplate,
     AccessRequestRejectedTemplate, Email, EmailTemplate, PasswordChangedEmailTemplate,
     PhraseSuggestionApprovedTemplate, PhraseSuggestionNotificationTemplate,
     PhraseSuggestionRejectedTemplate, ProfileUpdatedEmailTemplate, VerificationEmailTemplate,
 };
-use crate::services::email::EmailService;
 use anyhow::Result;
 use async_trait::async_trait;
 use std::sync::Arc;
@@ -143,7 +143,8 @@ impl EventHandler<PhraseSuggestionCreatedEvent> for PhraseSuggestionEmailNotific
         );
 
         // Fetch user details
-        let user = self.user_repository
+        let user = self
+            .user_repository
             .find_by_id(event.user_id)
             .await?
             .ok_or_else(|| anyhow::anyhow!("User not found for id {}", event.user_id))?;
@@ -232,7 +233,8 @@ impl EventHandler<AccessRequestApprovedEvent> for AccessRequestApprovedEmailHand
         );
 
         // Fetch user details
-        let user = self.user_repository
+        let user = self
+            .user_repository
             .find_by_id(event.user_id)
             .await?
             .ok_or_else(|| anyhow::anyhow!("User not found for id {}", event.user_id))?;
@@ -313,7 +315,8 @@ impl EventHandler<AccessRequestRejectedEvent> for AccessRequestRejectedEmailHand
         );
 
         // Fetch user details
-        let user = self.user_repository
+        let user = self
+            .user_repository
             .find_by_id(event.user_id)
             .await?
             .ok_or_else(|| anyhow::anyhow!("User not found for id {}", event.user_id))?;
@@ -393,7 +396,8 @@ impl EventHandler<PhraseSuggestionApprovedEvent> for PhraseSuggestionApprovedEma
         );
 
         // Fetch user details
-        let user = self.user_repository
+        let user = self
+            .user_repository
             .find_by_id(event.user_id)
             .await?
             .ok_or_else(|| anyhow::anyhow!("User not found for id {}", event.user_id))?;
@@ -474,7 +478,8 @@ impl EventHandler<PhraseSuggestionRejectedEvent> for PhraseSuggestionRejectedEma
         );
 
         // Fetch user details
-        let user = self.user_repository
+        let user = self
+            .user_repository
             .find_by_id(event.user_id)
             .await?
             .ok_or_else(|| anyhow::anyhow!("User not found for id {}", event.user_id))?;
@@ -562,14 +567,14 @@ impl EventHandler<PasswordChangedEvent> for PasswordChangedEmailHandler {
             .ok_or_else(|| anyhow::anyhow!("User not found for id {}", event.user_id))?;
 
         // Format timestamp for email
-        let changed_at = event.occurred_at.format("%B %d, %Y at %I:%M %P UTC").to_string();
+        let changed_at = event
+            .occurred_at
+            .format("%B %d, %Y at %I:%M %P UTC")
+            .to_string();
 
         // Build email template
-        let template = PasswordChangedEmailTemplate::new(
-            &user.display_name,
-            changed_at,
-            &self.frontend_url,
-        );
+        let template =
+            PasswordChangedEmailTemplate::new(&user.display_name, changed_at, &self.frontend_url);
 
         // Render email content
         let html_body = template.render_html()?;
@@ -633,10 +638,7 @@ impl ProfileUpdatedEmailHandler {
 #[async_trait]
 impl EventHandler<ProfileUpdatedEvent> for ProfileUpdatedEmailHandler {
     async fn handle(&self, event: &ProfileUpdatedEvent) -> Result<()> {
-        log::info!(
-            "Handling ProfileUpdatedEvent for user_id {}",
-            event.user_id
-        );
+        log::info!("Handling ProfileUpdatedEvent for user_id {}", event.user_id);
 
         // Fetch user details
         let user = self
@@ -646,7 +648,10 @@ impl EventHandler<ProfileUpdatedEvent> for ProfileUpdatedEmailHandler {
             .ok_or_else(|| anyhow::anyhow!("User not found for id {}", event.user_id))?;
 
         // Format timestamp for email
-        let updated_at = event.occurred_at.format("%B %d, %Y at %I:%M %P UTC").to_string();
+        let updated_at = event
+            .occurred_at
+            .format("%B %d, %Y at %I:%M %P UTC")
+            .to_string();
 
         // Determine if values actually changed (only show arrows if changed)
         let old_name = if event.old_display_name != event.new_display_name {
@@ -744,8 +749,8 @@ impl EventHandler<UserRegisteredEvent> for UserRegisteredEmailHandler {
         let token_hash = hash_verification_token(&token);
 
         // Create token data with 24-hour expiration
-        use chrono::{Duration, Utc};
         use crate::repositories::traits::verification_token_repository::CreateVerificationTokenData;
+        use chrono::{Duration, Utc};
 
         let expires_at = Utc::now() + Duration::hours(24);
         let token_data = CreateVerificationTokenData {
@@ -760,11 +765,8 @@ impl EventHandler<UserRegisteredEvent> for UserRegisteredEmailHandler {
             .await?;
 
         // Build email template
-        let template = VerificationEmailTemplate::new(
-            &event.user_display_name,
-            &token,
-            &self.frontend_url,
-        );
+        let template =
+            VerificationEmailTemplate::new(&event.user_display_name, &token, &self.frontend_url);
 
         // Render template
         let html_body = template.render_html()?;
@@ -915,14 +917,13 @@ mod tests {
             .returning(|| Ok(vec!["admin@example.com".to_string()]));
 
         // Configure user repository to return user details
-        mock_user_repo
-            .expect_find_by_id()
-            .times(1)
-            .returning(|_| {
-                Ok(Some(crate::test_utils::UserBuilder::new()
+        mock_user_repo.expect_find_by_id().times(1).returning(|_| {
+            Ok(Some(
+                crate::test_utils::UserBuilder::new()
                     .with_display_name("Test User")
-                    .build()))
-            });
+                    .build(),
+            ))
+        });
 
         // Clone for verification
         let email_service_clone = mock_email_service.clone();
@@ -936,10 +937,7 @@ mod tests {
         );
 
         // Create event
-        let event = PhraseSuggestionCreatedEvent::new(
-            Uuid::new_v4(),
-            "Time is an illusion",
-        );
+        let event = PhraseSuggestionCreatedEvent::new(Uuid::new_v4(), "Time is an illusion");
 
         // Handle event
         let result = handler.handle(&event).await;
@@ -983,10 +981,7 @@ mod tests {
         );
 
         // Create event
-        let event = PhraseSuggestionCreatedEvent::new(
-            user_id,
-            "Test phrase",
-        );
+        let event = PhraseSuggestionCreatedEvent::new(user_id, "Test phrase");
 
         // Handle event
         let result = handler.handle(&event).await;

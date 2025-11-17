@@ -1,8 +1,8 @@
 use crate::models::db::refresh_token::RefreshToken;
-use chrono::{DateTime, Duration, Utc};
-use uuid::Uuid;
-use sqlx::PgPool;
 use anyhow::Result;
+use chrono::{DateTime, Duration, Utc};
+use sqlx::PgPool;
+use uuid::Uuid;
 
 /// Builder for creating RefreshToken instances in tests with sensible defaults.
 ///
@@ -63,7 +63,9 @@ impl RefreshTokenBuilder {
         RefreshToken {
             id: self.id.unwrap_or_else(Uuid::new_v4),
             user_id: self.user_id.unwrap_or_else(Uuid::new_v4),
-            token_hash: self.token_hash.unwrap_or_else(|| format!("test_hash_{}", Uuid::new_v4())),
+            token_hash: self
+                .token_hash
+                .unwrap_or_else(|| format!("test_hash_{}", Uuid::new_v4())),
             device_info: self.device_info.unwrap_or(None),
             expires_at: self.expires_at.unwrap_or(now + Duration::days(7)),
             created_at: self.created_at.unwrap_or(now),
@@ -77,7 +79,9 @@ impl RefreshTokenBuilder {
         // Generate defaults
         let now = Utc::now();
         let user_id = self.user_id.expect("user_id is required for persist()");
-        let token_hash = self.token_hash.expect("token_hash is required for persist()");
+        let token_hash = self
+            .token_hash
+            .expect("token_hash is required for persist()");
         let device_info = self.device_info.unwrap_or(None);
         let expires_at = self.expires_at.unwrap_or(now + Duration::days(7));
         let last_used_at = self.last_used_at.unwrap_or(None);
@@ -212,9 +216,7 @@ mod tests {
     #[test]
     fn test_builder_expires_in_days() {
         let now = Utc::now();
-        let token = RefreshTokenBuilder::new()
-            .expires_in_days(30)
-            .build();
+        let token = RefreshTokenBuilder::new().expires_in_days(30).build();
 
         // Should be approximately 30 days from now (allow 1 second tolerance)
         let expected = now + Duration::days(30);
@@ -225,9 +227,7 @@ mod tests {
     #[test]
     fn test_builder_expires_in_hours() {
         let now = Utc::now();
-        let token = RefreshTokenBuilder::new()
-            .expires_in_hours(24)
-            .build();
+        let token = RefreshTokenBuilder::new().expires_in_hours(24).build();
 
         // Should be approximately 24 hours from now (allow 1 second tolerance)
         let expected = now + Duration::hours(24);
@@ -249,9 +249,7 @@ mod tests {
 
     #[test]
     fn test_builder_without_device_info() {
-        let token = RefreshTokenBuilder::new()
-            .without_device_info()
-            .build();
+        let token = RefreshTokenBuilder::new().without_device_info().build();
 
         assert!(token.device_info.is_none());
     }
@@ -259,18 +257,14 @@ mod tests {
     #[test]
     fn test_builder_last_used_at() {
         let used_time = Utc::now() - Duration::hours(2);
-        let token = RefreshTokenBuilder::new()
-            .last_used_at(used_time)
-            .build();
+        let token = RefreshTokenBuilder::new().last_used_at(used_time).build();
 
         assert_eq!(token.last_used_at, Some(used_time));
     }
 
     #[test]
     fn test_builder_never_used() {
-        let token = RefreshTokenBuilder::new()
-            .never_used()
-            .build();
+        let token = RefreshTokenBuilder::new().never_used().build();
 
         assert!(token.last_used_at.is_none());
     }

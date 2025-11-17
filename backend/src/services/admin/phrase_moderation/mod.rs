@@ -2,8 +2,8 @@ use anyhow::Result;
 use std::sync::Arc;
 use uuid::Uuid;
 
-use crate::events::types::{PhraseSuggestionApprovedEvent, PhraseSuggestionRejectedEvent};
 use crate::events::EventPublisher;
+use crate::events::types::{PhraseSuggestionApprovedEvent, PhraseSuggestionRejectedEvent};
 use crate::models::api::{PendingSuggestionResponse, PendingSuggestionsResponse};
 use crate::repositories::traits::PhraseRepository;
 

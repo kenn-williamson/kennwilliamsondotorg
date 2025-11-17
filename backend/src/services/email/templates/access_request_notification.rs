@@ -167,12 +167,8 @@ mod tests {
 
     #[test]
     fn test_admin_panel_url_construction() {
-        let template = AccessRequestNotificationTemplate::new(
-            "User",
-            None,
-            "admin",
-            "https://example.com/",
-        );
+        let template =
+            AccessRequestNotificationTemplate::new("User", None, "admin", "https://example.com/");
 
         // Should trim trailing slash from frontend_url
         assert_eq!(

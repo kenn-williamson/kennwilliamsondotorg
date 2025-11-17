@@ -222,11 +222,7 @@ mod tests {
     #[test]
     fn test_user_registered_event() {
         let user_id = Uuid::new_v4();
-        let event = UserRegisteredEvent::new(
-            user_id,
-            "test@example.com",
-            "Test User",
-        );
+        let event = UserRegisteredEvent::new(user_id, "test@example.com", "Test User");
 
         assert_eq!(event.user_id, user_id);
         assert_eq!(event.user_email, "test@example.com");
@@ -237,23 +233,15 @@ mod tests {
 
     #[test]
     fn test_user_registered_with_correlation_id() {
-        let event = UserRegisteredEvent::new(
-            Uuid::new_v4(),
-            "test@example.com",
-            "Test User",
-        )
-        .with_correlation_id("test-correlation-id");
+        let event = UserRegisteredEvent::new(Uuid::new_v4(), "test@example.com", "Test User")
+            .with_correlation_id("test-correlation-id");
 
         assert_eq!(event.correlation_id(), Some("test-correlation-id"));
     }
 
     #[test]
     fn test_user_registered_event_is_cloneable() {
-        let event = UserRegisteredEvent::new(
-            Uuid::new_v4(),
-            "test@example.com",
-            "Test User",
-        );
+        let event = UserRegisteredEvent::new(Uuid::new_v4(), "test@example.com", "Test User");
         let cloned = event.clone();
         assert_eq!(event.user_id, cloned.user_id);
         assert_eq!(event.user_email, cloned.user_email);
@@ -262,11 +250,7 @@ mod tests {
 
     #[test]
     fn test_user_registered_event_is_serializable() {
-        let event = UserRegisteredEvent::new(
-            Uuid::new_v4(),
-            "test@example.com",
-            "Test User",
-        );
+        let event = UserRegisteredEvent::new(Uuid::new_v4(), "test@example.com", "Test User");
         let json = serde_json::to_string(&event).expect("Failed to serialize");
         assert!(json.contains("user_id"));
         assert!(json.contains("test@example.com"));
@@ -285,8 +269,8 @@ mod tests {
 
     #[test]
     fn test_password_changed_with_correlation_id() {
-        let event = PasswordChangedEvent::new(Uuid::new_v4())
-            .with_correlation_id("test-correlation-id");
+        let event =
+            PasswordChangedEvent::new(Uuid::new_v4()).with_correlation_id("test-correlation-id");
 
         assert_eq!(event.correlation_id(), Some("test-correlation-id"));
     }
@@ -308,13 +292,8 @@ mod tests {
     #[test]
     fn test_profile_updated_event() {
         let user_id = Uuid::new_v4();
-        let event = ProfileUpdatedEvent::new(
-            user_id,
-            "Old Name",
-            "New Name",
-            "old-slug",
-            "new-slug",
-        );
+        let event =
+            ProfileUpdatedEvent::new(user_id, "Old Name", "New Name", "old-slug", "new-slug");
 
         assert_eq!(event.user_id, user_id);
         assert_eq!(event.old_display_name, "Old Name");
@@ -341,13 +320,7 @@ mod tests {
 
     #[test]
     fn test_profile_updated_event_is_cloneable() {
-        let event = ProfileUpdatedEvent::new(
-            Uuid::new_v4(),
-            "Old",
-            "New",
-            "old",
-            "new",
-        );
+        let event = ProfileUpdatedEvent::new(Uuid::new_v4(), "Old", "New", "old", "new");
 
         let cloned = event.clone();
         assert_eq!(event.user_id, cloned.user_id);
@@ -357,13 +330,7 @@ mod tests {
 
     #[test]
     fn test_profile_updated_event_is_serializable() {
-        let event = ProfileUpdatedEvent::new(
-            Uuid::new_v4(),
-            "Old",
-            "New",
-            "old",
-            "new",
-        );
+        let event = ProfileUpdatedEvent::new(Uuid::new_v4(), "Old", "New", "old", "new");
 
         let json = serde_json::to_string(&event).expect("Failed to serialize");
         assert!(json.contains("New"));

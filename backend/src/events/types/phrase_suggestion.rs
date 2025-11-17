@@ -29,10 +29,7 @@ impl PhraseSuggestionCreatedEvent {
     /// # Arguments
     /// * `user_id` - ID of the user suggesting the phrase
     /// * `phrase_text` - The suggested phrase
-    pub fn new(
-        user_id: Uuid,
-        phrase_text: impl Into<String>,
-    ) -> Self {
+    pub fn new(user_id: Uuid, phrase_text: impl Into<String>) -> Self {
         Self {
             user_id,
             phrase_text: phrase_text.into(),
@@ -221,10 +218,7 @@ mod tests {
     #[test]
     fn test_phrase_suggestion_created_event() {
         let user_id = Uuid::new_v4();
-        let event = PhraseSuggestionCreatedEvent::new(
-            user_id,
-            "Time is an illusion",
-        );
+        let event = PhraseSuggestionCreatedEvent::new(user_id, "Time is an illusion");
 
         assert_eq!(event.user_id, user_id);
         assert_eq!(event.phrase_text, "Time is an illusion");
@@ -234,21 +228,15 @@ mod tests {
 
     #[test]
     fn test_with_correlation_id() {
-        let event = PhraseSuggestionCreatedEvent::new(
-            Uuid::new_v4(),
-            "Test phrase",
-        )
-        .with_correlation_id("test-correlation-id");
+        let event = PhraseSuggestionCreatedEvent::new(Uuid::new_v4(), "Test phrase")
+            .with_correlation_id("test-correlation-id");
 
         assert_eq!(event.correlation_id(), Some("test-correlation-id"));
     }
 
     #[test]
     fn test_event_is_cloneable() {
-        let event = PhraseSuggestionCreatedEvent::new(
-            Uuid::new_v4(),
-            "Test phrase",
-        );
+        let event = PhraseSuggestionCreatedEvent::new(Uuid::new_v4(), "Test phrase");
 
         let cloned = event.clone();
         assert_eq!(event.phrase_text, cloned.phrase_text);
@@ -256,10 +244,7 @@ mod tests {
 
     #[test]
     fn test_event_is_serializable() {
-        let event = PhraseSuggestionCreatedEvent::new(
-            Uuid::new_v4(),
-            "Test phrase",
-        );
+        let event = PhraseSuggestionCreatedEvent::new(Uuid::new_v4(), "Test phrase");
 
         let json = serde_json::to_string(&event).expect("Failed to serialize");
         assert!(json.contains("Test phrase"));
@@ -299,24 +284,16 @@ mod tests {
 
     #[test]
     fn test_approved_event_with_correlation_id() {
-        let event = PhraseSuggestionApprovedEvent::new(
-            Uuid::new_v4(),
-            "Test phrase",
-            None,
-        )
-        .with_correlation_id("test-correlation-id");
+        let event = PhraseSuggestionApprovedEvent::new(Uuid::new_v4(), "Test phrase", None)
+            .with_correlation_id("test-correlation-id");
 
         assert_eq!(event.correlation_id(), Some("test-correlation-id"));
     }
 
     #[test]
     fn test_rejected_event_with_correlation_id() {
-        let event = PhraseSuggestionRejectedEvent::new(
-            Uuid::new_v4(),
-            "Test phrase",
-            None,
-        )
-        .with_correlation_id("test-correlation-id");
+        let event = PhraseSuggestionRejectedEvent::new(Uuid::new_v4(), "Test phrase", None)
+            .with_correlation_id("test-correlation-id");
 
         assert_eq!(event.correlation_id(), Some("test-correlation-id"));
     }

@@ -53,7 +53,9 @@ async fn test_update_password() {
     let user = create_test_user_with_credentials(&test_container.pool).await;
 
     // Update password (real user action)
-    repo.update_password(user.id, "new_hash".to_string()).await.unwrap();
+    repo.update_password(user.id, "new_hash".to_string())
+        .await
+        .unwrap();
 
     // Verify update
     let updated = repo.find_by_user_id(user.id).await.unwrap().unwrap();

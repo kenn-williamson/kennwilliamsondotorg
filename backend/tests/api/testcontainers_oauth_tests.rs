@@ -1,6 +1,6 @@
+use backend::test_utils::UserBuilder;
 use sqlx::PgPool;
 use uuid::Uuid;
-use backend::test_utils::UserBuilder;
 
 /// Fixture helper: Create a user with email/password (for testing account linking)
 /// Uses UserBuilder pattern for resilient test fixtures

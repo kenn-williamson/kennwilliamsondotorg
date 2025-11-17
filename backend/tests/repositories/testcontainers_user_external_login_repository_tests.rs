@@ -205,8 +205,9 @@ async fn test_unique_provider_constraint() {
 
     assert!(result.is_err());
     // Should be a unique constraint violation
-    assert!(result.unwrap_err().to_string().contains("unique")
-        || result_contains_duplicate_key_error());
+    assert!(
+        result.unwrap_err().to_string().contains("unique") || result_contains_duplicate_key_error()
+    );
 
     fn result_contains_duplicate_key_error() -> bool {
         // PostgreSQL error for duplicate key

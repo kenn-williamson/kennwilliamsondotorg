@@ -9,7 +9,8 @@ async fn test_cleanup_expired_refresh_tokens() {
     use backend::repositories::postgres::postgres_verification_token_repository::PostgresVerificationTokenRepository;
     use backend::services::cleanup::CleanupService;
 
-    let test_container = fixtures::TestContainer::builder().build()
+    let test_container = fixtures::TestContainer::builder()
+        .build()
         .await
         .expect("Failed to create test container");
     let pool = &test_container.pool;
@@ -52,11 +53,12 @@ async fn test_cleanup_expired_refresh_tokens() {
     assert_eq!(deleted_count, 1);
 
     // Verify the valid token still exists
-    let remaining_tokens: i64 = sqlx::query_scalar("SELECT COUNT(*) FROM refresh_tokens WHERE user_id = $1")
-        .bind(user.id)
-        .fetch_one(pool)
-        .await
-        .expect("Failed to count tokens");
+    let remaining_tokens: i64 =
+        sqlx::query_scalar("SELECT COUNT(*) FROM refresh_tokens WHERE user_id = $1")
+            .bind(user.id)
+            .fetch_one(pool)
+            .await
+            .expect("Failed to count tokens");
 
     assert_eq!(remaining_tokens, 1);
 }
@@ -68,7 +70,8 @@ async fn test_cleanup_expired_verification_tokens() {
     use backend::repositories::postgres::postgres_verification_token_repository::PostgresVerificationTokenRepository;
     use backend::services::cleanup::CleanupService;
 
-    let test_container = fixtures::TestContainer::builder().build()
+    let test_container = fixtures::TestContainer::builder()
+        .build()
         .await
         .expect("Failed to create test container");
     let pool = &test_container.pool;
@@ -140,7 +143,8 @@ async fn test_cleanup_both_token_types() {
     use backend::repositories::postgres::postgres_verification_token_repository::PostgresVerificationTokenRepository;
     use backend::services::cleanup::CleanupService;
 
-    let test_container = fixtures::TestContainer::builder().build()
+    let test_container = fixtures::TestContainer::builder()
+        .build()
         .await
         .expect("Failed to create test container");
     let pool = &test_container.pool;
@@ -184,14 +188,9 @@ async fn test_cleanup_both_token_types() {
 
     // Create 1 valid refresh token
     let valid_refresh_time = Utc::now() + Duration::days(7);
-    fixtures::create_test_refresh_token_in_db(
-        pool,
-        user.id,
-        "valid_refresh",
-        valid_refresh_time,
-    )
-    .await
-    .expect("Failed to create valid refresh token");
+    fixtures::create_test_refresh_token_in_db(pool, user.id, "valid_refresh", valid_refresh_time)
+        .await
+        .expect("Failed to create valid refresh token");
 
     // Create 1 valid verification token
     let valid_verification_time = Utc::now() + Duration::hours(23);
@@ -246,7 +245,8 @@ async fn test_cleanup_no_expired_tokens() {
     use backend::repositories::postgres::postgres_verification_token_repository::PostgresVerificationTokenRepository;
     use backend::services::cleanup::CleanupService;
 
-    let test_container = fixtures::TestContainer::builder().build()
+    let test_container = fixtures::TestContainer::builder()
+        .build()
         .await
         .expect("Failed to create test container");
     let pool = &test_container.pool;
@@ -300,7 +300,8 @@ async fn test_cleanup_empty_database() {
     use backend::repositories::postgres::postgres_verification_token_repository::PostgresVerificationTokenRepository;
     use backend::services::cleanup::CleanupService;
 
-    let test_container = fixtures::TestContainer::builder().build()
+    let test_container = fixtures::TestContainer::builder()
+        .build()
         .await
         .expect("Failed to create test container");
     let pool = &test_container.pool;

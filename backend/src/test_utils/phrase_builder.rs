@@ -1,8 +1,8 @@
 use crate::models::db::phrase::{Phrase, PhraseSuggestion};
-use chrono::{DateTime, Utc};
-use uuid::Uuid;
-use sqlx::PgPool;
 use anyhow::Result;
+use chrono::{DateTime, Utc};
+use sqlx::PgPool;
+use uuid::Uuid;
 
 /// Builder for creating Phrase instances in tests with sensible defaults.
 ///
@@ -56,7 +56,9 @@ impl PhraseBuilder {
 
         Phrase {
             id,
-            phrase_text: self.phrase_text.unwrap_or_else(|| format!("Test phrase {}", id)),
+            phrase_text: self
+                .phrase_text
+                .unwrap_or_else(|| format!("Test phrase {}", id)),
             active: self.active.unwrap_or(true),
             created_by: self.created_by.unwrap_or_else(Uuid::new_v4),
             created_at: self.created_at.unwrap_or(now),
@@ -67,14 +69,18 @@ impl PhraseBuilder {
     /// Persist Phrase to database (for integration tests)
     pub async fn persist(self, pool: &PgPool) -> Result<Phrase> {
         // Generate defaults
-        let phrase_text = self.phrase_text.unwrap_or_else(|| format!("Test phrase {}", Uuid::new_v4()));
+        let phrase_text = self
+            .phrase_text
+            .unwrap_or_else(|| format!("Test phrase {}", Uuid::new_v4()));
         let active = self.active.unwrap_or(true);
-        let created_by = self.created_by.expect("created_by is required for persist()");
+        let created_by = self
+            .created_by
+            .expect("created_by is required for persist()");
 
         let phrase = sqlx::query_as::<_, Phrase>(
             "INSERT INTO phrases (phrase_text, active, created_by)
              VALUES ($1, $2, $3)
-             RETURNING *"
+             RETURNING *",
         )
         .bind(phrase_text)
         .bind(active)
@@ -195,7 +201,9 @@ impl PhraseSuggestionBuilder {
         PhraseSuggestion {
             id,
             user_id: self.user_id.unwrap_or_else(Uuid::new_v4),
-            phrase_text: self.phrase_text.unwrap_or_else(|| format!("Test suggestion {}", id)),
+            phrase_text: self
+                .phrase_text
+                .unwrap_or_else(|| format!("Test suggestion {}", id)),
             status: self.status.unwrap_or_else(|| "pending".to_string()),
             admin_id: self.admin_id.unwrap_or(None),
             admin_reason: self.admin_reason.unwrap_or(None),
@@ -208,7 +216,9 @@ impl PhraseSuggestionBuilder {
     pub async fn persist(self, pool: &PgPool) -> Result<PhraseSuggestion> {
         // Generate defaults
         let user_id = self.user_id.expect("user_id is required for persist()");
-        let phrase_text = self.phrase_text.unwrap_or_else(|| format!("Test suggestion {}", Uuid::new_v4()));
+        let phrase_text = self
+            .phrase_text
+            .unwrap_or_else(|| format!("Test suggestion {}", Uuid::new_v4()));
         let status = self.status.unwrap_or_else(|| "pending".to_string());
         let admin_id = self.admin_id.unwrap_or(None);
         let admin_reason = self.admin_reason.unwrap_or(None);
@@ -216,7 +226,7 @@ impl PhraseSuggestionBuilder {
         let suggestion = sqlx::query_as::<_, PhraseSuggestion>(
             "INSERT INTO phrase_suggestions (user_id, phrase_text, status, admin_id, admin_reason)
              VALUES ($1, $2, $3, $4, $5)
-             RETURNING *"
+             RETURNING *",
         )
         .bind(user_id)
         .bind(phrase_text)
@@ -325,18 +335,14 @@ mod tests {
 
     #[test]
     fn test_phrase_builder_with_custom_text() {
-        let phrase = PhraseBuilder::new()
-            .with_text("Custom phrase")
-            .build();
+        let phrase = PhraseBuilder::new().with_text("Custom phrase").build();
 
         assert_eq!(phrase.phrase_text, "Custom phrase");
     }
 
     #[test]
     fn test_phrase_builder_inactive() {
-        let phrase = PhraseBuilder::new()
-            .inactive()
-            .build();
+        let phrase = PhraseBuilder::new().inactive().build();
 
         assert!(!phrase.active);
     }
@@ -344,9 +350,7 @@ mod tests {
     #[test]
     fn test_phrase_builder_with_creator() {
         let creator_id = Uuid::new_v4();
-        let phrase = PhraseBuilder::new()
-            .with_created_by(creator_id)
-            .build();
+        let phrase = PhraseBuilder::new().with_created_by(creator_id).build();
 
         assert_eq!(phrase.created_by, creator_id);
     }
@@ -391,9 +395,7 @@ mod tests {
 
     #[test]
     fn test_phrase_suggestion_builder_pending() {
-        let suggestion = PhraseSuggestionBuilder::new()
-            .pending()
-            .build();
+        let suggestion = PhraseSuggestionBuilder::new().pending().build();
 
         assert_eq!(suggestion.status, "pending");
     }

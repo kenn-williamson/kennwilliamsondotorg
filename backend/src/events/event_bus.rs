@@ -111,10 +111,7 @@ impl EventPublisher for InMemoryEventBus {
             Some(h) => h,
             None => {
                 // No handlers registered for this event type - not an error
-                log::debug!(
-                    "No handlers registered for event type: {}",
-                    event_type_name
-                );
+                log::debug!("No handlers registered for event type: {}", event_type_name);
                 return Ok(());
             }
         };
@@ -210,9 +207,9 @@ mod tests {
     use crate::events::{DomainEvent, EventHandler};
     use async_trait::async_trait;
     use chrono::Utc;
-    use std::sync::atomic::{AtomicUsize, Ordering};
     use std::sync::Arc;
-    use tokio::time::{sleep, Duration};
+    use std::sync::atomic::{AtomicUsize, Ordering};
+    use tokio::time::{Duration, sleep};
 
     // Test event type
     #[derive(Clone, Debug)]
@@ -289,7 +286,9 @@ mod tests {
             _message: "Test message".to_string(),
             occurred_at: Utc::now(),
         };
-        bus.publish(Box::new(event)).await.expect("Failed to publish event");
+        bus.publish(Box::new(event))
+            .await
+            .expect("Failed to publish event");
 
         // Give handler time to execute
         sleep(Duration::from_millis(50)).await;
@@ -324,7 +323,9 @@ mod tests {
             _message: "Test".to_string(),
             occurred_at: Utc::now(),
         };
-        bus.publish(Box::new(event)).await.expect("Failed to publish event");
+        bus.publish(Box::new(event))
+            .await
+            .expect("Failed to publish event");
 
         // Give handlers time to execute
         sleep(Duration::from_millis(50)).await;
@@ -371,7 +372,9 @@ mod tests {
             _message: "Test".to_string(),
             occurred_at: Utc::now(),
         };
-        bus.publish(Box::new(event)).await.expect("Failed to publish event");
+        bus.publish(Box::new(event))
+            .await
+            .expect("Failed to publish event");
 
         // Give handlers time to execute
         sleep(Duration::from_millis(50)).await;

@@ -252,10 +252,12 @@ mod tests {
 
         let result = mock.get_all_users_with_roles(None, None, None).await;
         assert!(result.is_err());
-        assert!(result
-            .unwrap_err()
-            .to_string()
-            .contains("Database connection failed"));
+        assert!(
+            result
+                .unwrap_err()
+                .to_string()
+                .contains("Database connection failed")
+        );
     }
 
     #[tokio::test]

@@ -1,5 +1,5 @@
 use anyhow::Result;
-use bcrypt::{hash, verify, DEFAULT_COST};
+use bcrypt::{DEFAULT_COST, hash, verify};
 use uuid::Uuid;
 
 use super::AuthService;
@@ -31,7 +31,7 @@ impl AuthService {
             None => {
                 return Err(anyhow::anyhow!(
                     "Cannot change password for OAuth-only accounts"
-                ))
+                ));
             }
         };
 
@@ -61,11 +61,7 @@ impl AuthService {
 
     /// Set password for users who don't have credentials (e.g., OAuth-only users)
     /// This allows them to add password authentication to their account
-    pub async fn set_password(
-        &self,
-        user_id: Uuid,
-        request: SetPasswordRequest,
-    ) -> Result<()> {
+    pub async fn set_password(&self, user_id: Uuid, request: SetPasswordRequest) -> Result<()> {
         // Get current user to verify they exist
         let user = self.user_repository.find_by_id(user_id).await?;
         if user.is_none() {
@@ -90,9 +86,7 @@ impl AuthService {
         let password_hash = hash(&request.new_password, DEFAULT_COST)?;
 
         // Create credentials for the user
-        credentials_repo
-            .create(user_id, password_hash)
-            .await?;
+        credentials_repo.create(user_id, password_hash).await?;
 
         // Publish PasswordChangedEvent if event publisher is configured
         if let Some(event_publisher) = &self.event_publisher {
@@ -114,7 +108,7 @@ mod tests {
     use crate::repositories::mocks::mock_user_credentials_repository::MockUserCredentialsRepository;
     use crate::repositories::mocks::mock_user_repository::MockUserRepository;
     use anyhow::Result;
-    use bcrypt::{hash, DEFAULT_COST};
+    use bcrypt::{DEFAULT_COST, hash};
     use chrono::Utc;
     use mockall::predicate::eq;
     use uuid::Uuid;
@@ -256,10 +250,12 @@ mod tests {
 
         let result = auth_service.change_password(user_id, request).await;
         assert!(result.is_err());
-        assert!(result
-            .unwrap_err()
-            .to_string()
-            .contains("Current password is incorrect"));
+        assert!(
+            result
+                .unwrap_err()
+                .to_string()
+                .contains("Current password is incorrect")
+        );
 
         Ok(())
     }
@@ -405,5 +401,4 @@ mod tests {
 
         Ok(())
     }
-
 }

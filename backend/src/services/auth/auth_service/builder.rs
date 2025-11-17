@@ -117,10 +117,7 @@ impl AuthServiceBuilder {
         self
     }
 
-    pub fn external_login_repository(
-        mut self,
-        repo: Box<dyn UserExternalLoginRepository>,
-    ) -> Self {
+    pub fn external_login_repository(mut self, repo: Box<dyn UserExternalLoginRepository>) -> Self {
         self.external_login_repository = Some(repo);
         self
     }

@@ -52,10 +52,12 @@ mod tests {
         let result = get_random_phrase_by_slug(&repo, "").await;
 
         assert!(result.is_err());
-        assert!(result
-            .unwrap_err()
-            .to_string()
-            .contains("User slug cannot be empty"));
+        assert!(
+            result
+                .unwrap_err()
+                .to_string()
+                .contains("User slug cannot be empty")
+        );
     }
 
     #[tokio::test]

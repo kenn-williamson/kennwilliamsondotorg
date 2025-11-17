@@ -1,6 +1,6 @@
-pub mod fixtures;
 pub mod api;
 pub mod events;
+pub mod fixtures;
 pub mod repositories;
 pub mod services;
 

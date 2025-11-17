@@ -1,8 +1,8 @@
 use crate::models::db::incident_timer::IncidentTimer;
-use chrono::{DateTime, Duration, Utc};
-use uuid::Uuid;
-use sqlx::PgPool;
 use anyhow::Result;
+use chrono::{DateTime, Duration, Utc};
+use sqlx::PgPool;
+use uuid::Uuid;
 
 /// Builder for creating IncidentTimer instances in tests with sensible defaults.
 ///
@@ -73,7 +73,7 @@ impl IncidentTimerBuilder {
         let timer = sqlx::query_as::<_, IncidentTimer>(
             "INSERT INTO incident_timers (user_id, reset_timestamp, notes)
              VALUES ($1, $2, $3)
-             RETURNING *"
+             RETURNING *",
         )
         .bind(user_id)
         .bind(reset_timestamp)
@@ -165,27 +165,21 @@ mod tests {
     #[test]
     fn test_builder_with_user_id() {
         let user_id = Uuid::new_v4();
-        let timer = IncidentTimerBuilder::new()
-            .with_user_id(user_id)
-            .build();
+        let timer = IncidentTimerBuilder::new().with_user_id(user_id).build();
 
         assert_eq!(timer.user_id, user_id);
     }
 
     #[test]
     fn test_builder_with_notes() {
-        let timer = IncidentTimerBuilder::new()
-            .with_notes("Test notes")
-            .build();
+        let timer = IncidentTimerBuilder::new().with_notes("Test notes").build();
 
         assert_eq!(timer.notes, Some("Test notes".to_string()));
     }
 
     #[test]
     fn test_builder_without_notes() {
-        let timer = IncidentTimerBuilder::new()
-            .without_notes()
-            .build();
+        let timer = IncidentTimerBuilder::new().without_notes().build();
 
         assert!(timer.notes.is_none());
     }
@@ -193,9 +187,7 @@ mod tests {
     #[test]
     fn test_builder_reset_in_days() {
         let now = Utc::now();
-        let timer = IncidentTimerBuilder::new()
-            .reset_in_days(7)
-            .build();
+        let timer = IncidentTimerBuilder::new().reset_in_days(7).build();
 
         // Should be approximately 7 days from now (allow 1 second tolerance)
         let expected = now + Duration::days(7);
@@ -206,9 +198,7 @@ mod tests {
     #[test]
     fn test_builder_reset_in_hours() {
         let now = Utc::now();
-        let timer = IncidentTimerBuilder::new()
-            .reset_in_hours(24)
-            .build();
+        let timer = IncidentTimerBuilder::new().reset_in_hours(24).build();
 
         // Should be approximately 24 hours from now (allow 1 second tolerance)
         let expected = now + Duration::hours(24);

@@ -1,21 +1,21 @@
-use anyhow::{anyhow, Result};
+use anyhow::{Result, anyhow};
 use uuid::Uuid;
 
 use super::AuthService;
 
 impl AuthService {
     /// Delete a user's account and all associated data
-    /// 
+    ///
     /// This method performs a hard delete of the user account with the following behavior:
     /// 1. Validates the user exists and is not the system user
     /// 2. Delegates to repository layer which handles phrase reassignment and cascade deletion
-    /// 
+    ///
     /// # Arguments
     /// * `user_id` - The ID of the user to delete
-    /// 
+    ///
     /// # Returns
     /// * `Result<()>` - Success if deletion completed, error if failed
-    /// 
+    ///
     /// # Errors
     /// * Returns error if user is the system user (protection)
     /// * Returns error if user not found
@@ -46,8 +46,8 @@ impl AuthService {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::repositories::mocks::mock_user_repository::MockUserRepository;
     use crate::repositories::mocks::mock_refresh_token_repository::MockRefreshTokenRepository;
+    use crate::repositories::mocks::mock_user_repository::MockUserRepository;
     use anyhow::Result;
     use chrono::Utc;
     use mockall::predicate::eq;
@@ -145,7 +145,12 @@ mod tests {
 
         let result = auth_service.delete_account(system_user_id).await;
         assert!(result.is_err());
-        assert!(result.unwrap_err().to_string().contains("Cannot delete system user"));
+        assert!(
+            result
+                .unwrap_err()
+                .to_string()
+                .contains("Cannot delete system user")
+        );
 
         Ok(())
     }

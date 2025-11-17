@@ -176,10 +176,12 @@ mod tests {
         let result = get_random_phrase(&repo, Uuid::nil()).await;
 
         assert!(result.is_err());
-        assert!(result
-            .unwrap_err()
-            .to_string()
-            .contains("User ID cannot be nil"));
+        assert!(
+            result
+                .unwrap_err()
+                .to_string()
+                .contains("User ID cannot be nil")
+        );
     }
 
     #[tokio::test]
@@ -214,10 +216,12 @@ mod tests {
         let result = get_user_phrases(&repo, Uuid::new_v4(), Some(-1), Some(0)).await;
 
         assert!(result.is_err());
-        assert!(result
-            .unwrap_err()
-            .to_string()
-            .contains("Limit cannot be negative"));
+        assert!(
+            result
+                .unwrap_err()
+                .to_string()
+                .contains("Limit cannot be negative")
+        );
     }
 
     #[tokio::test]
@@ -265,9 +269,11 @@ mod tests {
         let result = get_user_phrases_with_exclusions(&repo, Uuid::nil(), None, None, None).await;
 
         assert!(result.is_err());
-        assert!(result
-            .unwrap_err()
-            .to_string()
-            .contains("User ID cannot be nil"));
+        assert!(
+            result
+                .unwrap_err()
+                .to_string()
+                .contains("User ID cannot be nil")
+        );
     }
 }

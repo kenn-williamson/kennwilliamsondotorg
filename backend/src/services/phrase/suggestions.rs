@@ -132,10 +132,12 @@ mod tests {
         let result = submit_phrase_suggestion(&repo, Uuid::nil(), request).await;
 
         assert!(result.is_err());
-        assert!(result
-            .unwrap_err()
-            .to_string()
-            .contains("User ID cannot be nil"));
+        assert!(
+            result
+                .unwrap_err()
+                .to_string()
+                .contains("User ID cannot be nil")
+        );
     }
 
     #[tokio::test]
@@ -148,10 +150,12 @@ mod tests {
         let result = submit_phrase_suggestion(&repo, Uuid::new_v4(), request).await;
 
         assert!(result.is_err());
-        assert!(result
-            .unwrap_err()
-            .to_string()
-            .contains("Phrase text cannot be empty"));
+        assert!(
+            result
+                .unwrap_err()
+                .to_string()
+                .contains("Phrase text cannot be empty")
+        );
     }
 
     #[tokio::test]
@@ -164,10 +168,12 @@ mod tests {
         let result = submit_phrase_suggestion(&repo, Uuid::new_v4(), request).await;
 
         assert!(result.is_err());
-        assert!(result
-            .unwrap_err()
-            .to_string()
-            .contains("Phrase text cannot exceed 500 characters"));
+        assert!(
+            result
+                .unwrap_err()
+                .to_string()
+                .contains("Phrase text cannot exceed 500 characters")
+        );
     }
 
     #[tokio::test]

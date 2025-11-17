@@ -4,8 +4,8 @@ use backend::repositories::mocks::MockEmailSuppressionRepository;
 use backend::repositories::traits::email_suppression_repository::{
     CreateSuppressionData, EmailSuppressionRepository,
 };
-use backend::services::email::{EmailService, MockEmailService, SuppressionGuard};
 use backend::services::email::templates::{Email, EmailTemplate, VerificationEmailTemplate};
+use backend::services::email::{EmailService, MockEmailService, SuppressionGuard};
 
 #[tokio::test]
 async fn test_send_verification_email_succeeds_when_not_suppressed() {
@@ -18,11 +18,8 @@ async fn test_send_verification_email_succeeds_when_not_suppressed() {
     );
 
     // When: Sending to a non-suppressed email using template
-    let template = VerificationEmailTemplate::new(
-        "Test User",
-        "test-token-123",
-        "https://localhost",
-    );
+    let template =
+        VerificationEmailTemplate::new("Test User", "test-token-123", "https://localhost");
 
     let html_body = template.render_html().unwrap();
     let text_body = template.render_plain_text();
@@ -40,7 +37,11 @@ async fn test_send_verification_email_succeeds_when_not_suppressed() {
 
     // Then: Email should be sent successfully (no AWS calls, just stored in mock)
     assert!(result.is_ok(), "Email should be sent successfully");
-    assert_eq!(mock_email_service.count(), 1, "Email should be stored in mock service");
+    assert_eq!(
+        mock_email_service.count(),
+        1,
+        "Email should be stored in mock service"
+    );
 }
 
 #[tokio::test]
@@ -67,11 +68,8 @@ async fn test_send_verification_email_blocked_when_transactional_suppressed() {
     );
 
     // When: Sending verification email to suppressed address using template
-    let template = VerificationEmailTemplate::new(
-        "Test User",
-        "test-token-123",
-        "https://localhost",
-    );
+    let template =
+        VerificationEmailTemplate::new("Test User", "test-token-123", "https://localhost");
 
     let html_body = template.render_html().unwrap();
     let text_body = template.render_plain_text();
@@ -95,7 +93,11 @@ async fn test_send_verification_email_blocked_when_transactional_suppressed() {
         "Expected suppression error, got: {}",
         error_msg
     );
-    assert_eq!(mock_email_service.count(), 0, "No email should reach mock service");
+    assert_eq!(
+        mock_email_service.count(),
+        0,
+        "No email should reach mock service"
+    );
 }
 
 #[tokio::test]
@@ -122,11 +124,8 @@ async fn test_send_verification_email_allowed_when_only_marketing_suppressed() {
     );
 
     // When: Sending verification email (transactional) to marketing-only suppressed address using template
-    let template = VerificationEmailTemplate::new(
-        "Test User",
-        "test-token-123",
-        "https://localhost",
-    );
+    let template =
+        VerificationEmailTemplate::new("Test User", "test-token-123", "https://localhost");
 
     let html_body = template.render_html().unwrap();
     let text_body = template.render_plain_text();
@@ -143,8 +142,15 @@ async fn test_send_verification_email_allowed_when_only_marketing_suppressed() {
     let result = email_service.send_email(email).await;
 
     // Then: Email should be allowed (transactional emails bypass marketing suppression)
-    assert!(result.is_ok(), "Transactional email should bypass marketing-only suppression");
-    assert_eq!(mock_email_service.count(), 1, "Email should reach mock service");
+    assert!(
+        result.is_ok(),
+        "Transactional email should bypass marketing-only suppression"
+    );
+    assert_eq!(
+        mock_email_service.count(),
+        1,
+        "Email should reach mock service"
+    );
 }
 
 #[tokio::test]
@@ -171,11 +177,8 @@ async fn test_suppression_check_happens_before_email_service_call() {
     );
 
     // When: Attempting to send to suppressed email using template
-    let template = VerificationEmailTemplate::new(
-        "Test User",
-        "test-token-123",
-        "https://localhost",
-    );
+    let template =
+        VerificationEmailTemplate::new("Test User", "test-token-123", "https://localhost");
 
     let html_body = template.render_html().unwrap();
     let text_body = template.render_plain_text();
@@ -200,7 +203,11 @@ async fn test_suppression_check_happens_before_email_service_call() {
         "Expected suppression error, got: {}",
         error_msg
     );
-    assert_eq!(mock_email_service.count(), 0, "Email should never reach mock service");
+    assert_eq!(
+        mock_email_service.count(),
+        0,
+        "Email should never reach mock service"
+    );
 }
 
 #[tokio::test]
@@ -209,11 +216,8 @@ async fn test_email_service_can_work_without_suppression_guard() {
     let mock_email_service = MockEmailService::new();
 
     // When: Sending verification email using template
-    let template = VerificationEmailTemplate::new(
-        "Test User",
-        "test-token-123",
-        "https://localhost",
-    );
+    let template =
+        VerificationEmailTemplate::new("Test User", "test-token-123", "https://localhost");
 
     let html_body = template.render_html().unwrap();
     let text_body = template.render_plain_text();
@@ -231,6 +235,13 @@ async fn test_email_service_can_work_without_suppression_guard() {
 
     // Then: Email should be sent successfully (SuppressionGuard is optional)
     // This demonstrates that email services can work independently of suppression checking
-    assert!(result.is_ok(), "Email should be sent without suppression guard");
-    assert_eq!(mock_email_service.count(), 1, "Email should be stored in mock service");
+    assert!(
+        result.is_ok(),
+        "Email should be sent without suppression guard"
+    );
+    assert_eq!(
+        mock_email_service.count(),
+        1,
+        "Email should be stored in mock service"
+    );
 }

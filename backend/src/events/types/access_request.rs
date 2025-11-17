@@ -184,10 +184,7 @@ impl AccessRequestRejectedEvent {
     /// # Arguments
     /// * `user_id` - ID of the user
     /// * `admin_reason` - Optional admin message
-    pub fn new(
-        user_id: Uuid,
-        admin_reason: Option<String>,
-    ) -> Self {
+    pub fn new(user_id: Uuid, admin_reason: Option<String>) -> Self {
         Self {
             user_id,
             admin_reason,
@@ -316,41 +313,34 @@ mod tests {
         );
 
         assert_eq!(event.user_id, user_id);
-        assert_eq!(event.admin_reason, Some("Insufficient justification".to_string()));
+        assert_eq!(
+            event.admin_reason,
+            Some("Insufficient justification".to_string())
+        );
         assert_eq!(event.event_type(), "access_request.rejected");
         assert!(event.correlation_id.is_none());
     }
 
     #[test]
     fn test_approved_event_with_correlation_id() {
-        let event = AccessRequestApprovedEvent::new(
-            Uuid::new_v4(),
-            "trusted-contact",
-            None,
-        )
-        .with_correlation_id("test-correlation-id");
+        let event = AccessRequestApprovedEvent::new(Uuid::new_v4(), "trusted-contact", None)
+            .with_correlation_id("test-correlation-id");
 
         assert_eq!(event.correlation_id(), Some("test-correlation-id"));
     }
 
     #[test]
     fn test_rejected_event_with_correlation_id() {
-        let event = AccessRequestRejectedEvent::new(
-            Uuid::new_v4(),
-            None,
-        )
-        .with_correlation_id("test-correlation-id");
+        let event = AccessRequestRejectedEvent::new(Uuid::new_v4(), None)
+            .with_correlation_id("test-correlation-id");
 
         assert_eq!(event.correlation_id(), Some("test-correlation-id"));
     }
 
     #[test]
     fn test_approved_event_is_cloneable() {
-        let event = AccessRequestApprovedEvent::new(
-            Uuid::new_v4(),
-            "role",
-            Some("Reason".to_string()),
-        );
+        let event =
+            AccessRequestApprovedEvent::new(Uuid::new_v4(), "role", Some("Reason".to_string()));
 
         let cloned = event.clone();
         assert_eq!(event.granted_role, cloned.granted_role);
@@ -359,10 +349,7 @@ mod tests {
 
     #[test]
     fn test_rejected_event_is_cloneable() {
-        let event = AccessRequestRejectedEvent::new(
-            Uuid::new_v4(),
-            Some("Reason".to_string()),
-        );
+        let event = AccessRequestRejectedEvent::new(Uuid::new_v4(), Some("Reason".to_string()));
 
         let cloned = event.clone();
         assert_eq!(event.user_id, cloned.user_id);
@@ -384,10 +371,8 @@ mod tests {
 
     #[test]
     fn test_rejected_event_is_serializable() {
-        let event = AccessRequestRejectedEvent::new(
-            Uuid::new_v4(),
-            Some("Not qualified".to_string()),
-        );
+        let event =
+            AccessRequestRejectedEvent::new(Uuid::new_v4(), Some("Not qualified".to_string()));
 
         let json = serde_json::to_string(&event).expect("Failed to serialize");
         assert!(json.contains("Not qualified"));

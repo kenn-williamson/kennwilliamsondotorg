@@ -1,6 +1,6 @@
+use crate::fixtures::TestContext;
 use serde_json::json;
 use sqlx::PgPool;
-use crate::fixtures::TestContext;
 
 /// Test: Login includes roles in JWT claims
 #[actix_web::test]
@@ -16,7 +16,8 @@ async fn test_login_includes_roles_in_jwt() {
         "display_name": "Test User"
     });
 
-    let mut register_resp = ctx.server
+    let mut register_resp = ctx
+        .server
         .post("/backend/public/auth/register")
         .send_json(&register_body)
         .await
@@ -35,7 +36,8 @@ async fn test_login_includes_roles_in_jwt() {
         "password": password
     });
 
-    let mut login_resp = ctx.server
+    let mut login_resp = ctx
+        .server
         .post("/backend/public/auth/login")
         .send_json(&login_body)
         .await
@@ -50,10 +52,7 @@ async fn test_login_includes_roles_in_jwt() {
     let jwt_service = backend::services::auth::jwt::JwtService::new(jwt_secret);
     let claims = jwt_service.verify_token(token).await.unwrap().unwrap();
 
-    assert!(
-        !claims.roles.is_empty(),
-        "JWT should contain roles"
-    );
+    assert!(!claims.roles.is_empty(), "JWT should contain roles");
     assert!(
         claims.roles.contains(&"email-verified".to_string()),
         "JWT should contain email-verified role"
@@ -74,7 +73,8 @@ async fn test_token_refresh_includes_updated_roles() {
         "display_name": "Test User"
     });
 
-    let mut register_resp = ctx.server
+    let mut register_resp = ctx
+        .server
         .post("/backend/public/auth/register")
         .send_json(&register_body)
         .await
@@ -89,7 +89,11 @@ async fn test_token_refresh_includes_updated_roles() {
     // Verify initial token has no email-verified role using production code path
     let jwt_secret = "test-jwt-secret-for-api-tests".to_string(); // Must match test_helpers.rs:155
     let jwt_service = backend::services::auth::jwt::JwtService::new(jwt_secret);
-    let initial_claims = jwt_service.verify_token(initial_token).await.unwrap().unwrap();
+    let initial_claims = jwt_service
+        .verify_token(initial_token)
+        .await
+        .unwrap()
+        .unwrap();
 
     assert!(
         !initial_claims.roles.contains(&"email-verified".to_string()),
@@ -104,7 +108,8 @@ async fn test_token_refresh_includes_updated_roles() {
         "refresh_token": refresh_token
     });
 
-    let mut refresh_resp = ctx.server
+    let mut refresh_resp = ctx
+        .server
         .post("/backend/public/auth/refresh")
         .send_json(&refresh_body)
         .await
@@ -139,7 +144,8 @@ async fn test_unverified_user_blocked_from_creating_timer() {
         "display_name": "Test User"
     });
 
-    let mut register_resp = ctx.server
+    let mut register_resp = ctx
+        .server
         .post("/backend/public/auth/register")
         .send_json(&register_body)
         .await
@@ -155,7 +161,8 @@ async fn test_unverified_user_blocked_from_creating_timer() {
         "notes": "Test timer"
     });
 
-    let timer_resp = ctx.server
+    let timer_resp = ctx
+        .server
         .post("/backend/protected/incident-timers")
         .insert_header(("Authorization", format!("Bearer {}", token)))
         .send_json(&timer_body)
@@ -180,7 +187,8 @@ async fn test_verified_user_can_create_timer() {
         "display_name": "Test User"
     });
 
-    let mut register_resp = ctx.server
+    let mut register_resp = ctx
+        .server
         .post("/backend/public/auth/register")
         .send_json(&register_body)
         .await
@@ -199,7 +207,8 @@ async fn test_verified_user_can_create_timer() {
         "password": password
     });
 
-    let mut login_resp = ctx.server
+    let mut login_resp = ctx
+        .server
         .post("/backend/public/auth/login")
         .send_json(&login_body)
         .await
@@ -215,7 +224,8 @@ async fn test_verified_user_can_create_timer() {
         "notes": "Test timer"
     });
 
-    let mut timer_resp = ctx.server
+    let mut timer_resp = ctx
+        .server
         .post("/backend/protected/incident-timers")
         .insert_header(("Authorization", format!("Bearer {}", token)))
         .send_json(&timer_body)
@@ -244,7 +254,8 @@ async fn test_unverified_user_blocked_from_phrase_suggestion() {
         "display_name": "Test User"
     });
 
-    let mut register_resp = ctx.server
+    let mut register_resp = ctx
+        .server
         .post("/backend/public/auth/register")
         .send_json(&register_body)
         .await
@@ -259,7 +270,8 @@ async fn test_unverified_user_blocked_from_phrase_suggestion() {
         "phrase_text": "Test phrase suggestion"
     });
 
-    let suggestion_resp = ctx.server
+    let suggestion_resp = ctx
+        .server
         .post("/backend/protected/phrases/suggestions")
         .insert_header(("Authorization", format!("Bearer {}", token)))
         .send_json(&suggestion_body)
@@ -284,7 +296,8 @@ async fn test_verified_user_can_submit_phrase_suggestion() {
         "display_name": "Test User"
     });
 
-    let mut register_resp = ctx.server
+    let mut register_resp = ctx
+        .server
         .post("/backend/public/auth/register")
         .send_json(&register_body)
         .await
@@ -303,7 +316,8 @@ async fn test_verified_user_can_submit_phrase_suggestion() {
         "password": password
     });
 
-    let mut login_resp = ctx.server
+    let mut login_resp = ctx
+        .server
         .post("/backend/public/auth/login")
         .send_json(&login_body)
         .await
@@ -318,7 +332,8 @@ async fn test_verified_user_can_submit_phrase_suggestion() {
         "phrase_text": "Test phrase suggestion"
     });
 
-    let mut suggestion_resp = ctx.server
+    let mut suggestion_resp = ctx
+        .server
         .post("/backend/protected/phrases/suggestions")
         .insert_header(("Authorization", format!("Bearer {}", token)))
         .send_json(&suggestion_body)
@@ -343,23 +358,19 @@ async fn test_verified_user_can_submit_phrase_suggestion() {
 /// Manually assign email-verified role to user (simulates email verification or admin action)
 async fn assign_email_verified_role(pool: &PgPool, user_id: &str) {
     // Get email-verified role ID
-    let role_id: uuid::Uuid = sqlx::query_scalar(
-        "SELECT id FROM roles WHERE name = 'email-verified'"
-    )
-    .fetch_one(pool)
-    .await
-    .expect("Failed to get email-verified role ID");
+    let role_id: uuid::Uuid =
+        sqlx::query_scalar("SELECT id FROM roles WHERE name = 'email-verified'")
+            .fetch_one(pool)
+            .await
+            .expect("Failed to get email-verified role ID");
 
     let user_uuid = uuid::Uuid::parse_str(user_id).expect("Invalid user ID");
 
     // Assign role to user
-    sqlx::query(
-        "INSERT INTO user_roles (user_id, role_id) VALUES ($1, $2) ON CONFLICT DO NOTHING"
-    )
-    .bind(user_uuid)
-    .bind(role_id)
-    .execute(pool)
-    .await
-    .expect("Failed to assign email-verified role");
+    sqlx::query("INSERT INTO user_roles (user_id, role_id) VALUES ($1, $2) ON CONFLICT DO NOTHING")
+        .bind(user_uuid)
+        .bind(role_id)
+        .execute(pool)
+        .await
+        .expect("Failed to assign email-verified role");
 }
-

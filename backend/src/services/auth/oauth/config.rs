@@ -1,15 +1,15 @@
-use anyhow::{anyhow, Result};
+use anyhow::{Result, anyhow};
 use oauth2::basic::BasicClient;
 use oauth2::{AuthUrl, ClientId, ClientSecret, RedirectUrl, TokenUrl};
 
 // Type alias for BasicClient with endpoints configured
 // BasicClient is already a type alias, so we just need to specify the endpoint typestates
 pub type ConfiguredBasicClient = oauth2::basic::BasicClient<
-    oauth2::EndpointSet,        // HasAuthUrl is set
-    oauth2::EndpointNotSet,     // HasDeviceAuthUrl not set
-    oauth2::EndpointNotSet,     // HasIntrospectionUrl not set
-    oauth2::EndpointNotSet,     // HasRevocationUrl not set
-    oauth2::EndpointSet,        // HasTokenUrl is set
+    oauth2::EndpointSet,    // HasAuthUrl is set
+    oauth2::EndpointNotSet, // HasDeviceAuthUrl not set
+    oauth2::EndpointNotSet, // HasIntrospectionUrl not set
+    oauth2::EndpointNotSet, // HasRevocationUrl not set
+    oauth2::EndpointSet,    // HasTokenUrl is set
 >;
 
 /// Google OAuth configuration
@@ -24,8 +24,8 @@ pub struct GoogleOAuthConfig {
 impl GoogleOAuthConfig {
     /// Load Google OAuth configuration from environment variables
     pub fn from_env() -> Result<Self> {
-        let client_id = std::env::var("GOOGLE_CLIENT_ID")
-            .map_err(|_| anyhow!("GOOGLE_CLIENT_ID not set"))?;
+        let client_id =
+            std::env::var("GOOGLE_CLIENT_ID").map_err(|_| anyhow!("GOOGLE_CLIENT_ID not set"))?;
         let client_secret = std::env::var("GOOGLE_CLIENT_SECRET")
             .map_err(|_| anyhow!("GOOGLE_CLIENT_SECRET not set"))?;
         let redirect_uri = std::env::var("GOOGLE_REDIRECT_URI")

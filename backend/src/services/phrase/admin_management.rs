@@ -164,10 +164,12 @@ mod tests {
         let result = get_phrases(&repo, false, Some(-1), Some(0), None).await;
 
         assert!(result.is_err());
-        assert!(result
-            .unwrap_err()
-            .to_string()
-            .contains("Limit cannot be negative"));
+        assert!(
+            result
+                .unwrap_err()
+                .to_string()
+                .contains("Limit cannot be negative")
+        );
     }
 
     #[tokio::test]
@@ -208,10 +210,12 @@ mod tests {
         let result = create_phrase(&repo, request, Uuid::new_v4()).await;
 
         assert!(result.is_err());
-        assert!(result
-            .unwrap_err()
-            .to_string()
-            .contains("Phrase text cannot be empty"));
+        assert!(
+            result
+                .unwrap_err()
+                .to_string()
+                .contains("Phrase text cannot be empty")
+        );
     }
 
     #[tokio::test]
@@ -225,10 +229,12 @@ mod tests {
         let result = create_phrase(&repo, request, Uuid::new_v4()).await;
 
         assert!(result.is_err());
-        assert!(result
-            .unwrap_err()
-            .to_string()
-            .contains("Phrase text cannot exceed 500 characters"));
+        assert!(
+            result
+                .unwrap_err()
+                .to_string()
+                .contains("Phrase text cannot exceed 500 characters")
+        );
     }
 
     #[tokio::test]
@@ -269,9 +275,11 @@ mod tests {
         let result = update_phrase(&repo, Uuid::nil(), request).await;
 
         assert!(result.is_err());
-        assert!(result
-            .unwrap_err()
-            .to_string()
-            .contains("Phrase ID cannot be nil"));
+        assert!(
+            result
+                .unwrap_err()
+                .to_string()
+                .contains("Phrase ID cannot be nil")
+        );
     }
 }

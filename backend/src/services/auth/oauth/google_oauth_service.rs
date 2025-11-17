@@ -1,10 +1,10 @@
-use anyhow::{anyhow, Result};
+use anyhow::{Result, anyhow};
 use async_trait::async_trait;
 use oauth2::{
     AuthorizationCode, CsrfToken, PkceCodeChallenge, PkceCodeVerifier, Scope, TokenResponse as _,
 };
 
-use super::config::{GoogleOAuthConfig, ConfiguredBasicClient};
+use super::config::{ConfiguredBasicClient, GoogleOAuthConfig};
 use crate::models::oauth::GoogleUserInfo;
 
 /// Trait for Google OAuth operations (allows mocking in tests)
@@ -13,7 +13,10 @@ pub trait GoogleOAuthServiceTrait: Send + Sync {
     /// Generate Google OAuth authorization URL with PKCE
     /// Optionally accepts a custom state token (for encoding redirect info)
     /// Returns: (auth_url, csrf_token, pkce_verifier)
-    async fn get_authorization_url(&self, custom_state: Option<String>) -> Result<(String, CsrfToken, PkceCodeVerifier)>;
+    async fn get_authorization_url(
+        &self,
+        custom_state: Option<String>,
+    ) -> Result<(String, CsrfToken, PkceCodeVerifier)>;
 
     /// Exchange authorization code for access token using PKCE verifier
     async fn exchange_code_for_token(
@@ -47,7 +50,10 @@ impl GoogleOAuthService {
 
 #[async_trait]
 impl GoogleOAuthServiceTrait for GoogleOAuthService {
-    async fn get_authorization_url(&self, custom_state: Option<String>) -> Result<(String, CsrfToken, PkceCodeVerifier)> {
+    async fn get_authorization_url(
+        &self,
+        custom_state: Option<String>,
+    ) -> Result<(String, CsrfToken, PkceCodeVerifier)> {
         // Generate PKCE challenge
         let (pkce_challenge, pkce_verifier) = PkceCodeChallenge::new_random_sha256();
 
@@ -164,4 +170,3 @@ mod tests {
     // Note: Token exchange and user info tests require mocking HTTP calls
     // or integration tests with real Google API. Unit tests use MockGoogleOAuthService.
 }
-

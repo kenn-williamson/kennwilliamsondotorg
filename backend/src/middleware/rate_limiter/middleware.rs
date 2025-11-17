@@ -1,12 +1,12 @@
 use actix_web::{
+    Error, HttpMessage, Result,
     dev::{ServiceRequest, ServiceResponse},
     middleware::Next,
     web::Data,
-    Error, HttpMessage, Result,
 };
 use uuid::Uuid;
 
-use super::config::{get_rate_limit_configs, RateLimitConfig};
+use super::config::{RateLimitConfig, get_rate_limit_configs};
 use super::trait_def::RateLimitServiceTrait;
 
 /// Extract client identifier from request

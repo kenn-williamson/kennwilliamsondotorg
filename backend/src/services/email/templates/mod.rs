@@ -198,10 +198,12 @@ mod tests {
             .build();
 
         assert!(result.is_err());
-        assert!(result
-            .unwrap_err()
-            .to_string()
-            .contains("subject is required"));
+        assert!(
+            result
+                .unwrap_err()
+                .to_string()
+                .contains("subject is required")
+        );
     }
 
     #[test]
@@ -212,10 +214,12 @@ mod tests {
             .build();
 
         assert!(result.is_err());
-        assert!(result
-            .unwrap_err()
-            .to_string()
-            .contains("text body is required"));
+        assert!(
+            result
+                .unwrap_err()
+                .to_string()
+                .contains("text body is required")
+        );
     }
 
     #[test]
@@ -226,10 +230,12 @@ mod tests {
             .build();
 
         assert!(result.is_err());
-        assert!(result
-            .unwrap_err()
-            .to_string()
-            .contains("At least one recipient is required"));
+        assert!(
+            result
+                .unwrap_err()
+                .to_string()
+                .contains("At least one recipient is required")
+        );
     }
 
     #[test]

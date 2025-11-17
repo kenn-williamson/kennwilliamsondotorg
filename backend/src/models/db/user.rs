@@ -181,5 +181,4 @@ mod tests {
         assert!(json.get("real_name").is_none());
         assert!(json.get("timer_is_public").is_none());
     }
-
 }

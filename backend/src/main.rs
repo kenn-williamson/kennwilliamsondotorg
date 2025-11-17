@@ -1,5 +1,5 @@
 use actix_cors::Cors;
-use actix_web::{web, App, HttpServer};
+use actix_web::{App, HttpServer, web};
 use backend::routes;
 use backend::services;
 use dotenvy::dotenv;
@@ -64,9 +64,9 @@ async fn main() -> std::io::Result<()> {
 
     let cleanup_service = container.cleanup_service.clone();
     actix_web::rt::spawn(async move {
-        let mut interval = actix_web::rt::time::interval(
-            std::time::Duration::from_secs(cleanup_interval_hours * 3600)
-        );
+        let mut interval = actix_web::rt::time::interval(std::time::Duration::from_secs(
+            cleanup_interval_hours * 3600,
+        ));
 
         loop {
             interval.tick().await;
@@ -87,7 +87,10 @@ async fn main() -> std::io::Result<()> {
         }
     });
 
-    println!("🧹 Token cleanup scheduled every {} hours", cleanup_interval_hours);
+    println!(
+        "🧹 Token cleanup scheduled every {} hours",
+        cleanup_interval_hours
+    );
 
     HttpServer::new(move || {
         let cors_origin =
@@ -109,7 +112,9 @@ async fn main() -> std::io::Result<()> {
             .app_data(web::Data::from(container.phrase_service.clone()))
             .app_data(web::Data::from(container.admin_service.clone()))
             .app_data(web::Data::from(container.phrase_moderation_service.clone()))
-            .app_data(web::Data::from(container.access_request_moderation_service.clone()))
+            .app_data(web::Data::from(
+                container.access_request_moderation_service.clone(),
+            ))
             .app_data(web::Data::from(container.stats_service.clone()))
             .app_data(web::Data::from(container.rate_limit_service.clone()))
             .configure(routes::configure_app_routes)

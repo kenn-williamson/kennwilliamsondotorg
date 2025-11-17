@@ -32,8 +32,7 @@ use crate::events::handlers::{
     AccessRequestApprovedEmailHandler, AccessRequestEmailNotificationHandler,
     AccessRequestRejectedEmailHandler, PasswordChangedEmailHandler,
     PhraseSuggestionApprovedEmailHandler, PhraseSuggestionEmailNotificationHandler,
-    PhraseSuggestionRejectedEmailHandler, ProfileUpdatedEmailHandler,
-    UserRegisteredEmailHandler,
+    PhraseSuggestionRejectedEmailHandler, ProfileUpdatedEmailHandler, UserRegisteredEmailHandler,
 };
 use crate::events::types::{
     AccessRequestApprovedEvent, AccessRequestCreatedEvent, AccessRequestRejectedEvent,
@@ -96,16 +95,17 @@ impl ServiceContainer {
             reply_to_email.clone(),
             configuration_set_name.clone(),
         );
-        let email_service: Arc<dyn super::email::EmailService> = Arc::new(
-            SuppressionGuard::new(Box::new(ses_service), suppression_repo)
-        );
+        let email_service: Arc<dyn super::email::EmailService> = Arc::new(SuppressionGuard::new(
+            Box::new(ses_service),
+            suppression_repo,
+        ));
 
         // Create Google OAuth service (optional - only if env vars present)
         let google_oauth_service = super::auth::oauth::GoogleOAuthService::from_env().ok();
 
         // Create PKCE storage for OAuth flows
-        let pkce_storage = RedisPkceStorage::new(&redis_url)
-            .expect("Failed to create PKCE storage");
+        let pkce_storage =
+            RedisPkceStorage::new(&redis_url).expect("Failed to create PKCE storage");
 
         // Create and configure EventBus with handlers
         let mut event_bus = InMemoryEventBus::new();
@@ -136,7 +136,9 @@ impl ServiceContainer {
                 url.clone(),
             );
             event_bus
-                .register_handler::<PhraseSuggestionCreatedEvent>(Box::new(phrase_suggestion_handler))
+                .register_handler::<PhraseSuggestionCreatedEvent>(Box::new(
+                    phrase_suggestion_handler,
+                ))
                 .expect("Failed to register PhraseSuggestionEmailNotificationHandler");
 
             // Reuse shared email service instance
@@ -175,7 +177,9 @@ impl ServiceContainer {
                 url.clone(),
             );
             event_bus
-                .register_handler::<PhraseSuggestionApprovedEvent>(Box::new(phrase_approved_handler))
+                .register_handler::<PhraseSuggestionApprovedEvent>(Box::new(
+                    phrase_approved_handler,
+                ))
                 .expect("Failed to register PhraseSuggestionApprovedEmailHandler");
 
             // Reuse shared email service instance
@@ -188,7 +192,9 @@ impl ServiceContainer {
                 url.clone(),
             );
             event_bus
-                .register_handler::<PhraseSuggestionRejectedEvent>(Box::new(phrase_rejected_handler))
+                .register_handler::<PhraseSuggestionRejectedEvent>(Box::new(
+                    phrase_rejected_handler,
+                ))
                 .expect("Failed to register PhraseSuggestionRejectedEmailHandler");
 
             // Reuse shared email service instance
@@ -241,22 +247,24 @@ impl ServiceContainer {
         // Create services with repository dependencies using builder pattern
         let mut auth_builder = AuthService::builder()
             .user_repository(Box::new(PostgresUserRepository::new(pool.clone())))
-            .credentials_repository(Box::new(PostgresUserCredentialsRepository::new(pool.clone())))
-            .external_login_repository(Box::new(PostgresUserExternalLoginRepository::new(pool.clone())))
+            .credentials_repository(Box::new(PostgresUserCredentialsRepository::new(
+                pool.clone(),
+            )))
+            .external_login_repository(Box::new(PostgresUserExternalLoginRepository::new(
+                pool.clone(),
+            )))
             .profile_repository(Box::new(PostgresUserProfileRepository::new(pool.clone())))
-            .preferences_repository(Box::new(PostgresUserPreferencesRepository::new(pool.clone())))
-            .refresh_token_repository(Box::new(PostgresRefreshTokenRepository::new(
+            .preferences_repository(Box::new(PostgresUserPreferencesRepository::new(
                 pool.clone(),
             )))
-            .verification_token_repository(Box::new(
-                PostgresVerificationTokenRepository::new(pool.clone()),
-            ))
-            .password_reset_token_repository(Box::new(
-                PostgresPasswordResetTokenRepository::new(pool.clone()),
-            ))
-            .incident_timer_repository(Box::new(PostgresIncidentTimerRepository::new(
+            .refresh_token_repository(Box::new(PostgresRefreshTokenRepository::new(pool.clone())))
+            .verification_token_repository(Box::new(PostgresVerificationTokenRepository::new(
                 pool.clone(),
             )))
+            .password_reset_token_repository(Box::new(PostgresPasswordResetTokenRepository::new(
+                pool.clone(),
+            )))
+            .incident_timer_repository(Box::new(PostgresIncidentTimerRepository::new(pool.clone())))
             .phrase_repository(Box::new(PostgresPhraseRepository::new(pool.clone())))
             .email_service(Box::new(SuppressionGuard::new(
                 Box::new(SesEmailService::new(
@@ -300,12 +308,14 @@ impl ServiceContainer {
                 .with_repository(Box::new(PostgresPhraseRepository::new(pool.clone())))
                 .with_event_bus(Arc::clone(&event_publisher))
                 .build()
-                .expect("Failed to build PhraseModerationService")
+                .expect("Failed to build PhraseModerationService"),
         );
 
         // Build access request moderation service with event bus and email notification support
         let mut access_request_builder = AccessRequestModerationService::builder()
-            .with_access_request_repository(Box::new(PostgresAccessRequestRepository::new(pool.clone())))
+            .with_access_request_repository(Box::new(PostgresAccessRequestRepository::new(
+                pool.clone(),
+            )))
             .with_event_bus(Arc::clone(&event_publisher));
 
         // Add optional email dependencies if frontend_url is configured (Phase 1 fallback)
@@ -324,8 +334,9 @@ impl ServiceContainer {
         }
 
         let access_request_moderation_service = Arc::new(
-            access_request_builder.build()
-                .expect("Failed to build AccessRequestModerationService")
+            access_request_builder
+                .build()
+                .expect("Failed to build AccessRequestModerationService"),
         );
 
         let stats_service = Arc::new(StatsService::new(

@@ -1,4 +1,4 @@
-use actix_web::{web, HttpMessage, HttpRequest, HttpResponse, Result};
+use actix_web::{HttpMessage, HttpRequest, HttpResponse, Result, web};
 use uuid::Uuid;
 
 use crate::models::api::{
@@ -258,7 +258,8 @@ pub async fn add_user_role(
 
             // Check for specific error types
             let error_msg = e.to_string();
-            if error_msg.contains("Cannot manually add") || error_msg.contains("Invalid role name") {
+            if error_msg.contains("Cannot manually add") || error_msg.contains("Invalid role name")
+            {
                 Ok(HttpResponse::BadRequest().json(serde_json::json!({
                     "error": error_msg
                 })))
@@ -292,7 +293,8 @@ pub async fn remove_user_role(
                 Ok(HttpResponse::Conflict().json(serde_json::json!({
                     "error": error_msg
                 })))
-            } else if error_msg.contains("Cannot remove") || error_msg.contains("Invalid role name") {
+            } else if error_msg.contains("Cannot remove") || error_msg.contains("Invalid role name")
+            {
                 Ok(HttpResponse::BadRequest().json(serde_json::json!({
                     "error": error_msg
                 })))

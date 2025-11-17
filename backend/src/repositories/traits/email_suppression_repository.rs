@@ -18,10 +18,7 @@ pub struct CreateSuppressionData {
 #[allow(dead_code)]
 pub trait EmailSuppressionRepository: Send + Sync {
     /// Create a new email suppression
-    async fn create_suppression(
-        &self,
-        data: &CreateSuppressionData,
-    ) -> Result<EmailSuppression>;
+    async fn create_suppression(&self, data: &CreateSuppressionData) -> Result<EmailSuppression>;
 
     /// Find suppression by email address
     async fn find_by_email(&self, email: &str) -> Result<Option<EmailSuppression>>;
@@ -31,11 +28,7 @@ pub trait EmailSuppressionRepository: Send + Sync {
     async fn is_email_suppressed(&self, email: &str, email_type: EmailType) -> Result<bool>;
 
     /// Increment bounce count for an email
-    async fn increment_bounce_count(
-        &self,
-        email: &str,
-        bounced_at: DateTime<Utc>,
-    ) -> Result<()>;
+    async fn increment_bounce_count(&self, email: &str, bounced_at: DateTime<Utc>) -> Result<()>;
 
     /// Delete a suppression (admin override)
     async fn delete_suppression(&self, email: &str) -> Result<()>;

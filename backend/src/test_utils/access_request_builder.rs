@@ -1,8 +1,8 @@
 use crate::models::db::AccessRequest;
-use chrono::{DateTime, Utc};
-use uuid::Uuid;
-use sqlx::PgPool;
 use anyhow::Result;
+use chrono::{DateTime, Utc};
+use sqlx::PgPool;
+use uuid::Uuid;
 
 /// Builder for creating AccessRequest instances in tests with sensible defaults.
 #[derive(Clone)]
@@ -35,9 +35,15 @@ impl AccessRequestBuilder {
     /// Persist AccessRequest to database (for integration tests)
     pub async fn persist(self, pool: &PgPool) -> Result<AccessRequest> {
         let now = Utc::now();
-        let user_id = self.user_id.ok_or_else(|| anyhow::anyhow!("user_id is required"))?;
-        let message = self.message.unwrap_or_else(|| "I would like access please".to_string());
-        let requested_role = self.requested_role.unwrap_or_else(|| "trusted-contact".to_string());
+        let user_id = self
+            .user_id
+            .ok_or_else(|| anyhow::anyhow!("user_id is required"))?;
+        let message = self
+            .message
+            .unwrap_or_else(|| "I would like access please".to_string());
+        let requested_role = self
+            .requested_role
+            .unwrap_or_else(|| "trusted-contact".to_string());
         let status = self.status.unwrap_or_else(|| "pending".to_string());
 
         let request = sqlx::query_as::<_, AccessRequest>(

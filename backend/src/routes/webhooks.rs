@@ -1,16 +1,13 @@
-use actix_web::{post, web, HttpResponse};
+use actix_web::{HttpResponse, post, web};
 
+use crate::repositories::postgres::postgres_email_suppression_repository::PostgresEmailSuppressionRepository;
 use crate::services::webhooks::SnsHandler;
 use crate::services::webhooks::SnsMessage;
-use crate::repositories::postgres::postgres_email_suppression_repository::PostgresEmailSuppressionRepository;
 use sqlx::PgPool;
 
 /// Handle AWS SNS webhook notifications for SES bounces and complaints
 #[post("/webhooks/ses")]
-async fn handle_ses_webhook(
-    body: String,
-    pool: web::Data<PgPool>,
-) -> HttpResponse {
+async fn handle_ses_webhook(body: String, pool: web::Data<PgPool>) -> HttpResponse {
     log::debug!("SNS webhook received body: {}", body);
 
     let sns_message: SnsMessage = match serde_json::from_str(&body) {
@@ -24,7 +21,9 @@ async fn handle_ses_webhook(
     };
 
     // Create SNS handler with suppression repository
-    let suppression_repo = Box::new(PostgresEmailSuppressionRepository::new(pool.get_ref().clone()));
+    let suppression_repo = Box::new(PostgresEmailSuppressionRepository::new(
+        pool.get_ref().clone(),
+    ));
     let handler = SnsHandler::new(suppression_repo);
 
     // Handle different SNS message types
@@ -33,7 +32,10 @@ async fn handle_ses_webhook(
             // Auto-confirm SNS subscription
             match handler.handle_subscription_confirmation(&sns_message).await {
                 Ok(_) => {
-                    log::info!("SNS subscription confirmed for topic: {}", sns_message.topic_arn);
+                    log::info!(
+                        "SNS subscription confirmed for topic: {}",
+                        sns_message.topic_arn
+                    );
                     HttpResponse::Ok().json(serde_json::json!({
                         "status": "subscription_confirmed"
                     }))

@@ -1,3 +1,3 @@
+pub mod data_export_integration_tests;
 pub mod email_suppression_integration_tests;
 pub mod sns_webhook_handler_tests;
-pub mod data_export_integration_tests;

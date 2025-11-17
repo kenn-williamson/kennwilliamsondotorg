@@ -1,4 +1,4 @@
-use anyhow::{anyhow, Context, Result};
+use anyhow::{Context, Result, anyhow};
 use chrono::Utc;
 use serde::{Deserialize, Serialize};
 
@@ -92,8 +92,8 @@ pub struct MailMetadata {
 /// Bounce type classification
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub enum BounceType {
-    Hard,    // Permanent bounce
-    Soft,    // Transient bounce
+    Hard, // Permanent bounce
+    Soft, // Transient bounce
     Unknown,
 }
 
@@ -204,7 +204,9 @@ impl SnsHandler {
 
                     // Set the bounce count to the new count
                     for _ in 0..new_count {
-                        self.suppression_repo.increment_bounce_count(email, Utc::now()).await?;
+                        self.suppression_repo
+                            .increment_bounce_count(email, Utc::now())
+                            .await?;
                     }
 
                     log::warn!(

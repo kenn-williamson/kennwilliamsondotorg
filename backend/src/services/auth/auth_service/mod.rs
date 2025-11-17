@@ -16,8 +16,8 @@ use crate::services::email::EmailService;
 use anyhow::Result;
 use std::sync::Arc;
 
-pub mod builder;
 pub mod account_deletion;
+pub mod builder;
 pub mod data_export;
 pub mod email_verification;
 pub mod login;
@@ -82,7 +82,7 @@ impl AuthService {
         user: crate::models::db::User,
         roles: Vec<String>,
     ) -> Result<crate::models::api::UserResponse> {
-        use crate::models::api::{UserResponse, ProfileData, ExternalAccount, PreferencesData};
+        use crate::models::api::{ExternalAccount, PreferencesData, ProfileData, UserResponse};
 
         let email_verified = roles.contains(&"email-verified".to_string());
 

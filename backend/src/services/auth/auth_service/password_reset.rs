@@ -1,4 +1,4 @@
-use anyhow::{anyhow, Result};
+use anyhow::{Result, anyhow};
 use chrono::{Duration, Utc};
 use rand::Rng;
 use sha2::{Digest, Sha256};
@@ -49,9 +49,12 @@ impl AuthService {
             password_reset_repo.create_token(&token_data).await?;
 
             // Send password reset email using template
-            use crate::services::email::templates::{Email, EmailTemplate, PasswordResetEmailTemplate};
+            use crate::services::email::templates::{
+                Email, EmailTemplate, PasswordResetEmailTemplate,
+            };
 
-            let template = PasswordResetEmailTemplate::new(&user.display_name, &token, frontend_url);
+            let template =
+                PasswordResetEmailTemplate::new(&user.display_name, &token, frontend_url);
 
             let html_body = template.render_html()?;
             let text_body = template.render_plain_text();
@@ -69,7 +72,9 @@ impl AuthService {
 
         // Return same response regardless of whether user exists (security)
         Ok(ForgotPasswordResponse {
-            message: "If an account exists with that email, you will receive a password reset link.".to_string(),
+            message:
+                "If an account exists with that email, you will receive a password reset link."
+                    .to_string(),
         })
     }
 
@@ -104,9 +109,7 @@ impl AuthService {
             .await?;
 
         // Mark token as used (single-use token)
-        password_reset_repo
-            .mark_token_used(&token_hash)
-            .await?;
+        password_reset_repo.mark_token_used(&token_hash).await?;
 
         // Revoke all user refresh tokens (force re-login for security)
         self.refresh_token_repository
@@ -114,7 +117,8 @@ impl AuthService {
             .await?;
 
         Ok(ResetPasswordResponse {
-            message: "Password reset successfully. You can now login with your new password.".to_string(),
+            message: "Password reset successfully. You can now login with your new password."
+                .to_string(),
         })
     }
 }
@@ -256,7 +260,12 @@ mod tests {
             .await;
 
         assert!(result.is_err());
-        assert!(result.unwrap_err().to_string().contains("Email service not configured"));
+        assert!(
+            result
+                .unwrap_err()
+                .to_string()
+                .contains("Email service not configured")
+        );
 
         Ok(())
     }
@@ -292,7 +301,10 @@ mod tests {
         user_repo
             .expect_update_password()
             .times(1)
-            .with(mockall::predicate::eq(user_id), mockall::predicate::always())
+            .with(
+                mockall::predicate::eq(user_id),
+                mockall::predicate::always(),
+            )
             .returning(|_, _| Ok(()));
 
         // Expect token marked as used
@@ -349,7 +361,12 @@ mod tests {
             .await;
 
         assert!(result.is_err());
-        assert!(result.unwrap_err().to_string().contains("Invalid or expired"));
+        assert!(
+            result
+                .unwrap_err()
+                .to_string()
+                .contains("Invalid or expired")
+        );
 
         Ok(())
     }
@@ -607,10 +624,12 @@ mod tests {
             .await;
 
         assert!(result.is_err());
-        assert!(result
-            .unwrap_err()
-            .to_string()
-            .contains("Password reset token repository not configured"));
+        assert!(
+            result
+                .unwrap_err()
+                .to_string()
+                .contains("Password reset token repository not configured")
+        );
 
         Ok(())
     }

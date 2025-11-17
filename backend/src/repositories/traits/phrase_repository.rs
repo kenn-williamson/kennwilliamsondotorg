@@ -42,7 +42,7 @@ pub trait PhraseRepository: Send + Sync {
 
     /// Create a new phrase (admin only)
     async fn create_phrase(&self, request: CreatePhraseRequest, created_by: Uuid)
-        -> Result<Phrase>;
+    -> Result<Phrase>;
 
     /// Update a phrase (admin only)
     async fn update_phrase(&self, phrase_id: Uuid, request: UpdatePhraseRequest) -> Result<Phrase>;

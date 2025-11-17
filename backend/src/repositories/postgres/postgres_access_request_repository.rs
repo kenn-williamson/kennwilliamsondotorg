@@ -131,9 +131,8 @@ impl AccessRequestRepository for PostgresAccessRequestRepository {
         .fetch_optional(&mut *tx)
         .await?;
 
-        let request = request.ok_or_else(|| {
-            anyhow::anyhow!("Access request not found or already processed")
-        })?;
+        let request = request
+            .ok_or_else(|| anyhow::anyhow!("Access request not found or already processed"))?;
 
         // Update the access request status
         sqlx::query!(

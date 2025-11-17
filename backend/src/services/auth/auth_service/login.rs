@@ -21,7 +21,9 @@ impl AuthService {
         };
 
         // Check credentials table for password
-        let creds_repo = self.credentials_repository.as_ref()
+        let creds_repo = self
+            .credentials_repository
+            .as_ref()
             .ok_or_else(|| anyhow::anyhow!("Credentials repository not configured"))?;
 
         let credentials = creds_repo.find_by_user_id(user.id).await?;
@@ -84,7 +86,7 @@ async fn create_refresh_token(
 
 /// Generate refresh token string
 fn generate_refresh_token_string() -> String {
-    use rand::{rng, Rng};
+    use rand::{Rng, rng};
     let mut token_bytes = [0u8; 32]; // 256 bits
     rng().fill(&mut token_bytes);
     hex::encode(token_bytes)
@@ -101,14 +103,14 @@ fn hash_token(token: &str) -> String {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::models::db::refresh_token::RefreshToken;
     use crate::models::db::UserCredentials;
+    use crate::models::db::refresh_token::RefreshToken;
     use crate::repositories::mocks::mock_refresh_token_repository::MockRefreshTokenRepository;
     use crate::repositories::mocks::mock_user_credentials_repository::MockUserCredentialsRepository;
     use crate::repositories::mocks::mock_user_repository::MockUserRepository;
     use crate::services::auth::jwt::JwtService;
     use anyhow::Result;
-    use bcrypt::{hash, DEFAULT_COST};
+    use bcrypt::{DEFAULT_COST, hash};
     use chrono::Utc;
     use mockall::predicate::eq;
     use uuid::Uuid;

@@ -1,7 +1,7 @@
 use actix_web::{
+    Error, HttpMessage, Result,
     dev::{ServiceRequest, ServiceResponse},
     middleware::Next,
-    Error, HttpMessage, Result,
 };
 
 use super::auth::AuthContext;

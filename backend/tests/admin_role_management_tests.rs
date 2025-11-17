@@ -1,4 +1,4 @@
-use actix_web::{test, web, App};
+use actix_web::{App, test, web};
 use backend::models::db::User;
 use backend::repositories::postgres::postgres_admin_repository::PostgresAdminRepository;
 use backend::repositories::postgres::postgres_refresh_token_repository::PostgresRefreshTokenRepository;
@@ -30,11 +30,13 @@ async fn create_test_admin(pool: &PgPool) -> (User, String) {
         .expect("Failed to create admin user");
 
     // Add admin role (using raw SQL since we're testing admin role management)
-    sqlx::query("INSERT INTO user_roles (user_id, role_id) SELECT $1, id FROM roles WHERE name = 'admin'")
-        .bind(user.id)
-        .execute(pool)
-        .await
-        .unwrap();
+    sqlx::query(
+        "INSERT INTO user_roles (user_id, role_id) SELECT $1, id FROM roles WHERE name = 'admin'",
+    )
+    .bind(user.id)
+    .execute(pool)
+    .await
+    .unwrap();
 
     (user, password.to_string())
 }
@@ -60,7 +62,8 @@ async fn create_test_user(pool: &PgPool) -> User {
 fn generate_admin_jwt(admin_id: Uuid) -> String {
     use backend::test_utils::UserBuilder;
 
-    let jwt_service = JwtService::new("test_secret_key_that_is_at_least_256_bits_long_for_hs256".to_string());
+    let jwt_service =
+        JwtService::new("test_secret_key_that_is_at_least_256_bits_long_for_hs256".to_string());
 
     // Create a minimal user struct for token generation using UserBuilder
     let user = UserBuilder::new()
@@ -71,12 +74,17 @@ fn generate_admin_jwt(admin_id: Uuid) -> String {
         .without_password()
         .build();
 
-    jwt_service.generate_token(&user, &["user".to_string(), "admin".to_string()]).unwrap()
+    jwt_service
+        .generate_token(&user, &["user".to_string(), "admin".to_string()])
+        .unwrap()
 }
 
 #[tokio::test]
 async fn test_add_role_trusted_contact_success() {
-    let container = TestContainer::builder().build().await.expect("Failed to create test container");
+    let container = TestContainer::builder()
+        .build()
+        .await
+        .expect("Failed to create test container");
     let pool = &container.pool;
 
     // Create admin and regular user
@@ -97,13 +105,10 @@ async fn test_add_role_trusted_contact_success() {
     let app = test::init_service(
         App::new()
             .app_data(web::Data::new(user_management_service))
-            .service(
-                web::scope("/backend/admin")
-                    .route(
-                        "/users/{id}/roles/{role}",
-                        web::post().to(routes::admin::add_user_role),
-                    ),
-            ),
+            .service(web::scope("/backend/admin").route(
+                "/users/{id}/roles/{role}",
+                web::post().to(routes::admin::add_user_role),
+            )),
     )
     .await;
 
@@ -128,7 +133,10 @@ async fn test_add_role_trusted_contact_success() {
 
 #[tokio::test]
 async fn test_add_role_requires_admin_auth() {
-    let container = TestContainer::builder().build().await.expect("Failed to create test container");
+    let container = TestContainer::builder()
+        .build()
+        .await
+        .expect("Failed to create test container");
     let pool = &container.pool;
 
     // Create regular user
@@ -148,13 +156,10 @@ async fn test_add_role_requires_admin_auth() {
     let app = test::init_service(
         App::new()
             .app_data(web::Data::new(user_management_service))
-            .service(
-                web::scope("/backend/admin")
-                    .route(
-                        "/users/{id}/roles/{role}",
-                        web::post().to(routes::admin::add_user_role),
-                    ),
-            ),
+            .service(web::scope("/backend/admin").route(
+                "/users/{id}/roles/{role}",
+                web::post().to(routes::admin::add_user_role),
+            )),
     )
     .await;
 
@@ -176,7 +181,10 @@ async fn test_add_role_requires_admin_auth() {
 
 #[tokio::test]
 async fn test_add_role_invalid_name_returns_400() {
-    let container = TestContainer::builder().build().await.expect("Failed to create test container");
+    let container = TestContainer::builder()
+        .build()
+        .await
+        .expect("Failed to create test container");
     let pool = &container.pool;
 
     // Create admin and regular user
@@ -197,13 +205,10 @@ async fn test_add_role_invalid_name_returns_400() {
     let app = test::init_service(
         App::new()
             .app_data(web::Data::new(user_management_service))
-            .service(
-                web::scope("/backend/admin")
-                    .route(
-                        "/users/{id}/roles/{role}",
-                        web::post().to(routes::admin::add_user_role),
-                    ),
-            ),
+            .service(web::scope("/backend/admin").route(
+                "/users/{id}/roles/{role}",
+                web::post().to(routes::admin::add_user_role),
+            )),
     )
     .await;
 
@@ -228,7 +233,10 @@ async fn test_add_role_invalid_name_returns_400() {
 
 #[tokio::test]
 async fn test_add_role_user_role_returns_400() {
-    let container = TestContainer::builder().build().await.expect("Failed to create test container");
+    let container = TestContainer::builder()
+        .build()
+        .await
+        .expect("Failed to create test container");
     let pool = &container.pool;
 
     // Create admin and regular user
@@ -249,13 +257,10 @@ async fn test_add_role_user_role_returns_400() {
     let app = test::init_service(
         App::new()
             .app_data(web::Data::new(user_management_service))
-            .service(
-                web::scope("/backend/admin")
-                    .route(
-                        "/users/{id}/roles/{role}",
-                        web::post().to(routes::admin::add_user_role),
-                    ),
-            ),
+            .service(web::scope("/backend/admin").route(
+                "/users/{id}/roles/{role}",
+                web::post().to(routes::admin::add_user_role),
+            )),
     )
     .await;
 
@@ -277,7 +282,10 @@ async fn test_add_role_user_role_returns_400() {
 
 #[tokio::test]
 async fn test_remove_role_success() {
-    let container = TestContainer::builder().build().await.expect("Failed to create test container");
+    let container = TestContainer::builder()
+        .build()
+        .await
+        .expect("Failed to create test container");
     let pool = &container.pool;
 
     // Create admin and regular user
@@ -305,13 +313,10 @@ async fn test_remove_role_success() {
     let app = test::init_service(
         App::new()
             .app_data(web::Data::new(user_management_service))
-            .service(
-                web::scope("/backend/admin")
-                    .route(
-                        "/users/{id}/roles/{role}",
-                        web::delete().to(routes::admin::remove_user_role),
-                    ),
-            ),
+            .service(web::scope("/backend/admin").route(
+                "/users/{id}/roles/{role}",
+                web::delete().to(routes::admin::remove_user_role),
+            )),
     )
     .await;
 
@@ -336,7 +341,10 @@ async fn test_remove_role_success() {
 
 #[tokio::test]
 async fn test_remove_role_user_role_returns_400() {
-    let container = TestContainer::builder().build().await.expect("Failed to create test container");
+    let container = TestContainer::builder()
+        .build()
+        .await
+        .expect("Failed to create test container");
     let pool = &container.pool;
 
     // Create admin and regular user
@@ -357,13 +365,10 @@ async fn test_remove_role_user_role_returns_400() {
     let app = test::init_service(
         App::new()
             .app_data(web::Data::new(user_management_service))
-            .service(
-                web::scope("/backend/admin")
-                    .route(
-                        "/users/{id}/roles/{role}",
-                        web::delete().to(routes::admin::remove_user_role),
-                    ),
-            ),
+            .service(web::scope("/backend/admin").route(
+                "/users/{id}/roles/{role}",
+                web::delete().to(routes::admin::remove_user_role),
+            )),
     )
     .await;
 
@@ -385,7 +390,10 @@ async fn test_remove_role_user_role_returns_400() {
 
 #[tokio::test]
 async fn test_remove_role_last_admin_returns_409() {
-    let container = TestContainer::builder().build().await.expect("Failed to create test container");
+    let container = TestContainer::builder()
+        .build()
+        .await
+        .expect("Failed to create test container");
     let pool = &container.pool;
 
     // Create admin (only admin in system)
@@ -405,13 +413,10 @@ async fn test_remove_role_last_admin_returns_409() {
     let app = test::init_service(
         App::new()
             .app_data(web::Data::new(user_management_service))
-            .service(
-                web::scope("/backend/admin")
-                    .route(
-                        "/users/{id}/roles/{role}",
-                        web::delete().to(routes::admin::remove_user_role),
-                    ),
-            ),
+            .service(web::scope("/backend/admin").route(
+                "/users/{id}/roles/{role}",
+                web::delete().to(routes::admin::remove_user_role),
+            )),
     )
     .await;
 
@@ -433,7 +438,10 @@ async fn test_remove_role_last_admin_returns_409() {
 
 #[tokio::test]
 async fn test_remove_role_requires_admin_auth() {
-    let container = TestContainer::builder().build().await.expect("Failed to create test container");
+    let container = TestContainer::builder()
+        .build()
+        .await
+        .expect("Failed to create test container");
     let pool = &container.pool;
 
     // Create regular user
@@ -460,13 +468,10 @@ async fn test_remove_role_requires_admin_auth() {
     let app = test::init_service(
         App::new()
             .app_data(web::Data::new(user_management_service))
-            .service(
-                web::scope("/backend/admin")
-                    .route(
-                        "/users/{id}/roles/{role}",
-                        web::delete().to(routes::admin::remove_user_role),
-                    ),
-            ),
+            .service(web::scope("/backend/admin").route(
+                "/users/{id}/roles/{role}",
+                web::delete().to(routes::admin::remove_user_role),
+            )),
     )
     .await;
 

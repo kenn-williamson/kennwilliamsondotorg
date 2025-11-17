@@ -131,10 +131,12 @@ mod tests {
 
         // Verify
         assert!(result.is_err());
-        assert!(result
-            .unwrap_err()
-            .to_string()
-            .contains("Reset timestamp cannot be in the future"));
+        assert!(
+            result
+                .unwrap_err()
+                .to_string()
+                .contains("Reset timestamp cannot be in the future")
+        );
     }
 
     #[tokio::test]

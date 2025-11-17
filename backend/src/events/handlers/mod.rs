@@ -5,6 +5,5 @@ pub use email_notification_handler::{
     AccessRequestApprovedEmailHandler, AccessRequestEmailNotificationHandler,
     AccessRequestRejectedEmailHandler, PasswordChangedEmailHandler,
     PhraseSuggestionApprovedEmailHandler, PhraseSuggestionEmailNotificationHandler,
-    PhraseSuggestionRejectedEmailHandler, ProfileUpdatedEmailHandler,
-    UserRegisteredEmailHandler,
+    PhraseSuggestionRejectedEmailHandler, ProfileUpdatedEmailHandler, UserRegisteredEmailHandler,
 };

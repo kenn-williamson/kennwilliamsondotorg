@@ -1,5 +1,5 @@
-use serde_json::json;
 use crate::fixtures::TestContext;
+use serde_json::json;
 use uuid::Uuid;
 
 /// Integration tests to verify multi-table schema operations
@@ -20,7 +20,8 @@ async fn test_registration_creates_all_required_tables() {
     });
 
     // Register user
-    let mut resp = ctx.server
+    let mut resp = ctx
+        .server
         .post("/backend/public/auth/register")
         .send_json(&register_req)
         .await
@@ -29,12 +30,18 @@ async fn test_registration_creates_all_required_tables() {
     assert!(resp.status().is_success(), "Registration should succeed");
 
     let body: serde_json::Value = resp.json().await.unwrap();
-    let user_id_str = body.get("user").unwrap().get("id").unwrap().as_str().unwrap();
+    let user_id_str = body
+        .get("user")
+        .unwrap()
+        .get("id")
+        .unwrap()
+        .as_str()
+        .unwrap();
     let user_id = Uuid::parse_str(user_id_str).unwrap();
 
     // Verify user created in users table
     let user = sqlx::query_as::<_, (Uuid, String, String)>(
-        "SELECT id, email, display_name FROM users WHERE id = $1"
+        "SELECT id, email, display_name FROM users WHERE id = $1",
     )
     .bind(user_id)
     .fetch_one(&ctx.pool)
@@ -45,7 +52,7 @@ async fn test_registration_creates_all_required_tables() {
 
     // Verify credentials created in user_credentials table
     let creds = sqlx::query_as::<_, (Uuid, String)>(
-        "SELECT user_id, password_hash FROM user_credentials WHERE user_id = $1"
+        "SELECT user_id, password_hash FROM user_credentials WHERE user_id = $1",
     )
     .bind(user_id)
     .fetch_one(&ctx.pool)
@@ -63,12 +70,18 @@ async fn test_registration_creates_all_required_tables() {
     .await
     .unwrap();
     assert_eq!(prefs.0, user_id);
-    assert!(prefs.1, "Default timer_is_public should be true for backward compatibility");
-    assert!(prefs.2, "Default timer_show_in_list should be true for backward compatibility");
+    assert!(
+        prefs.1,
+        "Default timer_is_public should be true for backward compatibility"
+    );
+    assert!(
+        prefs.2,
+        "Default timer_show_in_list should be true for backward compatibility"
+    );
 
     // Verify profile created in user_profiles table (optional, may be null fields)
     let profile = sqlx::query_as::<_, (Uuid, Option<String>)>(
-        "SELECT user_id, real_name FROM user_profiles WHERE user_id = $1"
+        "SELECT user_id, real_name FROM user_profiles WHERE user_id = $1",
     )
     .bind(user_id)
     .fetch_one(&ctx.pool)
@@ -90,7 +103,8 @@ async fn test_registration_transaction_rollback_on_failure() {
         "display_name": "Test User"
     });
 
-    let resp = ctx.server
+    let resp = ctx
+        .server
         .post("/backend/public/auth/register")
         .send_json(&register_req)
         .await
@@ -99,23 +113,26 @@ async fn test_registration_transaction_rollback_on_failure() {
     assert!(resp.status().is_success());
 
     // Second registration with same email should fail
-    let resp = ctx.server
+    let resp = ctx
+        .server
         .post("/backend/public/auth/register")
         .send_json(&register_req)
         .await
         .unwrap();
 
-    assert_eq!(resp.status(), 409, "Duplicate email should return 409 Conflict");
+    assert_eq!(
+        resp.status(),
+        409,
+        "Duplicate email should return 409 Conflict"
+    );
 
     // Verify no orphaned records in other tables
     // Count total users with this email
-    let user_count = sqlx::query_scalar::<_, i64>(
-        "SELECT COUNT(*) FROM users WHERE email = $1"
-    )
-    .bind(&email)
-    .fetch_one(&ctx.pool)
-    .await
-    .unwrap();
+    let user_count = sqlx::query_scalar::<_, i64>("SELECT COUNT(*) FROM users WHERE email = $1")
+        .bind(&email)
+        .fetch_one(&ctx.pool)
+        .await
+        .unwrap();
 
     assert_eq!(user_count, 1, "Should only have one user with this email");
 
@@ -145,7 +162,8 @@ async fn test_login_queries_multiple_tables() {
         "display_name": "Test User"
     });
 
-    let mut resp = ctx.server
+    let mut resp = ctx
+        .server
         .post("/backend/public/auth/register")
         .send_json(&register_req)
         .await
@@ -154,7 +172,13 @@ async fn test_login_queries_multiple_tables() {
     assert!(resp.status().is_success());
 
     let register_body: serde_json::Value = resp.json().await.unwrap();
-    let user_id_str = register_body.get("user").unwrap().get("id").unwrap().as_str().unwrap();
+    let user_id_str = register_body
+        .get("user")
+        .unwrap()
+        .get("id")
+        .unwrap()
+        .as_str()
+        .unwrap();
     let user_id = Uuid::parse_str(user_id_str).unwrap();
 
     // Now login
@@ -163,7 +187,8 @@ async fn test_login_queries_multiple_tables() {
         "password": password
     });
 
-    let mut resp = ctx.server
+    let mut resp = ctx
+        .server
         .post("/backend/public/auth/login")
         .send_json(&login_req)
         .await
@@ -176,13 +201,12 @@ async fn test_login_queries_multiple_tables() {
     assert!(body.get("refresh_token").is_some());
 
     // Verify login used credentials from user_credentials table
-    let creds = sqlx::query_as::<_, (Uuid,)>(
-        "SELECT user_id FROM user_credentials WHERE user_id = $1"
-    )
-    .bind(user_id)
-    .fetch_one(&ctx.pool)
-    .await
-    .unwrap();
+    let creds =
+        sqlx::query_as::<_, (Uuid,)>("SELECT user_id FROM user_credentials WHERE user_id = $1")
+            .bind(user_id)
+            .fetch_one(&ctx.pool)
+            .await
+            .unwrap();
 
     assert_eq!(creds.0, user_id);
 }
@@ -197,29 +221,29 @@ async fn test_oauth_user_without_password() {
     let user = ctx.create_oauth_user(&email, &slug, "google_12345").await;
 
     // Verify user exists in users table
-    let db_user = sqlx::query_as::<_, (Uuid, String)>(
-        "SELECT id, email FROM users WHERE id = $1"
-    )
-    .bind(user.id)
-    .fetch_one(&ctx.pool)
-    .await
-    .unwrap();
+    let db_user = sqlx::query_as::<_, (Uuid, String)>("SELECT id, email FROM users WHERE id = $1")
+        .bind(user.id)
+        .fetch_one(&ctx.pool)
+        .await
+        .unwrap();
     assert_eq!(db_user.1, email);
 
     // Verify NO credentials in user_credentials table
-    let creds = sqlx::query_as::<_, (Uuid,)>(
-        "SELECT user_id FROM user_credentials WHERE user_id = $1"
-    )
-    .bind(user.id)
-    .fetch_optional(&ctx.pool)
-    .await
-    .unwrap();
+    let creds =
+        sqlx::query_as::<_, (Uuid,)>("SELECT user_id FROM user_credentials WHERE user_id = $1")
+            .bind(user.id)
+            .fetch_optional(&ctx.pool)
+            .await
+            .unwrap();
 
-    assert!(creds.is_none(), "OAuth-only user should not have credentials");
+    assert!(
+        creds.is_none(),
+        "OAuth-only user should not have credentials"
+    );
 
     // Verify external login exists in user_external_logins table
     let ext_login = sqlx::query_as::<_, (Uuid, String, String)>(
-        "SELECT user_id, provider, provider_user_id FROM user_external_logins WHERE user_id = $1"
+        "SELECT user_id, provider, provider_user_id FROM user_external_logins WHERE user_id = $1",
     )
     .bind(user.id)
     .fetch_one(&ctx.pool)
@@ -245,7 +269,8 @@ async fn test_data_export_includes_all_new_tables() {
         "display_name": "Complete User"
     });
 
-    let mut resp = ctx.server
+    let mut resp = ctx
+        .server
         .post("/backend/public/auth/register")
         .send_json(&register_req)
         .await
@@ -255,7 +280,13 @@ async fn test_data_export_includes_all_new_tables() {
 
     let register_body: serde_json::Value = resp.json().await.unwrap();
     let token = register_body.get("token").unwrap().as_str().unwrap();
-    let user_id_str = register_body.get("user").unwrap().get("id").unwrap().as_str().unwrap();
+    let user_id_str = register_body
+        .get("user")
+        .unwrap()
+        .get("id")
+        .unwrap()
+        .as_str()
+        .unwrap();
     let user_id = Uuid::parse_str(user_id_str).unwrap();
 
     // Link Google account to create external login
@@ -272,14 +303,12 @@ async fn test_data_export_includes_all_new_tables() {
     .unwrap();
 
     // Update profile with real_name
-    sqlx::query(
-        "UPDATE user_profiles SET real_name = $1 WHERE user_id = $2"
-    )
-    .bind("Real Name Test")
-    .bind(user_id)
-    .execute(&ctx.pool)
-    .await
-    .unwrap();
+    sqlx::query("UPDATE user_profiles SET real_name = $1 WHERE user_id = $2")
+        .bind("Real Name Test")
+        .bind(user_id)
+        .execute(&ctx.pool)
+        .await
+        .unwrap();
 
     // Update preferences
     sqlx::query(
@@ -293,7 +322,8 @@ async fn test_data_export_includes_all_new_tables() {
     .unwrap();
 
     // Export data
-    let mut resp = ctx.server
+    let mut resp = ctx
+        .server
         .get("/backend/protected/auth/export-data")
         .insert_header(("Authorization", format!("Bearer {}", token)))
         .send()
@@ -339,12 +369,15 @@ async fn test_data_export_oauth_only_user() {
     // Create OAuth-only user (no password)
     let email = crate::fixtures::unique_test_email();
     let slug = crate::fixtures::unique_test_slug();
-    let user = ctx.create_oauth_user(&email, &slug, "google_oauth_123").await;
+    let user = ctx
+        .create_oauth_user(&email, &slug, "google_oauth_123")
+        .await;
 
     let token = crate::fixtures::create_test_jwt_token(&user).await.unwrap();
 
     // Export data
-    let mut resp = ctx.server
+    let mut resp = ctx
+        .server
         .get("/backend/protected/auth/export-data")
         .insert_header(("Authorization", format!("Bearer {}", token)))
         .send()
@@ -359,7 +392,10 @@ async fn test_data_export_oauth_only_user() {
     assert!(export.get("authentication").is_some());
     let auth = export.get("authentication").unwrap();
     assert_eq!(auth["has_password"], false);
-    assert!(auth["password_last_changed"].is_null() || !auth.get("password_last_changed").unwrap().is_string());
+    assert!(
+        auth["password_last_changed"].is_null()
+            || !auth.get("password_last_changed").unwrap().is_string()
+    );
 
     // Verify external login exists
     let ext_logins = export["external_logins"].as_array().unwrap();
@@ -382,7 +418,8 @@ async fn test_account_deletion_cascades_to_all_tables() {
         "display_name": "To Be Deleted"
     });
 
-    let mut resp = ctx.server
+    let mut resp = ctx
+        .server
         .post("/backend/public/auth/register")
         .send_json(&register_req)
         .await
@@ -392,7 +429,13 @@ async fn test_account_deletion_cascades_to_all_tables() {
 
     let register_body: serde_json::Value = resp.json().await.unwrap();
     let token = register_body.get("token").unwrap().as_str().unwrap();
-    let user_id_str = register_body.get("user").unwrap().get("id").unwrap().as_str().unwrap();
+    let user_id_str = register_body
+        .get("user")
+        .unwrap()
+        .get("id")
+        .unwrap()
+        .as_str()
+        .unwrap();
     let user_id = Uuid::parse_str(user_id_str).unwrap();
 
     // Verify records exist in all tables
@@ -403,25 +446,28 @@ async fn test_account_deletion_cascades_to_all_tables() {
         .unwrap();
     assert_eq!(user.0, user_id);
 
-    let creds = sqlx::query_as::<_, (Uuid,)>("SELECT user_id FROM user_credentials WHERE user_id = $1")
-        .bind(user_id)
-        .fetch_one(&ctx.pool)
-        .await
-        .unwrap();
+    let creds =
+        sqlx::query_as::<_, (Uuid,)>("SELECT user_id FROM user_credentials WHERE user_id = $1")
+            .bind(user_id)
+            .fetch_one(&ctx.pool)
+            .await
+            .unwrap();
     assert_eq!(creds.0, user_id);
 
-    let prefs = sqlx::query_as::<_, (Uuid,)>("SELECT user_id FROM user_preferences WHERE user_id = $1")
-        .bind(user_id)
-        .fetch_one(&ctx.pool)
-        .await
-        .unwrap();
+    let prefs =
+        sqlx::query_as::<_, (Uuid,)>("SELECT user_id FROM user_preferences WHERE user_id = $1")
+            .bind(user_id)
+            .fetch_one(&ctx.pool)
+            .await
+            .unwrap();
     assert_eq!(prefs.0, user_id);
 
-    let profile = sqlx::query_as::<_, (Uuid,)>("SELECT user_id FROM user_profiles WHERE user_id = $1")
-        .bind(user_id)
-        .fetch_one(&ctx.pool)
-        .await
-        .unwrap();
+    let profile =
+        sqlx::query_as::<_, (Uuid,)>("SELECT user_id FROM user_profiles WHERE user_id = $1")
+            .bind(user_id)
+            .fetch_one(&ctx.pool)
+            .await
+            .unwrap();
     assert_eq!(profile.0, user_id);
 
     // Delete account
@@ -429,14 +475,18 @@ async fn test_account_deletion_cascades_to_all_tables() {
         "password": password
     });
 
-    let resp = ctx.server
+    let resp = ctx
+        .server
         .delete("/backend/protected/auth/delete-account")
         .insert_header(("Authorization", format!("Bearer {}", token)))
         .send_json(&delete_req)
         .await
         .unwrap();
 
-    assert!(resp.status().is_success(), "Account deletion should succeed");
+    assert!(
+        resp.status().is_success(),
+        "Account deletion should succeed"
+    );
 
     // Verify user was hard deleted
     let user = sqlx::query_as::<_, (Uuid,)>("SELECT id FROM users WHERE id = $1")
@@ -447,25 +497,28 @@ async fn test_account_deletion_cascades_to_all_tables() {
     assert!(user.is_none(), "User should be completely deleted");
 
     // Verify cascade deletion removed all related records
-    let creds = sqlx::query_as::<_, (Uuid,)>("SELECT user_id FROM user_credentials WHERE user_id = $1")
-        .bind(user_id)
-        .fetch_optional(&ctx.pool)
-        .await
-        .unwrap();
+    let creds =
+        sqlx::query_as::<_, (Uuid,)>("SELECT user_id FROM user_credentials WHERE user_id = $1")
+            .bind(user_id)
+            .fetch_optional(&ctx.pool)
+            .await
+            .unwrap();
     assert!(creds.is_none(), "Credentials should be cascade deleted");
 
-    let prefs = sqlx::query_as::<_, (Uuid,)>("SELECT user_id FROM user_preferences WHERE user_id = $1")
-        .bind(user_id)
-        .fetch_optional(&ctx.pool)
-        .await
-        .unwrap();
+    let prefs =
+        sqlx::query_as::<_, (Uuid,)>("SELECT user_id FROM user_preferences WHERE user_id = $1")
+            .bind(user_id)
+            .fetch_optional(&ctx.pool)
+            .await
+            .unwrap();
     assert!(prefs.is_none(), "Preferences should be cascade deleted");
 
-    let profile = sqlx::query_as::<_, (Uuid,)>("SELECT user_id FROM user_profiles WHERE user_id = $1")
-        .bind(user_id)
-        .fetch_optional(&ctx.pool)
-        .await
-        .unwrap();
+    let profile =
+        sqlx::query_as::<_, (Uuid,)>("SELECT user_id FROM user_profiles WHERE user_id = $1")
+            .bind(user_id)
+            .fetch_optional(&ctx.pool)
+            .await
+            .unwrap();
     assert!(profile.is_none(), "Profile should be cascade deleted")
 }
 
@@ -483,7 +536,8 @@ async fn test_profile_update_modifies_user_profiles_table() {
         "display_name": "Original Name"
     });
 
-    let mut resp = ctx.server
+    let mut resp = ctx
+        .server
         .post("/backend/public/auth/register")
         .send_json(&register_req)
         .await
@@ -493,7 +547,13 @@ async fn test_profile_update_modifies_user_profiles_table() {
 
     let register_body: serde_json::Value = resp.json().await.unwrap();
     let token = register_body.get("token").unwrap().as_str().unwrap();
-    let user_id_str = register_body.get("user").unwrap().get("id").unwrap().as_str().unwrap();
+    let user_id_str = register_body
+        .get("user")
+        .unwrap()
+        .get("id")
+        .unwrap()
+        .as_str()
+        .unwrap();
     let user_id = Uuid::parse_str(user_id_str).unwrap();
 
     // Update profile with display_name and slug
@@ -502,7 +562,8 @@ async fn test_profile_update_modifies_user_profiles_table() {
         "slug": "updated-slug"
     });
 
-    let mut resp = ctx.server
+    let mut resp = ctx
+        .server
         .put("/backend/protected/auth/profile")
         .insert_header(("Authorization", format!("Bearer {}", token)))
         .send_json(&update_req)
@@ -516,11 +577,12 @@ async fn test_profile_update_modifies_user_profiles_table() {
     assert_eq!(body["slug"], "updated-slug");
 
     // Verify database updates
-    let user = sqlx::query_as::<_, (String, String)>("SELECT display_name, slug FROM users WHERE id = $1")
-        .bind(user_id)
-        .fetch_one(&ctx.pool)
-        .await
-        .unwrap();
+    let user =
+        sqlx::query_as::<_, (String, String)>("SELECT display_name, slug FROM users WHERE id = $1")
+            .bind(user_id)
+            .fetch_one(&ctx.pool)
+            .await
+            .unwrap();
     assert_eq!(user.0, "Updated Name");
     assert_eq!(user.1, "updated-slug");
 }

@@ -110,10 +110,12 @@ mod tests {
         let result = exclude_phrase_for_user(&repo, Uuid::nil(), Uuid::new_v4()).await;
 
         assert!(result.is_err());
-        assert!(result
-            .unwrap_err()
-            .to_string()
-            .contains("User ID cannot be nil"));
+        assert!(
+            result
+                .unwrap_err()
+                .to_string()
+                .contains("User ID cannot be nil")
+        );
     }
 
     #[tokio::test]
@@ -123,10 +125,12 @@ mod tests {
         let result = exclude_phrase_for_user(&repo, Uuid::new_v4(), Uuid::nil()).await;
 
         assert!(result.is_err());
-        assert!(result
-            .unwrap_err()
-            .to_string()
-            .contains("Phrase ID cannot be nil"));
+        assert!(
+            result
+                .unwrap_err()
+                .to_string()
+                .contains("Phrase ID cannot be nil")
+        );
     }
 
     #[tokio::test]
@@ -157,10 +161,12 @@ mod tests {
         let result = remove_phrase_exclusion(&repo, Uuid::nil(), Uuid::new_v4()).await;
 
         assert!(result.is_err());
-        assert!(result
-            .unwrap_err()
-            .to_string()
-            .contains("User ID cannot be nil"));
+        assert!(
+            result
+                .unwrap_err()
+                .to_string()
+                .contains("User ID cannot be nil")
+        );
     }
 
     #[tokio::test]
@@ -170,9 +176,11 @@ mod tests {
         let result = remove_phrase_exclusion(&repo, Uuid::new_v4(), Uuid::nil()).await;
 
         assert!(result.is_err());
-        assert!(result
-            .unwrap_err()
-            .to_string()
-            .contains("Phrase ID cannot be nil"));
+        assert!(
+            result
+                .unwrap_err()
+                .to_string()
+                .contains("Phrase ID cannot be nil")
+        );
     }
 }

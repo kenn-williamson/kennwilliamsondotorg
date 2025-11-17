@@ -1,4 +1,4 @@
-use actix_web::{web, HttpMessage, HttpRequest, HttpResponse, Result as ActixResult};
+use actix_web::{HttpMessage, HttpRequest, HttpResponse, Result as ActixResult, web};
 use uuid::Uuid;
 
 use crate::middleware::auth::AuthContext;
@@ -88,7 +88,11 @@ pub async fn create_timer(
             Ok(HttpResponse::Created().json(response))
         }
         Err(err) => {
-            log::error!("Failed to create timer for user {}: {}", auth_ctx.user_id, err);
+            log::error!(
+                "Failed to create timer for user {}: {}",
+                auth_ctx.user_id,
+                err
+            );
             Ok(HttpResponse::InternalServerError().json(serde_json::json!({
                 "error": "Internal server error"
             })))

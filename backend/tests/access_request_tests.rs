@@ -3,13 +3,16 @@ mod fixtures;
 use backend::repositories::postgres::postgres_access_request_repository::PostgresAccessRequestRepository;
 use backend::repositories::traits::AccessRequestRepository;
 use backend::test_utils::AccessRequestBuilder;
-use fixtures::database::{create_test_user, get_user_roles};
 use fixtures::TestContainer;
+use fixtures::database::{create_test_user, get_user_roles};
 
 #[tokio::test]
 async fn test_approve_access_request_grants_role() {
     // Setup test database
-    let container = TestContainer::builder().build().await.expect("Failed to create test container");
+    let container = TestContainer::builder()
+        .build()
+        .await
+        .expect("Failed to create test container");
     let pool = &container.pool;
 
     // Create a regular user without trusted-contact role
@@ -17,8 +20,10 @@ async fn test_approve_access_request_grants_role() {
 
     // Verify user doesn't have trusted-contact role initially
     let initial_roles = get_user_roles(pool, user.id).await;
-    assert!(!initial_roles.contains(&"trusted-contact".to_string()),
-        "User should not have trusted-contact role initially");
+    assert!(
+        !initial_roles.contains(&"trusted-contact".to_string()),
+        "User should not have trusted-contact role initially"
+    );
 
     // Create an access request for trusted-contact role using builder
     let request = AccessRequestBuilder::new()
@@ -54,14 +59,20 @@ async fn test_approve_access_request_grants_role() {
 
     // MOST IMPORTANT: Verify the user now has the trusted-contact role
     let final_roles = get_user_roles(pool, user.id).await;
-    assert!(final_roles.contains(&"trusted-contact".to_string()),
-        "User should have trusted-contact role after approval. Roles: {:?}", final_roles);
+    assert!(
+        final_roles.contains(&"trusted-contact".to_string()),
+        "User should have trusted-contact role after approval. Roles: {:?}",
+        final_roles
+    );
 }
 
 #[tokio::test]
 async fn test_approve_access_request_idempotent() {
     // Setup test database
-    let container = TestContainer::builder().build().await.expect("Failed to create test container");
+    let container = TestContainer::builder()
+        .build()
+        .await
+        .expect("Failed to create test container");
     let pool = &container.pool;
 
     // Create a user who already has the trusted-contact role
@@ -99,7 +110,10 @@ async fn test_approve_access_request_idempotent() {
         .approve_request(request.id, admin.id, None)
         .await;
 
-    assert!(result.is_ok(), "Approving request should succeed even if user already has the role");
+    assert!(
+        result.is_ok(),
+        "Approving request should succeed even if user already has the role"
+    );
 
     // Verify user still has the role (no duplicates)
     let roles_count = sqlx::query_scalar::<_, i64>(
@@ -115,13 +129,19 @@ async fn test_approve_access_request_idempotent() {
     .await
     .expect("Failed to count roles");
 
-    assert_eq!(roles_count, 1, "User should have exactly one trusted-contact role (no duplicates)");
+    assert_eq!(
+        roles_count, 1,
+        "User should have exactly one trusted-contact role (no duplicates)"
+    );
 }
 
 #[tokio::test]
 async fn test_reject_access_request_does_not_grant_role() {
     // Setup test database
-    let container = TestContainer::builder().build().await.expect("Failed to create test container");
+    let container = TestContainer::builder()
+        .build()
+        .await
+        .expect("Failed to create test container");
     let pool = &container.pool;
 
     // Create a regular user
@@ -159,6 +179,8 @@ async fn test_reject_access_request_does_not_grant_role() {
 
     // Verify the user does NOT have the trusted-contact role
     let roles = get_user_roles(pool, user.id).await;
-    assert!(!roles.contains(&"trusted-contact".to_string()),
-        "User should NOT have trusted-contact role after rejection");
+    assert!(
+        !roles.contains(&"trusted-contact".to_string()),
+        "User should NOT have trusted-contact role after rejection"
+    );
 }

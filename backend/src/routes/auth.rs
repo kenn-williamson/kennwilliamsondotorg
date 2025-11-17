@@ -1,10 +1,10 @@
-use actix_web::{web, HttpMessage, HttpRequest, HttpResponse, Result as ActixResult};
+use actix_web::{HttpMessage, HttpRequest, HttpResponse, Result as ActixResult, web};
 use serde_json::json;
 use uuid::Uuid;
 
 use crate::models::api::{
-    CreateUserRequest, LoginRequest, PaginationQuery, PasswordChangeRequest, PublicTimerListItem,
-    SetPasswordRequest, ProfileUpdateRequest, RefreshTokenRequest, RevokeTokenRequest,
+    CreateUserRequest, LoginRequest, PaginationQuery, PasswordChangeRequest, ProfileUpdateRequest,
+    PublicTimerListItem, RefreshTokenRequest, RevokeTokenRequest, SetPasswordRequest,
     SlugPreviewRequest, SlugValidationRequest, UpdatePreferencesRequest, VerifyEmailRequest,
 };
 use crate::services::auth::AuthService;
@@ -264,10 +264,7 @@ pub async fn set_password(
 ) -> ActixResult<HttpResponse> {
     let user_id = req.extensions().get::<Uuid>().cloned().unwrap();
 
-    match auth_service
-        .set_password(user_id, data.into_inner())
-        .await
-    {
+    match auth_service.set_password(user_id, data.into_inner()).await {
         Ok(()) => Ok(HttpResponse::Ok().json(serde_json::json!({
             "message": "Password set successfully"
         }))),
@@ -454,9 +451,10 @@ pub async fn google_oauth_callback(
     payload: web::Json<crate::models::api::user::GoogleOAuthCallbackRequest>,
 ) -> Result<HttpResponse, actix_web::Error> {
     // Extract state parameter - required for PKCE verifier retrieval
-    let state = payload.state.clone().ok_or_else(|| {
-        actix_web::error::ErrorBadRequest("Missing state parameter")
-    })?;
+    let state = payload
+        .state
+        .clone()
+        .ok_or_else(|| actix_web::error::ErrorBadRequest("Missing state parameter"))?;
 
     match auth_service
         .google_oauth_callback(payload.code.clone(), state)
@@ -487,7 +485,7 @@ pub async fn export_data(
     auth_service: web::Data<AuthService>,
 ) -> ActixResult<HttpResponse> {
     let user_id = req.extensions().get::<Uuid>().cloned().unwrap();
-    
+
     match auth_service.export_user_data(user_id).await {
         Ok(export_data) => {
             let json = serde_json::to_string(&export_data)?;
@@ -495,10 +493,13 @@ pub async fn export_data(
                 "kennwilliamson-data-export-{}.json",
                 chrono::Utc::now().format("%Y-%m-%d")
             );
-            
+
             Ok(HttpResponse::Ok()
                 .content_type("application/json")
-                .append_header(("Content-Disposition", format!("attachment; filename=\"{}\"", filename)))
+                .append_header((
+                    "Content-Disposition",
+                    format!("attachment; filename=\"{}\"", filename),
+                ))
                 .body(json))
         }
         Err(err) => {
@@ -535,7 +536,11 @@ pub async fn update_preferences(
                     "error": error_msg
                 })))
             } else {
-                log::error!("User preferences update error for user {}: {}", user_id, err);
+                log::error!(
+                    "User preferences update error for user {}: {}",
+                    user_id,
+                    err
+                );
                 Ok(HttpResponse::InternalServerError().json(serde_json::json!({
                     "error": "Internal server error"
                 })))
@@ -600,7 +605,7 @@ mod tests {
     use crate::models::db::user::User;
     use crate::repositories::mocks::{MockRefreshTokenRepository, MockUserRepository};
     use crate::services::auth::auth_service::AuthServiceBuilder;
-    use actix_web::{test, web, App};
+    use actix_web::{App, test, web};
     use chrono::Utc;
     use uuid::Uuid;
 
@@ -625,24 +630,27 @@ mod tests {
     async fn test_export_data_requires_authentication() {
         // Test that the endpoint exists and works with proper authentication
         // This test verifies the endpoint functionality with auth context
-        
+
         let user_id = Uuid::new_v4();
         let user = create_test_user_with_id(user_id);
-        
+
         // Create mock repositories
         let mut user_repo = MockUserRepository::new();
-        user_repo.expect_find_by_id()
+        user_repo
+            .expect_find_by_id()
             .with(mockall::predicate::eq(user_id))
             .times(1)
             .returning(move |_| Ok(Some(user.clone())));
-        
-        user_repo.expect_get_user_roles()
+
+        user_repo
+            .expect_get_user_roles()
             .with(mockall::predicate::eq(user_id))
             .times(1)
             .returning(|_| Ok(vec!["user".to_string()]));
 
         let mut refresh_token_repo = MockRefreshTokenRepository::new();
-        refresh_token_repo.expect_find_by_user_id()
+        refresh_token_repo
+            .expect_find_by_user_id()
             .with(mockall::predicate::eq(user_id))
             .times(1)
             .returning(|_| Ok(vec![]));
@@ -658,13 +666,12 @@ mod tests {
         let app = test::init_service(
             App::new()
                 .app_data(web::Data::new(auth_service))
-                .service(web::resource("/export-data").to(export_data))
-        ).await;
+                .service(web::resource("/export-data").to(export_data)),
+        )
+        .await;
 
         // Make request with user_id in extensions (simulating authenticated request)
-        let req = test::TestRequest::get()
-            .uri("/export-data")
-            .to_request();
+        let req = test::TestRequest::get().uri("/export-data").to_request();
 
         // Manually add user_id to request extensions to simulate auth middleware
         #[allow(unused_mut)]
@@ -672,15 +679,15 @@ mod tests {
         req.extensions_mut().insert(user_id);
 
         let resp = test::call_service(&app, req).await;
-        
+
         // Should return 200 OK when properly authenticated
         assert_eq!(resp.status(), 200);
-        
+
         // Verify response is JSON
         let body = test::read_body(resp).await;
         let body_str = String::from_utf8(body.to_vec()).unwrap();
         let export_data: serde_json::Value = serde_json::from_str(&body_str).unwrap();
-        
+
         // Verify user data matches the authenticated user
         assert_eq!(export_data["user"]["id"], user_id.to_string());
         assert_eq!(export_data["user"]["email"], "test@example.com");
@@ -690,24 +697,27 @@ mod tests {
     async fn test_export_data_returns_user_data_only() {
         // Test that user can only export their own data
         // Test that other users' data is not included
-        
+
         let user_id = Uuid::new_v4();
         let user = create_test_user_with_id(user_id);
-        
+
         // Create mock repositories
         let mut user_repo = MockUserRepository::new();
-        user_repo.expect_find_by_id()
+        user_repo
+            .expect_find_by_id()
             .with(mockall::predicate::eq(user_id))
             .times(1)
             .returning(move |_| Ok(Some(user.clone())));
-        
-        user_repo.expect_get_user_roles()
+
+        user_repo
+            .expect_get_user_roles()
             .with(mockall::predicate::eq(user_id))
             .times(1)
             .returning(|_| Ok(vec!["user".to_string()]));
 
         let mut refresh_token_repo = MockRefreshTokenRepository::new();
-        refresh_token_repo.expect_find_by_user_id()
+        refresh_token_repo
+            .expect_find_by_user_id()
             .with(mockall::predicate::eq(user_id))
             .times(1)
             .returning(|_| Ok(vec![]));
@@ -723,8 +733,9 @@ mod tests {
         let app = test::init_service(
             App::new()
                 .app_data(web::Data::new(auth_service))
-                .service(web::resource("/export-data").to(export_data))
-        ).await;
+                .service(web::resource("/export-data").to(export_data)),
+        )
+        .await;
 
         // Make request with user_id in extensions (simulating authenticated request)
         let req = test::TestRequest::get()
@@ -738,15 +749,15 @@ mod tests {
         req.extensions_mut().insert(user_id);
 
         let resp = test::call_service(&app, req).await;
-        
+
         // Should return 200 OK
         assert_eq!(resp.status(), 200);
-        
+
         // Verify response is JSON
         let body = test::read_body(resp).await;
         let body_str = String::from_utf8(body.to_vec()).unwrap();
         let export_data: serde_json::Value = serde_json::from_str(&body_str).unwrap();
-        
+
         // Verify user data matches the authenticated user
         assert_eq!(export_data["user"]["id"], user_id.to_string());
         assert_eq!(export_data["user"]["email"], "test@example.com");
@@ -757,24 +768,27 @@ mod tests {
         // Test JSON structure matches specification
         // Test proper HTTP headers for file download
         // Test filename format: "kennwilliamson-data-export-YYYY-MM-DD.json"
-        
+
         let user_id = Uuid::new_v4();
         let user = create_test_user_with_id(user_id);
-        
+
         // Create mock repositories
         let mut user_repo = MockUserRepository::new();
-        user_repo.expect_find_by_id()
+        user_repo
+            .expect_find_by_id()
             .with(mockall::predicate::eq(user_id))
             .times(1)
             .returning(move |_| Ok(Some(user.clone())));
-        
-        user_repo.expect_get_user_roles()
+
+        user_repo
+            .expect_get_user_roles()
             .with(mockall::predicate::eq(user_id))
             .times(1)
             .returning(|_| Ok(vec!["user".to_string()]));
 
         let mut refresh_token_repo = MockRefreshTokenRepository::new();
-        refresh_token_repo.expect_find_by_user_id()
+        refresh_token_repo
+            .expect_find_by_user_id()
             .with(mockall::predicate::eq(user_id))
             .times(1)
             .returning(|_| Ok(vec![]));
@@ -790,13 +804,12 @@ mod tests {
         let app = test::init_service(
             App::new()
                 .app_data(web::Data::new(auth_service))
-                .service(web::resource("/export-data").to(export_data))
-        ).await;
+                .service(web::resource("/export-data").to(export_data)),
+        )
+        .await;
 
         // Make request with user_id in extensions (simulating authenticated request)
-        let req = test::TestRequest::get()
-            .uri("/export-data")
-            .to_request();
+        let req = test::TestRequest::get().uri("/export-data").to_request();
 
         // Manually add user_id to request extensions to simulate auth middleware
         #[allow(unused_mut)]
@@ -804,25 +817,25 @@ mod tests {
         req.extensions_mut().insert(user_id);
 
         let resp = test::call_service(&app, req).await;
-        
+
         // Should return 200 OK
         assert_eq!(resp.status(), 200);
-        
+
         // Verify content type
         let content_type = resp.headers().get("content-type").unwrap();
         assert_eq!(content_type, "application/json");
-        
+
         // Verify content disposition header for file download
         let content_disposition = resp.headers().get("content-disposition").unwrap();
         let disposition_str = content_disposition.to_str().unwrap();
         assert!(disposition_str.starts_with("attachment; filename=\"kennwilliamson-data-export-"));
         assert!(disposition_str.ends_with(".json\""));
-        
+
         // Verify JSON structure
         let body = test::read_body(resp).await;
         let body_str = String::from_utf8(body.to_vec()).unwrap();
         let export_data: serde_json::Value = serde_json::from_str(&body_str).unwrap();
-        
+
         // Verify required fields are present
         assert!(export_data.get("export_date").is_some());
         assert!(export_data.get("export_version").is_some());
@@ -838,27 +851,30 @@ mod tests {
     async fn test_export_data_rate_limiting() {
         // Test that rate limiting is applied
         // Test that excessive requests are blocked
-        
+
         // For now, just test that the endpoint exists and responds
         // Rate limiting testing would require more complex middleware setup
-        
+
         let user_id = Uuid::new_v4();
         let user = create_test_user_with_id(user_id);
-        
+
         // Create mock repositories
         let mut user_repo = MockUserRepository::new();
-        user_repo.expect_find_by_id()
+        user_repo
+            .expect_find_by_id()
             .with(mockall::predicate::eq(user_id))
             .times(1)
             .returning(move |_| Ok(Some(user.clone())));
-        
-        user_repo.expect_get_user_roles()
+
+        user_repo
+            .expect_get_user_roles()
             .with(mockall::predicate::eq(user_id))
             .times(1)
             .returning(|_| Ok(vec!["user".to_string()]));
 
         let mut refresh_token_repo = MockRefreshTokenRepository::new();
-        refresh_token_repo.expect_find_by_user_id()
+        refresh_token_repo
+            .expect_find_by_user_id()
             .with(mockall::predicate::eq(user_id))
             .times(1)
             .returning(|_| Ok(vec![]));
@@ -874,13 +890,12 @@ mod tests {
         let app = test::init_service(
             App::new()
                 .app_data(web::Data::new(auth_service))
-                .service(web::resource("/export-data").to(export_data))
-        ).await;
+                .service(web::resource("/export-data").to(export_data)),
+        )
+        .await;
 
         // Make request with user_id in extensions (simulating authenticated request)
-        let req = test::TestRequest::get()
-            .uri("/export-data")
-            .to_request();
+        let req = test::TestRequest::get().uri("/export-data").to_request();
 
         // Manually add user_id to request extensions to simulate auth middleware
         #[allow(unused_mut)]
@@ -888,10 +903,10 @@ mod tests {
         req.extensions_mut().insert(user_id);
 
         let resp = test::call_service(&app, req).await;
-        
+
         // Should return 200 OK
         assert_eq!(resp.status(), 200);
-        
+
         // Note: Full rate limiting testing would require middleware integration
         // This test verifies the endpoint works correctly
     }
@@ -932,11 +947,12 @@ mod tests {
         ];
 
         // Mock the get_users_with_public_timers call
-        user_repo.expect_get_users_with_public_timers()
+        user_repo
+            .expect_get_users_with_public_timers()
             .with(
-                mockall::predicate::eq(20), // page_size
-                mockall::predicate::eq(0),  // offset
-                mockall::predicate::eq(None::<String>) // search
+                mockall::predicate::eq(20),             // page_size
+                mockall::predicate::eq(0),              // offset
+                mockall::predicate::eq(None::<String>), // search
             )
             .times(1)
             .returning(move |_, _, _| Ok(timers.clone()));
@@ -951,16 +967,13 @@ mod tests {
             .build();
 
         // Create test app
-        let app = test::init_service(
-            App::new()
-                .app_data(web::Data::new(auth_service))
-                .service(web::resource("/public-timers").route(web::get().to(super::get_public_timer_list)))
-        ).await;
+        let app = test::init_service(App::new().app_data(web::Data::new(auth_service)).service(
+            web::resource("/public-timers").route(web::get().to(super::get_public_timer_list)),
+        ))
+        .await;
 
         // Make request
-        let req = test::TestRequest::get()
-            .uri("/public-timers")
-            .to_request();
+        let req = test::TestRequest::get().uri("/public-timers").to_request();
 
         let resp = test::call_service(&app, req).await;
 
@@ -983,11 +996,12 @@ mod tests {
         let mut user_repo = MockUserRepository::new();
 
         // Mock empty result
-        user_repo.expect_get_users_with_public_timers()
+        user_repo
+            .expect_get_users_with_public_timers()
             .with(
                 mockall::predicate::eq(20),
                 mockall::predicate::eq(0),
-                mockall::predicate::eq(None::<String>)
+                mockall::predicate::eq(None::<String>),
             )
             .times(1)
             .returning(|_, _, _| Ok(vec![]));
@@ -1002,16 +1016,13 @@ mod tests {
             .build();
 
         // Create test app
-        let app = test::init_service(
-            App::new()
-                .app_data(web::Data::new(auth_service))
-                .service(web::resource("/public-timers").route(web::get().to(super::get_public_timer_list)))
-        ).await;
+        let app = test::init_service(App::new().app_data(web::Data::new(auth_service)).service(
+            web::resource("/public-timers").route(web::get().to(super::get_public_timer_list)),
+        ))
+        .await;
 
         // Make request
-        let req = test::TestRequest::get()
-            .uri("/public-timers")
-            .to_request();
+        let req = test::TestRequest::get().uri("/public-timers").to_request();
 
         let resp = test::call_service(&app, req).await;
 

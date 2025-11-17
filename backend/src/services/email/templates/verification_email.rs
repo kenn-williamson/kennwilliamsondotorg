@@ -27,7 +27,10 @@ impl VerificationEmailTemplate {
     /// * `frontend_url` - Base URL of the frontend (e.g., "https://kennwilliamson.org")
     pub fn new(to_name: impl Into<String>, verification_token: &str, frontend_url: &str) -> Self {
         let frontend_base = frontend_url.trim_end_matches('/');
-        let verification_url = format!("{}/verify-email?token={}", frontend_base, verification_token);
+        let verification_url = format!(
+            "{}/verify-email?token={}",
+            frontend_base, verification_token
+        );
 
         Self {
             to_name: to_name.into(),
@@ -104,11 +107,8 @@ mod tests {
 
     #[test]
     fn test_verification_email_subject() {
-        let template = VerificationEmailTemplate::new(
-            "Test User",
-            "token",
-            "https://kennwilliamson.org",
-        );
+        let template =
+            VerificationEmailTemplate::new("Test User", "token", "https://kennwilliamson.org");
 
         let subject = template.subject();
 
@@ -117,11 +117,7 @@ mod tests {
 
     #[test]
     fn test_verification_url_construction() {
-        let template = VerificationEmailTemplate::new(
-            "User",
-            "my-token",
-            "https://example.com/",
-        );
+        let template = VerificationEmailTemplate::new("User", "my-token", "https://example.com/");
 
         // Should trim trailing slash from frontend_url
         assert_eq!(

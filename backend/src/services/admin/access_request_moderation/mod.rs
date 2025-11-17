@@ -2,13 +2,18 @@ use anyhow::Result;
 use std::sync::Arc;
 use uuid::Uuid;
 
+use crate::events::EventPublisher;
 use crate::events::types::{
     AccessRequestApprovedEvent, AccessRequestCreatedEvent, AccessRequestRejectedEvent,
 };
-use crate::events::EventPublisher;
-use crate::models::api::access_request::{AccessRequestListResponse, AccessRequestWithUserResponse};
+use crate::models::api::access_request::{
+    AccessRequestListResponse, AccessRequestWithUserResponse,
+};
 use crate::repositories::traits::{AccessRequestRepository, AdminRepository};
-use crate::services::email::{EmailService, templates::{AccessRequestNotificationTemplate, Email, EmailTemplate}};
+use crate::services::email::{
+    EmailService,
+    templates::{AccessRequestNotificationTemplate, Email, EmailTemplate},
+};
 
 /// Access request moderation service for admin operations
 pub struct AccessRequestModerationService {
@@ -22,11 +27,26 @@ pub struct AccessRequestModerationService {
 impl std::fmt::Debug for AccessRequestModerationService {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         f.debug_struct("AccessRequestModerationService")
-            .field("access_request_repository", &"Arc<dyn AccessRequestRepository>")
-            .field("admin_repository", &self.admin_repository.as_ref().map(|_| "Arc<dyn AdminRepository>"))
-            .field("email_service", &self.email_service.as_ref().map(|_| "Arc<dyn EmailService>"))
+            .field(
+                "access_request_repository",
+                &"Arc<dyn AccessRequestRepository>",
+            )
+            .field(
+                "admin_repository",
+                &self
+                    .admin_repository
+                    .as_ref()
+                    .map(|_| "Arc<dyn AdminRepository>"),
+            )
+            .field(
+                "email_service",
+                &self.email_service.as_ref().map(|_| "Arc<dyn EmailService>"),
+            )
             .field("frontend_url", &self.frontend_url)
-            .field("event_bus", &self.event_bus.as_ref().map(|_| "Arc<dyn EventPublisher>"))
+            .field(
+                "event_bus",
+                &self.event_bus.as_ref().map(|_| "Arc<dyn EventPublisher>"),
+            )
             .finish()
     }
 }
@@ -57,7 +77,10 @@ impl AccessRequestModerationServiceBuilder {
         }
     }
 
-    pub fn with_access_request_repository(mut self, repo: Box<dyn AccessRequestRepository>) -> Self {
+    pub fn with_access_request_repository(
+        mut self,
+        repo: Box<dyn AccessRequestRepository>,
+    ) -> Self {
         self.access_request_repository = Some(repo);
         self
     }
@@ -83,7 +106,8 @@ impl AccessRequestModerationServiceBuilder {
     }
 
     pub fn build(self) -> Result<AccessRequestModerationService> {
-        let access_request_repository = self.access_request_repository
+        let access_request_repository = self
+            .access_request_repository
             .ok_or_else(|| anyhow::anyhow!("AccessRequestRepository is required"))?;
 
         Ok(AccessRequestModerationService {
@@ -167,11 +191,21 @@ impl AccessRequestModerationService {
             if let Err(e) = event_bus.publish(Box::new(event)).await {
                 log::error!("Failed to publish AccessRequestCreatedEvent: {}", e);
             } else {
-                log::debug!("Published AccessRequestCreatedEvent for user {} ({})", user_display_name, user_email);
+                log::debug!(
+                    "Published AccessRequestCreatedEvent for user {} ({})",
+                    user_display_name,
+                    user_email
+                );
             }
         } else {
             // Fallback to Phase 1 direct email sending
-            self.send_notification_emails(&user_email, &user_display_name, message, &requested_role).await;
+            self.send_notification_emails(
+                &user_email,
+                &user_display_name,
+                message,
+                &requested_role,
+            )
+            .await;
         }
 
         Ok(())
@@ -264,7 +298,11 @@ impl AccessRequestModerationService {
 
         // Send email (fire-and-forget)
         if let Err(e) = email_service.send_email(email).await {
-            log::error!("Failed to send access request notification email to {} admin(s): {}", admin_emails.len(), e);
+            log::error!(
+                "Failed to send access request notification email to {} admin(s): {}",
+                admin_emails.len(),
+                e
+            );
         } else {
             log::info!(
                 "Sent access request notification for user '{}' ({}) to {} admin(s)",
@@ -371,10 +409,7 @@ impl AccessRequestModerationService {
 
         // Emit event if EventBus is configured
         if let Some(event_bus) = &self.event_bus {
-            let event = AccessRequestRejectedEvent::new(
-                access_request.user_id,
-                admin_reason,
-            );
+            let event = AccessRequestRejectedEvent::new(access_request.user_id, admin_reason);
 
             // Fire-and-forget event publishing
             if let Err(e) = event_bus.publish(Box::new(event)).await {
@@ -412,11 +447,7 @@ mod tests {
         // Configure mock expectations
         mock_repo
             .expect_create_request()
-            .with(
-                eq(user_id),
-                eq(message.clone()),
-                eq(requested_role.clone()),
-            )
+            .with(eq(user_id), eq(message.clone()), eq(requested_role.clone()))
             .times(1)
             .returning(|user_id, message, requested_role| {
                 Ok(crate::models::db::AccessRequest {
@@ -464,11 +495,7 @@ mod tests {
         // Configure access request repository mock
         mock_repo
             .expect_create_request()
-            .with(
-                eq(user_id),
-                eq(message.clone()),
-                eq(requested_role.clone()),
-            )
+            .with(eq(user_id), eq(message.clone()), eq(requested_role.clone()))
             .times(1)
             .returning(|user_id, message, requested_role| {
                 Ok(crate::models::db::AccessRequest {
@@ -730,6 +757,11 @@ mod tests {
             .build();
 
         assert!(result.is_err());
-        assert!(result.unwrap_err().to_string().contains("AccessRequestRepository is required"));
+        assert!(
+            result
+                .unwrap_err()
+                .to_string()
+                .contains("AccessRequestRepository is required")
+        );
     }
 }

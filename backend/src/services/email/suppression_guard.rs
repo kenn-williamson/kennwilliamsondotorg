@@ -65,7 +65,8 @@ impl EmailService for SuppressionGuard {
     async fn send_email(&self, email: Email) -> Result<()> {
         // Check suppression list for all recipients
         for recipient in &email.to {
-            let is_suppressed = self.suppression_repo
+            let is_suppressed = self
+                .suppression_repo
                 .is_email_suppressed(recipient, EmailType::Transactional)
                 .await
                 .context("Failed to check email suppression status")?;
@@ -90,9 +91,9 @@ impl EmailService for SuppressionGuard {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::services::email::MockEmailService;
     use crate::repositories::mocks::MockEmailSuppressionRepository;
     use crate::repositories::traits::email_suppression_repository::CreateSuppressionData;
+    use crate::services::email::MockEmailService;
 
     #[tokio::test]
     async fn test_suppression_guard_blocks_suppressed_email() {
@@ -128,7 +129,11 @@ mod tests {
 
         // Then: Email should be blocked
         assert!(result.is_err());
-        assert_eq!(mock_email_service.count(), 0, "No email should reach inner service");
+        assert_eq!(
+            mock_email_service.count(),
+            0,
+            "No email should reach inner service"
+        );
     }
 
     #[tokio::test]
@@ -154,6 +159,10 @@ mod tests {
 
         // Then: Email should be sent to inner service
         assert!(result.is_ok());
-        assert_eq!(mock_email_service.count(), 1, "Email should reach inner service");
+        assert_eq!(
+            mock_email_service.count(),
+            1,
+            "Email should reach inner service"
+        );
     }
 }

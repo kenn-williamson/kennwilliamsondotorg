@@ -7,7 +7,7 @@ use backend::events::{EventBus, EventPublisher};
 use backend::repositories::mocks::{MockAdminRepository, MockUserRepository};
 use backend::services::email::MockEmailService;
 use std::sync::Arc;
-use tokio::time::{sleep, Duration};
+use tokio::time::{Duration, sleep};
 use uuid::Uuid;
 
 /// Test that AccessRequestCreatedEvent triggers email notifications
@@ -103,14 +103,13 @@ async fn test_phrase_suggestion_event_sends_emails_to_admins() {
         .returning(|| Ok(vec!["admin@example.com".to_string()]));
 
     // Configure user repository to return user details
-    mock_user_repo
-        .expect_find_by_id()
-        .times(1)
-        .returning(|_| {
-            Ok(Some(backend::test_utils::UserBuilder::new()
+    mock_user_repo.expect_find_by_id().times(1).returning(|_| {
+        Ok(Some(
+            backend::test_utils::UserBuilder::new()
                 .with_display_name("Phrase Suggester")
-                .build()))
-        });
+                .build(),
+        ))
+    });
 
     // Clone for verification
     let email_service_clone = mock_email_service.clone();
@@ -149,11 +148,13 @@ async fn test_phrase_suggestion_event_sends_emails_to_admins() {
     let sent_emails = email_service_clone.get_sent_emails();
     assert_eq!(sent_emails[0].to, vec!["admin@example.com"]);
     assert!(sent_emails[0].subject.contains("Phrase Suggestion"));
-    assert!(sent_emails[0]
-        .html_body
-        .as_ref()
-        .unwrap()
-        .contains("Time is an illusion"));
+    assert!(
+        sent_emails[0]
+            .html_body
+            .as_ref()
+            .unwrap()
+            .contains("Time is an illusion")
+    );
 }
 
 /// Test that multiple handlers can be registered for different event types
@@ -180,14 +181,13 @@ async fn test_multiple_event_types_with_different_handlers() {
         .times(1)
         .returning(|| Ok(vec!["admin@example.com".to_string()]));
 
-    mock_user_repo2
-        .expect_find_by_id()
-        .times(1)
-        .returning(|_| {
-            Ok(Some(backend::test_utils::UserBuilder::new()
+    mock_user_repo2.expect_find_by_id().times(1).returning(|_| {
+        Ok(Some(
+            backend::test_utils::UserBuilder::new()
                 .with_display_name("User")
-                .build()))
-        });
+                .build(),
+        ))
+    });
 
     let email_service_clone2 = mock_email_service2.clone();
 

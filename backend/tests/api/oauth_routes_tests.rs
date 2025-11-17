@@ -1,6 +1,6 @@
-use serde_json::json;
-use backend::services::auth::oauth::MockGoogleOAuthService;
 use backend::models::oauth::GoogleUserInfo;
+use backend::services::auth::oauth::MockGoogleOAuthService;
+use serde_json::json;
 
 use crate::fixtures::TestContext;
 
@@ -9,15 +9,14 @@ use crate::fixtures::TestContext;
 #[actix_web::test]
 async fn test_oauth_url_endpoint_returns_valid_url() {
     // Configure mock OAuth service to return a valid URL
-    let mock_oauth = MockGoogleOAuthService::new()
-        .with_access_token("mock_access_token".to_string());
-    
-    let ctx = TestContext::builder()
-        .with_oauth(mock_oauth)
-        .build()
-        .await;
+    let mock_oauth =
+        MockGoogleOAuthService::new().with_access_token("mock_access_token".to_string());
 
-    let mut resp = ctx.server.get("/backend/public/auth/google/url")
+    let ctx = TestContext::builder().with_oauth(mock_oauth).build().await;
+
+    let mut resp = ctx
+        .server
+        .get("/backend/public/auth/google/url")
         .send()
         .await
         .unwrap();
@@ -43,15 +42,14 @@ async fn test_oauth_url_endpoint_returns_valid_url() {
 #[actix_web::test]
 async fn test_oauth_url_endpoint_includes_pkce_challenge() {
     // Configure mock OAuth service
-    let mock_oauth = MockGoogleOAuthService::new()
-        .with_access_token("mock_access_token".to_string());
-    
-    let ctx = TestContext::builder()
-        .with_oauth(mock_oauth)
-        .build()
-        .await;
+    let mock_oauth =
+        MockGoogleOAuthService::new().with_access_token("mock_access_token".to_string());
 
-    let mut resp = ctx.server.get("/backend/public/auth/google/url")
+    let ctx = TestContext::builder().with_oauth(mock_oauth).build().await;
+
+    let mut resp = ctx
+        .server
+        .get("/backend/public/auth/google/url")
         .send()
         .await
         .unwrap();
@@ -70,7 +68,9 @@ async fn test_oauth_url_endpoint_when_oauth_not_configured() {
     // For now, we accept that the mock always returns a URL successfully
     let ctx = TestContext::builder().build().await;
 
-    let resp = ctx.server.get("/backend/public/auth/google/url")
+    let resp = ctx
+        .server
+        .get("/backend/public/auth/google/url")
         .send()
         .await
         .unwrap();
@@ -94,28 +94,33 @@ async fn test_oauth_callback_with_valid_code_creates_new_user() {
         name: Some("Test User".to_string()),
         email_verified: Some(true),
     };
-    
+
     let mock_oauth = MockGoogleOAuthService::new()
         .with_user_info(user_info)
         .with_access_token("mock_access_token".to_string());
-    
-    let ctx = TestContext::builder()
-        .with_oauth(mock_oauth)
-        .build()
-        .await;
+
+    let ctx = TestContext::builder().with_oauth(mock_oauth).build().await;
 
     // First, get the OAuth URL to generate a valid state parameter
-    let mut url_resp = ctx.server.get("/backend/public/auth/google/url")
+    let mut url_resp = ctx
+        .server
+        .get("/backend/public/auth/google/url")
         .send()
         .await
         .unwrap();
     assert_eq!(url_resp.status(), 200);
-    
+
     let url_body: serde_json::Value = url_resp.json().await.unwrap();
     let url = url_body["url"].as_str().unwrap();
-    
+
     // Extract state parameter from URL
-    let state = url.split("state=").nth(1).unwrap().split("&").next().unwrap();
+    let state = url
+        .split("state=")
+        .nth(1)
+        .unwrap()
+        .split("&")
+        .next()
+        .unwrap();
 
     // Simulate OAuth callback with authorization code and state
     let payload = json!({
@@ -123,7 +128,9 @@ async fn test_oauth_callback_with_valid_code_creates_new_user() {
         "state": state
     });
 
-    let mut resp = ctx.server.post("/backend/public/auth/google/callback")
+    let mut resp = ctx
+        .server
+        .post("/backend/public/auth/google/callback")
         .send_json(&payload)
         .await
         .unwrap();
@@ -140,33 +147,39 @@ async fn test_oauth_callback_with_valid_code_creates_new_user() {
 #[actix_web::test]
 async fn test_oauth_callback_with_invalid_code_returns_error() {
     // Configure mock OAuth service to fail on token exchange
-    let mock_oauth = MockGoogleOAuthService::new()
-        .with_exchange_failure();
-    
-    let ctx = TestContext::builder()
-        .with_oauth(mock_oauth)
-        .build()
-        .await;
+    let mock_oauth = MockGoogleOAuthService::new().with_exchange_failure();
+
+    let ctx = TestContext::builder().with_oauth(mock_oauth).build().await;
 
     // First, get the OAuth URL to generate a valid state parameter
-    let mut url_resp = ctx.server.get("/backend/public/auth/google/url")
+    let mut url_resp = ctx
+        .server
+        .get("/backend/public/auth/google/url")
         .send()
         .await
         .unwrap();
     assert_eq!(url_resp.status(), 200);
-    
+
     let url_body: serde_json::Value = url_resp.json().await.unwrap();
     let url = url_body["url"].as_str().unwrap();
-    
+
     // Extract state parameter from URL
-    let state = url.split("state=").nth(1).unwrap().split("&").next().unwrap();
+    let state = url
+        .split("state=")
+        .nth(1)
+        .unwrap()
+        .split("&")
+        .next()
+        .unwrap();
 
     let payload = json!({
         "code": "invalid_code",
         "state": state
     });
 
-    let resp = ctx.server.post("/backend/public/auth/google/callback")
+    let resp = ctx
+        .server
+        .post("/backend/public/auth/google/callback")
         .send_json(&payload)
         .await
         .unwrap();
@@ -181,7 +194,9 @@ async fn test_oauth_callback_missing_code_returns_bad_request() {
 
     let payload = json!({});
 
-    let resp = ctx.server.post("/backend/public/auth/google/callback")
+    let resp = ctx
+        .server
+        .post("/backend/public/auth/google/callback")
         .send_json(&payload)
         .await
         .unwrap();
@@ -204,15 +219,12 @@ async fn test_oauth_callback_links_to_existing_verified_user() {
         name: Some("Mock User".to_string()),
         email_verified: Some(true),
     };
-    
+
     let mock_oauth = MockGoogleOAuthService::new()
         .with_user_info(user_info)
         .with_access_token("mock_access_token".to_string());
-    
-    let ctx = TestContext::builder()
-        .with_oauth(mock_oauth)
-        .build()
-        .await;
+
+    let ctx = TestContext::builder().with_oauth(mock_oauth).build().await;
 
     // Create existing user with verified email (must match mock OAuth email)
     let user = ctx
@@ -220,17 +232,25 @@ async fn test_oauth_callback_links_to_existing_verified_user() {
         .await;
 
     // First, get the OAuth URL to generate a valid state parameter
-    let mut url_resp = ctx.server.get("/backend/public/auth/google/url")
+    let mut url_resp = ctx
+        .server
+        .get("/backend/public/auth/google/url")
         .send()
         .await
         .unwrap();
     assert_eq!(url_resp.status(), 200);
-    
+
     let url_body: serde_json::Value = url_resp.json().await.unwrap();
     let url = url_body["url"].as_str().unwrap();
-    
+
     // Extract state parameter from URL
-    let state = url.split("state=").nth(1).unwrap().split("&").next().unwrap();
+    let state = url
+        .split("state=")
+        .nth(1)
+        .unwrap()
+        .split("&")
+        .next()
+        .unwrap();
 
     // Simulate OAuth callback - mock returns mock@example.com
     let payload = json!({
@@ -238,7 +258,9 @@ async fn test_oauth_callback_links_to_existing_verified_user() {
         "state": state
     });
 
-    let resp = ctx.server.post("/backend/public/auth/google/callback")
+    let resp = ctx
+        .server
+        .post("/backend/public/auth/google/callback")
         .send_json(&payload)
         .await
         .unwrap();
@@ -271,15 +293,12 @@ async fn test_oauth_callback_links_and_verifies_unverified_user() {
         name: Some("Mock User".to_string()),
         email_verified: Some(true),
     };
-    
+
     let mock_oauth = MockGoogleOAuthService::new()
         .with_user_info(user_info)
         .with_access_token("mock_access_token".to_string());
-    
-    let ctx = TestContext::builder()
-        .with_oauth(mock_oauth)
-        .build()
-        .await;
+
+    let ctx = TestContext::builder().with_oauth(mock_oauth).build().await;
 
     // Create existing user WITHOUT verified email (using mock email)
     let existing_user = ctx
@@ -287,17 +306,25 @@ async fn test_oauth_callback_links_and_verifies_unverified_user() {
         .await;
 
     // First, get the OAuth URL to generate a valid state parameter
-    let mut url_resp = ctx.server.get("/backend/public/auth/google/url")
+    let mut url_resp = ctx
+        .server
+        .get("/backend/public/auth/google/url")
         .send()
         .await
         .unwrap();
     assert_eq!(url_resp.status(), 200);
-    
+
     let url_body: serde_json::Value = url_resp.json().await.unwrap();
     let url = url_body["url"].as_str().unwrap();
-    
+
     // Extract state parameter from URL
-    let state = url.split("state=").nth(1).unwrap().split("&").next().unwrap();
+    let state = url
+        .split("state=")
+        .nth(1)
+        .unwrap()
+        .split("&")
+        .next()
+        .unwrap();
 
     // Simulate OAuth callback - mock returns mock@example.com
     // Google has verified this email, so we should link and verify the account
@@ -306,7 +333,9 @@ async fn test_oauth_callback_links_and_verifies_unverified_user() {
         "state": state
     });
 
-    let mut resp = ctx.server.post("/backend/public/auth/google/callback")
+    let mut resp = ctx
+        .server
+        .post("/backend/public/auth/google/callback")
         .send_json(&payload)
         .await
         .unwrap();
@@ -347,15 +376,12 @@ async fn test_oauth_callback_existing_google_user_logs_in() {
         name: Some("Mock User".to_string()),
         email_verified: Some(true),
     };
-    
+
     let mock_oauth = MockGoogleOAuthService::new()
         .with_user_info(user_info)
         .with_access_token("mock_access_token".to_string());
-    
-    let ctx = TestContext::builder()
-        .with_oauth(mock_oauth)
-        .build()
-        .await;
+
+    let ctx = TestContext::builder().with_oauth(mock_oauth).build().await;
 
     // Create user with Google OAuth already linked (using mock Google ID)
     let _user = ctx
@@ -363,17 +389,25 @@ async fn test_oauth_callback_existing_google_user_logs_in() {
         .await;
 
     // First, get the OAuth URL to generate a valid state parameter
-    let mut url_resp = ctx.server.get("/backend/public/auth/google/url")
+    let mut url_resp = ctx
+        .server
+        .get("/backend/public/auth/google/url")
         .send()
         .await
         .unwrap();
     assert_eq!(url_resp.status(), 200);
-    
+
     let url_body: serde_json::Value = url_resp.json().await.unwrap();
     let url = url_body["url"].as_str().unwrap();
-    
+
     // Extract state parameter from URL
-    let state = url.split("state=").nth(1).unwrap().split("&").next().unwrap();
+    let state = url
+        .split("state=")
+        .nth(1)
+        .unwrap()
+        .split("&")
+        .next()
+        .unwrap();
 
     // Simulate OAuth callback - mock returns mock_google_user_id
     let payload = json!({
@@ -381,7 +415,9 @@ async fn test_oauth_callback_existing_google_user_logs_in() {
         "state": state
     });
 
-    let mut resp = ctx.server.post("/backend/public/auth/google/callback")
+    let mut resp = ctx
+        .server
+        .post("/backend/public/auth/google/callback")
         .send_json(&payload)
         .await
         .unwrap();
@@ -409,7 +445,9 @@ async fn test_oauth_callback_validates_csrf_token() {
         "code": "csrf_test_code",
     });
 
-    let resp = ctx.server.post("/backend/public/auth/google/callback")
+    let resp = ctx
+        .server
+        .post("/backend/public/auth/google/callback")
         .send_json(&payload)
         .await
         .unwrap();
@@ -431,35 +469,42 @@ async fn test_oauth_assigns_email_verified_role_to_new_users() {
         name: Some("New OAuth User".to_string()),
         email_verified: Some(true),
     };
-    
+
     let mock_oauth = MockGoogleOAuthService::new()
         .with_user_info(user_info)
         .with_access_token("mock_access_token".to_string());
-    
-    let ctx = TestContext::builder()
-        .with_oauth(mock_oauth)
-        .build()
-        .await;
+
+    let ctx = TestContext::builder().with_oauth(mock_oauth).build().await;
 
     // First, get the OAuth URL to generate a valid state parameter
-    let mut url_resp = ctx.server.get("/backend/public/auth/google/url")
+    let mut url_resp = ctx
+        .server
+        .get("/backend/public/auth/google/url")
         .send()
         .await
         .unwrap();
     assert_eq!(url_resp.status(), 200);
-    
+
     let url_body: serde_json::Value = url_resp.json().await.unwrap();
     let url = url_body["url"].as_str().unwrap();
-    
+
     // Extract state parameter from URL
-    let state = url.split("state=").nth(1).unwrap().split("&").next().unwrap();
+    let state = url
+        .split("state=")
+        .nth(1)
+        .unwrap()
+        .split("&")
+        .next()
+        .unwrap();
 
     let payload = json!({
         "code": "new_oauth_user_code",
         "state": state
     });
 
-    let mut resp = ctx.server.post("/backend/public/auth/google/callback")
+    let mut resp = ctx
+        .server
+        .post("/backend/public/auth/google/callback")
         .send_json(&payload)
         .await
         .unwrap();
@@ -471,7 +516,9 @@ async fn test_oauth_assigns_email_verified_role_to_new_users() {
     let token = body["token"].as_str().unwrap();
 
     // Decode JWT to get user ID (or use /me endpoint)
-    let mut me_resp = ctx.server.get("/backend/protected/auth/me")
+    let mut me_resp = ctx
+        .server
+        .get("/backend/protected/auth/me")
         .insert_header(("Authorization", format!("Bearer {}", token)))
         .send()
         .await

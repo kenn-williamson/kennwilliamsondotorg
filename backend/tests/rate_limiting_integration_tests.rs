@@ -1,8 +1,8 @@
 use serde_json::json;
 use testcontainers::{
+    GenericImage,
     core::{IntoContainerPort, WaitFor},
     runners::AsyncRunner,
-    GenericImage,
 };
 
 mod fixtures;
@@ -17,15 +17,15 @@ async fn test_rate_limiting_blocks_excessive_requests() {
         .with_exposed_port(6379.tcp())
         .with_wait_for(WaitFor::message_on_stdout("Ready to accept connections"));
 
-    let _redis_container = redis_image.start().await.expect("Failed to start Redis container");
+    let _redis_container = redis_image
+        .start()
+        .await
+        .expect("Failed to start Redis container");
     let redis_port = _redis_container.get_host_port_ipv4(6379).await.unwrap();
     let redis_url = format!("redis://127.0.0.1:{}", redis_port);
 
     // Create test app with Redis-backed rate limiting
-    let ctx = TestContext::builder()
-        .with_redis(redis_url)
-        .build()
-        .await;
+    let ctx = TestContext::builder().with_redis(redis_url).build().await;
 
     // Make multiple rapid requests to trigger rate limiting
     // Registration endpoint has very restrictive limits (3/hour, 1 burst)
@@ -36,7 +36,9 @@ async fn test_rate_limiting_blocks_excessive_requests() {
     });
 
     // First request should succeed
-    let resp = ctx.server.post("/backend/public/auth/register")
+    let resp = ctx
+        .server
+        .post("/backend/public/auth/register")
         .send_json(&request_body)
         .await
         .unwrap();
@@ -51,11 +53,13 @@ async fn test_rate_limiting_blocks_excessive_requests() {
         "display_name": "Test User 2"
     });
 
-    let resp2 = ctx.server.post("/backend/public/auth/register")
+    let resp2 = ctx
+        .server
+        .post("/backend/public/auth/register")
         .send_json(&request_body2)
         .await
         .unwrap();
-    
+
     // Should be rate limited
     assert_eq!(resp2.status(), 429); // Too Many Requests
 }
@@ -67,18 +71,20 @@ async fn test_rate_limiting_allows_normal_usage() {
         .with_exposed_port(6379.tcp())
         .with_wait_for(WaitFor::message_on_stdout("Ready to accept connections"));
 
-    let _redis_container = redis_image.start().await.expect("Failed to start Redis container");
+    let _redis_container = redis_image
+        .start()
+        .await
+        .expect("Failed to start Redis container");
     let redis_port = _redis_container.get_host_port_ipv4(6379).await.unwrap();
     let redis_url = format!("redis://127.0.0.1:{}", redis_port);
 
-    let ctx = TestContext::builder()
-        .with_redis(redis_url)
-        .build()
-        .await;
+    let ctx = TestContext::builder().with_redis(redis_url).build().await;
 
     // Test that normal usage patterns work
     // Health endpoint has generous limits (300/hour, 50 burst)
-    let resp = ctx.server.get("/backend/public/health")
+    let resp = ctx
+        .server
+        .get("/backend/public/health")
         .send()
         .await
         .unwrap();
@@ -87,7 +93,9 @@ async fn test_rate_limiting_allows_normal_usage() {
 
     // Multiple health checks should work fine
     for _ in 0..5 {
-        let resp = ctx.server.get("/backend/public/health")
+        let resp = ctx
+            .server
+            .get("/backend/public/health")
             .send()
             .await
             .unwrap();
@@ -102,14 +110,14 @@ async fn test_rate_limiting_different_endpoints_have_different_limits() {
         .with_exposed_port(6379.tcp())
         .with_wait_for(WaitFor::message_on_stdout("Ready to accept connections"));
 
-    let _redis_container = redis_image.start().await.expect("Failed to start Redis container");
+    let _redis_container = redis_image
+        .start()
+        .await
+        .expect("Failed to start Redis container");
     let redis_port = _redis_container.get_host_port_ipv4(6379).await.unwrap();
     let redis_url = format!("redis://127.0.0.1:{}", redis_port);
 
-    let ctx = TestContext::builder()
-        .with_redis(redis_url)
-        .build()
-        .await;
+    let ctx = TestContext::builder().with_redis(redis_url).build().await;
 
     // Test that different endpoints have different rate limits
     // Registration is very restrictive
@@ -119,7 +127,9 @@ async fn test_rate_limiting_different_endpoints_have_different_limits() {
         "display_name": "Test User"
     });
 
-    let resp = ctx.server.post("/backend/public/auth/register")
+    let resp = ctx
+        .server
+        .post("/backend/public/auth/register")
         .send_json(&request_body)
         .await
         .unwrap();
@@ -132,14 +142,18 @@ async fn test_rate_limiting_different_endpoints_have_different_limits() {
         "display_name": "Test User 2"
     });
 
-    let resp2 = ctx.server.post("/backend/public/auth/register")
+    let resp2 = ctx
+        .server
+        .post("/backend/public/auth/register")
         .send_json(&request_body2)
         .await
         .unwrap();
     assert_eq!(resp2.status(), 429);
 
     // But health checks should still work (different endpoint)
-    let resp3 = ctx.server.get("/backend/public/health")
+    let resp3 = ctx
+        .server
+        .get("/backend/public/health")
         .send()
         .await
         .unwrap();

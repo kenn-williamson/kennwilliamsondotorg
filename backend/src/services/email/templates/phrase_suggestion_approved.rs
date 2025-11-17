@@ -137,7 +137,10 @@ mod tests {
 
         let subject = template.subject();
 
-        assert_eq!(subject, "Your Phrase Suggestion Was Approved! - KennWilliamson.org");
+        assert_eq!(
+            subject,
+            "Your Phrase Suggestion Was Approved! - KennWilliamson.org"
+        );
     }
 
     #[test]

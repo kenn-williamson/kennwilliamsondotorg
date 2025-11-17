@@ -168,17 +168,20 @@ mod tests {
             password_reset_history: vec![],
             email_suppression: None,
         };
-        
+
         // Test that serialization works
         let json_result = serde_json::to_string(&export_data);
         assert!(json_result.is_ok());
-        
+
         let json_string = json_result.unwrap();
         let parsed: serde_json::Value = serde_json::from_str(&json_string).unwrap();
-        
+
         // Verify required fields are present
         assert!(parsed.get("export_date").is_some());
-        assert_eq!(parsed.get("export_version").unwrap().as_str().unwrap(), "2.0");
+        assert_eq!(
+            parsed.get("export_version").unwrap().as_str().unwrap(),
+            "2.0"
+        );
         assert!(parsed.get("user").is_some());
         assert!(parsed.get("authentication").is_some());
         assert!(parsed.get("external_logins").is_some());
@@ -243,7 +246,7 @@ mod tests {
                 password_last_changed: None,
             },
             external_logins: vec![],
-            profile: None, // Test optional field
+            profile: None,     // Test optional field
             preferences: None, // Test optional field
             incident_timers: vec![],
             phrase_suggestions: vec![],
@@ -253,14 +256,14 @@ mod tests {
             password_reset_history: vec![],
             email_suppression: None,
         };
-        
+
         // Test serialization with optional fields as None
         let json_result = serde_json::to_string(&export_data);
         assert!(json_result.is_ok());
-        
+
         let json_string = json_result.unwrap();
         let parsed: serde_json::Value = serde_json::from_str(&json_string).unwrap();
-        
+
         // Verify optional fields are handled correctly
         assert!(parsed.get("profile").unwrap().is_null()); // Should be null in JSON
         assert!(parsed.get("preferences").unwrap().is_null()); // Should be null in JSON
@@ -286,13 +289,13 @@ mod tests {
             created_at: Utc::now(),
             updated_at: Utc::now(),
         };
-        
+
         let json_result = serde_json::to_string(&timer_data);
         assert!(json_result.is_ok());
-        
+
         let json_string = json_result.unwrap();
         let parsed: serde_json::Value = serde_json::from_str(&json_string).unwrap();
-        
+
         assert!(parsed.get("id").is_some());
         assert!(parsed.get("reset_timestamp").is_some());
         assert!(parsed.get("notes").is_some());
@@ -312,13 +315,13 @@ mod tests {
             created_at: Utc::now(),
             updated_at: Utc::now(),
         };
-        
+
         let json_result = serde_json::to_string(&suggestion_data);
         assert!(json_result.is_ok());
-        
+
         let json_string = json_result.unwrap();
         let parsed: serde_json::Value = serde_json::from_str(&json_string).unwrap();
-        
+
         assert!(parsed.get("id").is_some());
         assert!(parsed.get("user_id").is_some());
         assert!(parsed.get("phrase_text").is_some());
@@ -342,19 +345,19 @@ mod tests {
             last_used_at: Some(Utc::now()),
             expires_at: Utc::now() + chrono::Duration::days(7),
         };
-        
+
         let json_result = serde_json::to_string(&session_data);
         assert!(json_result.is_ok());
-        
+
         let json_string = json_result.unwrap();
         let parsed: serde_json::Value = serde_json::from_str(&json_string).unwrap();
-        
+
         assert!(parsed.get("id").is_some());
         assert!(parsed.get("device_info").is_some());
         assert!(parsed.get("created_at").is_some());
         assert!(parsed.get("last_used_at").is_some());
         assert!(parsed.get("expires_at").is_some());
-        
+
         // Verify device_info is properly serialized
         let device_info = parsed.get("device_info").unwrap();
         assert!(device_info.get("user_agent").is_some());
@@ -362,5 +365,3 @@ mod tests {
         assert!(device_info.get("timestamp").is_some());
     }
 }
-
-

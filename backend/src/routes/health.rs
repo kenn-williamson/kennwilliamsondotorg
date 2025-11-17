@@ -1,4 +1,4 @@
-use actix_web::{web, HttpResponse, Result};
+use actix_web::{HttpResponse, Result, web};
 use sqlx::PgPool;
 
 pub async fn health() -> Result<HttpResponse> {

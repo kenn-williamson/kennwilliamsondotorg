@@ -1,6 +1,6 @@
 use anyhow::Result;
 use chrono::{Duration, Utc};
-use jsonwebtoken::{decode, encode, DecodingKey, EncodingKey, Header, TokenData, Validation};
+use jsonwebtoken::{DecodingKey, EncodingKey, Header, TokenData, Validation, decode, encode};
 use serde::{Deserialize, Serialize};
 
 use crate::models::db::User;
@@ -151,11 +151,7 @@ mod tests {
     async fn preserves_role_order_in_token() -> Result<()> {
         let jwt_service = JwtService::new("test-secret".to_string());
         let user = create_test_user();
-        let roles = vec![
-            "zebra".to_string(),
-            "admin".to_string(),
-            "user".to_string(),
-        ];
+        let roles = vec!["zebra".to_string(), "admin".to_string(), "user".to_string()];
 
         let token = jwt_service.generate_token(&user, &roles)?;
         let claims = jwt_service.verify_token(&token).await?;

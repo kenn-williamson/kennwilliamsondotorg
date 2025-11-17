@@ -1,8 +1,8 @@
+use backend::repositories::mocks::MockEmailSuppressionRepository;
+use backend::repositories::traits::email_suppression_repository::EmailSuppressionRepository;
 /// Phase 3 Unit Tests: SNS Webhook Message Handling
 /// Tests the logic for parsing and processing SNS notifications (bounces, complaints)
 use backend::services::webhooks::sns_handler::{SnsHandler, SnsMessage};
-use backend::repositories::mocks::MockEmailSuppressionRepository;
-use backend::repositories::traits::email_suppression_repository::EmailSuppressionRepository;
 use chrono::Utc;
 
 #[tokio::test]
@@ -126,10 +126,16 @@ async fn test_parse_soft_bounce_notification() {
         .await
         .unwrap();
 
-    assert!(suppression.is_some(), "First soft bounce should create tracking entry");
+    assert!(
+        suppression.is_some(),
+        "First soft bounce should create tracking entry"
+    );
     let suppression = suppression.unwrap();
     assert_eq!(suppression.suppression_type, "soft_bounce");
-    assert!(!suppression.suppress_transactional, "First soft bounce should not suppress");
+    assert!(
+        !suppression.suppress_transactional,
+        "First soft bounce should not suppress"
+    );
     assert_eq!(suppression.bounce_count, 1);
 }
 
@@ -141,13 +147,15 @@ async fn test_soft_bounce_threshold_creates_suppression() {
 
     // Create initial soft bounce suppression entry (for tracking)
     suppression_repo
-        .create_suppression(&backend::repositories::traits::email_suppression_repository::CreateSuppressionData {
-            email: "repeated@example.com".to_string(),
-            suppression_type: "soft_bounce".to_string(),
-            reason: Some("Tracking soft bounces".to_string()),
-            suppress_transactional: false,
-            suppress_marketing: false,
-        })
+        .create_suppression(
+            &backend::repositories::traits::email_suppression_repository::CreateSuppressionData {
+                email: "repeated@example.com".to_string(),
+                suppression_type: "soft_bounce".to_string(),
+                reason: Some("Tracking soft bounces".to_string()),
+                suppress_transactional: false,
+                suppress_marketing: false,
+            },
+        )
         .await
         .unwrap();
 
@@ -199,8 +207,14 @@ async fn test_soft_bounce_threshold_creates_suppression() {
         .unwrap();
 
     assert_eq!(suppression.bounce_count, 3);
-    assert!(suppression.suppress_transactional, "Should suppress transactional after 3 soft bounces");
-    assert!(suppression.suppress_marketing, "Should suppress marketing after 3 soft bounces");
+    assert!(
+        suppression.suppress_transactional,
+        "Should suppress transactional after 3 soft bounces"
+    );
+    assert!(
+        suppression.suppress_marketing,
+        "Should suppress marketing after 3 soft bounces"
+    );
 }
 
 #[tokio::test]
@@ -259,13 +273,15 @@ async fn test_duplicate_bounce_notification_updates_count() {
     // Given: Existing bounce suppression
     let suppression_repo = MockEmailSuppressionRepository::new();
     suppression_repo
-        .create_suppression(&backend::repositories::traits::email_suppression_repository::CreateSuppressionData {
-            email: "existing@example.com".to_string(),
-            suppression_type: "bounce".to_string(),
-            reason: Some("Initial bounce".to_string()),
-            suppress_transactional: true,
-            suppress_marketing: true,
-        })
+        .create_suppression(
+            &backend::repositories::traits::email_suppression_repository::CreateSuppressionData {
+                email: "existing@example.com".to_string(),
+                suppression_type: "bounce".to_string(),
+                reason: Some("Initial bounce".to_string()),
+                suppress_transactional: true,
+                suppress_marketing: true,
+            },
+        )
         .await
         .unwrap();
 
