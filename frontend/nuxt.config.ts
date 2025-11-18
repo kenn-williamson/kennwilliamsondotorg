@@ -40,7 +40,7 @@ export default defineNuxtConfig({
     },
     // Server-side API base URL (for internal Docker network)
     apiBase: process.env.NUXT_API_BASE || 'http://backend:8080/backend',
-    
+
     public: {
       // Client-side environment variables
       apiBase: process.env.NUXT_PUBLIC_API_BASE || 'https://localhost/backend',

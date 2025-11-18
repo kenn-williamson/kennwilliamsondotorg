@@ -184,7 +184,8 @@ pub fn configure_app_routes(cfg: &mut web::ServiceConfig) {
                                     web::scope("/blog")
                                         .route("/posts", web::post().to(blog::create_post))
                                         .route("/posts/{id}", web::put().to(blog::update_post))
-                                        .route("/posts/{id}", web::delete().to(blog::delete_post)),
+                                        .route("/posts/{id}", web::delete().to(blog::delete_post))
+                                        .route("/upload-image", web::post().to(blog::upload_image)),
                                 ),
                         ),
                 ),

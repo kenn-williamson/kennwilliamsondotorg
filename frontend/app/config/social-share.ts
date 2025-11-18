@@ -33,10 +33,14 @@ export const SOCIAL_SHARE_CONFIG = {
       image: '/images/timer-share.jpg',
       description: 'Track incident-free time with a steampunk-themed timer. Browse community timers or create your own with real-time updates, historical data, and shareable links. Beautiful, useful, and actually built.',
     },
+    '/blog': {
+      image: '/images/blog-share.jpg',
+      description: 'Thoughts on Christian Voluntarism, technology, and personal growth from Kenn Williamson',
+    },
   },
 } as const
 
-export type ShareImageKey = 'homepage' | 'personal' | 'professional' | 'timer' | 'project'
+export type ShareImageKey = 'homepage' | 'personal' | 'professional' | 'timer' | 'project' | 'blog'
 
 export const SHARE_IMAGES: Record<ShareImageKey, string> = {
   homepage: '/images/homepage-share.jpg',
@@ -44,4 +48,5 @@ export const SHARE_IMAGES: Record<ShareImageKey, string> = {
   professional: '/images/professional-share.jpg',
   timer: '/images/timer-share.jpg',
   project: '/images/project-share.jpg',
+  blog: '/images/blog-share.jpg',
 }

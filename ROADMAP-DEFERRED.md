@@ -5,6 +5,28 @@ This document contains features, optimizations, and architectural improvements t
 
 ## Infrastructure & Performance (Deferred)
 
+### Analytics (Umami)
+**Deferred Reason**: No traffic to analyze - premature complexity for low/no visitor site
+**Future Trigger**: Consistent traffic growth (>100 visitors/month) justifying data-driven decisions
+
+**Components**:
+- Umami Analytics self-hosted instance
+- Blog post view tracking
+- Social share button analytics
+- User engagement metrics
+
+**Current Alternative**: LinkedIn engagement metrics (likes, comments, shares) provide better early validation of blog content quality than site analytics on a low-traffic site.
+
+**Deferred Rationale**:
+- Zero traffic means no meaningful data to analyze
+- Resource constraint - saves 150-200MB RAM on t3.small (2GB) instance
+- Deployment complexity - subpath routing requires custom Docker build, subdomain adds DNS/cert overhead
+- LinkedIn metrics answer the important early question: "Is this content resonating?"
+- Analytics become valuable later for understanding user behavior, content patterns, and conversion rates
+- Can add quickly when traffic justifies the operational overhead
+
+**Technical Note**: If/when implemented, use subdomain approach (analytics.kennwilliamson.org) rather than subpath (/analytics) to avoid BASE_PATH build-time complexity.
+
 ### Caching Strategy
 **Deferred Reason**: Premature optimization for 3-user example project
 **Future Trigger**: When user base grows significantly or performance becomes an actual bottleneck

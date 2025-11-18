@@ -37,6 +37,13 @@ export const API_ROUTES = {
       BY_USER_SLUG: (userSlug: string) => `/public/${userSlug}/phrase`,
     },
     PUBLIC_TIMER_LIST: '/public/public-timers',
+    BLOG: {
+      POSTS: '/public/blog/posts',
+      POST_BY_SLUG: (slug: string) => `/public/blog/posts/${slug}`,
+      SEARCH: '/public/blog/search',
+      TAGS: '/public/blog/tags',
+      FEED: '/public/blog/feed.xml',
+    },
   },
 
   /**
@@ -98,6 +105,11 @@ export const API_ROUTES = {
         LIST: '/protected/admin/access-requests',
         APPROVE: (id: string) => `/protected/admin/access-requests/${id}/approve`,
         REJECT: (id: string) => `/protected/admin/access-requests/${id}/reject`,
+      },
+      BLOG: {
+        POSTS: '/protected/admin/blog/posts',
+        POST_BY_ID: (id: string) => `/protected/admin/blog/posts/${id}`,
+        UPLOAD_IMAGE: '/protected/admin/blog/upload-image',
       },
     },
   },

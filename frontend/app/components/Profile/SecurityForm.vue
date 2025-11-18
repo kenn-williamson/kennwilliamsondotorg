@@ -8,7 +8,6 @@
       <Field
         name="currentPassword"
         type="password"
-        v-model="form.current_password"
         :class="[
           'w-full px-4 py-3 border rounded-md focus:ring-2 focus:ring-sky-500 focus:border-transparent transition-colors duration-200',
           errors.currentPassword ? 'border-red-300 bg-red-50' : 'border-nautical-300'
@@ -45,7 +44,6 @@
       <Field
         name="newPassword"
         type="password"
-        v-model="form.new_password"
         :class="[
           'w-full px-4 py-3 border rounded-md focus:ring-2 focus:ring-sky-500 focus:border-transparent transition-colors duration-200',
           errors.newPassword ? 'border-red-300 bg-red-50' : 'border-nautical-300'
@@ -82,7 +80,6 @@
       <Field
         name="confirmPassword"
         type="password"
-        v-model="form.confirm_password"
         :class="[
           'w-full px-4 py-3 border rounded-md focus:ring-2 focus:ring-sky-500 focus:border-transparent transition-colors duration-200',
           errors.confirmPassword ? 'border-red-300 bg-red-50' : 'border-nautical-300'
@@ -133,7 +130,7 @@ const { changePassword, setPassword, isLoading, error, hasError } = useAuthProfi
 const hasCredentials = computed(() => user.value?.has_credentials ?? true)
 
 // Form setup - use appropriate schema based on has_credentials
-const { handleSubmit, errors, isSubmitting, setFieldValue, values } = useForm({
+const { handleSubmit, errors, isSubmitting, setFieldValue, values, resetForm } = useForm({
   validationSchema: hasCredentials.value ? passwordChangeSchema : setPasswordSchema,
   initialValues: hasCredentials.value ? {
     currentPassword: '',
@@ -145,16 +142,9 @@ const { handleSubmit, errors, isSubmitting, setFieldValue, values } = useForm({
   }
 })
 
-// Reactive form data
-const form = ref({
-  current_password: '',
-  new_password: '',
-  confirm_password: ''
-})
-
 // Password validation checks
 const passwordChecks = computed(() => {
-  const password = form.value.new_password || ''
+  const password = values.newPassword || ''
   return {
     length: password.length >= 8,
     lowercase: /[a-z]/.test(password),
@@ -165,8 +155,8 @@ const passwordChecks = computed(() => {
 
 // Form validation - different requirements based on has_credentials
 const isFormValid = computed(() => {
-  const baseValid = form.value.new_password &&
-                   form.value.confirm_password &&
+  const baseValid = values.newPassword &&
+                   values.confirmPassword &&
                    !errors.value.newPassword &&
                    !errors.value.confirmPassword &&
                    passwordChecks.value.length &&
@@ -175,7 +165,7 @@ const isFormValid = computed(() => {
                    passwordChecks.value.number
 
   if (hasCredentials.value) {
-    return baseValid && form.value.current_password && !errors.value.currentPassword
+    return baseValid && values.currentPassword && !errors.value.currentPassword
   }
 
   return baseValid
@@ -197,28 +187,12 @@ const onSubmit = handleSubmit(async (values) => {
       })
     }
 
-    // Clear form
-    form.value.current_password = ''
-    form.value.new_password = ''
-    form.value.confirm_password = ''
-    if (hasCredentials.value) {
-      setFieldValue('currentPassword', '')
-    }
-    setFieldValue('newPassword', '')
-    setFieldValue('confirmPassword', '')
+    // Clear form using resetForm
+    resetForm()
 
   } catch (error) {
     console.error('Password change/set error:', error)
     // Error handling is managed by the service
   }
 })
-
-// Watch form values for validation
-watch(form, (newForm) => {
-  if (hasCredentials.value) {
-    setFieldValue('currentPassword', newForm.current_password)
-  }
-  setFieldValue('newPassword', newForm.new_password)
-  setFieldValue('confirmPassword', newForm.confirm_password)
-}, { deep: true })
 </script>

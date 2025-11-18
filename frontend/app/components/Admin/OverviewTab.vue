@@ -112,6 +112,35 @@
           </div>
         </div>
       </div>
+
+      <!-- Quick Actions Section -->
+      <div>
+        <h2 class="text-lg font-semibold text-nautical-900 mb-4">Quick Actions</h2>
+        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+          <!-- Blog Management -->
+          <NuxtLink
+            to="/admin/blog"
+            class="bg-white rounded-lg shadow-sm border border-nautical-200 p-6 hover:shadow-md hover:border-sky-300 transition-all group"
+          >
+            <div class="flex items-center justify-between">
+              <div class="flex items-center">
+                <div class="flex-shrink-0">
+                  <div class="w-12 h-12 bg-sky-100 rounded-lg flex items-center justify-center group-hover:bg-sky-200 transition-colors">
+                    <span class="text-sky-600 text-2xl">📝</span>
+                  </div>
+                </div>
+                <div class="ml-4">
+                  <p class="text-base font-semibold text-nautical-900">Blog Management</p>
+                  <p class="text-sm text-nautical-500">Create & edit posts</p>
+                </div>
+              </div>
+              <svg class="w-5 h-5 text-nautical-400 group-hover:text-sky-600 transition-colors" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" />
+              </svg>
+            </div>
+          </NuxtLink>
+        </div>
+      </div>
     </div>
 
     <!-- Empty State -->

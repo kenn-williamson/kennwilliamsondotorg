@@ -8,13 +8,11 @@
       <Field
         name="displayName"
         type="text"
-        v-model="form.display_name"
         :class="[
           'w-full px-4 py-3 border rounded-md focus:ring-2 focus:ring-sky-500 focus:border-transparent transition-colors duration-200',
           errors.displayName ? 'border-red-300 bg-red-50' : 'border-nautical-300'
         ]"
         placeholder="John Doe"
-        @input="onDisplayNameChange"
       />
       <ErrorMessage name="displayName" class="text-red-600 text-sm mt-1" />
     </div>
@@ -28,7 +26,6 @@
       <Field
         name="slug"
         type="text"
-        v-model="form.slug"
         :class="[
           'w-full px-4 py-3 border rounded-md focus:ring-2 focus:ring-sky-500 focus:border-transparent transition-colors duration-200',
           errors.slug ? 'border-red-300 bg-red-50' : 'border-nautical-300'
@@ -162,12 +159,6 @@ const { handleSubmit, errors, isSubmitting, setFieldValue, values } = useForm({
   }
 })
 
-// Reactive form data
-const form = ref({
-  display_name: user.value?.display_name || '',
-  slug: user.value?.slug || ''
-})
-
 // Base URL for preview
 const baseUrl = computed(() => {
   if (process.client) {
@@ -178,21 +169,13 @@ const baseUrl = computed(() => {
 
 // Form validation
 const isFormValid = computed(() => {
-  return form.value.display_name && form.value.slug && !errors.value.displayName && !errors.value.slug
+  return values.displayName && values.slug && !errors.value.displayName && !errors.value.slug
 })
 
-// Event handlers
-const onDisplayNameChange = (event: Event) => {
-  const target = event.target as HTMLInputElement
-  form.value.display_name = target.value
-  setFieldValue('displayName', target.value)
-}
-
+// Event handler for slug changes (to trigger validation check)
 const onSlugChange = (event: Event) => {
   const target = event.target as HTMLInputElement
   const value = target.value
-  form.value.slug = value
-  setFieldValue('slug', value)
 
   // Check slug validation and uniqueness with debounce
   debouncedSlugCheck(value)
@@ -218,8 +201,6 @@ const onSubmit = handleSubmit(async (values) => {
 // Watch for user data changes
 watch(user, (newUser) => {
   if (newUser) {
-    form.value.display_name = newUser.display_name
-    form.value.slug = newUser.slug
     setFieldValue('displayName', newUser.display_name)
     setFieldValue('slug', newUser.slug)
   }

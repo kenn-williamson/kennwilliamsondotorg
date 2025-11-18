@@ -1,6 +1,8 @@
 use sqlx::PgPool;
 use std::sync::Arc;
 
+use crate::repositories::s3_image_storage::S3ImageStorage;
+
 #[cfg(feature = "mocks")]
 use crate::repositories::mocks::{
     MockAccessRequestRepository, MockAdminRepository, MockBlogRepository, MockImageStorage,
@@ -374,14 +376,20 @@ impl ServiceContainer {
 
         #[cfg(not(feature = "mocks"))]
         let blog_service = {
-            // When mocks feature is not enabled, we still need an ImageStorage
-            // Use the mock one directly from the mod (will need to make it public or create a stub)
-            // For now, this will cause a compile error - Phase 5 will implement S3ImageStorage
-            compile_error!("S3ImageStorage not yet implemented - Phase 5 requirement");
-            Arc::new(BlogService::builder()
-                .with_repository(Box::new(PostgresBlogRepository::new(pool.clone())))
-                .build()
-                .expect("Failed to build BlogService"))
+            // Get S3 bucket name from env
+            let bucket_name = std::env::var("AWS_S3_BUCKET_BLOG_IMAGES")
+                .expect("AWS_S3_BUCKET_BLOG_IMAGES must be set");
+
+            // S3ImageStorage will lazily create the S3 client when needed
+            let image_storage = S3ImageStorage::new(bucket_name);
+
+            Arc::new(
+                BlogService::builder()
+                    .with_repository(Box::new(PostgresBlogRepository::new(pool.clone())))
+                    .with_image_storage(Box::new(image_storage))
+                    .build()
+                    .expect("Failed to build BlogService"),
+            )
         };
 
         Self {

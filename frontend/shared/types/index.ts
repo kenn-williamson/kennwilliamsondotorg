@@ -29,3 +29,6 @@ export * from './api-routes'
 
 // UI types
 export * from './ui'
+
+// Blog types
+export * from './blog'

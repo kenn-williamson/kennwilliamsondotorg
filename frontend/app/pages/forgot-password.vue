@@ -42,7 +42,6 @@
               <Field
                 name="email"
                 type="email"
-                v-model="form.email"
                 :class="[
                   'w-full px-4 py-3 border rounded-md focus:ring-2 focus:ring-sky-500 focus:border-transparent transition-colors duration-200',
                   errors.email ? 'border-red-300 bg-red-50' : 'border-nautical-300'
@@ -116,11 +115,6 @@ if (loggedIn.value) {
 // Form validation schema
 const validationSchema = forgotPasswordSchema
 
-// Form state
-const form = reactive({
-  email: '',
-})
-
 const serverError = ref('')
 const emailSent = ref(false)
 
@@ -130,15 +124,17 @@ const { sendResetEmail, isLoading, error } = usePasswordResetActions()
 // Form validation composable
 const { errors, meta, handleSubmit } = useForm({
   validationSchema,
-  initialValues: form,
+  initialValues: {
+    email: '',
+  },
 })
 
-// Handle form submission
-const handleResetRequest = async () => {
+// Create the submit handler using vee-validate's handleSubmit
+const onSubmit = handleSubmit(async (values) => {
   try {
     serverError.value = ''
 
-    await sendResetEmail(form.email)
+    await sendResetEmail(values.email)
 
     // Show success state
     emailSent.value = true
@@ -148,10 +144,7 @@ const handleResetRequest = async () => {
     // Always show the same generic message (security: no user enumeration)
     serverError.value = 'An error occurred. Please try again.'
   }
-}
-
-// Create the submit handler using vee-validate's handleSubmit
-const onSubmit = handleSubmit(handleResetRequest)
+})
 
 // Auto-focus email field
 onMounted(() => {

@@ -52,7 +52,6 @@
               <Field
                 name="password"
                 type="password"
-                v-model="form.password"
                 :class="[
                   'w-full px-4 py-3 border rounded-md focus:ring-2 focus:ring-sky-500 focus:border-transparent transition-colors duration-200',
                   errors.password ? 'border-red-300 bg-red-50' : 'border-nautical-300'
@@ -70,7 +69,6 @@
               <Field
                 name="confirmPassword"
                 type="password"
-                v-model="form.confirmPassword"
                 :class="[
                   'w-full px-4 py-3 border rounded-md focus:ring-2 focus:ring-sky-500 focus:border-transparent transition-colors duration-200',
                   errors.confirmPassword ? 'border-red-300 bg-red-50' : 'border-nautical-300'
@@ -147,19 +145,16 @@ const resetToken = ref('')
 // Form validation schema
 const validationSchema = resetPasswordSchema
 
-// Form state
-const form = reactive({
-  password: '',
-  confirmPassword: '',
-})
-
 // Password reset actions
 const { resetPassword, isLoading } = usePasswordResetActions()
 
 // Form validation composable
 const { errors, meta, handleSubmit } = useForm({
   validationSchema,
-  initialValues: form,
+  initialValues: {
+    password: '',
+    confirmPassword: '',
+  },
 })
 
 // Verify token exists on mount
@@ -184,12 +179,12 @@ onMounted(async () => {
   }
 })
 
-// Handle form submission
-const handlePasswordReset = async () => {
+// Create the submit handler using vee-validate's handleSubmit
+const onSubmit = handleSubmit(async (values) => {
   try {
     serverError.value = ''
 
-    await resetPassword(resetToken.value, form.password)
+    await resetPassword(resetToken.value, values.password)
 
     // Show success state
     resetStatus.value = 'success'
@@ -208,10 +203,7 @@ const handlePasswordReset = async () => {
       serverError.value = error.message || 'Password reset failed. Please try again.'
     }
   }
-}
-
-// Create the submit handler using vee-validate's handleSubmit
-const onSubmit = handleSubmit(handlePasswordReset)
+})
 </script>
 
 <style scoped>

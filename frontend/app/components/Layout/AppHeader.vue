@@ -31,6 +31,13 @@
               About
             </NuxtLink>
             <NuxtLink
+              to="/blog"
+              class="nav-link"
+              :class="{ 'nav-link-active': $route.path.startsWith('/blog') }"
+            >
+              Blog
+            </NuxtLink>
+            <NuxtLink
               to="/project"
               class="nav-link"
               :class="{ 'nav-link-active': $route.path === '/project' }"
@@ -144,6 +151,13 @@
             @click="showMobileMenu = false"
           >
             About
+          </NuxtLink>
+          <NuxtLink
+            to="/blog"
+            class="mobile-nav-link"
+            @click="showMobileMenu = false"
+          >
+            Blog
           </NuxtLink>
           <NuxtLink
             to="/project"

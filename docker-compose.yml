@@ -123,32 +123,6 @@ services:
         max-size: "10m"
         max-file: "3"
 
-  # Umami Analytics (Privacy-focused, self-hosted)
-  umami:
-    image: ghcr.io/umami-software/umami:latest
-    environment:
-      DATABASE_URL: postgresql://${DB_USER:-postgres}:${DB_PASSWORD:-password}@postgres:5432/umami
-      DATABASE_TYPE: postgresql
-      APP_SECRET: ${UMAMI_APP_SECRET}
-      CORS_ALLOWED_ORIGINS: ${UMAMI_CORS_ORIGINS:-https://kennwilliamson.org}
-    ports:
-      - "3001:3000"  # External 3001 to avoid conflict with Nuxt dev server (internal 3000)
-    depends_on:
-      postgres:
-        condition: service_healthy
-    restart: unless-stopped
-    deploy:
-      resources:
-        limits:
-          memory: 200m
-        reservations:
-          memory: 150m
-    logging:
-      driver: "json-file"
-      options:
-        max-size: "10m"
-        max-file: "3"
-
   # Nginx Reverse Proxy
   nginx:
     image: nginx:alpine
@@ -166,7 +140,6 @@ services:
       - frontend
       - backend
       - redis
-      - umami
     restart: unless-stopped
     deploy:
       resources:

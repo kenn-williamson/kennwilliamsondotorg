@@ -188,4 +188,28 @@ impl BlogService {
     pub async fn delete_post(&self, id: uuid::Uuid) -> Result<()> {
         delete::delete_post(self, id).await
     }
+
+    // --- Image Operations ---
+
+    /// Upload blog featured image
+    ///
+    /// Handles:
+    /// - Image validation (size, format)
+    /// - Filename sanitization
+    /// - Image processing (resize, compress)
+    /// - S3 upload (featured + original)
+    ///
+    /// # Errors
+    ///
+    /// Returns error if:
+    /// - Image exceeds 5MB limit
+    /// - Invalid image format
+    /// - S3 upload fails
+    pub async fn upload_image(
+        &self,
+        image_data: Vec<u8>,
+        filename: String,
+    ) -> Result<crate::repositories::traits::ImageUrls> {
+        self.image_storage.upload_image(image_data, filename).await
+    }
 }

@@ -31,7 +31,6 @@
             <Field
               name="email"
               type="email"
-              v-model="form.email"
               :class="[
                 'w-full px-4 py-3 border rounded-md focus:ring-2 focus:ring-sky-500 focus:border-transparent transition-colors duration-200',
                 errors.email ? 'border-red-300 bg-red-50' : 'border-nautical-300'
@@ -57,7 +56,6 @@
             <Field
               name="password"
               type="password"
-              v-model="form.password"
               :class="[
                 'w-full px-4 py-3 border rounded-md focus:ring-2 focus:ring-sky-500 focus:border-transparent transition-colors duration-200',
                 errors.password ? 'border-red-300 bg-red-50' : 'border-nautical-300'
@@ -133,12 +131,6 @@ if (loggedIn.value) {
 // Form validation schema
 const validationSchema = loginSchema
 
-// Form state
-const form = reactive({
-  email: '',
-  password: '',
-})
-
 const serverError = ref('')
 
 // Auth actions
@@ -147,34 +139,37 @@ const { login, isLoading, error } = useAuthActions()
 // Form validation composable
 const { errors, meta, handleSubmit } = useForm({
   validationSchema,
-  initialValues: form,
+  initialValues: {
+    email: '',
+    password: '',
+  },
 })
 
-// Handle form submission
-const handleLogin = async () => {
+// Create the submit handler using vee-validate's handleSubmit
+const onSubmit = handleSubmit(async (values) => {
   try {
     serverError.value = ''
 
     const result = await login({
-      email: form.email,
-      password: form.password,
+      email: values.email,
+      password: values.password,
     })
 
     if (result.success) {
       // Get redirect parameter from URL or default to homepage
       const route = useRoute()
       const redirectTo = String(route.query.redirect || '/')
-      
+
       // Validate redirect to prevent open redirects
       const isValidRedirect = redirectTo.startsWith('/') && !redirectTo.startsWith('//')
       const targetPath = isValidRedirect ? redirectTo : '/'
-      
+
       console.log('Login successful, redirecting to:', targetPath)
       await router.push(targetPath)
     }
   } catch (error) {
     console.error('Login error:', error)
-    
+
     // Handle specific error types
     if (error.statusCode === 401) {
       serverError.value = 'Invalid email or password. Please try again.'
@@ -184,10 +179,7 @@ const handleLogin = async () => {
       serverError.value = error.message || 'Login failed. Please try again.'
     }
   }
-}
-
-// Create the submit handler using vee-validate's handleSubmit
-const onSubmit = handleSubmit(handleLogin)
+})
 
 // Auto-focus email field
 onMounted(() => {

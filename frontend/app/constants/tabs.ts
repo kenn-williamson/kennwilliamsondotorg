@@ -87,6 +87,31 @@ export const ADMIN_TABS = {
   default: 'overview' as const
 } as const
 
+/**
+ * Blog Admin Page Tabs
+ */
+export const BLOG_ADMIN_TABS = {
+  tabs: [
+    {
+      id: 'list',
+      label: 'All Posts',
+      icon: '📋'
+    },
+    {
+      id: 'editor',
+      label: 'Create/Edit',
+      icon: '✍️'
+    }
+  ] as const satisfies readonly Tab[],
+
+  get ids() {
+    return this.tabs.map(t => t.id) as readonly string[]
+  },
+
+  default: 'list' as const
+} as const
+
 // Type exports for type-safe usage
 export type IncidentTabId = typeof INCIDENT_TABS.tabs[number]['id']
 export type AdminTabId = typeof ADMIN_TABS.tabs[number]['id']
+export type BlogAdminTabId = typeof BLOG_ADMIN_TABS.tabs[number]['id']

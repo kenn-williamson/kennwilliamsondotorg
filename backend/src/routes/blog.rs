@@ -4,8 +4,10 @@
 /// - Public endpoints for viewing published posts
 /// - Admin endpoints for CRUD operations
 /// - Image upload handling
+use actix_multipart::Multipart;
 use actix_web::{HttpMessage, HttpRequest, HttpResponse, Result as ActixResult, web};
-use serde::Deserialize;
+use futures_util::StreamExt;
+use serde::{Deserialize, Serialize};
 use uuid::Uuid;
 
 use crate::middleware::auth::AuthContext;
@@ -236,6 +238,91 @@ pub async fn delete_post(
             Ok(HttpResponse::InternalServerError().json(serde_json::json!({
                 "error": "Internal server error"
             })))
+        }
+    }
+}
+
+/// Response for image upload
+#[derive(Serialize)]
+struct ImageUploadResponse {
+    url: String,
+    original_url: String,
+}
+
+/// POST /backend/protected/admin/blog/upload-image
+/// Upload blog featured image (admin only)
+pub async fn upload_image(
+    req: HttpRequest,
+    mut payload: Multipart,
+    service: web::Data<BlogService>,
+) -> ActixResult<HttpResponse> {
+    let auth_ctx = req.extensions().get::<AuthContext>().cloned().unwrap();
+
+    // Require admin role
+    auth_ctx.require_role("admin")?;
+
+    // Extract image data from multipart form
+    let mut image_data: Vec<u8> = Vec::new();
+    let mut filename = String::from("upload.jpg");
+
+    while let Some(item) = payload.next().await {
+        let mut field = item.map_err(|e| {
+            log::error!("Failed to read multipart field: {}", e);
+            actix_web::error::ErrorBadRequest("Invalid multipart data")
+        })?;
+
+        let content_disposition = field.content_disposition();
+
+        // Get the field name
+        if let Some(name) = content_disposition.get_name()
+            && name == "image"
+        {
+            // Get filename if available
+            if let Some(fname) = content_disposition.get_filename() {
+                filename = fname.to_string();
+            }
+
+            // Read the field data
+            while let Some(chunk) = field.next().await {
+                let data = chunk.map_err(|e| {
+                    log::error!("Failed to read chunk: {}", e);
+                    actix_web::error::ErrorBadRequest("Failed to read image data")
+                })?;
+                image_data.extend_from_slice(&data);
+            }
+        }
+    }
+
+    // Validate that we received image data
+    if image_data.is_empty() {
+        return Ok(HttpResponse::BadRequest().json(serde_json::json!({
+            "error": "No image data received"
+        })));
+    }
+
+    // Upload image via ImageStorage (S3)
+    match service.upload_image(image_data, filename).await {
+        Ok(urls) => {
+            let response = ImageUploadResponse {
+                url: urls.featured_url,
+                original_url: urls.original_url,
+            };
+            Ok(HttpResponse::Ok().json(response))
+        }
+        Err(err) => {
+            let error_msg = err.to_string();
+            log::error!("Failed to upload image: {}", error_msg);
+
+            // Return 400 for validation errors, 500 for server errors
+            if error_msg.contains("exceeds") || error_msg.contains("Invalid") {
+                Ok(HttpResponse::BadRequest().json(serde_json::json!({
+                    "error": error_msg
+                })))
+            } else {
+                Ok(HttpResponse::InternalServerError().json(serde_json::json!({
+                    "error": "Failed to upload image"
+                })))
+            }
         }
     }
 }

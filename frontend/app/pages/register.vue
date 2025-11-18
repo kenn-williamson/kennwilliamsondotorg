@@ -31,7 +31,6 @@
             <Field
               name="email"
               type="email"
-              v-model="form.email"
               :class="[
                 'w-full px-4 py-3 border rounded-md focus:ring-2 focus:ring-sky-500 focus:border-transparent transition-colors duration-200',
                 errors.email ? 'border-red-300 bg-red-50' : 'border-nautical-300'
@@ -50,7 +49,6 @@
             <Field
               name="displayName"
               type="text"
-              v-model="form.display_name"
               :class="[
                 'w-full px-4 py-3 border rounded-md focus:ring-2 focus:ring-sky-500 focus:border-transparent transition-colors duration-200',
                 errors.displayName ? 'border-red-300 bg-red-50' : 'border-nautical-300'
@@ -59,7 +57,7 @@
             />
             <ErrorMessage name="displayName" class="text-red-600 text-sm mt-1" />
             <!-- Dynamic Slug Preview -->
-            <div v-if="slugPreview && form.display_name.length >= 2" class="mt-2 p-3 bg-sky-50 border border-sky-200 rounded-md">
+            <div v-if="slugPreview && (values.displayName?.length || 0) >= 2" class="mt-2 p-3 bg-sky-50 border border-sky-200 rounded-md">
               <p class="text-xs text-nautical-600 mb-2">Your public incident timer will be available at:</p>
               <p class="text-sm font-mono text-sky-700 break-all mb-2">
                 kennwilliamson.org/<span class="font-bold">{{ slugPreview.final_slug }}</span>/incident-timer
@@ -71,7 +69,7 @@
                 "{{ slugPreview.slug }}" is taken, using "{{ slugPreview.final_slug }}" instead
               </div>
             </div>
-            <p v-else-if="form.display_name.length < 2" class="text-xs text-nautical-500 mt-1">
+            <p v-else-if="(values.displayName?.length || 0) < 2" class="text-xs text-nautical-500 mt-1">
               Your public incident timer will be available at kennwilliamson.org/{auto-generated-slug}/incident-timer
             </p>
           </div>
@@ -84,7 +82,6 @@
             <Field
               name="password"
               type="password"
-              v-model="form.password"
               :class="[
                 'w-full px-4 py-3 border rounded-md focus:ring-2 focus:ring-sky-500 focus:border-transparent transition-colors duration-200',
                 errors.password ? 'border-red-300 bg-red-50' : 'border-nautical-300'
@@ -102,7 +99,6 @@
             <Field
               name="confirmPassword"
               type="password"
-              v-model="form.confirmPassword"
               :class="[
                 'w-full px-4 py-3 border rounded-md focus:ring-2 focus:ring-sky-500 focus:border-transparent transition-colors duration-200',
                 errors.confirmPassword ? 'border-red-300 bg-red-50' : 'border-nautical-300'
@@ -178,14 +174,6 @@ if (loggedIn.value) {
 // Form validation schema
 const validationSchema = registerSchema
 
-// Form state
-const form = reactive({
-  email: '',
-  display_name: '',
-  password: '',
-  confirmPassword: '',
-})
-
 const serverError = ref('')
 const slugPreview = ref(null)
 const slugPreviewLoading = ref(false)
@@ -194,12 +182,17 @@ const slugPreviewLoading = ref(false)
 const { register, previewSlug, isLoading, error } = useAuthActions()
 
 // Form validation composable
-const { errors, meta, handleSubmit } = useForm({
+const { errors, meta, handleSubmit, values } = useForm({
   validationSchema,
-  initialValues: form,
+  initialValues: {
+    email: '',
+    displayName: '',
+    password: '',
+    confirmPassword: '',
+  },
 })
 
-// Watch for changes in display_name and get slug preview
+// Watch for changes in displayName and get slug preview
 const debouncedSlugPreview = useDebounceFn(async (displayName) => {
   if (!displayName || displayName.length < 2) {
     slugPreview.value = null
@@ -218,7 +211,7 @@ const debouncedSlugPreview = useDebounceFn(async (displayName) => {
   }
 }, 300)
 
-watch(() => form.display_name, (newValue) => {
+watch(() => values.displayName, (newValue) => {
   debouncedSlugPreview(newValue)
 })
 
