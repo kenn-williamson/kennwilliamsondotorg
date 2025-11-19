@@ -11,18 +11,13 @@ RUN apk add --no-cache \
 
 WORKDIR /app
 
-# Copy dependency files first for caching
+# Copy dependency files for reference (actual source mounted at runtime)
 COPY Cargo.toml Cargo.lock ./
-
-# Pre-build dependencies (creates dummy main.rs for caching)
-RUN mkdir src && \
-    echo "fn main() {println!(\"Dummy for dependency caching\")}" > src/main.rs && \
-    cargo build && \
-    rm src/main.rs
 
 # Set up volume mount points
 # Source code will be mounted at runtime from docker-compose
 # Target directory will be a persistent volume for build cache
+# Note: Dependencies will be built on first run, then cached in backend_target_dev volume
 
 # Set environment variables for development
 ENV RUST_LOG=backend=debug,actix_web=debug
