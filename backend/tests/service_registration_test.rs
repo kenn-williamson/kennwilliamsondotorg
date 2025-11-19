@@ -58,8 +58,8 @@ async fn test_all_services_are_registered() {
     println!("✅ All services are properly registered in the Actix app");
 }
 
-#[test]
-fn test_service_container_has_all_expected_services() {
+#[tokio::test]
+async fn test_service_container_has_all_expected_services() {
     // This is a compile-time check. If ServiceContainer adds a new service,
     // you MUST update main.rs to register it. This test documents what services exist.
 

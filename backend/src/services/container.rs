@@ -1,6 +1,7 @@
 use sqlx::PgPool;
 use std::sync::Arc;
 
+#[cfg(not(feature = "mocks"))]
 use crate::repositories::s3_image_storage::S3ImageStorage;
 
 #[cfg(feature = "mocks")]

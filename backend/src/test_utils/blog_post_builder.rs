@@ -81,7 +81,7 @@ impl BlogPostBuilder {
             featured_image_url: self.featured_image_url.unwrap_or(None),
             featured_image_alt: self.featured_image_alt.unwrap_or(None),
             status: self.status.unwrap_or_else(|| "draft".to_string()),
-            tags: self.tags.unwrap_or_else(Vec::new),
+            tags: self.tags.unwrap_or_default(),
             published_at: self.published_at.unwrap_or(None),
             created_at: self.created_at.unwrap_or(now),
             updated_at: self.updated_at.unwrap_or(now),
@@ -105,7 +105,7 @@ impl BlogPostBuilder {
         let featured_image_url = self.featured_image_url.unwrap_or(None);
         let featured_image_alt = self.featured_image_alt.unwrap_or(None);
         let status = self.status.unwrap_or_else(|| "draft".to_string());
-        let tags = self.tags.unwrap_or_else(Vec::new);
+        let tags = self.tags.unwrap_or_default();
         let published_at = self.published_at.unwrap_or(None);
         let meta_description = self.meta_description.unwrap_or(None);
 
@@ -227,7 +227,7 @@ impl BlogPostBuilder {
 
     /// Add a single tag
     pub fn with_tag(mut self, tag: impl Into<String>) -> Self {
-        let mut tags = self.tags.unwrap_or_else(Vec::new);
+        let mut tags = self.tags.unwrap_or_default();
         tags.push(tag.into());
         self.tags = Some(tags);
         self
