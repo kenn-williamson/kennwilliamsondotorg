@@ -32,7 +32,7 @@ async fn test_get_published_posts_public() {
 
     let body: serde_json::Value = resp.json().await.unwrap();
     assert!(body.get("posts").is_some());
-    assert!(body["posts"].as_array().unwrap().len() > 0);
+    assert!(!body["posts"].as_array().unwrap().is_empty());
 }
 
 #[actix_web::test]
@@ -53,7 +53,7 @@ async fn test_get_post_by_slug_public_success() {
     // Get post by slug without auth
     let mut resp = ctx
         .server
-        .get(&format!("/backend/public/blog/posts/{}", post.slug))
+        .get(format!("/backend/public/blog/posts/{}", post.slug))
         .send()
         .await
         .unwrap();
@@ -349,7 +349,7 @@ async fn test_update_post_success() {
 
     let mut resp = ctx
         .server
-        .put(&format!("/backend/protected/admin/blog/posts/{}", post.id))
+        .put(format!("/backend/protected/admin/blog/posts/{}", post.id))
         .insert_header(("Authorization", format!("Bearer {}", token)))
         .send_json(&update_request)
         .await
@@ -408,7 +408,7 @@ async fn test_delete_post_success() {
     // Delete the post
     let resp = ctx
         .server
-        .delete(&format!("/backend/protected/admin/blog/posts/{}", post.id))
+        .delete(format!("/backend/protected/admin/blog/posts/{}", post.id))
         .insert_header(("Authorization", format!("Bearer {}", token)))
         .send()
         .await
@@ -424,8 +424,8 @@ async fn test_list_posts_pagination() {
     // Create multiple published posts
     for i in 1..=15 {
         let _ = BlogPostBuilder::new()
-            .with_title(&format!("Post {}", i))
-            .with_slug(&format!("post-{}", i))
+            .with_title(format!("Post {}", i))
+            .with_slug(format!("post-{}", i))
             .with_status("published")
             .published_at(chrono::Utc::now())
             .persist(&ctx.pool)

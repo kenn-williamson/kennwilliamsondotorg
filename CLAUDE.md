@@ -170,6 +170,35 @@ When working on this project, use Context7 MCP for framework documentation:
 - `./scripts/reset-db.sh` - Fresh database start (DESTRUCTIVE)
 - `./scripts/prepare-sqlx.sh` - Update SQLx cache after SQL query changes
 - `./scripts/backup-db.sh` - Backup/restore database
+- `./scripts/ci-check.sh` - **Run local CI validation before pushing** (matches GitHub Actions exactly)
+
+**CRITICAL: Pre-Push CI Validation**
+
+**ALWAYS run `./scripts/ci-check.sh` before pushing to avoid CI failures and sloppy commit histories.**
+
+This script runs the exact same checks as GitHub Actions CI:
+- **Backend**: Clippy with `--all-targets` (catches test lints!), tests, security audit, SQLx metadata
+- **Frontend**: TypeScript checking, tests with coverage, security audit
+
+**Why this matters:**
+- Catches issues locally that CI would catch remotely
+- Prevents embarrassing "fix CI" commit chains
+- The `--all-targets` flag is crucial - it checks tests, benches, examples (not just main code)
+- Saves time and maintains professional commit history
+
+**Quick checks during development:**
+```bash
+# Full CI validation (run before every push)
+./scripts/ci-check.sh
+
+# Backend only (faster during backend work)
+./scripts/ci-check.sh backend
+
+# Frontend only (faster during frontend work)
+./scripts/ci-check.sh frontend
+```
+
+**Common gotcha:** Running `cargo clippy -- -D warnings` locally will NOT catch test file lints. You MUST use `cargo clippy --all-targets -- -D warnings` or the ci-check script.
 
 **Why scripts matter:**
 - Consistent interface across all developers

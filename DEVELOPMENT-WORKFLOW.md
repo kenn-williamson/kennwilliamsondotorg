@@ -22,6 +22,48 @@
 - **Frontend**: Edit `frontend/app/` - HMR updates instantly
 - **Backend**: Edit `backend/src/` - cargo-watch rebuilds automatically
 
+### Git Workflow (Pre-Push CI Validation)
+
+**CRITICAL: ALWAYS run CI checks before pushing to avoid CI failures and sloppy commit history.**
+
+```bash
+# Before every git push - run full CI validation
+./scripts/ci-check.sh
+
+# Or check specific component (faster during focused work)
+./scripts/ci-check.sh backend   # Backend only
+./scripts/ci-check.sh frontend  # Frontend only
+```
+
+**What it checks (matches GitHub Actions CI exactly):**
+
+**Backend:**
+- Clippy lints with `--all-targets` (includes tests, benches, examples)
+- All tests with nextest/cargo test
+- Security audit (cargo audit)
+- SQLx metadata up-to-date
+
+**Frontend:**
+- TypeScript type checking (vue-tsc)
+- All tests with coverage
+- Security audit (npm audit)
+
+**Why the `--all-targets` flag matters:**
+- Default `cargo clippy` only checks main code
+- CI uses `--all-targets` which includes tests, benches, examples
+- This is why you might see "clean" clippy locally but failures in CI!
+
+**Pre-push checklist:**
+```bash
+# 1. Run CI validation
+./scripts/ci-check.sh
+
+# 2. If all checks pass, safe to push
+git push origin <branch>
+
+# 3. If checks fail, fix issues and re-run ci-check before pushing
+```
+
 ### Database
 ```bash
 # After schema changes
@@ -37,6 +79,7 @@
 - **`dev-stop.sh`**: Stop services (`--remove` to remove containers)
 - **`dev-logs.sh`**: View logs (`[service]`, `--tail N`, `--timestamps`)
 - **`health-check.sh`**: Verify health (`--dev`, `--local-prod`, `--wait`, `--service SERVICE`)
+- **`ci-check.sh`**: **Pre-push CI validation** - Run before every push! (`backend`, `frontend`, or no args for both)
 
 ### Database Scripts
 - **`setup-db.sh`**: Run migrations (preserves data)
