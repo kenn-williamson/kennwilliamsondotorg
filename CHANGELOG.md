@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.2.1](https://github.com/kenn-williamson/kennwilliamsondotorg/compare/v1.2.0...v1.2.1) (2025-11-19)
+
+
+### Bug Fixes
+
+* add AWS S3 bucket environment variable for blog images ([3867147](https://github.com/kenn-williamson/kennwilliamsondotorg/commit/3867147fb170cfa0f18a7b520bffc84fc16a9d0a))
+
 ## [1.2.0](https://github.com/kenn-williamson/kennwilliamsondotorg/compare/v1.1.0...v1.2.0) (2025-11-19)
 
 
