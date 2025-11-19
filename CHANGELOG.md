@@ -1,5 +1,13 @@
 # Changelog
 
+## [1.2.3](https://github.com/kenn-williamson/kennwilliamsondotorg/compare/v1.2.2...v1.2.3) (2025-11-19)
+
+
+### Bug Fixes
+
+* rename blog components directory and fix word wrapping ([60f7d05](https://github.com/kenn-williamson/kennwilliamsondotorg/commit/60f7d0500b342b5305473a8b220566d1be2fa8ba))
+* update Dockerfile.dev to improve dependency caching and clarify comments ([7747a6b](https://github.com/kenn-williamson/kennwilliamsondotorg/commit/7747a6b4c42d7a6c34d5562130c80ad0cf22491c))
+
 ## [1.2.2](https://github.com/kenn-williamson/kennwilliamsondotorg/compare/v1.2.1...v1.2.2) (2025-11-19)
 
 
