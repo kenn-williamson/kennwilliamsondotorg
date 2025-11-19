@@ -84,6 +84,11 @@ const mermaidConfig = {
   margin: 0.25em 0 !important;
 }
 
+/* Override md-editor-preview's word-break: break-all to prevent mid-word breaks */
+.md-editor-preview {
+  word-break: normal !important;
+}
+
 /* Typography matching About Me pages - professional, readable */
 .markdown-content {
   @apply text-nautical-800;
