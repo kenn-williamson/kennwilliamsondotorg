@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.2.4](https://github.com/kenn-williamson/kennwilliamsondotorg/compare/v1.2.3...v1.2.4) (2025-11-19)
+
+
+### Bug Fixes
+
+* resolve session role duplication and improve markdown rendering ([64c2fe0](https://github.com/kenn-williamson/kennwilliamsondotorg/commit/64c2fe00e5d26af635bd4afb3a51a62fd41e8ca6))
+
 ## [1.2.3](https://github.com/kenn-williamson/kennwilliamsondotorg/compare/v1.2.2...v1.2.3) (2025-11-19)
 
 
