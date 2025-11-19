@@ -95,7 +95,7 @@
       The actual problem is the people gaming the system. The oligarchy. The
       military-banking-industrial-intelligence-silicon complex. The
       <SteampunkTooltip
-        text="Rent-seeking is obtaining wealth by manipulating public policy or economic conditions without creating new wealth. Rent-seekers extract uncompensated value from others through political manipulation—subsidies, tariffs, regulations that hamper competitors—rather than productive activity. This results in economic inefficiency, reduced competition, and heightened inequality."
+        text="Rent-seeking is obtaining wealth by manipulating public policy or economic conditions without creating new wealth. Rent-seekers extract uncompensated value from others through political manipulation (subsidies, tariffs, regulations that hamper competitors) rather than productive activity. This results in economic inefficiency, reduced competition, and heightened inequality."
         placement="top"
       >
         <span>rent-seekers</span>

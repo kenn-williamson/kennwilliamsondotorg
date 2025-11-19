@@ -27,7 +27,7 @@
 
     <p>
       Throughout this piece, I'll use more precise language than the "AI" buzzword allows.
-      When referring to the actual technology, I'll use <strong>generative models (GM)</strong>—systems
+      When referring to the actual technology, I'll use <strong>generative models (GM)</strong>, systems
       that generate text, images, code, video, and other outputs based on patterns in training data.
       This includes large language models (LLMs) like ChatGPT and Claude, image generators like
       Midjourney and DALL-E, and code assistants like GitHub Copilot.
@@ -74,7 +74,7 @@
 
     <p>
       <strong>Both positions accept the premise that AI could theoretically replace human
-      expertise—they just disagree on the timeline and desirability.</strong> But that premise
+      expertise. They just disagree on the timeline and desirability.</strong> But that premise
       itself is flawed.
     </p>
 
@@ -140,7 +140,7 @@
       <SteampunkTooltip variant="steel">
         <template #content>
           Anthropic's research on Claude 3.5 showed that "the steps Claude used to solve problems
-          were not what we expected—they're also not the steps that Claude claimed it took, providing
+          were not what we expected. They're also not the steps that Claude claimed it took, providing
           clear evidence that large language models will give reasons for what they do that do not
           necessarily reflect what they actually did."
           <br><br>
@@ -149,7 +149,7 @@
         the companies building these systems admit they don't fully understand how they work.
       </SteampunkTooltip>
       Anthropic CEO Dario Amodei has acknowledged that "people are often surprised and alarmed to
-      learn that we do not understand how our own AI creations work"—calling this unprecedented
+      learn that we do not understand how our own AI creations work," calling this unprecedented
       in the history of technology.
     </p>
 
@@ -198,8 +198,8 @@
     <h3>The Productivity Multiplier</h3>
 
     <p>
-      Developers practicing IA—combining strong fundamentals, good communication skills, and
-      sound judgment with AI tools—will be incredibly productive. They'll be able to:
+      Developers practicing IA (combining strong fundamentals, good communication skills, and
+      sound judgment with AI tools) will be incredibly productive. They'll be able to:
     </p>
 
     <ul class="list-disc list-inside mb-4 space-y-2">
@@ -214,7 +214,7 @@
       work in technologies I haven't used professionally (Rust, Nuxt, Postgres optimization)
       and learn them much faster than I could through documentation alone. But I'm validating
       everything, making the architectural decisions, and catching the mistakes. The GM
-      accelerates my capabilities—it doesn't replace my judgment.
+      accelerates my capabilities. It doesn't replace my judgment.
     </p>
 
     <h3>The Rising Bar</h3>
@@ -267,7 +267,7 @@
     </ul>
 
     <p>
-      But it's always Intelligence Augmentation—GMs and ML technologies amplifying human
+      But it's always Intelligence Augmentation. GMs and ML technologies amplify human
       expertise, never replacing it. These systems can identify patterns in massive datasets
       that humans would miss. But it takes human judgment to know which patterns matter, what
       to do about them, and how to implement changes without creating new problems. This is IA
@@ -287,7 +287,7 @@
     <p>Focus on:</p>
 
     <ul class="list-disc list-inside mb-4 space-y-2">
-      <li>Training your team to practice IA—using GMs and ML tools while maintaining human judgment</li>
+      <li>Training your team to practice IA (using GMs and ML tools while maintaining human judgment)</li>
       <li>Establishing processes for validating GM-generated output</li>
       <li>Identifying tasks where IA provides the biggest productivity multiplier</li>
       <li>Maintaining standards for architecture, quality, and human oversight</li>
@@ -416,7 +416,7 @@
         they don't know) remain inherent to the architecture
       </li>
       <li>
-        Successful organizations have mastered Intelligence Augmentation—they've figured out
+        Successful organizations have mastered Intelligence Augmentation. They've figured out
         the optimal division of labor between GMs and human judgment
       </li>
       <li>Professional roles evolve to emphasize human strengths while leveraging IA</li>
@@ -438,15 +438,15 @@
     <h2>The Bottom Line: From AI to IA</h2>
 
     <p>
-      Generative models are neither savior nor threat. They're tools—powerful ones that work
+      Generative models are neither savior nor threat. They're tools, powerful ones that work
       best when augmenting human capabilities, not attempting to replace human judgment.
     </p>
 
     <p>
       The future belongs to people who practice Intelligence Augmentation effectively:
       those who leverage GMs while maintaining the human capabilities that GMs can't
-      replicate—judgment, creativity, communication, understanding context, asking the
-      right questions.
+      replicate (judgment, creativity, communication, understanding context, asking the
+      right questions).
     </p>
 
     <p>
@@ -462,7 +462,7 @@
 
     <p>
       That's the question I'm exploring in my own work, and it's the question I'm helping
-      organizations answer in theirs. Not AI replacing humans—IA amplifying human potential.
+      organizations answer in theirs. Not AI replacing humans. IA amplifying human potential.
     </p>
 
     <AccessPrompt />

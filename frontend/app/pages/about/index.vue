@@ -13,7 +13,7 @@
 
     <p>
       I'm a single dad to three remarkable kids: Rory (10), Charlie (9), and Teddy
-      (almost 5). By day, I'm an Enterprise Architect at SEQTEK, building software
+      (5). By day, I'm an Enterprise Architect at SEQTEK, building software
       systems and helping companies navigate the AI revolution with a healthy dose of
       realism. By calling, I'm a disciple of Christ trying to figure out what it means
       to walk in love, exploring theological territory that most people haven't heard of
@@ -131,7 +131,7 @@
       to an Orthodox church and began reading the Church Fathers systematically. Then I
       discovered René Girard's
       <SteampunkTooltip
-        text="Mimetic theory proposes that human desire is imitative—we want things because others want them. This imitation leads to rivalry and conflict. Girard showed how societies resolve this through scapegoating: uniting against a victim to restore peace."
+        text="Mimetic theory proposes that human desire is imitative: we want things because others want them. This imitation leads to rivalry and conflict. Girard showed how societies resolve this through scapegoating: uniting against a victim to restore peace."
         placement="top"
       >
         <span>mimetic theory</span> </SteampunkTooltip
@@ -139,12 +139,12 @@
       found a reading of the Gospel that made sense of contradictions I'd struggled with
       my whole life. I'm now what you'd call a
       <SteampunkTooltip
-        text="Christian Voluntarism means I believe all human relationships should be voluntary—no coercion in politics, economics, or faith. It combines taking Jesus seriously (the Sermon on the Mount isn't optional) with rejection of state violence. I'm theologically orthodox (I affirm the creeds and read the Church Fathers), politically libertarian, and practically pacifist. Christianity and state coercion are incompatible."
+        text="Christian Voluntarism means I believe all human relationships should be voluntary: no coercion in politics, economics, or faith. It combines taking Jesus seriously (the Sermon on the Mount isn't optional) with rejection of state violence. I'm theologically orthodox (I affirm the creeds and read the Church Fathers), politically libertarian, and practically pacifist. Christianity and state coercion are incompatible."
         placement="top"
       >
         <span>Christian Voluntaryist</span> </SteampunkTooltip
       >, which sounds abstract but means I think Jesus meant what he said about turning
-      the other cheek and loving your enemies—and that we should build communities on
+      the other cheek and loving your enemies, and that we should build communities on
       voluntary commitment, not violence or coercion.
     </p>
 
@@ -154,7 +154,7 @@
       through a coding boot camp in 2017. I've been at SEQTEK for almost seven and a
       half years now, moving from mid-level developer to Enterprise Architect. I've led
       successful projects, helped companies get acquired, and found my niche
-      evangelizing Intelligence Augmentation (IA)—helping companies understand that
+      evangelizing Intelligence Augmentation (IA), helping companies understand that
       the goal is amplifying human capabilities, not replacing human judgment.
     </p>
 
@@ -227,7 +227,7 @@
           class="font-semibold text-primary-700 hover:text-primary-900"
         >
           From AI to IA
-        </NuxtLink>: Why both AI hype and skepticism miss the point—Intelligence Augmentation amplifies human capabilities rather than replacing them
+        </NuxtLink>: Why both AI hype and skepticism miss the point. Intelligence Augmentation amplifies human capabilities rather than replacing them
       </li>
       <li v-if="hasTrustedContactAccess">
         <NuxtLink

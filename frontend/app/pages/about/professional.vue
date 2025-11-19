@@ -124,7 +124,7 @@
       I interviewed at SEQTEK and got hired in February 2018. Interestingly, my very
       first project wasn't even web development. It was an
       <SteampunkTooltip
-        text="Embedded C/C++ programming involves writing software for embedded systems—specialized computing devices with dedicated functions rather than general-purpose computers. C and C++ provide low-level hardware control through direct memory access and pointers, crucial for resource-constrained devices like microcontrollers. These languages sit close to the system hardware, maximizing efficiency on devices with limited memory and processing power."
+        text="Embedded C/C++ programming involves writing software for embedded systems, specialized computing devices with dedicated functions rather than general-purpose computers. C and C++ provide low-level hardware control through direct memory access and pointers, crucial for resource-constrained devices like microcontrollers. These languages sit close to the system hardware, maximizing efficiency on devices with limited memory and processing power."
         placement="top"
       >
         <span>embedded C/C++ project</span>

@@ -213,7 +213,7 @@
       community apart in all-against-all violence, societies have historically resolved
       the crisis through
       <SteampunkTooltip
-        text="The scapegoat mechanism is society's method for dissipating tensions by redirecting violence to an outsider. When mimetic rivalry threatens the community, all participants spontaneously unite in violence against a single victim. This sacrifice (through death or expulsion) releases interpersonal tensions and restores social order. For it to work, participants must genuinely believe the victim is guilty—they cannot recognize it as scapegoating."
+        text="The scapegoat mechanism is society's method for dissipating tensions by redirecting violence to an outsider. When mimetic rivalry threatens the community, all participants spontaneously unite in violence against a single victim. This sacrifice (through death or expulsion) releases interpersonal tensions and restores social order. For it to work, participants must genuinely believe the victim is guilty. They cannot recognize it as scapegoating."
         placement="top"
       >
         <span>scapegoating</span> </SteampunkTooltip
@@ -357,7 +357,7 @@
     <p>
       I describe myself as a Christian Voluntaryist. That sounds abstract, but
       it's simply taking Jesus seriously when He says to turn the other cheek and love
-      your enemies—and applying this to all human relationships.
+      your enemies, and applying this to all human relationships.
     </p>
 
     <p>

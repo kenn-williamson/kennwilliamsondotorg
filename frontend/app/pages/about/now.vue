@@ -24,7 +24,7 @@
     <h2>The Kids: Three Very Different People</h2>
 
     <p>
-      I have Rory (10), Charlie (9), and Teddy (almost 5). They're with me most of the
+      I have Rory (10), Charlie (9), and Teddy (5). They're with me most of the
       time, about four and a half days a week. Their mom and I split custody, with me
       having marginally more time. We maintain a healthy co-parenting relationship,
       which I'm grateful for.
@@ -105,7 +105,7 @@
     <p>
       She's very interested in justice and fairness, in being kind, in things making
       sense and being consistent. I see her becoming someone with a curious and
-      scientific mind—maybe going into a medical field or research. But she also talks a
+      scientific mind, maybe going into a medical field or research. But she also talks a
       lot about wanting to get married and have kids, so maybe she'll want to be a
       homemaker. Ultimately, whatever is fulfilling and whatever is God's plan for her
       life, that's what I want. I'm trying not to plan too heavily on it.
@@ -182,7 +182,7 @@
     <h3>Theodore Lysander (Teddy)</h3>
 
     <p>
-      Teddy is almost 5 and has
+      Teddy is 5 and has
       <SteampunkTooltip :clickable="true" placement="top">
         <template #default>
           <span>level three autism</span>
@@ -324,7 +324,7 @@
           alt="Teddy"
           class="w-full rounded-lg shadow-lg mb-2"
         />
-        <p class="text-sm font-semibold text-gold-800">Teddy (almost 5)</p>
+        <p class="text-sm font-semibold text-gold-800">Teddy (5)</p>
       </div>
     </div>
 
