@@ -27,6 +27,13 @@ A modern web application built with Nuxt.js 4 and Rust, featuring OAuth and JWT 
 - **Phrase Personalization**: Exclude phrases you don't want to see in your personal feed
 - **Email Notifications**: Automated notifications when suggestions are approved or rejected
 
+### Microblog
+- **Markdown Blog Posts**: Rich Markdown content with code highlighting and formatting
+- **Image Uploads**: S3-hosted blog images with admin upload interface
+- **Full-Text Search**: PostgreSQL-powered search across all blog content
+- **SEO Optimization**: Meta tags, Open Graph, and social sharing integration
+- **Admin Editor**: Rich Markdown editor with live preview
+
 ### Email & Notifications
 - **AWS SES Integration**: Production-grade email delivery
 - **Access Request Notifications**: Automated emails to admins for new access requests
@@ -103,9 +110,9 @@ A modern web application built with Nuxt.js 4 and Rust, featuring OAuth and JWT 
 ## CI/CD & Quality Assurance
 
 ### Automated Testing
-- **Backend**: 445+ Rust tests with cargo-tarpaulin coverage
+- **Backend**: 520+ Rust tests with cargo-tarpaulin coverage
 - **Frontend**: 191+ TypeScript/Vue tests with Vitest coverage
-- **Total**: 600+ comprehensive tests across all layers
+- **Total**: 700+ comprehensive tests across all layers
 
 ### CI Pipeline (GitHub Actions)
 - Automated tests on every PR and push to main
@@ -187,6 +194,14 @@ kennwilliamsondotorg/
 - `POST /api/phrases/suggestions` - Submit phrase suggestion (protected)
 - `GET /api/phrases/suggestions` - Get user's suggestions (protected)
 - `POST /api/phrases/exclude/{id}` - Exclude phrase from feed (protected)
+
+### Blog
+- `GET /api/blog` - Get published blog posts (public)
+- `GET /api/blog/{slug}` - Get blog post by slug (public)
+- `POST /backend/admin/blog` - Create blog post (admin only)
+- `PUT /backend/admin/blog/{id}` - Update blog post (admin only)
+- `DELETE /backend/admin/blog/{id}` - Delete blog post (admin only)
+- `POST /backend/admin/blog/upload-image` - Upload blog image to S3 (admin only)
 
 ### Admin Endpoints
 - `GET /api/admin/stats` - System statistics (admin only)

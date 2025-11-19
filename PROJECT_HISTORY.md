@@ -804,6 +804,52 @@
 - **User Experience**: Engaging animated hero that gracefully degrades to static image
 - **Development Workflow**: Simplified asset management with automatic LFS handling
 
+### Recent Major Features (November 2025)
+
+#### Microblog System Implementation
+**Achievement**: Complete full-stack microblog system with Markdown support, S3 image hosting, and SEO optimization built in one weekend (6-8 hours).
+
+**Key Deliverables**:
+- **Blog Post Management**: Full CRUD operations with slug-based URLs and draft/published workflow
+- **Markdown Support**: Rich Markdown content with code highlighting and formatting
+- **Image Hosting**: S3-based image storage with admin upload interface
+- **Full-Text Search**: PostgreSQL full-text search across titles and content
+- **SEO Optimization**: Complete meta tags, Open Graph, and social sharing integration
+- **Admin Blog Editor**: Rich Markdown editor with live preview and drag-and-drop image upload
+- **Public Blog Pages**: `/blog` index page and `/blog/{slug}` individual post pages
+
+**Technical Implementation**:
+- **Database Schema**: `blog_posts` table with full-text search indexes and published/draft status
+- **Repository Layer**: BlogRepository trait with PostgreSQL and mock implementations (14 tests)
+- **Service Layer**: BlogService with CRUD operations and search functionality (47 tests)
+- **API Layer**: Public blog routes (`/api/blog`) and admin routes (`/backend/admin/blog`) with 11 HTTP tests
+- **S3 Integration**: IAM role-based authentication for blog image uploads (no credentials in env vars)
+- **Frontend Pages**: Blog index page with search, pagination, and individual blog post pages with social sharing
+- **Admin Interface**: Blog editor component with Markdown preview and image upload
+- **Testing Coverage**: 72 total tests (14 repository + 47 service + 11 API) achieving 100% pass rate
+
+**Architecture Benefits**:
+- **SEO-Ready**: Server-rendered blog posts with proper meta tags for search engine indexing
+- **Scalable**: Full-text search indexes ensure performance scales with content growth
+- **Secure**: IAM role-based S3 access eliminates credential management
+- **Testable**: Comprehensive test coverage across all layers ensures reliability
+- **User-Friendly**: Admin Markdown editor with live preview simplifies content creation
+- **Performant**: 5 performance indexes on blog_posts table optimize common query patterns
+
+**Development Timeline**:
+- **Phase 0-2**: Infrastructure + repository layer (45 minutes) - Nov 16, 7:12 PM
+- **Phase 3**: Service layer with 47 tests (45 minutes) - Nov 16, 8:01 PM
+- **Phase 4**: API routes with 11 tests (30 minutes) - Nov 16, 8:29 PM
+- **Phase 5**: Full UI, refactoring, polish (3-4 hours) - Nov 18, 11:54 AM
+- **Total**: 6-8 hours across 2 days with 100% AI-written code
+
+**Notable Implementation Details**:
+- Used 3-layer architecture (API → Service → Repository) for clean separation and testability
+- Implemented excerpt generation from Markdown content for blog index page
+- Added slug generation and validation with duplicate slug handling
+- Created comprehensive test infrastructure with test builders and fixtures
+- Integrated with existing AWS IAM role infrastructure for S3 access
+
 ### Recent Major Features (January 2025)
 
 #### OAuth Redirect Preservation
@@ -1002,7 +1048,7 @@
 
 ## Current Status
 - **Application**: Live at kennwilliamson.org with full production infrastructure
-- **Testing**: 636 total tests (445 backend + 191 frontend) with comprehensive coverage across all architectural layers
+- **Testing**: 720+ total tests (520+ backend + 191 frontend) with comprehensive coverage across all architectural layers
 - **Development Environment**: Complete hot reload with production-like routing
 - **Documentation**: Comprehensive implementation and workflow documentation with hybrid API architecture
 - **Architecture**: Clean 3-layer architecture with repository pattern, dependency injection, and comprehensive testing infrastructure

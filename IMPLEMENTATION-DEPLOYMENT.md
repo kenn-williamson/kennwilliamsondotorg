@@ -104,6 +104,30 @@ Production deployment architecture and decisions for AWS EC2 with Docker Compose
 - `.github/workflows/ci.yml` - CI pipeline definition
 - `.github/workflows/deploy.yml` - CD pipeline definition
 
+### Pre-Deployment Checklist
+
+**Before tagging a release, verify:**
+
+1. **Code Quality**
+   - [ ] Run `./scripts/ci-check.sh` locally and all checks pass (includes tests, clippy, audits)
+   - [ ] SQLx metadata is up to date (if SQL queries changed: `./scripts/prepare-sqlx.sh`)
+
+2. **Environment Variables** (if any were added/changed)
+   - [ ] Added to `.env.production` on EC2 server
+   - [ ] Added to `docker-compose.production.yml` environment section
+   - [ ] Added to `docker-compose.yml` for local development
+   - [ ] Updated `.env.example` for documentation
+   - [ ] Verified variable name matches exactly in all locations
+
+3. **Database Migrations** (if schema changed)
+   - [ ] Migration files created and tested locally
+   - [ ] Migration is reversible (or documented why not)
+   - [ ] Ran `./scripts/prepare-sqlx.sh` to update metadata
+
+4. **Release Documentation**
+   - [ ] GitHub release notes drafted with feature descriptions
+   - [ ] Any breaking changes clearly documented
+
 ### How to Deploy
 
 **Trigger Deployment:**
@@ -166,14 +190,29 @@ export GITHUB_USER=kenn
 
 **Files:**
 - `.env.development` - Local development
-- `.env.production` - Production server
+- `.env.production` - Production server (on EC2)
 - `.env.example` - Template
+
+**Docker Compose Files:**
+- `docker-compose.yml` - Local development
+- `docker-compose.production.yml` - Production deployment
+
+**CRITICAL**: When adding new environment variables:
+1. Add to `.env.production` on EC2 server
+2. Add to `docker-compose.production.yml` backend/frontend environment section
+3. Add to `docker-compose.yml` for local development
+4. Update `.env.example` as documentation
 
 **Why:**
 - Clear separation
 - Easy to see differences
 - Scripts detect environment
 - No accidental production changes
+
+**Common mistakes:**
+- Adding variable to `.env.production` but forgetting `docker-compose.production.yml`
+- Editing `docker-compose.yml` instead of `docker-compose.production.yml` for production
+- The backend reads from environment variables passed through docker-compose, not directly from .env files
 
 ### SSL Certificate Generation
 **Pattern**: Temporary certs → real certs
