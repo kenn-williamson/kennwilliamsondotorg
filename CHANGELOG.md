@@ -1,5 +1,22 @@
 # Changelog
 
+## [1.2.0](https://github.com/kenn-williamson/kennwilliamsondotorg/compare/v1.1.0...v1.2.0) (2025-11-19)
+
+
+### Features
+
+* add local CI validation script to prevent remote failures ([42702e8](https://github.com/kenn-williamson/kennwilliamsondotorg/commit/42702e8286664119ce2b7fcccad1596945cf9f23))
+* implement microblog Phase 0-2 (infrastructure + repository layer) ([e064049](https://github.com/kenn-williamson/kennwilliamsondotorg/commit/e064049a797479b12d70d5760646253d168df675))
+* implement microblog Phase 3 (service layer with 47 passing tests) ([9f68160](https://github.com/kenn-williamson/kennwilliamsondotorg/commit/9f68160ce734d517adb475c756da85c18613fde5))
+* implement microblog Phase 4 (API routes with 11 passing HTTP tests) ([a3276eb](https://github.com/kenn-williamson/kennwilliamsondotorg/commit/a3276eb00b0e865f65baca591dd0a04b94999d39))
+* implement microblog Phase 5 (UI, refactoring, and polish) ([223f34b](https://github.com/kenn-williamson/kennwilliamsondotorg/commit/223f34bccfa0dcb18ed993a468949fa83f721641))
+
+
+### Bug Fixes
+
+* remove em dashes and update Teddy's age in about pages ([24a7377](https://github.com/kenn-williamson/kennwilliamsondotorg/commit/24a7377e39cb28b7438ade5ae2a8df1b5f103538))
+* resolve CI errors (clippy, tests, cargo audit, npm audit) ([9d312c6](https://github.com/kenn-williamson/kennwilliamsondotorg/commit/9d312c6ecc2a03034ed43f2bb7dc21ccbfe0d65f))
+
 ## [1.1.0](https://github.com/kenn-williamson/kennwilliamsondotorg/compare/v1.0.3...v1.1.0) (2025-11-13)
 
 
