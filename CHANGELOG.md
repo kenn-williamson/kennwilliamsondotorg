@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.2.2](https://github.com/kenn-williamson/kennwilliamsondotorg/compare/v1.2.1...v1.2.2) (2025-11-19)
+
+
+### Bug Fixes
+
+* add blog S3 env var and update docs for microblog deployment ([e2fc50f](https://github.com/kenn-williamson/kennwilliamsondotorg/commit/e2fc50f8e58b341ba366db17d97c14faece8bdf3))
+
 ## [1.2.1](https://github.com/kenn-williamson/kennwilliamsondotorg/compare/v1.2.0...v1.2.1) (2025-11-19)
 
 
