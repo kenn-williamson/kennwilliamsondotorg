@@ -107,7 +107,7 @@ export async function performRefresh(event: any, session: any, refreshToken: str
     
     if (refreshResponse.token) {
       console.log('🔄 [JWT Handler] Updating session with new tokens and user data...')
-      await setUserSession(event, {
+      await replaceUserSession(event, {
         user: refreshResponse.user,
         secure: {
           jwtToken: refreshResponse.token,

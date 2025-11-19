@@ -6,6 +6,11 @@ on:
   pull_request:
     branches: [master]
 
+# Cancel in-progress runs when a new commit is pushed
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
 env:
   CARGO_TERM_COLOR: always
   RUST_VERSION: 1.90.0
@@ -64,7 +69,7 @@ jobs:
       - name: Cache Rust dependencies
         uses: Swatinem/rust-cache@v2
         with:
-          workdir: backend
+          workspaces: backend
           cache-on-failure: true
 
       - name: Cache sqlx-cli binary
@@ -156,7 +161,7 @@ jobs:
       - name: Cache Rust dependencies
         uses: Swatinem/rust-cache@v2
         with:
-          workdir: backend
+          workspaces: backend
           cache-on-failure: true
 
       - name: Run Clippy lints
@@ -190,7 +195,7 @@ jobs:
       - name: Cache Rust dependencies
         uses: Swatinem/rust-cache@v2
         with:
-          workdir: backend
+          workspaces: backend
           cache-on-failure: true
 
       - name: Install cargo-audit

@@ -1,14 +1,9 @@
 <template>
   <ClientOnly>
-    <div class="markdown-content">
-      <MdPreview
-        :model-value="markdown"
-        :theme="isDark ? 'dark' : 'light'"
-        preview-theme="default"
-        code-theme="github"
-        :mermaid-config="mermaidConfig"
-      />
-    </div>
+    <div
+      class="markdown-content"
+      v-html="renderedMarkdown"
+    />
     <template #fallback>
       <div class="prose prose-lg max-w-none">
         <div class="animate-pulse">
@@ -22,72 +17,47 @@
 </template>
 
 <script setup lang="ts">
-import { MdPreview } from 'md-editor-v3'
-import 'md-editor-v3/lib/preview.css'
+import mermaid from 'mermaid'
 
-defineProps<{
+const props = defineProps<{
   markdown: string
 }>()
 
-// Optional: Dark mode support (can hook into app theme if needed)
-const isDark = ref(false)
+const { $markdown } = useNuxtApp()
 
-// Mermaid configuration
-const mermaidConfig = {
-  theme: 'default',
-  logLevel: 'error',
-  securityLevel: 'loose',
-  startOnLoad: true,
-  flowchart: {
-    useMaxWidth: true,
-    htmlLabels: true,
-    curve: 'basis'
-  }
-}
+// Render markdown with sanitization
+const renderedMarkdown = computed(() => {
+  return $markdown.render(props.markdown)
+})
+
+// Initialize mermaid after component mounts
+onMounted(() => {
+  mermaid.initialize({
+    theme: 'default',
+    logLevel: 'error',
+    securityLevel: 'loose',
+    startOnLoad: true,
+    flowchart: {
+      useMaxWidth: true,
+      htmlLabels: true,
+      curve: 'basis',
+    },
+  })
+
+  // Render mermaid diagrams
+  mermaid.run()
+})
+
+// Re-render mermaid diagrams when content changes
+watch(() => props.markdown, async () => {
+  await nextTick()
+  mermaid.run()
+})
 </script>
 
 <style>
-/* Make md-editor background transparent to show parent gradient */
-.markdown-content,
-.markdown-content .md-editor,
-.markdown-content .md-editor-previewOnly,
-.markdown-content .md-editor-preview,
-.markdown-content .md-editor-preview-wrapper,
-.markdown-content .default-theme,
-.markdown-content .md-editor-scrn {
-  background: transparent !important;
-  background-color: transparent !important;
-}
-
-/* Base text color */
-.markdown-content {
-  @apply text-nautical-800;
-}
-
-/* Fix for Tailwind preflight removing list styles */
-.markdown-content .md-editor-preview ul {
-  list-style-type: disc !important;
-  list-style-position: outside !important;
-  padding-left: 2em !important;
-  margin: 1em 0 !important;
-}
-
-.markdown-content .md-editor-preview ol {
-  list-style-type: decimal !important;
-  list-style-position: outside !important;
-  padding-left: 2em !important;
-  margin: 1em 0 !important;
-}
-
-.markdown-content .md-editor-preview li {
-  display: list-item !important;
-  margin: 0.25em 0 !important;
-}
-
-/* Override md-editor-preview's word-break: break-all to prevent mid-word breaks */
-.md-editor-preview {
-  word-break: normal !important;
-}
+/* Import Prism syntax highlighting theme - dark theme for code blocks */
+@import 'prismjs/themes/prism-tomorrow.css';
 
 /* Typography matching About Me pages - professional, readable */
 .markdown-content {
@@ -140,5 +110,38 @@ const mermaidConfig = {
 
 .markdown-content em {
   @apply italic;
+}
+
+/* Fix for Tailwind preflight removing list styles */
+.markdown-content ul {
+  list-style-type: disc !important;
+  list-style-position: outside !important;
+  padding-left: 2em !important;
+  margin: 1em 0 !important;
+}
+
+.markdown-content ol {
+  list-style-type: decimal !important;
+  list-style-position: outside !important;
+  padding-left: 2em !important;
+  margin: 1em 0 !important;
+}
+
+.markdown-content li {
+  display: list-item !important;
+  margin: 0.25em 0 !important;
+}
+
+/* Ensure normal word wrapping (no mid-word breaks) */
+.markdown-content,
+.markdown-content h1,
+.markdown-content h2,
+.markdown-content h3,
+.markdown-content h4,
+.markdown-content h5,
+.markdown-content h6,
+.markdown-content p {
+  word-break: normal;
+  overflow-wrap: normal;
 }
 </style>
