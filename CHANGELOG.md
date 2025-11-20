@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.3.0](https://github.com/kenn-williamson/kennwilliamsondotorg/compare/v1.2.4...v1.3.0) (2025-11-20)
+
+
+### Features
+
+* **turnstile:** add Cloudflare Turnstile CAPTCHA bot protection ([7950c40](https://github.com/kenn-williamson/kennwilliamsondotorg/commit/7950c40eadc38798c7e41c47c64bd17d49c1c9cf))
+
 ## [1.2.4](https://github.com/kenn-williamson/kennwilliamsondotorg/compare/v1.2.3...v1.2.4) (2025-11-19)
 
 
