@@ -33,7 +33,10 @@ export function useSocialShare(options: SocialShareOptions) {
   }
 
   // Generate absolute URL for image (required by social platforms)
-  const absoluteImageUrl = `${SOCIAL_SHARE_CONFIG.baseUrl}${imagePath}`
+  // If imagePath is already absolute (starts with http:// or https://), use as-is
+  // Otherwise, prepend the base URL for relative paths
+  const isAbsoluteUrl = imagePath.startsWith('http://') || imagePath.startsWith('https://')
+  const absoluteImageUrl = isAbsoluteUrl ? imagePath : `${SOCIAL_SHARE_CONFIG.baseUrl}${imagePath}`
 
   // Set SEO meta tags using Nuxt's type-safe composable
   useSeoMeta({

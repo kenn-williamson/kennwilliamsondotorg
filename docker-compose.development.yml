@@ -36,6 +36,8 @@ services:
       - SES_FROM_EMAIL=${SES_FROM_EMAIL}
       - SES_REPLY_TO_EMAIL=${SES_REPLY_TO_EMAIL}
       - FRONTEND_URL=${FRONTEND_URL}
+      - TURNSTILE_SECRET_KEY=${TURNSTILE_SECRET_KEY}
+      - DISABLE_EMAIL_SENDING=${DISABLE_EMAIL_SENDING}
     volumes:
       - ./backend/src:/app/src:ro           # Mount source code (read-only)
       - ./backend/Cargo.toml:/app/Cargo.toml:ro
@@ -68,6 +70,7 @@ services:
       - NUXT_PUBLIC_API_BASE=https://localhost/backend  # Client-side API base
       - NUXT_API_BASE=http://backend:8080/backend  # Server-side API base
       - NUXT_SESSION_PASSWORD=${NUXT_SESSION_PASSWORD}  # For Nuxt Auth Utils
+      - NUXT_PUBLIC_TURNSTILE_SITE_KEY=${NUXT_PUBLIC_TURNSTILE_SITE_KEY}
       - JWT_SECRET=${JWT_SECRET}
       - CHOKIDAR_USEPOLLING=true  # For file watching in containers
       - NODE_OPTIONS=--max-old-space-size=1536  # Set Node.js heap size to 1.5GB

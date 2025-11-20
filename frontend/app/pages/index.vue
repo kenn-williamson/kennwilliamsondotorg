@@ -44,7 +44,7 @@
         </p>
 
         <!-- CTA Buttons -->
-        <div class="flex flex-col sm:flex-row gap-4 justify-center">
+        <div class="flex flex-wrap gap-4 justify-center max-w-4xl mx-auto">
           <NuxtLink
             to="/about"
             class="px-8 py-3 bg-gradient-to-r from-primary-600 to-accent-600 hover:from-primary-700 hover:to-accent-700 text-white font-semibold rounded-lg shadow-lg transition-all duration-200 transform hover:scale-105"
@@ -52,10 +52,22 @@
             Read My Story
           </NuxtLink>
           <NuxtLink
+            to="/blog"
+            class="px-8 py-3 bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-700 hover:to-purple-700 text-white font-semibold rounded-lg shadow-lg transition-all duration-200 transform hover:scale-105"
+          >
+            Read My Blog
+          </NuxtLink>
+          <NuxtLink
+            to="/project"
+            class="px-8 py-3 bg-gradient-to-r from-sky-600 to-cyan-600 hover:from-sky-700 hover:to-cyan-700 text-white font-semibold rounded-lg shadow-lg transition-all duration-200 transform hover:scale-105"
+          >
+            See How It's Built
+          </NuxtLink>
+          <NuxtLink
             to="/incidents"
             class="px-8 py-3 bg-nautical-700 hover:bg-nautical-600 text-white font-semibold rounded-lg shadow-lg transition-all duration-200 transform hover:scale-105"
           >
-            View Projects
+            Try Incident Timers
           </NuxtLink>
         </div>
       </div>
@@ -93,7 +105,7 @@
           Explore
         </h2>
 
-        <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
+        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
           <!-- Professional Card -->
           <div class="group bg-gradient-to-br from-nautical-50 to-nautical-100 rounded-lg p-8 shadow-lg hover:shadow-xl transition-all duration-300 border-2 border-nautical-200 hover:border-primary-400">
             <div class="flex items-center mb-4">
@@ -201,6 +213,52 @@
               </NuxtLink>
             </div>
           </div>
+
+          <!-- Blog Card -->
+          <div class="group bg-gradient-to-br from-purple-50 to-pink-50 rounded-lg p-8 shadow-lg hover:shadow-xl transition-all duration-300 border-2 border-indigo-200 hover:border-primary-400">
+            <div class="flex items-center mb-4">
+              <!-- Pencil/Edit Icon -->
+              <svg class="w-12 h-12 text-primary-600 mr-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"/>
+              </svg>
+              <h3 class="text-2xl font-bold text-nautical-900">
+                Blog & Reflections
+              </h3>
+            </div>
+            <p class="text-nautical-700 mb-6">
+              Thoughts on Christian Voluntarism, technology, AI realism, and personal growth.
+              Exploring what it means to live out faith in the modern world.
+            </p>
+            <NuxtLink
+              to="/blog"
+              class="text-primary-600 hover:text-primary-700 font-semibold underline"
+            >
+              Read the Blog →
+            </NuxtLink>
+          </div>
+
+          <!-- Technical Deep Dive Card -->
+          <div class="group bg-gradient-to-br from-sky-50 to-cyan-50 rounded-lg p-8 shadow-lg hover:shadow-xl transition-all duration-300 border-2 border-sky-200 hover:border-primary-400">
+            <div class="flex items-center mb-4">
+              <!-- Code Icon -->
+              <svg class="w-12 h-12 text-primary-600 mr-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 20l4-16m4 4l4 4-4 4M6 16l-4-4 4-4"/>
+              </svg>
+              <h3 class="text-2xl font-bold text-nautical-900">
+                Building This Site: IA in Practice
+              </h3>
+            </div>
+            <p class="text-nautical-700 mb-6">
+              Two months part-time with Claude: learning Rust and Nuxt simultaneously.
+              Complete technical walkthrough with architecture decisions and lessons learned.
+            </p>
+            <NuxtLink
+              to="/project"
+              class="text-primary-600 hover:text-primary-700 font-semibold underline"
+            >
+              View Technical Overview →
+            </NuxtLink>
+          </div>
         </div>
       </div>
     </section>
@@ -234,14 +292,14 @@
 
     <!-- Footer CTA Section -->
     <section class="py-16 px-4 sm:px-6 lg:px-8 bg-gradient-to-br from-nautical-800 to-nautical-900 text-white">
-      <div class="max-w-4xl mx-auto text-center">
+      <div class="max-w-5xl mx-auto text-center">
         <h2 class="text-3xl sm:text-4xl font-bold mb-6">
           Welcome to the Story
         </h2>
         <p class="text-lg sm:text-xl text-nautical-300 mb-8">
           It's still being written.
         </p>
-        <div class="flex flex-col sm:flex-row gap-4 justify-center">
+        <div class="flex flex-wrap gap-4 justify-center max-w-4xl mx-auto">
           <NuxtLink
             to="/about"
             class="px-8 py-3 bg-gradient-to-r from-primary-600 to-accent-600 hover:from-primary-700 hover:to-accent-700 text-white font-semibold rounded-lg shadow-lg transition-all duration-200 transform hover:scale-105"
@@ -249,10 +307,22 @@
             Learn More About Me
           </NuxtLink>
           <NuxtLink
+            to="/blog"
+            class="px-8 py-3 bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-700 hover:to-purple-700 text-white font-semibold rounded-lg shadow-lg transition-all duration-200 transform hover:scale-105"
+          >
+            Read My Blog
+          </NuxtLink>
+          <NuxtLink
+            to="/project"
+            class="px-8 py-3 bg-gradient-to-r from-sky-600 to-cyan-600 hover:from-sky-700 hover:to-cyan-700 text-white font-semibold rounded-lg shadow-lg transition-all duration-200 transform hover:scale-105"
+          >
+            See How It's Built
+          </NuxtLink>
+          <NuxtLink
             to="/incidents"
             class="px-8 py-3 bg-nautical-700 hover:bg-nautical-600 text-white font-semibold rounded-lg shadow-lg transition-all duration-200 transform hover:scale-105"
           >
-            Explore Projects
+            Try Incident Timers
           </NuxtLink>
         </div>
       </div>

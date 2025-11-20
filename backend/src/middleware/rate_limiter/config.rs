@@ -14,13 +14,14 @@ pub struct RateLimitConfig {
 pub fn get_rate_limit_configs() -> HashMap<String, RateLimitConfig> {
     let mut configs = HashMap::new();
 
-    // Registration - very restrictive
+    // Registration - with CAPTCHA protection, can be less restrictive
+    // Turnstile provides primary bot defense, rate limiting is secondary
     configs.insert(
         "register".to_string(),
         RateLimitConfig {
-            requests_per_hour: 3,
-            burst_limit: 1,
-            burst_window: 300, // 5 minutes
+            requests_per_hour: 10,  // Increased from 3 (better UX for shared IPs)
+            burst_limit: 2,          // Increased from 1
+            burst_window: 300,       // 5 minutes (unchanged)
         },
     );
 
@@ -82,10 +83,10 @@ mod tests {
         assert!(configs.contains_key("general"));
         assert!(configs.contains_key("timers"));
 
-        // Test that registration is most restrictive
+        // Test registration rate limits (with CAPTCHA protection)
         let register_config = configs.get("register").unwrap();
-        assert_eq!(register_config.requests_per_hour, 3);
-        assert_eq!(register_config.burst_limit, 1);
+        assert_eq!(register_config.requests_per_hour, 10);
+        assert_eq!(register_config.burst_limit, 2);
 
         // Test that general API is least restrictive
         let general_config = configs.get("general").unwrap();

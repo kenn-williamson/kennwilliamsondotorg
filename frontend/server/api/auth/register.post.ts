@@ -9,11 +9,13 @@ import type { AuthResponse } from '#shared/types'
 const bodySchema = z.object({
   email: z.string().email(),
   display_name: z.string().min(2).max(50).trim(),
-  password: z.string().min(8)
+  password: z.string().min(8),
+  captcha_token: z.string().optional(),
+  honeypot: z.string().optional()
 })
 
 export default defineEventHandler(async (event: any) => {
-  const { email, display_name, password } = await readValidatedBody(event, bodySchema.parse)
+  const { email, display_name, password, captcha_token, honeypot } = await readValidatedBody(event, bodySchema.parse)
   
   // Check rate limit for registration
   const isRateLimited = await rateLimitMiddleware(event, '/auth/register')
@@ -34,7 +36,7 @@ export default defineEventHandler(async (event: any) => {
     
     const response = await $fetch<AuthResponse>(`${config.apiBase}${API_ROUTES.PUBLIC.AUTH.REGISTER}`, {
       method: 'POST',
-      body: { email, display_name, password },
+      body: { email, display_name, password, captcha_token, honeypot },
       headers: {
         // Forward the original client IP headers for proper refresh token tracking
         'X-Real-IP': clientInfo.ip,

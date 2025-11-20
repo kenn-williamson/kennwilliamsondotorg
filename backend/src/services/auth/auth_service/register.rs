@@ -184,6 +184,8 @@ mod tests {
             email: "test@example.com".to_string(),
             password: "password123".to_string(),
             display_name: "Test User".to_string(),
+            captcha_token: None,
+            honeypot: None,
         };
 
         let auth_service = AuthService::new(
@@ -224,6 +226,8 @@ mod tests {
             email: "test@example.com".to_string(),
             password: "password123".to_string(),
             display_name: "Test User".to_string(),
+            captcha_token: None,
+            honeypot: None,
         };
 
         let auth_service = AuthService::new(
@@ -269,6 +273,8 @@ mod tests {
             email: "test@example.com".to_string(),
             password: "password123".to_string(),
             display_name: "Test User".to_string(),
+            captcha_token: None,
+            honeypot: None,
         };
 
         let auth_service = AuthService::new(
@@ -317,6 +323,8 @@ mod tests {
             email: "test@example.com".to_string(),
             password: "password123".to_string(),
             display_name: "Test User".to_string(),
+            captcha_token: None,
+            honeypot: None,
         };
 
         // Create event bus to track events
@@ -380,6 +388,8 @@ mod tests {
             email: "test@example.com".to_string(),
             password: "password123".to_string(),
             display_name: "Test User".to_string(),
+            captcha_token: None,
+            honeypot: None,
         };
 
         // Use legacy constructor (no email service)
@@ -434,6 +444,8 @@ mod tests {
             email: "test@example.com".to_string(),
             password: "password123".to_string(),
             display_name: "Test User".to_string(),
+            captcha_token: None,
+            honeypot: None,
         };
 
         let auth_service = AuthService::builder()

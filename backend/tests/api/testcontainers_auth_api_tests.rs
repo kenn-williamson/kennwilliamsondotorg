@@ -588,3 +588,92 @@ async fn test_send_verification_email_unauthorized() {
     );
     assert_eq!(resp.status(), 401); // Unauthorized
 }
+
+// ============================================================================
+// Bot Protection Tests (TDD - these will fail until route validation is implemented)
+// ============================================================================
+
+#[actix_web::test]
+async fn test_register_blocked_with_filled_honeypot() {
+    let ctx = TestContext::builder().build().await;
+
+    let request_body = json!({
+        "email": crate::fixtures::unique_test_email(),
+        "password": "TestPassword123!",
+        "display_name": "Test User",
+        "honeypot": "I am a bot" // Bots fill this field
+    });
+
+    let resp = ctx
+        .server
+        .post("/backend/public/auth/register")
+        .send_json(&request_body)
+        .await
+        .unwrap();
+
+    // Should be rejected with 400 Bad Request
+    assert_eq!(resp.status(), 400);
+}
+
+// NOTE: This test is commented out because MockTurnstileService always returns success
+// Real invalid token validation can only be tested with the actual Cloudflare API
+// or with a more sophisticated mock that tracks token validity
+//
+// #[actix_web::test]
+// async fn test_register_blocked_with_invalid_captcha() {
+//     // Would need to configure mock to return failure for this token
+//     // This is tested in production with real Cloudflare service
+// }
+
+#[actix_web::test]
+async fn test_register_success_with_valid_captcha() {
+    let ctx = TestContext::builder().build().await;
+
+    let request_body = json!({
+        "email": crate::fixtures::unique_test_email(),
+        "password": "TestPassword123!",
+        "display_name": "Test User",
+        "captcha_token": "valid_test_token",
+        "honeypot": "" // Empty honeypot (legitimate user)
+    });
+
+    let mut resp = ctx
+        .server
+        .post("/backend/public/auth/register")
+        .send_json(&request_body)
+        .await
+        .unwrap();
+
+    // Should succeed (mock turnstile service returns success)
+    assert!(resp.status().is_success());
+
+    let body: serde_json::Value = resp.json().await.unwrap();
+    assert!(body.get("token").is_some());
+    assert!(body.get("user").is_some());
+}
+
+#[actix_web::test]
+async fn test_register_success_without_captcha_backward_compat() {
+    let ctx = TestContext::builder().build().await;
+
+    let request_body = json!({
+        "email": crate::fixtures::unique_test_email(),
+        "password": "TestPassword123!",
+        "display_name": "Test User"
+        // No captcha_token or honeypot fields (old clients)
+    });
+
+    let mut resp = ctx
+        .server
+        .post("/backend/public/auth/register")
+        .send_json(&request_body)
+        .await
+        .unwrap();
+
+    // Should still succeed for backward compatibility
+    // (we'll log a warning but not block)
+    assert!(resp.status().is_success());
+
+    let body: serde_json::Value = resp.json().await.unwrap();
+    assert!(body.get("token").is_some());
+}

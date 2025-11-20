@@ -9,6 +9,10 @@ pub struct CreateUserRequest {
     pub email: String,
     pub password: String,
     pub display_name: String,
+    /// Cloudflare Turnstile CAPTCHA token (optional for backward compatibility)
+    pub captcha_token: Option<String>,
+    /// Honeypot field - should always be empty for legitimate users
+    pub honeypot: Option<String>,
 }
 
 #[derive(Debug, Serialize, Deserialize)]

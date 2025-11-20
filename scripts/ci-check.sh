@@ -56,8 +56,11 @@ if [ "$CHECK_BACKEND" = true ]; then
         FAILED_CHECKS+=("backend-clippy")
     fi
 
-    echo -e "${BLUE}[2/7] Backend Tests${NC}"
-    if cargo nextest run --locked --all-features 2>/dev/null || cargo test --locked --all-features -- --test-threads=4; then
+    echo -e "${BLUE}[2/7] Backend Tests (this may take a few minutes...)${NC}"
+    # Use --test-threads=1 to prevent WSL resource exhaustion
+    # Integration tests use testcontainers which spin up Docker containers
+    # Show output so you can see progress
+    if cargo nextest run --locked --all-features --test-threads=1 || cargo test --locked --all-features -- --test-threads=1; then
         echo -e "${GREEN}✓ Backend tests passed${NC}\n"
     else
         echo -e "${RED}✗ Backend tests failed${NC}\n"
@@ -99,7 +102,8 @@ if [ "$CHECK_FRONTEND" = true ]; then
     fi
 
     echo -e "${BLUE}[6/7] Frontend Tests${NC}"
-    if npm run test:coverage > /dev/null 2>&1; then
+    # Show output to see test progress
+    if npm run test:coverage; then
         echo -e "${GREEN}✓ Frontend tests passed${NC}\n"
     else
         echo -e "${RED}✗ Frontend tests failed${NC}\n"

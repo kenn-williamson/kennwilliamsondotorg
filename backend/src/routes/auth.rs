@@ -8,6 +8,7 @@ use crate::models::api::{
     SlugPreviewRequest, SlugValidationRequest, UpdatePreferencesRequest, VerifyEmailRequest,
 };
 use crate::services::auth::AuthService;
+use crate::services::turnstile::TurnstileServiceTrait;
 
 /// Extract device information from HTTP request headers
 /// Handles forwarded headers from proxies/load balancers using Actix Web's built-in support
@@ -43,7 +44,80 @@ pub async fn register(
     data: web::Json<CreateUserRequest>,
     req: HttpRequest,
     auth_service: web::Data<AuthService>,
+    turnstile_service: web::Data<dyn TurnstileServiceTrait>,
 ) -> ActixResult<HttpResponse> {
+    // ========================================================================
+    // Bot Protection Layer 1: Honeypot Validation
+    // ========================================================================
+    // Honeypot field should always be empty for legitimate users
+    // Bots that auto-fill forms will populate this hidden field
+    if let Some(honeypot) = &data.honeypot
+        && !honeypot.is_empty()
+    {
+        log::warn!(
+            "Honeypot triggered for registration attempt: email={}, honeypot_value_length={}",
+            data.email,
+            honeypot.len()
+        );
+        return Ok(HttpResponse::BadRequest().json(json!({
+            "error": "Invalid request"
+        })));
+    }
+
+    // ========================================================================
+    // Bot Protection Layer 2: Turnstile CAPTCHA Verification
+    // ========================================================================
+    // Extract IP address for CAPTCHA verification (extract before any awaits to drop RefCell)
+    let ip_address = req
+        .connection_info()
+        .realip_remote_addr()
+        .unwrap_or("Unknown")
+        .to_string();
+
+    // Verify CAPTCHA token if provided
+    if let Some(token) = &data.captcha_token {
+        match turnstile_service.verify_token(token, &ip_address).await {
+            Ok(true) => {
+                // Token is valid, continue with registration
+                log::debug!("Turnstile verification succeeded for IP: {}", ip_address);
+            }
+            Ok(false) => {
+                // Token is invalid or expired
+                log::warn!(
+                    "Turnstile verification failed for registration: email={}, ip={}",
+                    data.email,
+                    ip_address
+                );
+                return Ok(HttpResponse::BadRequest().json(json!({
+                    "error": "CAPTCHA verification failed. Please try again."
+                })));
+            }
+            Err(e) => {
+                // Network/API error - fail open (allow registration)
+                // This prevents Cloudflare API outages from blocking legitimate users
+                log::error!(
+                    "Turnstile API error (failing open): {}, ip={}, email={}",
+                    e,
+                    ip_address,
+                    data.email
+                );
+                // Continue with registration despite error
+            }
+        }
+    } else {
+        // No CAPTCHA token provided
+        // For backward compatibility, we log a warning but allow registration
+        // In production enforcement, change this to return BadRequest
+        log::warn!(
+            "Registration without CAPTCHA token: email={}, ip={}",
+            data.email,
+            ip_address
+        );
+    }
+
+    // ========================================================================
+    // Proceed with Normal Registration Flow
+    // ========================================================================
     let device_info = extract_device_info(&req);
     let frontend_url = std::env::var("FRONTEND_URL").ok();
     match auth_service

@@ -28,7 +28,7 @@ async fn test_rate_limiting_blocks_excessive_requests() {
     let ctx = TestContext::builder().with_redis(redis_url).build().await;
 
     // Make multiple rapid requests to trigger rate limiting
-    // Registration endpoint has very restrictive limits (3/hour, 1 burst)
+    // Registration endpoint has limits (10/hour, 2 burst)
     let request_body = json!({
         "email": fixtures::unique_test_email(),
         "password": "TestPassword123!",
@@ -46,7 +46,7 @@ async fn test_rate_limiting_blocks_excessive_requests() {
     // Should succeed initially
     assert!(resp.status().is_success());
 
-    // Second request should be rate limited (burst limit = 1)
+    // Second request should succeed (burst limit = 2)
     let request_body2 = json!({
         "email": fixtures::unique_test_email(),
         "password": "TestPassword123!",
@@ -60,8 +60,25 @@ async fn test_rate_limiting_blocks_excessive_requests() {
         .await
         .unwrap();
 
+    // Second request should also succeed
+    assert!(resp2.status().is_success());
+
+    // Third request should be rate limited (exceeds burst limit = 2)
+    let request_body3 = json!({
+        "email": fixtures::unique_test_email(),
+        "password": "TestPassword123!",
+        "display_name": "Test User 3"
+    });
+
+    let resp3 = ctx
+        .server
+        .post("/backend/public/auth/register")
+        .send_json(&request_body3)
+        .await
+        .unwrap();
+
     // Should be rate limited
-    assert_eq!(resp2.status(), 429); // Too Many Requests
+    assert_eq!(resp3.status(), 429); // Too Many Requests
 }
 
 #[actix_web::test]
@@ -120,7 +137,7 @@ async fn test_rate_limiting_different_endpoints_have_different_limits() {
     let ctx = TestContext::builder().with_redis(redis_url).build().await;
 
     // Test that different endpoints have different rate limits
-    // Registration is very restrictive
+    // Registration has burst limit of 2
     let request_body = json!({
         "email": fixtures::unique_test_email(),
         "password": "TestPassword123!",
@@ -135,7 +152,7 @@ async fn test_rate_limiting_different_endpoints_have_different_limits() {
         .unwrap();
     assert!(resp.status().is_success());
 
-    // Second registration should be blocked
+    // Second registration should succeed (burst limit = 2)
     let request_body2 = json!({
         "email": fixtures::unique_test_email(),
         "password": "TestPassword123!",
@@ -148,14 +165,29 @@ async fn test_rate_limiting_different_endpoints_have_different_limits() {
         .send_json(&request_body2)
         .await
         .unwrap();
-    assert_eq!(resp2.status(), 429);
+    assert!(resp2.status().is_success());
+
+    // Third registration should be blocked (exceeds burst limit)
+    let request_body3 = json!({
+        "email": fixtures::unique_test_email(),
+        "password": "TestPassword123!",
+        "display_name": "Test User 3"
+    });
+
+    let resp3 = ctx
+        .server
+        .post("/backend/public/auth/register")
+        .send_json(&request_body3)
+        .await
+        .unwrap();
+    assert_eq!(resp3.status(), 429);
 
     // But health checks should still work (different endpoint)
-    let resp3 = ctx
+    let resp4 = ctx
         .server
         .get("/backend/public/health")
         .send()
         .await
         .unwrap();
-    assert!(resp3.status().is_success());
+    assert!(resp4.status().is_success());
 }

@@ -108,6 +108,12 @@
             <ErrorMessage name="confirmPassword" class="text-red-600 text-sm mt-1" />
           </div>
 
+          <!-- Bot Protection: Honeypot Field (hidden) -->
+          <HoneypotField ref="honeypotRef" />
+
+          <!-- Bot Protection: Turnstile CAPTCHA -->
+          <TurnstileWidget ref="turnstileRef" />
+
           <!-- Server Error -->
           <div v-if="serverError" class="bg-red-50 border border-red-200 rounded-md p-4">
             <p class="text-red-800 text-sm">{{ serverError }}</p>
@@ -155,6 +161,8 @@
 import { useForm, Field, ErrorMessage } from 'vee-validate'
 import { registerSchema, generateSlug } from '#shared/schemas/auth'
 import { useAuthActions } from '~/composables/useAuthActions'
+import TurnstileWidget from '~/components/Auth/TurnstileWidget.vue'
+import HoneypotField from '~/components/Auth/HoneypotField.vue'
 
 // Page meta
 useHead({
@@ -177,6 +185,10 @@ const validationSchema = registerSchema
 const serverError = ref('')
 const slugPreview = ref(null)
 const slugPreviewLoading = ref(false)
+
+// Bot protection refs
+const turnstileRef = ref(null)
+const honeypotRef = ref(null)
 
 // Auth actions
 const { register, previewSlug, isLoading, error } = useAuthActions()
@@ -220,11 +232,22 @@ const onSubmit = handleSubmit(async (values) => {
   try {
     serverError.value = ''
 
-    // Use auth service for registration
+    // Get bot protection tokens
+    const captchaToken = turnstileRef.value?.getToken()
+    const honeypotValue = honeypotRef.value?.getValue() || ''
+
+    if (!captchaToken) {
+      serverError.value = 'Please complete the CAPTCHA verification'
+      return
+    }
+
+    // Use auth service for registration with bot protection
     const result = await register({
       email: values.email,
       display_name: values.displayName,
       password: values.password,
+      captcha_token: captchaToken,
+      honeypot: honeypotValue
     })
 
     if (result.success) {
@@ -245,6 +268,11 @@ const onSubmit = handleSubmit(async (values) => {
   } catch (error) {
     console.error('Registration error:', error)
     serverError.value = error.message || 'Registration failed. Please try again.'
+
+    // Reset CAPTCHA on error
+    if (turnstileRef.value) {
+      turnstileRef.value.reset()
+    }
   }
 })
 

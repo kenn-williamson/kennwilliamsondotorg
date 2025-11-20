@@ -421,6 +421,11 @@ impl TestContextBuilder {
                 .expect("Failed to build BlogService"),
         );
 
+        // Create turnstile service for testing (always succeeds)
+        use backend::services::turnstile::{MockTurnstileService, TurnstileServiceTrait};
+        let turnstile_service: Arc<dyn TurnstileServiceTrait> =
+            Arc::new(MockTurnstileService::new_success());
+
         let container = ServiceContainer {
             auth_service,
             blog_service,
@@ -431,6 +436,7 @@ impl TestContextBuilder {
             access_request_moderation_service,
             stats_service,
             rate_limit_service,
+            turnstile_service,
             cleanup_service,
         };
 
@@ -450,6 +456,7 @@ impl TestContextBuilder {
                 ))
                 .app_data(web::Data::from(container.stats_service.clone()))
                 .app_data(web::Data::from(container.rate_limit_service.clone()))
+                .app_data(web::Data::from(container.turnstile_service.clone()))
                 .configure(routes::configure_app_routes)
         });
 

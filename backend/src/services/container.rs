@@ -53,9 +53,13 @@ use super::blog::BlogService;
 use super::cleanup::CleanupService;
 #[cfg(feature = "mocks")]
 use super::email::MockEmailService;
-use super::email::{SesEmailService, SuppressionGuard};
+use super::email::{LogOnlyEmailService, SesEmailService, SuppressionGuard};
 use super::incident_timer::IncidentTimerService;
 use super::phrase::PhraseService;
+use super::turnstile::TurnstileServiceTrait;
+#[cfg(feature = "mocks")]
+use super::turnstile::MockTurnstileService;
+use super::turnstile::CloudflareTurnstileService;
 #[cfg(feature = "mocks")]
 use crate::middleware::rate_limiter::MockRateLimitService;
 use crate::middleware::rate_limiter::{RateLimitServiceTrait, RedisRateLimitService};
@@ -72,6 +76,7 @@ pub struct ServiceContainer {
     pub access_request_moderation_service: Arc<AccessRequestModerationService>,
     pub stats_service: Arc<StatsService>,
     pub rate_limit_service: Arc<dyn RateLimitServiceTrait>,
+    pub turnstile_service: Arc<dyn TurnstileServiceTrait>,
     pub cleanup_service: Arc<CleanupService>,
 }
 
@@ -93,18 +98,28 @@ impl ServiceContainer {
             log::warn!("SES_CONFIGURATION_SET_NAME not set - bounce/complaint tracking disabled");
         }
 
-        // Create single shared email service instance with suppression checking
-        // This Arc<dyn EmailService> will be reused across all event handlers and services
-        let suppression_repo = Box::new(PostgresEmailSuppressionRepository::new(pool.clone()));
-        let ses_service = SesEmailService::new(
-            from_email.clone(),
-            reply_to_email.clone(),
-            configuration_set_name.clone(),
-        );
-        let email_service: Arc<dyn super::email::EmailService> = Arc::new(SuppressionGuard::new(
-            Box::new(ses_service),
-            suppression_repo,
-        ));
+        // Create single shared email service instance
+        // Check if email sending should be disabled (useful for development)
+        let disable_email_sending = std::env::var("DISABLE_EMAIL_SENDING")
+            .map(|v| v.eq_ignore_ascii_case("true"))
+            .unwrap_or(false);
+
+        let email_service: Arc<dyn super::email::EmailService> = if disable_email_sending {
+            log::warn!("⚠️  Email sending DISABLED - using log-only mode (DISABLE_EMAIL_SENDING=true)");
+            Arc::new(LogOnlyEmailService::new())
+        } else {
+            // Production mode: use SES with suppression checking
+            let suppression_repo = Box::new(PostgresEmailSuppressionRepository::new(pool.clone()));
+            let ses_service = SesEmailService::new(
+                from_email.clone(),
+                reply_to_email.clone(),
+                configuration_set_name.clone(),
+            );
+            Arc::new(SuppressionGuard::new(
+                Box::new(ses_service),
+                suppression_repo,
+            ))
+        };
 
         // Create Google OAuth service (optional - only if env vars present)
         let google_oauth_service = super::auth::oauth::GoogleOAuthService::from_env().ok();
@@ -363,6 +378,13 @@ impl ServiceContainer {
             Box::new(PostgresPasswordResetTokenRepository::new(pool.clone())),
         ));
 
+        // Create Turnstile verification service
+        let turnstile_secret_key = std::env::var("TURNSTILE_SECRET_KEY")
+            .unwrap_or_else(|_| "1x0000000000000000000000000000000AA".to_string()); // Test key fallback
+        let turnstile_service: Arc<dyn TurnstileServiceTrait> = Arc::new(
+            CloudflareTurnstileService::new(turnstile_secret_key)
+        );
+
         // Create blog service with PostgreSQL repository
         // Note: MockImageStorage used even in production for Phase 4
         // TODO: Implement S3ImageStorage and use here in Phase 5
@@ -403,6 +425,7 @@ impl ServiceContainer {
             access_request_moderation_service,
             stats_service,
             rate_limit_service,
+            turnstile_service,
             cleanup_service,
         }
     }
@@ -465,6 +488,10 @@ impl ServiceContainer {
             Box::new(MockPasswordResetTokenRepository::new()),
         ));
 
+        // For testing, use mock turnstile service
+        let turnstile_service: Arc<dyn TurnstileServiceTrait> =
+            Arc::new(MockTurnstileService::new_success());
+
         // For testing, use mock blog service
         let blog_service = Arc::new(
             BlogService::builder()
@@ -484,6 +511,7 @@ impl ServiceContainer {
             access_request_moderation_service,
             stats_service,
             rate_limit_service,
+            turnstile_service,
             cleanup_service,
         }
     }

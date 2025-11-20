@@ -44,7 +44,9 @@ export default defineNuxtConfig({
     public: {
       // Client-side environment variables
       apiBase: process.env.NUXT_PUBLIC_API_BASE || 'https://localhost/backend',
-      appName: 'KennWilliamson.org'
+      appName: 'KennWilliamson.org',
+      // Cloudflare Turnstile site key (public, safe to expose)
+      turnstileSiteKey: process.env.NUXT_PUBLIC_TURNSTILE_SITE_KEY || '1x00000000000000000000AA'
     }
   },
 
@@ -99,6 +101,13 @@ export default defineNuxtConfig({
         { rel: 'icon', type: 'image/png', sizes: '192x192', href: '/favicon-192x192.png' },
         { rel: 'icon', type: 'image/png', sizes: '512x512', href: '/favicon-512x512.png' },
         { rel: 'apple-touch-icon', sizes: '180x180', href: '/apple-touch-icon.png' }
+      ],
+      script: [
+        {
+          src: 'https://challenges.cloudflare.com/turnstile/v0/api.js',
+          async: true,
+          defer: true
+        }
       ]
     }
   }

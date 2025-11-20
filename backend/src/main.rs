@@ -118,6 +118,7 @@ async fn main() -> std::io::Result<()> {
             ))
             .app_data(web::Data::from(container.stats_service.clone()))
             .app_data(web::Data::from(container.rate_limit_service.clone()))
+            .app_data(web::Data::from(container.turnstile_service.clone()))
             .configure(routes::configure_app_routes)
     })
     .bind(format!("{}:{}", host, port))?
