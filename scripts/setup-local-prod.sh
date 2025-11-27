@@ -123,12 +123,12 @@ fi
 # Step 2: Stop existing services if requested
 if [[ "$STOP_FIRST" == true ]]; then
     log "Step 2: Stopping existing services..."
-    docker-compose --env-file .env.production down --remove-orphans || true
+    docker compose --env-file .env.production down --remove-orphans || true
 fi
 
 # Step 3: Start local production services
 log "Step 3: Starting local production services..."
-COMPOSE_CMD="docker-compose --env-file .env.production -f docker-compose.yml -f docker-compose.local-prod.yml"
+COMPOSE_CMD="docker compose --env-file .env.production -f docker-compose.yml -f docker-compose.local-prod.yml"
 
 if [[ -n "$BUILD_FLAG" ]]; then
     info "Building containers from scratch..."
@@ -191,9 +191,9 @@ echo ""
 warn "Note: Self-signed certificates will show browser warnings (this is expected)"
 echo ""
 info "Useful commands:"
-echo "  • View logs:      docker-compose --env-file .env.production logs -f"
-echo "  • Stop services:  docker-compose --env-file .env.production down"
-echo "  • Restart nginx:  docker-compose --env-file .env.production restart nginx"
+echo "  • View logs:      docker compose --env-file .env.production logs -f"
+echo "  • Stop services:  docker compose --env-file .env.production down"
+echo "  • Restart nginx:  docker compose --env-file .env.production restart nginx"
 echo "  • Health check:   ./scripts/health-check.sh"
 
 # Follow logs if requested

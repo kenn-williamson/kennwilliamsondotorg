@@ -7,7 +7,7 @@
           Want to read the full story?
         </div>
         <p class="text-nautical-700 mb-6">
-          There's more to discover about my journey—from family origins to faith transformation and life now.
+          There's more to discover—including personal details about difficult seasons and current daily life.
         </p>
         <NuxtLink
           :to="`/login?redirect=${encodeURIComponent(currentPath)}`"
@@ -23,7 +23,7 @@
           Interested in the full story?
         </div>
         <p class="text-nautical-700 mb-6">
-          Additional sections include personal details about family, faith journey, and current life that require trusted contact access.
+          Two additional sections—The Wilderness (my lost years) and Life Now (current daily struggles)—require trusted contact access.
         </p>
         <NuxtLink
           to="/about/request-access"

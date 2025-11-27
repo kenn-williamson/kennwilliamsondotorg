@@ -121,7 +121,7 @@ done
 # Handle different operation modes
 if [ -n "$RESTART_FLAG" ]; then
     # Restart mode - just restart existing containers
-    CMD="docker-compose --env-file $ENV_FILE $COMPOSE_FILES restart $SERVICES"
+    CMD="docker compose --env-file $ENV_FILE $COMPOSE_FILES restart $SERVICES"
     echo -e "${YELLOW}🔄 Restarting containers: $CMD${NC}"
 else
     # Normal start/build mode
@@ -159,7 +159,7 @@ else
             fi
         fi
         
-        BUILD_CMD="docker-compose --env-file $ENV_FILE $COMPOSE_FILES build --no-cache $SERVICES"
+        BUILD_CMD="docker compose --env-file $ENV_FILE $COMPOSE_FILES build --no-cache $SERVICES"
         echo "   Running: $BUILD_CMD"
         
         if ! eval $BUILD_CMD; then
@@ -170,7 +170,7 @@ else
     fi
     
     # Build the main command
-    CMD="docker-compose --env-file $ENV_FILE $COMPOSE_FILES up $DETACHED $DOCKER_FLAGS $SERVICES"
+    CMD="docker compose --env-file $ENV_FILE $COMPOSE_FILES up $DETACHED $DOCKER_FLAGS $SERVICES"
     echo -e "${YELLOW}📦 Starting services: $CMD${NC}"
 fi
 
@@ -191,7 +191,7 @@ if eval $CMD; then
         echo -e "${BLUE}📋 Useful commands:${NC}"
         echo "   ./scripts/dev-logs.sh           # View logs"
         echo "   ./scripts/dev-stop.sh           # Stop services"
-        echo "   docker-compose --env-file $ENV_FILE ps  # Check status"
+        echo "   docker compose --env-file $ENV_FILE ps  # Check status"
         echo ""
         
         # Show if we started specific services
@@ -204,7 +204,7 @@ if eval $CMD; then
     # If logs requested, show them
     if [ -n "$LOGS_FLAG" ]; then
         echo -e "${BLUE}📋 Following logs (Ctrl+C to stop):${NC}"
-        docker-compose --env-file $ENV_FILE $COMPOSE_FILES logs -f $SERVICES
+        docker compose --env-file $ENV_FILE $COMPOSE_FILES logs -f $SERVICES
     fi
 else
     echo -e "${RED}❌ Failed to start development environment${NC}"

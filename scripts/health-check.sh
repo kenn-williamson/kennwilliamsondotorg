@@ -113,9 +113,9 @@ done
 # Change to project root
 cd "$PROJECT_ROOT"
 
-# Check if docker-compose is available
-if ! command -v docker-compose >/dev/null 2>&1; then
-    error "docker-compose not found. Please install Docker Compose."
+# Check if docker compose is available
+if ! docker compose version >/dev/null 2>&1; then
+    error "docker compose not found. Please install Docker Compose V2."
 fi
 
 # Environment detection and validation
@@ -165,13 +165,13 @@ else
     fi
 fi
 
-# Set docker-compose command based on mode
+# Set docker compose command based on mode
 if [[ "$DEV_MODE" == true ]]; then
-    COMPOSE_CMD="docker-compose --env-file .env.development -f docker-compose.yml -f docker-compose.development.yml"
+    COMPOSE_CMD="docker compose --env-file .env.development -f docker-compose.yml -f docker-compose.development.yml"
 elif [[ "$LOCAL_PROD_MODE" == true ]]; then
-    COMPOSE_CMD="docker-compose --env-file .env.production -f docker-compose.yml -f docker-compose.local-prod.yml"
+    COMPOSE_CMD="docker compose --env-file .env.production -f docker-compose.yml -f docker-compose.local-prod.yml"
 else
-    COMPOSE_CMD="docker-compose --env-file .env.production -f docker-compose.yml"
+    COMPOSE_CMD="docker compose --env-file .env.production -f docker-compose.yml"
 fi
 
 # Get available services

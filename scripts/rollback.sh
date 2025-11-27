@@ -55,15 +55,15 @@ fi
 
 # Pull specified version from registry
 echo "📥 Pulling version $VERSION from registry..."
-docker-compose -f docker-compose.production.yml --env-file .env.production pull
+docker compose -f docker-compose.production.yml --env-file .env.production pull
 
 # Stop existing containers
 echo "🛑 Stopping current containers..."
-docker-compose -f docker-compose.production.yml --env-file .env.production down --timeout 30
+docker compose -f docker-compose.production.yml --env-file .env.production down --timeout 30
 
 # Start containers with rollback version
 echo "▶️ Starting containers with version $VERSION..."
-docker-compose -f docker-compose.production.yml --env-file .env.production up -d
+docker compose -f docker-compose.production.yml --env-file .env.production up -d
 
 # Wait for services to be healthy
 echo "🏥 Waiting for services to be healthy..."
@@ -71,7 +71,7 @@ sleep 30
 
 # Check service health
 echo "✅ Checking service health..."
-docker-compose -f docker-compose.production.yml --env-file .env.production ps
+docker compose -f docker-compose.production.yml --env-file .env.production ps
 
 echo ""
 echo "⚠️  DATABASE MIGRATION NOTICE:"
@@ -79,8 +79,8 @@ echo "   Database migrations are NOT automatically reverted during rollback."
 echo "   If the failed deployment applied new migrations, you may need to manually revert them."
 echo ""
 echo "   To manually revert migrations (if needed):"
-echo "   1. Check migration status: docker-compose -f docker-compose.production.yml --env-file .env.production run --rm migrations migrate info"
-echo "   2. Revert last migration: docker-compose -f docker-compose.production.yml --env-file .env.production run --rm migrations migrate revert"
+echo "   1. Check migration status: docker compose -f docker-compose.production.yml --env-file .env.production run --rm migrations migrate info"
+echo "   2. Revert last migration: docker compose -f docker-compose.production.yml --env-file .env.production run --rm migrations migrate revert"
 echo "   3. Repeat step 2 for each migration that needs reverting"
 echo ""
 echo "   Note: Only revert migrations if they are incompatible with version $VERSION"

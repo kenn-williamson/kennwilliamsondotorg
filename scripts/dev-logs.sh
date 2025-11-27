@@ -75,7 +75,7 @@ while [[ $# -gt 0 ]]; do
 done
 
 # Build command
-CMD="docker-compose --env-file $ENV_FILE $COMPOSE_FILES logs $FOLLOW_FLAG $TAIL_LINES $TIMESTAMPS $SERVICES"
+CMD="docker compose --env-file $ENV_FILE $COMPOSE_FILES logs $FOLLOW_FLAG $TAIL_LINES $TIMESTAMPS $SERVICES"
 
 echo -e "${YELLOW}📋 Running: $CMD${NC}"
 

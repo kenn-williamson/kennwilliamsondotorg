@@ -514,9 +514,6 @@ import AboutLayout from "~/components/About/AboutLayout.vue";
 import SteampunkTooltip from "~/components/Steampunk/SteampunkTooltip.vue";
 import SteampunkAccordion from "~/components/Steampunk/SteampunkAccordion.vue";
 
-definePageMeta({
-  middleware: 'trusted-contact'
-})
 
 useHead({
   title: "Origins - Kenn Williamson",

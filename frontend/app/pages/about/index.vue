@@ -177,7 +177,7 @@
     </p>
 
     <ul class="space-y-3 my-6">
-      <li v-if="hasTrustedContactAccess">
+      <li>
         <NuxtLink
           to="/about/origins"
           class="font-semibold text-primary-700 hover:text-primary-900"
@@ -195,7 +195,7 @@
         </NuxtLink>: College failures, my mother's death, the lost years, becoming a father while
         barely functional
       </li>
-      <li v-if="hasTrustedContactAccess">
+      <li>
         <NuxtLink
           to="/about/faith"
           class="font-semibold text-primary-700 hover:text-primary-900"
@@ -204,7 +204,7 @@
         </NuxtLink>: From childhood religion through atheism to discovering the Church Fathers, and
         the journey back to faith
       </li>
-      <li v-if="hasTrustedContactAccess">
+      <li>
         <NuxtLink
           to="/about/theology"
           class="font-semibold text-primary-700 hover:text-primary-900"
@@ -238,7 +238,7 @@
         </NuxtLink>: Single dad reality, three kids with very different needs, church community,
         hobbies, and yes, the dating question
       </li>
-      <li v-if="hasTrustedContactAccess">
+      <li>
         <NuxtLink
           to="/about/vision"
           class="font-semibold text-primary-700 hover:text-primary-900"

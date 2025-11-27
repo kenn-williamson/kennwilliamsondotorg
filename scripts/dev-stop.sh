@@ -61,10 +61,10 @@ done
 
 # Build command
 if [ -n "$REMOVE_FLAG" ]; then
-    CMD="docker-compose --env-file $ENV_FILE $COMPOSE_FILES down $REMOVE_FLAG $SERVICES"
+    CMD="docker compose --env-file $ENV_FILE $COMPOSE_FILES down $REMOVE_FLAG $SERVICES"
     echo -e "${YELLOW}🗑️  Stopping and removing: $CMD${NC}"
 else
-    CMD="docker-compose --env-file $ENV_FILE $COMPOSE_FILES stop $SERVICES"
+    CMD="docker compose --env-file $ENV_FILE $COMPOSE_FILES stop $SERVICES"
     echo -e "${YELLOW}⏹️  Stopping: $CMD${NC}"
 fi
 

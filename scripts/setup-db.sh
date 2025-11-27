@@ -92,7 +92,7 @@ if [[ ! -f "$BACKEND_DIR/Cargo.toml" ]]; then
 fi
 
 # Initialize Docker Compose command
-COMPOSE_CMD="docker-compose"
+COMPOSE_CMD="docker compose"
 
 # Environment detection and validation (skip if in container context)
 if [[ "$CONTAINER_CONTEXT" != "true" ]]; then
@@ -115,7 +115,7 @@ fi
 # Check if we're running in container context
 if [[ "$CONTAINER_CONTEXT" == "true" ]]; then
     log "Using environment variables provided by container runtime"
-    # In container context, we don't need to load files or use docker-compose
+    # In container context, we don't need to load files or use docker compose
     COMPOSE_CMD=""
 elif [[ "$DEV_MODE" == true ]]; then
     # Development mode - load dev environment
@@ -191,7 +191,7 @@ if ! test_db_connection; then
     warn "Cannot connect to database"
     
     # Check if Docker Compose is available
-    if command -v docker-compose >/dev/null 2>&1; then
+    if docker compose version >/dev/null 2>&1; then
         echo "Would you like to start PostgreSQL? (y/N)"
         read -r response
         if [[ "$response" =~ ^[Yy]$ ]]; then
@@ -216,7 +216,7 @@ if ! test_db_connection; then
             error "Database is required for migrations. Start it with: $COMPOSE_CMD up postgres -d"
         fi
     else
-        error "Cannot connect to database and docker-compose not available"
+        error "Cannot connect to database and docker compose not available"
     fi
 fi
 

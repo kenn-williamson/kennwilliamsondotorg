@@ -140,14 +140,14 @@ const mobileMenuOpen = ref(false)
 // About section navigation structure
 const allSections = [
   { title: 'Overview', path: '/about', restricted: false },
-  { title: 'Origins', path: '/about/origins', restricted: true },
+  { title: 'Origins', path: '/about/origins', restricted: false },
   { title: 'The Wilderness', path: '/about/wilderness', restricted: true },
-  { title: 'Finding Faith', path: '/about/faith', restricted: true },
-  { title: 'Theology & Practice', path: '/about/theology', restricted: true },
+  { title: 'Finding Faith', path: '/about/faith', restricted: false },
+  { title: 'Theology & Practice', path: '/about/theology', restricted: false },
   { title: 'Professional Path', path: '/about/professional', restricted: false },
   { title: 'AI → IA', path: '/about/ai', restricted: false },
   { title: 'Life Now', path: '/about/now', restricted: true },
-  { title: 'Philosophy & Vision', path: '/about/vision', restricted: true }
+  { title: 'Philosophy & Vision', path: '/about/vision', restricted: false }
 ]
 
 // Check if user has access to restricted content

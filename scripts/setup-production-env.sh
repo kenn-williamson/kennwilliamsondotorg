@@ -163,7 +163,7 @@ echo "• Consider using environment variables or secrets management in producti
 echo "• Backup these secrets securely before deployment"
 echo ""
 echo -e "${GREEN}Ready to test production build:${NC}"
-echo "docker-compose -f docker-compose.yml --env-file $ENV_FILE build"
+echo "docker compose -f docker-compose.yml --env-file $ENV_FILE build"
 echo ""
 
 # Offer to show the generated secrets (masked)

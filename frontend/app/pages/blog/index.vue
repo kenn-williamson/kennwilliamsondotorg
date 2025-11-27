@@ -12,34 +12,8 @@
         <div class="p-6 sm:p-8 lg:p-12">
           <!-- Header -->
           <header class="mb-8">
-            <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-4">
+            <div class="mb-4">
               <h1 class="text-4xl sm:text-5xl font-bold text-primary-900">Blog</h1>
-
-              <!-- View Toggle -->
-              <div class="flex items-center gap-2 bg-nautical-100 rounded-lg p-1 border border-nautical-300">
-                <button
-                  @click="viewMode = 'excerpt'"
-                  :class="[
-                    'px-4 py-2 rounded-md text-sm font-medium transition-colors',
-                    viewMode === 'excerpt'
-                      ? 'bg-primary-600 text-white shadow-sm'
-                      : 'text-nautical-700 hover:bg-nautical-200'
-                  ]"
-                >
-                  Excerpt View
-                </button>
-                <button
-                  @click="viewMode = 'full'"
-                  :class="[
-                    'px-4 py-2 rounded-md text-sm font-medium transition-colors',
-                    viewMode === 'full'
-                      ? 'bg-primary-600 text-white shadow-sm'
-                      : 'text-nautical-700 hover:bg-nautical-200'
-                  ]"
-                >
-                  Full View
-                </button>
-              </div>
             </div>
 
             <p class="text-lg text-nautical-700">
@@ -84,7 +58,6 @@
               v-for="post in postsData.posts"
               :key="post.id"
               :post="post"
-              :show-full-content="viewMode === 'full'"
             />
 
             <!-- Pagination -->
@@ -106,9 +79,6 @@ import type { BlogPostList } from '#shared/types'
 
 const route = useRoute()
 const blogStore = useBlogStore()
-
-// View mode state
-const viewMode = ref<'excerpt' | 'full'>('excerpt')
 
 // Reactive query params
 const page = computed(() => parseInt(route.query.page as string) || 1)

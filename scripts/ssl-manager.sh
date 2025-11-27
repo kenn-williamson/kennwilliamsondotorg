@@ -146,7 +146,7 @@ generate_certificates() {
     # Stop nginx temporarily to free up port 80
     log "Stopping nginx container..."
     cd "$PROJECT_ROOT"
-    docker-compose --env-file .env.production stop nginx
+    docker compose --env-file .env.production stop nginx
     
     # Generate certificates using standalone mode (includes www subdomain)
     certbot certonly \
@@ -204,7 +204,7 @@ renew_certificates() {
             # Reload nginx to use new certificates
             log "Reloading nginx with new certificates..."
             cd "$PROJECT_ROOT"
-            docker-compose --env-file .env.production exec nginx nginx -s reload
+            docker compose --env-file .env.production exec nginx nginx -s reload
             
             success "Certificates renewed and nginx reloaded!"
         fi
@@ -288,7 +288,7 @@ main() {
             generate_certificates
             log "Restarting nginx with new certificates..."
             cd "$PROJECT_ROOT"
-            docker-compose --env-file .env.production start nginx
+            docker compose --env-file .env.production start nginx
             success "SSL setup complete! Your site should now be accessible at https://$DOMAIN_NAME"
             ;;
         "fake")
@@ -298,7 +298,7 @@ main() {
             create_fake_certificates
             log "Restarting nginx with temporary certificates..."
             cd "$PROJECT_ROOT"
-            docker-compose --env-file .env.production restart nginx
+            docker compose --env-file .env.production restart nginx
             success "Temporary SSL setup complete! Your site should now be accessible at https://$DOMAIN_NAME (with browser warning)"
             ;;
         "renew")

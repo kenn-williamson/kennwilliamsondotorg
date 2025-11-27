@@ -76,7 +76,7 @@ test_db_connection() {
         pg_isready -d "$DATABASE_URL" >/dev/null 2>&1
     else
         # Use Docker to test connectivity
-        docker-compose exec -T postgres pg_isready -U postgres >/dev/null 2>&1
+        docker compose exec -T postgres pg_isready -U postgres >/dev/null 2>&1
     fi
 }
 
@@ -84,13 +84,13 @@ if ! test_db_connection; then
     warn "Cannot connect to database"
     
     # Check if Docker Compose is available
-    if command -v docker-compose >/dev/null 2>&1; then
+    if docker compose version >/dev/null 2>&1; then
         echo "Would you like to start PostgreSQL? (y/N)"
         read -r response
         if [[ "$response" =~ ^[Yy]$ ]]; then
             log "Starting PostgreSQL service..."
             cd "$PROJECT_ROOT"
-            docker-compose up postgres -d
+            docker compose up postgres -d
             
             # Wait for database to be ready
             log "Waiting for database to be ready..."
@@ -106,10 +106,10 @@ if ! test_db_connection; then
             done
             cd "$BACKEND_DIR"
         else
-            error "Database is required for SQLx preparation. Start it with: docker-compose up postgres -d"
+            error "Database is required for SQLx preparation. Start it with: docker compose up postgres -d"
         fi
     else
-        error "Cannot connect to database and docker-compose not available"
+        error "Cannot connect to database and docker compose not available"
     fi
 fi
 

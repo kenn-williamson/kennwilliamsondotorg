@@ -292,9 +292,6 @@
 import AboutLayout from "~/components/About/AboutLayout.vue";
 import SteampunkTooltip from "~/components/Steampunk/SteampunkTooltip.vue";
 
-definePageMeta({
-  middleware: 'trusted-contact'
-})
 
 useHead({
   title: "Finding Faith - Kenn Williamson",

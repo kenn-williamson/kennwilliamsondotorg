@@ -15,6 +15,7 @@ services:
   # Backend - Development with Hot Reload
   backend:
     image: kennwilliamson-backend-dev  # Separate dev image to avoid conflicts
+    pull_policy: never  # Don't try to pull from registry, use local image
     build:
       context: ./backend
       dockerfile: Dockerfile.dev  # Development-specific Dockerfile
@@ -55,9 +56,10 @@ services:
         reservations:
           memory: 500m
     
-  # Frontend - Development with Hot Reload  
+  # Frontend - Development with Hot Reload
   frontend:
     image: kennwilliamson-frontend-dev  # Separate dev image to avoid conflicts
+    pull_policy: never  # Don't try to pull from registry, use local image
     build:
       context: ./frontend
       dockerfile: Dockerfile.dev  # Development-specific Dockerfile
