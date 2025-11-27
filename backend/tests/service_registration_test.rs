@@ -5,28 +5,23 @@
  * with the Actix web application. It catches the common mistake of adding a
  * new service to the container but forgetting to register it in main.rs.
  */
+mod fixtures;
+
 use actix_web::{App, test, web};
 use backend::services::container::ServiceContainer;
-use sqlx::PgPool;
 use std::env;
 
 #[actix_web::test]
 async fn test_all_services_are_registered() {
-    // Setup test environment
-    dotenvy::from_filename(".env.development").ok();
+    // Use testcontainer pool for database
+    let tc = fixtures::pool::checkout().await;
+    let pool = tc.pool.clone();
 
-    let database_url = env::var("DATABASE_URL").unwrap_or_else(|_| {
-        "postgresql://postgres:password@localhost:5432/kennwilliamson".to_string()
-    });
     let jwt_secret = env::var("JWT_SECRET").unwrap_or_else(|_| "test_secret".to_string());
     let redis_url = env::var("REDIS_URL").unwrap_or_else(|_| "redis://localhost:6379".to_string());
 
-    let pool = PgPool::connect(&database_url)
-        .await
-        .expect("Failed to connect to database");
-
     // Create service container (same as main.rs)
-    let container = ServiceContainer::new_development(pool.clone(), jwt_secret, redis_url);
+    let services = ServiceContainer::new_development(pool.clone(), jwt_secret, redis_url);
 
     // Create app with the SAME service registrations as main.rs
     // If you add a service to container but forget to register it here,
@@ -34,17 +29,17 @@ async fn test_all_services_are_registered() {
     let app = test::init_service(
         App::new()
             .app_data(web::Data::new(pool.clone()))
-            .app_data(web::Data::from(container.auth_service.clone()))
-            .app_data(web::Data::from(container.blog_service.clone()))
-            .app_data(web::Data::from(container.incident_timer_service.clone()))
-            .app_data(web::Data::from(container.phrase_service.clone()))
-            .app_data(web::Data::from(container.admin_service.clone()))
-            .app_data(web::Data::from(container.phrase_moderation_service.clone()))
+            .app_data(web::Data::from(services.auth_service.clone()))
+            .app_data(web::Data::from(services.blog_service.clone()))
+            .app_data(web::Data::from(services.incident_timer_service.clone()))
+            .app_data(web::Data::from(services.phrase_service.clone()))
+            .app_data(web::Data::from(services.admin_service.clone()))
+            .app_data(web::Data::from(services.phrase_moderation_service.clone()))
             .app_data(web::Data::from(
-                container.access_request_moderation_service.clone(),
+                services.access_request_moderation_service.clone(),
             ))
-            .app_data(web::Data::from(container.stats_service.clone()))
-            .app_data(web::Data::from(container.rate_limit_service.clone())),
+            .app_data(web::Data::from(services.stats_service.clone()))
+            .app_data(web::Data::from(services.rate_limit_service.clone())),
     )
     .await;
 
