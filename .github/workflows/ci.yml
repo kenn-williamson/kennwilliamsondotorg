@@ -83,7 +83,16 @@ jobs:
           mkdir -p coverage
           cargo llvm-cov nextest --locked --profile ci --lcov --output-path coverage/lcov.info --all-features
         env:
-          TESTCONTAINER_POOL_SIZE: 4
+          TESTCONTAINER_POOL_SIZE: 8
+
+      - name: Show container stats
+        if: always()
+        run: |
+          echo "=== Docker containers created during tests ==="
+          docker ps -a --format "table {{.Names}}\t{{.Status}}\t{{.CreatedAt}}" | head -20
+          echo ""
+          echo "=== Total container count ==="
+          docker ps -a -q | wc -l
 
       - name: Upload backend coverage
         if: always()
