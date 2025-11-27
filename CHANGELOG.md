@@ -1,5 +1,19 @@
 # Changelog
 
+## [1.4.1](https://github.com/kenn-williamson/kennwilliamsondotorg/compare/v1.4.0...v1.4.1) (2025-11-27)
+
+
+### Bug Fixes
+
+* **ci:** remove all service containers, tests use testcontainers ([18f0d0b](https://github.com/kenn-williamson/kennwilliamsondotorg/commit/18f0d0b753d922451d948251ae5f3ff26a4c7ce6))
+* **tests:** use testcontainer pool in service_registration_test ([21d5e12](https://github.com/kenn-williamson/kennwilliamsondotorg/commit/21d5e12c3448ff7d4e9ed0ce61951aa03d7cd154))
+
+
+### Performance Improvements
+
+* **ci:** increase test parallelism to 8 threads and 8 containers ([64d542d](https://github.com/kenn-williamson/kennwilliamsondotorg/commit/64d542d9db876b12832141bd4b39c7eeccce0d5c))
+* **tests:** add deadpool testcontainer pooling for faster integration tests ([185b294](https://github.com/kenn-williamson/kennwilliamsondotorg/commit/185b2948efd387b70c418ccd6423691b8d2f588b))
+
 ## [1.4.0](https://github.com/kenn-williamson/kennwilliamsondotorg/compare/v1.3.0...v1.4.0) (2025-11-27)
 
 
