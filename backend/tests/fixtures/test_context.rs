@@ -7,10 +7,72 @@ use anyhow::Result;
 use sqlx::PgPool;
 use std::sync::Arc;
 use testcontainers::{
-    GenericImage, ImageExt,
+    GenericImage, ImageExt, ReuseDirective,
     core::{IntoContainerPort, WaitFor},
     runners::AsyncRunner,
 };
+
+/// TRUNCATE all test data tables and re-seed for container reuse.
+/// This mirrors the seed data from migrations.
+const RESET_SQL: &str = r#"
+-- Truncate all data tables
+TRUNCATE TABLE
+    user_excluded_phrases,
+    phrase_suggestions,
+    phrases,
+    incident_timers,
+    refresh_tokens,
+    verification_tokens,
+    password_reset_tokens,
+    access_requests,
+    user_roles,
+    user_preferences,
+    user_profiles,
+    user_credentials,
+    user_external_logins,
+    email_suppressions,
+    blog_posts,
+    users,
+    roles
+CASCADE;
+
+-- Re-seed roles (from migrations)
+INSERT INTO roles (name, description) VALUES
+    ('user', 'Standard user with basic permissions'),
+    ('admin', 'Administrator with full permissions'),
+    ('email-verified', 'User has verified their email address'),
+    ('trusted-contact', 'Trusted contact with access to personal/family content');
+
+-- Re-seed system user (from migrations)
+INSERT INTO users (email, slug, display_name)
+VALUES ('system@kennwilliamson.org', 'system', 'System');
+
+-- Re-seed phrases (from migrations)
+INSERT INTO phrases (phrase_text, created_by)
+SELECT phrase_data.phrase, (SELECT id FROM users WHERE email = 'system@kennwilliamson.org' LIMIT 1)
+FROM (VALUES
+    ('The Watch Continues. The Walls Must Hold.'),
+    ('By Grace you stand; by vigilance you endure.'),
+    ('A Chain is Forged One Link at a Time. Keep it Unbroken.'),
+    ('Each Day Forges a Stronger Will. Temper it with Awareness.'),
+    ('This Path is a Razor''s Edge. Walk with Purpose and a Steady Soul.'),
+    ('The Spirit is willing, but the flesh is weak. Clothe yourself in vigilance.'),
+    ('Complacency is the Serpent in the Garden. Guard the Gates.'),
+    ('This number is a monument to your resolve. Protect its foundation.'),
+    ('A Garden Untended Grows to Weed. Tend the Soul with Prayer and Watchfulness.'),
+    ('Navigating a Steady Course. Be Wary of the Coming Tides.'),
+    ('The Beast is Caged, Not Slain. Do Not Forget the Strength of its Bars.'),
+    ('The Higher the Ascent, the Sheerer the Ledge. Keep Your Gaze Fixed on the Summit.'),
+    ('Kept by Grace, Tested by the World. Stay Close to the Shepherd.'),
+    ('This Quiet is a Hard-Won Peace. Do Not Mistake it for a Truce.'),
+    ('Refined by the Fire of Trial. May Your Resolve be as Pure as Gold.'),
+    ('The Past is a Shoreline Behind You. The Ocean Ahead is Vast and Unseen.'),
+    ('A Fortress of Habit Stands One Stone at a Time. Lay Today''s Stone with Care.'),
+    ('The Light Holds, but Shadows Lengthen. Stay Rooted in your Conviction.'),
+    ('Let This Streak be a Testament, Not a Trophy. A Trophy Gathers Dust; a Testament Must be Lived.'),
+    ('Strength is a Gift, Not a Given. Honor it with Continued Discipline.')
+) AS phrase_data(phrase);
+"#;
 
 // ============================================================================
 // TEST CONTAINER - Database-only fixture
@@ -72,7 +134,14 @@ impl TestContainer {
                 tokio::time::sleep(tokio::time::Duration::from_secs(1)).await; // Brief pause
             }
 
-            // Create a fresh image configuration for each attempt
+            // Use slot-based container name for parallel test support
+            // Each nextest slot gets its own reusable container
+            // See: https://nexte.st/docs/configuration/env-vars/
+            let slot_id = std::env::var("NEXTEST_TEST_GLOBAL_SLOT")
+                .unwrap_or_else(|_| "0".to_string());
+            let container_name = format!("test-postgres-{}", slot_id);
+
+            // Create image with reuse enabled for faster test execution
             let image = GenericImage::new("ghcr.io/fboulnois/pg_uuidv7", "1.6.0")
                 .with_exposed_port(5432.tcp())
                 .with_wait_for(WaitFor::message_on_stdout(
@@ -80,7 +149,9 @@ impl TestContainer {
                 ))
                 .with_env_var("POSTGRES_DB", "testdb")
                 .with_env_var("POSTGRES_USER", "postgres")
-                .with_env_var("POSTGRES_PASSWORD", "postgres");
+                .with_env_var("POSTGRES_PASSWORD", "postgres")
+                .with_container_name(&container_name)
+                .with_reuse(ReuseDirective::Always);
 
             let container = match image.start().await {
                 Ok(container) => container,
@@ -116,11 +187,17 @@ impl TestContainer {
                         .await
                         .expect("Failed to enable pg_uuidv7 extension");
 
-                    // Run migrations
+                    // Run migrations (idempotent - won't re-run if already done)
                     sqlx::migrate!("./migrations")
                         .run(&pool)
                         .await
                         .expect("Failed to run migrations");
+
+                    // TRUNCATE all data for clean slate (reused containers have old data)
+                    sqlx::raw_sql(RESET_SQL)
+                        .execute(&pool)
+                        .await
+                        .expect("Failed to reset database");
 
                     return Ok(TestContainer {
                         _container: Box::new(container),

@@ -57,10 +57,9 @@ if [ "$CHECK_BACKEND" = true ]; then
     fi
 
     echo -e "${BLUE}[2/7] Backend Tests (this may take a few minutes...)${NC}"
-    # Use --test-threads=1 to prevent WSL resource exhaustion
-    # Integration tests use testcontainers which spin up Docker containers
-    # Show output so you can see progress
-    if cargo nextest run --locked --all-features --test-threads=1 || cargo test --locked --all-features -- --test-threads=1; then
+    # Use 8 threads with reusable testcontainers for fast parallel execution
+    # Containers are reused within each slot via NEXTEST_TEST_GLOBAL_SLOT
+    if cargo nextest run --locked --all-features --test-threads=8 || cargo test --locked --all-features -- --test-threads=8; then
         echo -e "${GREEN}✓ Backend tests passed${NC}\n"
     else
         echo -e "${RED}✗ Backend tests failed${NC}\n"
@@ -117,6 +116,16 @@ if [ "$CHECK_FRONTEND" = true ]; then
         echo -e "${RED}✗ Frontend audit failed${NC}\n"
         FAILED_CHECKS+=("frontend-audit")
     fi
+fi
+
+#######################################################
+# Cleanup
+#######################################################
+# Clean up reusable test containers (in CI, GitHub runner handles this)
+if [ "$CHECK_BACKEND" = true ]; then
+    echo -e "${BLUE}Cleaning up test containers...${NC}"
+    "$SCRIPT_DIR/cleanup-test-containers.sh"
+    echo ""
 fi
 
 #######################################################

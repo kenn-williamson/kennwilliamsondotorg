@@ -48,5 +48,5 @@ actix-rt = "2"
 actix-test = "0.1"
 tokio-test = "0.4"
 lazy_static = "1.4"
-testcontainers = "0.25"
+testcontainers = { version = "0.25", features = ["reusable-containers"] }
 testcontainers-modules = "0.13"
