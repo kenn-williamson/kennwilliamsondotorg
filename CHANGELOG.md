@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.4.0](https://github.com/kenn-williamson/kennwilliamsondotorg/compare/v1.3.0...v1.4.0) (2025-11-27)
+
+
+### Features
+
+* **about:** make faith, theology, origins, and vision pages public ([b73e4a8](https://github.com/kenn-williamson/kennwilliamsondotorg/commit/b73e4a85d8a2923b003e99de18859c508b8c4c52))
+
 ## [1.3.0](https://github.com/kenn-williamson/kennwilliamsondotorg/compare/v1.2.4...v1.3.0) (2025-11-20)
 
 
