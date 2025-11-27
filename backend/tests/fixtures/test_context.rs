@@ -2,23 +2,28 @@
 //
 // Provides TestContext (full application with services) and TestContainer (just database)
 // for different levels of integration testing.
+//
+// TestContainer now uses a pooled testcontainer internally for improved performance.
+// Containers are reused across tests with database reset (TRUNCATE + re-migrate) between tests.
 
 use anyhow::Result;
 use sqlx::PgPool;
 use std::sync::Arc;
-use testcontainers::{
-    GenericImage, ImageExt,
-    core::{IntoContainerPort, WaitFor},
-    runners::AsyncRunner,
-};
+
+use super::pool;
 
 // ============================================================================
-// TEST CONTAINER - Database-only fixture
+// TEST CONTAINER - Database-only fixture (now pool-backed)
 // ============================================================================
 
-/// Test container that keeps the container alive for the duration of the test
+/// Test container that keeps a pooled container alive for the duration of the test.
+///
+/// Internally uses deadpool to reuse containers across tests for better performance.
+/// When the TestContainer is dropped, the underlying container is returned to the pool
+/// and reset (TRUNCATE + re-migrate) for the next test.
 pub struct TestContainer {
-    _container: Box<dyn std::any::Any + Send + Sync>,
+    /// Pooled container handle (returned to pool on drop)
+    _pooled: deadpool::managed::Object<pool::manager::TestcontainerManager>,
     pub pool: PgPool,
     #[allow(dead_code)] // Field is available for debugging and future use
     pub connection_string: String,
@@ -52,138 +57,19 @@ impl TestContainer {
     }
 
     /// Internal constructor - use builder() instead
+    ///
+    /// Checks out a container from the global pool. The container is already
+    /// initialized with migrations and ready to use.
     async fn new_internal() -> Result<Self> {
-        let mut current_container: Option<Box<dyn std::any::Any + Send + Sync>> = None;
-        let mut total_attempts = 0;
-        let max_total_attempts = 15; // 3 containers × 5 attempts each
+        let pooled = pool::checkout().await;
+        let connection_string = pooled.connection_string();
+        let db_pool = pooled.pool.clone();
 
-        loop {
-            total_attempts += 1;
-            if total_attempts > max_total_attempts {
-                return Err(anyhow::anyhow!(
-                    "Failed to setup database after {} total attempts (3 containers × 5 attempts each)",
-                    max_total_attempts
-                ));
-            }
-            // Clean up the previous container if it exists
-            if let Some(old_container) = current_container.take() {
-                // The container will be automatically cleaned up when dropped
-                drop(old_container);
-                tokio::time::sleep(tokio::time::Duration::from_secs(1)).await; // Brief pause
-            }
-
-            // Create a fresh image configuration for each attempt
-            let image = GenericImage::new("ghcr.io/fboulnois/pg_uuidv7", "1.6.0")
-                .with_exposed_port(5432.tcp())
-                .with_wait_for(WaitFor::message_on_stdout(
-                    "database system is ready to accept connections",
-                ))
-                .with_env_var("POSTGRES_DB", "testdb")
-                .with_env_var("POSTGRES_USER", "postgres")
-                .with_env_var("POSTGRES_PASSWORD", "postgres");
-
-            let container = match image.start().await {
-                Ok(container) => container,
-                Err(e) => {
-                    eprintln!("❌ Failed to start container: {}", e);
-                    tokio::time::sleep(tokio::time::Duration::from_secs(2)).await;
-                    continue;
-                }
-            };
-
-            let port = match container.get_host_port_ipv4(5432).await {
-                Ok(port) => port,
-                Err(e) => {
-                    eprintln!("❌ Failed to get port: {}", e);
-                    // Store container for cleanup
-                    current_container = Some(Box::new(container));
-                    tokio::time::sleep(tokio::time::Duration::from_secs(2)).await;
-                    continue;
-                }
-            };
-
-            let connection_string = format!(
-                "postgres://postgres:postgres@127.0.0.1:{}/testdb?sslmode=disable",
-                port
-            );
-
-            // Try to connect with restart logic (tries 5 times, then signals restart)
-            match Self::wait_for_database_ready_with_restart(&connection_string).await {
-                Ok(pool) => {
-                    // Enable pg_uuidv7 extension
-                    sqlx::query("CREATE EXTENSION IF NOT EXISTS pg_uuidv7")
-                        .execute(&pool)
-                        .await
-                        .expect("Failed to enable pg_uuidv7 extension");
-
-                    // Run migrations
-                    sqlx::migrate!("./migrations")
-                        .run(&pool)
-                        .await
-                        .expect("Failed to run migrations");
-
-                    return Ok(TestContainer {
-                        _container: Box::new(container),
-                        pool,
-                        connection_string,
-                    });
-                }
-                Err(e) => {
-                    eprintln!("❌ Database setup failed: {}", e);
-                    // Store container for cleanup on next iteration
-                    current_container = Some(Box::new(container));
-                    tokio::time::sleep(tokio::time::Duration::from_secs(2)).await;
-                }
-            }
-        }
-    }
-
-    /// Wait for database to be ready with container restart logic
-    async fn wait_for_database_ready_with_restart(connection_string: &str) -> Result<PgPool> {
-        let mut attempt = 0;
-        let attempts_per_container = 5; // Try 5 times before restarting container
-
-        loop {
-            attempt += 1;
-
-            match sqlx::postgres::PgPoolOptions::new()
-                .max_connections(5)
-                .acquire_timeout(std::time::Duration::from_secs(10))
-                .idle_timeout(std::time::Duration::from_secs(600))
-                .connect(connection_string)
-                .await
-            {
-                Ok(pool) => {
-                    // Test the connection
-                    match sqlx::query("SELECT 1").fetch_one(&pool).await {
-                        Ok(_) => {
-                            return Ok(pool);
-                        }
-                        Err(_e) => {
-                            // Query failed, will retry
-                        }
-                    }
-                }
-                Err(_e) => {
-                    // Connection failed, will retry
-                }
-            }
-
-            // If we've tried 5 times, signal that we need to restart the container
-            if attempt % attempts_per_container == 0 {
-                eprintln!(
-                    "⚠️  Database unresponsive after {} attempts, restarting container...",
-                    attempt
-                );
-                return Err(anyhow::anyhow!(
-                    "Container restart needed after {} attempts",
-                    attempt
-                ));
-            }
-
-            let delay = std::cmp::min(1 << (attempt % attempts_per_container), 8); // Exponential backoff, max 8 seconds
-            tokio::time::sleep(tokio::time::Duration::from_secs(delay)).await;
-        }
+        Ok(TestContainer {
+            _pooled: pooled,
+            pool: db_pool,
+            connection_string,
+        })
     }
 }
 

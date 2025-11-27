@@ -124,6 +124,7 @@ jobs:
         env:
           DATABASE_URL: postgres://testuser:testpass@localhost:5432/testdb
           REDIS_URL: redis://localhost:6379
+          TESTCONTAINER_POOL_SIZE: 4  # Match test-threads in nextest.toml [profile.ci]
 
       - name: Upload backend coverage
         if: always()

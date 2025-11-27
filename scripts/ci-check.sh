@@ -57,10 +57,11 @@ if [ "$CHECK_BACKEND" = true ]; then
     fi
 
     echo -e "${BLUE}[2/7] Backend Tests (this may take a few minutes...)${NC}"
-    # Use --test-threads=1 to prevent WSL resource exhaustion
-    # Integration tests use testcontainers which spin up Docker containers
-    # Show output so you can see progress
-    if cargo nextest run --locked --all-features --test-threads=1 || cargo test --locked --all-features -- --test-threads=1; then
+    # Use pooled testcontainers for faster parallel test execution
+    # TESTCONTAINER_POOL_SIZE=8 maintains 8 reusable containers
+    # --test-threads=8 runs tests in parallel across those containers
+    export TESTCONTAINER_POOL_SIZE=8
+    if cargo nextest run --locked --all-features --test-threads=8 || cargo test --locked --all-features -- --test-threads=8; then
         echo -e "${GREEN}✓ Backend tests passed${NC}\n"
     else
         echo -e "${RED}✗ Backend tests failed${NC}\n"

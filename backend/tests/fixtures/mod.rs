@@ -8,6 +8,7 @@
 pub mod data_generators;
 pub mod database;
 pub mod jwt;
+pub mod pool;
 pub mod test_context;
 
 // Re-export commonly used items
@@ -24,5 +25,7 @@ pub use database::{
 };
 #[allow(unused_imports)]
 pub use jwt::create_test_jwt_token;
+#[allow(unused_imports)]
+pub use pool::checkout;
 #[allow(unused_imports)]
 pub use test_context::{TestContainer, TestContext};
