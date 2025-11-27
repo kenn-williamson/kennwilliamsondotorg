@@ -20,32 +20,14 @@ jobs:
     name: Backend Tests & Coverage
     runs-on: ubuntu-latest
 
-    services:
-      postgres:
-        image: ghcr.io/fboulnois/pg_uuidv7:1.6.0
-        env:
-          POSTGRES_USER: testuser
-          POSTGRES_PASSWORD: testpass
-          POSTGRES_DB: testdb
-        options: >-
-          --health-cmd pg_isready
-          --health-interval 10s
-          --health-timeout 5s
-          --health-retries 5
-        ports:
-          - 5432:5432
-
-      redis:
-        image: redis:7-alpine
-        options: >-
-          --health-cmd "redis-cli ping"
-          --health-interval 10s
-          --health-timeout 5s
-          --health-retries 5
-        ports:
-          - 6379:6379
-
     steps:
+      - name: Free disk space
+        run: |
+          # Remove unnecessary tools to free ~10GB
+          sudo rm -rf /usr/share/dotnet /usr/local/lib/android /opt/ghc
+          docker system prune -af --volumes
+          df -h
+
       - name: Checkout code
         uses: actions/checkout@v4
 
@@ -72,30 +54,15 @@ jobs:
           workspaces: backend
           cache-on-failure: true
 
-      - name: Cache sqlx-cli binary
-        id: cache-sqlx
-        uses: actions/cache@v4
-        with:
-          path: ~/.cargo/bin/sqlx
-          key: ${{ runner.os }}-sqlx-cli-0.8.6
-
       - name: Install cargo-llvm-cov and cargo-nextest
         uses: taiki-e/install-action@v2
         with:
           tool: cargo-llvm-cov,cargo-nextest
 
-      - name: Install sqlx-cli
-        if: steps.cache-sqlx.outputs.cache-hit != 'true'
-        uses: taiki-e/install-action@v2
-        with:
-          tool: sqlx-cli
-
       - name: Set up test environment
         working-directory: backend
         run: |
           cat > .env.test << EOF
-          DATABASE_URL=postgres://testuser:testpass@localhost:5432/testdb
-          REDIS_URL=redis://localhost:6379
           JWT_SECRET=test_jwt_secret_key_for_ci_testing_only
           HOST=0.0.0.0
           PORT=8080
@@ -110,21 +77,13 @@ jobs:
           CLEANUP_INTERVAL_HOURS=24
           EOF
 
-      - name: Run database migrations
-        working-directory: backend
-        run: sqlx migrate run
-        env:
-          DATABASE_URL: postgres://testuser:testpass@localhost:5432/testdb
-
       - name: Run tests with coverage
         working-directory: backend
         run: |
           mkdir -p coverage
           cargo llvm-cov nextest --locked --profile ci --lcov --output-path coverage/lcov.info --all-features
         env:
-          DATABASE_URL: postgres://testuser:testpass@localhost:5432/testdb
-          REDIS_URL: redis://localhost:6379
-          TESTCONTAINER_POOL_SIZE: 4  # Match test-threads in nextest.toml [profile.ci]
+          TESTCONTAINER_POOL_SIZE: 4
 
       - name: Upload backend coverage
         if: always()

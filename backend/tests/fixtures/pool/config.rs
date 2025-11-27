@@ -42,9 +42,13 @@ impl Default for PoolConfig {
 
 impl PoolConfig {
     /// Configuration optimized for CI (fewer resources).
+    /// Respects TESTCONTAINER_POOL_SIZE env var if set, otherwise defaults to 2.
     pub fn ci() -> Self {
         Self {
-            max_size: 2,
+            max_size: std::env::var("TESTCONTAINER_POOL_SIZE")
+                .ok()
+                .and_then(|s| s.parse().ok())
+                .unwrap_or(2),
             checkout_timeout: Duration::from_secs(60),
             create_timeout: Duration::from_secs(120),
             recycle_timeout: Duration::from_secs(60),
