@@ -1,5 +1,5 @@
 # Development Dockerfile for Nuxt.js frontend with hot reload
-FROM node:20-alpine AS dev
+FROM node:24-alpine AS dev
 
 WORKDIR /app
 

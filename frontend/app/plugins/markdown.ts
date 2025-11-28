@@ -1,7 +1,25 @@
 import MarkdownIt from 'markdown-it'
-import markdownItPrism from 'markdown-it-prism'
 import markdownItMermaid from '@markslides/markdown-it-mermaid'
 import DOMPurify from 'dompurify'
+import Prism from 'prismjs'
+
+// Pre-import languages to avoid dynamic require.resolve (which doesn't work in browser)
+// Core languages commonly used in blog posts
+import 'prismjs/components/prism-javascript'
+import 'prismjs/components/prism-typescript'
+import 'prismjs/components/prism-css'
+import 'prismjs/components/prism-json'
+import 'prismjs/components/prism-bash'
+import 'prismjs/components/prism-yaml'
+import 'prismjs/components/prism-markdown'
+import 'prismjs/components/prism-sql'
+import 'prismjs/components/prism-rust'
+import 'prismjs/components/prism-python'
+import 'prismjs/components/prism-docker'
+import 'prismjs/components/prism-toml'
+import 'prismjs/components/prism-markup' // HTML, XML, SVG
+import 'prismjs/components/prism-csharp'
+
 
 export default defineNuxtPlugin(() => {
   // Initialize markdown-it with security and formatting options
@@ -10,11 +28,15 @@ export default defineNuxtPlugin(() => {
     linkify: true,       // Auto-convert URLs to links
     typographer: true,   // Enable smartquotes and other nice typographic replacements
     breaks: false,       // Don't convert \n to <br> (proper paragraph handling)
-  })
-
-  // Add syntax highlighting plugin
-  md.use(markdownItPrism, {
-    defaultLanguage: 'plaintext',
+    highlight: (code: string, lang: string): string => {
+      // Use Prism for syntax highlighting if language is supported
+      const language = lang && Prism.languages[lang] ? lang : 'plaintext'
+      if (Prism.languages[language]) {
+        return Prism.highlight(code, Prism.languages[language], language)
+      }
+      // Fallback: escape HTML and return as-is
+      return md.utils.escapeHtml(code)
+    },
   })
 
   // Add mermaid diagram support

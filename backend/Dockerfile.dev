@@ -29,6 +29,7 @@ EXPOSE 8080
 # Create non-root user for security
 RUN addgroup -g 1000 appuser && \
     adduser -D -u 1000 -G appuser appuser && \
+    mkdir -p /app/target && \
     chown -R appuser:appuser /app && \
     chown -R appuser:appuser /usr/local/cargo
 
