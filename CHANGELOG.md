@@ -1,5 +1,17 @@
 # Changelog
 
+## [1.5.0](https://github.com/kenn-williamson/kennwilliamsondotorg/compare/v1.4.0...v1.5.0) (2025-11-28)
+
+
+### Features
+
+* **tests:** add testcontainer reuse for faster test execution ([86ca822](https://github.com/kenn-williamson/kennwilliamsondotorg/commit/86ca8224817f8252e04121d598e85e0a0faeac53))
+
+
+### Bug Fixes
+
+* **frontend:** resolve markdown-it-prism browser compatibility error ([7102334](https://github.com/kenn-williamson/kennwilliamsondotorg/commit/7102334961f33e3c10f9e528798861b21dbc7eb2))
+
 ## [1.4.0](https://github.com/kenn-williamson/kennwilliamsondotorg/compare/v1.3.0...v1.4.0) (2025-11-27)
 
 
