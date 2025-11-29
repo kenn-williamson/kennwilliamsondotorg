@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.6.0](https://github.com/kenn-williamson/kennwilliamsondotorg/compare/v1.5.0...v1.6.0) (2025-11-29)
+
+
+### Features
+
+* **blog:** add email notifications for published posts ([4b334a3](https://github.com/kenn-williamson/kennwilliamsondotorg/commit/4b334a31ceef22b6332ac7edf2cb0cb6e3143397))
+
 ## [1.5.0](https://github.com/kenn-williamson/kennwilliamsondotorg/compare/v1.4.0...v1.5.0) (2025-11-28)
 
 
