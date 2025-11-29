@@ -598,27 +598,52 @@ pub async fn update_preferences(
 ) -> ActixResult<HttpResponse> {
     let user_id = req.extensions().get::<Uuid>().cloned().unwrap();
 
-    match auth_service
+    // Update timer privacy settings
+    if let Err(err) = auth_service
         .update_timer_privacy(user_id, data.timer_is_public, data.timer_show_in_list)
         .await
     {
+        let error_msg = err.to_string();
+        if error_msg.contains("not public") || error_msg.contains("Show in List") {
+            return Ok(HttpResponse::BadRequest().json(serde_json::json!({
+                "error": error_msg
+            })));
+        } else {
+            log::error!(
+                "User preferences update error for user {}: {}",
+                user_id,
+                err
+            );
+            return Ok(HttpResponse::InternalServerError().json(serde_json::json!({
+                "error": "Internal server error"
+            })));
+        }
+    }
+
+    // Update blog notification preference if provided
+    if let Some(notify_blog_posts) = data.notify_blog_posts
+        && let Err(err) = auth_service
+            .update_blog_notifications(user_id, notify_blog_posts)
+            .await
+    {
+        log::error!(
+            "Blog notification preference update error for user {}: {}",
+            user_id,
+            err
+        );
+        return Ok(HttpResponse::InternalServerError().json(serde_json::json!({
+            "error": "Internal server error"
+        })));
+    }
+
+    // Fetch and return updated user
+    match auth_service.get_current_user(user_id).await {
         Ok(user) => Ok(HttpResponse::Ok().json(user)),
         Err(err) => {
-            let error_msg = err.to_string();
-            if error_msg.contains("not public") || error_msg.contains("Show in List") {
-                Ok(HttpResponse::BadRequest().json(serde_json::json!({
-                    "error": error_msg
-                })))
-            } else {
-                log::error!(
-                    "User preferences update error for user {}: {}",
-                    user_id,
-                    err
-                );
-                Ok(HttpResponse::InternalServerError().json(serde_json::json!({
-                    "error": "Internal server error"
-                })))
-            }
+            log::error!("Failed to fetch updated user {}: {}", user_id, err);
+            Ok(HttpResponse::InternalServerError().json(serde_json::json!({
+                "error": "Internal server error"
+            })))
         }
     }
 }

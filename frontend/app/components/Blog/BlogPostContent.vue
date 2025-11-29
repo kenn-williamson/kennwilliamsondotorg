@@ -36,7 +36,7 @@ onMounted(() => {
     theme: 'default',
     logLevel: 'error',
     securityLevel: 'loose',
-    startOnLoad: true,
+    startOnLoad: false, // We'll trigger manually after decoding
     flowchart: {
       useMaxWidth: true,
       htmlLabels: true,
@@ -44,14 +44,35 @@ onMounted(() => {
     },
   })
 
-  // Render mermaid diagrams
-  mermaid.run()
+  renderMermaidDiagrams()
 })
+
+// Decode base64 mermaid code from data attributes and render
+const renderMermaidDiagrams = async () => {
+  await nextTick()
+
+  // The markdown-it-mermaid plugin stores code in data-mermaid-code (base64 encoded)
+  const mermaidElements = document.querySelectorAll('.mermaid[data-mermaid-code]')
+  mermaidElements.forEach((el) => {
+    const encoded = el.getAttribute('data-mermaid-code')
+    if (encoded && !el.textContent?.trim()) {
+      try {
+        el.textContent = atob(encoded)
+      } catch {
+        console.error('Failed to decode mermaid content')
+      }
+    }
+  })
+
+  // Now run mermaid on all .mermaid elements
+  if (mermaidElements.length > 0) {
+    await mermaid.run()
+  }
+}
 
 // Re-render mermaid diagrams when content changes
 watch(() => props.markdown, async () => {
-  await nextTick()
-  mermaid.run()
+  await renderMermaidDiagrams()
 })
 </script>
 
@@ -98,6 +119,11 @@ watch(() => props.markdown, async () => {
 
 .markdown-content pre {
   @apply bg-nautical-800 text-nautical-100 p-4 rounded-lg overflow-x-auto my-4;
+}
+
+/* Mermaid diagrams should have a light/transparent background */
+.markdown-content pre.mermaid {
+  @apply bg-transparent p-0;
 }
 
 .markdown-content pre code {

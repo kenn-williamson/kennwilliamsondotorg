@@ -98,12 +98,52 @@
           </div>
         </div>
       </div>
+    </div>
 
-      <!-- Error message -->
-      <div
-        v-if="error"
-        class="bg-red-50 border border-red-200 rounded-md p-4"
-      >
+    <!-- Email Notifications Section -->
+    <div class="space-y-4">
+      <h3 class="text-base font-semibold text-nautical-900 pb-2 border-b border-nautical-200">
+        Email Notifications
+      </h3>
+
+      <!-- Blog Post Notifications Toggle -->
+      <div class="flex items-center justify-between py-4">
+        <div class="flex-1 mr-4">
+          <h4 class="text-sm font-medium text-nautical-900">
+            New Blog Posts
+          </h4>
+          <p class="text-sm text-nautical-500 mt-1">
+            Receive an email when new blog posts are published
+          </p>
+        </div>
+        <button
+          type="button"
+          @click="toggleNotifyBlogPosts"
+          :disabled="isLoading"
+          :class="[
+            'relative inline-flex h-6 w-11 flex-shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none focus:ring-2 focus:ring-sky-500 focus:ring-offset-2',
+            notifyBlogPosts ? 'bg-sky-600' : 'bg-nautical-200',
+            isLoading ? 'opacity-50 cursor-not-allowed' : ''
+          ]"
+          role="switch"
+          :aria-checked="notifyBlogPosts"
+          aria-label="Toggle blog post notifications"
+        >
+          <span
+            :class="[
+              'pointer-events-none inline-block h-5 w-5 transform rounded-full bg-white shadow ring-0 transition duration-200 ease-in-out',
+              notifyBlogPosts ? 'translate-x-5' : 'translate-x-0'
+            ]"
+          />
+        </button>
+      </div>
+    </div>
+
+    <!-- Error message -->
+    <div
+      v-if="error"
+      class="bg-red-50 border border-red-200 rounded-md p-4"
+    >
       <div class="flex">
         <div class="flex-shrink-0">
           <svg class="h-5 w-5 text-red-400" viewBox="0 0 20 20" fill="currentColor">
@@ -112,13 +152,9 @@
         </div>
         <div class="ml-3">
           <p class="text-sm text-red-700">{{ error }}</p>
-          </div>
         </div>
       </div>
     </div>
-
-    <!-- Future preferences sections can be added here -->
-    <!-- Example: Notification Preferences, Display Preferences, etc. -->
   </div>
 </template>
 
@@ -135,6 +171,7 @@ const timerStore = useIncidentTimerStore()
 // Local state for toggles (initialized from user preferences)
 const isPublic = ref(user.value?.preferences?.timer_is_public ?? true)
 const showInList = ref(user.value?.preferences?.timer_show_in_list ?? true)
+const notifyBlogPosts = ref(user.value?.preferences?.notify_blog_posts ?? true)
 
 // Loading and error state
 const isLoading = ref(false)
@@ -145,6 +182,7 @@ watch(() => user.value?.preferences, (newPrefs) => {
   if (newPrefs) {
     isPublic.value = newPrefs.timer_is_public ?? true
     showInList.value = newPrefs.timer_show_in_list ?? true
+    notifyBlogPosts.value = newPrefs.notify_blog_posts ?? true
   }
 }, { deep: true })
 
@@ -195,6 +233,32 @@ const toggleShowInList = async () => {
 
     // Update local state
     showInList.value = newShowInList
+  } catch (err: any) {
+    error.value = err.message || 'Failed to update preferences'
+    console.error('Error updating preferences:', err)
+  } finally {
+    isLoading.value = false
+  }
+}
+
+const toggleNotifyBlogPosts = async () => {
+  const newNotifyBlogPosts = !notifyBlogPosts.value
+
+  isLoading.value = true
+  error.value = null
+
+  try {
+    await timerStore.updateUserPreferences({
+      timer_is_public: isPublic.value,
+      timer_show_in_list: showInList.value,
+      notify_blog_posts: newNotifyBlogPosts
+    })
+
+    // Refresh client-side reactive refs from updated server cookie
+    await refreshSession()
+
+    // Update local state
+    notifyBlogPosts.value = newNotifyBlogPosts
   } catch (err: any) {
     error.value = err.message || 'Failed to update preferences'
     console.error('Error updating preferences:', err)

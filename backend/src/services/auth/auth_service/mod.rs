@@ -5,6 +5,7 @@ use crate::repositories::traits::password_reset_token_repository::PasswordResetT
 use crate::repositories::traits::phrase_repository::PhraseRepository;
 use crate::repositories::traits::pkce_storage::PkceStorage;
 use crate::repositories::traits::refresh_token_repository::RefreshTokenRepository;
+use crate::repositories::traits::unsubscribe_token_repository::UnsubscribeTokenRepository;
 use crate::repositories::traits::user_credentials_repository::UserCredentialsRepository;
 use crate::repositories::traits::user_external_login_repository::UserExternalLoginRepository;
 use crate::repositories::traits::user_preferences_repository::UserPreferencesRepository;
@@ -19,6 +20,7 @@ use std::sync::Arc;
 pub mod account_deletion;
 pub mod builder;
 pub mod data_export;
+pub mod email_preferences;
 pub mod email_verification;
 pub mod login;
 pub mod oauth;
@@ -46,6 +48,7 @@ pub struct AuthService {
     external_login_repository: Option<Box<dyn UserExternalLoginRepository>>,
     profile_repository: Option<Box<dyn UserProfileRepository>>,
     preferences_repository: Option<Box<dyn UserPreferencesRepository>>,
+    unsubscribe_token_repository: Option<Box<dyn UnsubscribeTokenRepository>>,
     event_publisher: Option<Arc<dyn EventPublisher>>,
 }
 
@@ -125,6 +128,7 @@ impl AuthService {
                 .map(|p| PreferencesData {
                     timer_is_public: p.timer_is_public,
                     timer_show_in_list: p.timer_show_in_list,
+                    notify_blog_posts: p.notify_blog_posts,
                 })
         } else {
             None

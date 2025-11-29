@@ -43,9 +43,7 @@ impl CloudflareTurnstileService {
     /// * `Some(service)` if TURNSTILE_SECRET_KEY is set
     /// * `None` if environment variable is not set
     pub fn from_env() -> Option<Self> {
-        std::env::var("TURNSTILE_SECRET_KEY")
-            .ok()
-            .map(Self::new)
+        std::env::var("TURNSTILE_SECRET_KEY").ok().map(Self::new)
     }
 }
 
@@ -145,14 +143,11 @@ mod tests {
     #[ignore] // Ignore by default to avoid hitting external API in unit tests
     async fn test_verify_with_cloudflare_test_key() {
         // Cloudflare's test secret key (always passes)
-        let service = CloudflareTurnstileService::new(
-            "1x0000000000000000000000000000000AA".to_string()
-        );
+        let service =
+            CloudflareTurnstileService::new("1x0000000000000000000000000000000AA".to_string());
 
         // Any token works with the test key
-        let result = service
-            .verify_token("test_token", "192.168.1.1")
-            .await;
+        let result = service.verify_token("test_token", "192.168.1.1").await;
 
         assert!(result.is_ok());
         assert!(result.unwrap());

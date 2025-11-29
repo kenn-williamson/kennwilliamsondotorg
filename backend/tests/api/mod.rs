@@ -10,5 +10,6 @@ pub mod testcontainers_oauth_tests;
 pub mod testcontainers_phrase_api_tests;
 pub mod testcontainers_rbac_feature_gating_tests;
 pub mod testcontainers_sns_webhook_api_tests;
+pub mod testcontainers_unsubscribe_api_tests;
 
 // Re-export commonly used items

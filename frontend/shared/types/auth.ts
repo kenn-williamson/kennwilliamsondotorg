@@ -22,6 +22,7 @@ export interface ExternalAccount {
 export interface PreferencesData {
   timer_is_public: boolean
   timer_show_in_list: boolean
+  notify_blog_posts: boolean
 }
 
 // User types (from shared/types/auth.d.ts)
@@ -182,6 +183,7 @@ export interface VerifyEmailResponse {
 export interface UpdatePreferencesRequest {
   timer_is_public: boolean
   timer_show_in_list: boolean
+  notify_blog_posts?: boolean
 }
 
 // Public timer list types

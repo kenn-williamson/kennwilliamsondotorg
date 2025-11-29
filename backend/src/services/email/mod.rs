@@ -1,16 +1,16 @@
 use anyhow::Result;
 use async_trait::async_trait;
 
+pub mod log_only_email_service;
 #[cfg(feature = "mocks")]
 pub mod mock_email_service;
-pub mod log_only_email_service;
 pub mod ses_email_service;
 pub mod suppression_guard;
 pub mod templates;
 
+pub use log_only_email_service::LogOnlyEmailService;
 #[cfg(feature = "mocks")]
 pub use mock_email_service::MockEmailService;
-pub use log_only_email_service::LogOnlyEmailService;
 pub use ses_email_service::SesEmailService;
 pub use suppression_guard::SuppressionGuard;
 pub use templates::{Email, EmailTemplate};

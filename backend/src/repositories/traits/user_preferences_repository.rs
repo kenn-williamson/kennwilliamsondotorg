@@ -22,4 +22,11 @@ pub trait UserPreferencesRepository: Send + Sync {
         is_public: bool,
         show_in_list: bool,
     ) -> Result<()>;
+
+    /// Update blog notification preference
+    async fn update_blog_notifications(&self, user_id: Uuid, enabled: bool) -> Result<()>;
+
+    /// Find all user IDs that have blog notifications enabled
+    /// Returns user IDs for users who have opted in to blog post notifications
+    async fn find_users_with_blog_notifications(&self) -> Result<Vec<Uuid>>;
 }

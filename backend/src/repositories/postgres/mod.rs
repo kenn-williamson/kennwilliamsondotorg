@@ -6,6 +6,7 @@ pub mod postgres_incident_timer_repository;
 pub mod postgres_password_reset_token_repository;
 pub mod postgres_phrase_repository;
 pub mod postgres_refresh_token_repository;
+pub mod postgres_unsubscribe_token_repository;
 pub mod postgres_user_credentials_repository;
 pub mod postgres_user_external_login_repository;
 pub mod postgres_user_preferences_repository;

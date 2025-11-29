@@ -450,7 +450,6 @@ mod tests {
         MockUserPreferencesRepository,
     ) {
         use crate::models::db::user_external_login::UserExternalLogin;
-        use crate::models::db::user_preferences::UserPreferences;
         use crate::models::db::user_profile::UserProfile;
         use uuid::Uuid;
 
@@ -546,22 +545,17 @@ mod tests {
         // Mock preferences repository
         let mut prefs_repo = MockUserPreferencesRepository::new();
         prefs_repo.expect_create().returning(|_| {
-            Ok(UserPreferences {
-                user_id: Uuid::new_v4(),
-                timer_is_public: false,
-                timer_show_in_list: false,
-                created_at: chrono::Utc::now(),
-                updated_at: chrono::Utc::now(),
-            })
+            Ok(crate::test_utils::UserPreferencesBuilder::new()
+                .private_timer()
+                .build())
         });
         prefs_repo.expect_find_by_user_id().returning(|user_id| {
-            Ok(Some(UserPreferences {
-                user_id,
-                timer_is_public: false,
-                timer_show_in_list: false,
-                created_at: chrono::Utc::now(),
-                updated_at: chrono::Utc::now(),
-            }))
+            Ok(Some(
+                crate::test_utils::UserPreferencesBuilder::new()
+                    .with_user_id(user_id)
+                    .private_timer()
+                    .build(),
+            ))
         });
 
         (user_repo, external_login_repo, profile_repo, prefs_repo)
@@ -941,7 +935,6 @@ mod tests {
     #[tokio::test]
     async fn test_real_name_updates_on_subsequent_oauth_logins() {
         use crate::models::db::user_external_login::UserExternalLogin;
-        use crate::models::db::user_preferences::UserPreferences;
         use crate::models::db::user_profile::UserProfile;
         use uuid::Uuid;
 
@@ -1027,13 +1020,12 @@ mod tests {
         // Mock preferences repository
         let mut prefs_repo = MockUserPreferencesRepository::new();
         prefs_repo.expect_find_by_user_id().returning(move |_| {
-            Ok(Some(UserPreferences {
-                user_id,
-                timer_is_public: false,
-                timer_show_in_list: false,
-                created_at: chrono::Utc::now(),
-                updated_at: chrono::Utc::now(),
-            }))
+            Ok(Some(
+                crate::test_utils::UserPreferencesBuilder::new()
+                    .with_user_id(user_id)
+                    .private_timer()
+                    .build(),
+            ))
         });
 
         let token_repo = mock_token_repo();
@@ -1070,7 +1062,6 @@ mod tests {
     #[tokio::test]
     async fn test_phase4c_new_oauth_user_creates_all_tables() {
         use crate::models::db::user_external_login::UserExternalLogin;
-        use crate::models::db::user_preferences::UserPreferences;
         use crate::models::db::user_profile::UserProfile;
         use crate::repositories::mocks::{
             MockUserExternalLoginRepository, MockUserPreferencesRepository,
@@ -1182,22 +1173,18 @@ mod tests {
         // Mock preferences repository
         let mut prefs_repo = MockUserPreferencesRepository::new();
         prefs_repo.expect_create().returning(|user_id| {
-            Ok(UserPreferences {
-                user_id,
-                timer_is_public: false,
-                timer_show_in_list: false,
-                created_at: chrono::Utc::now(),
-                updated_at: chrono::Utc::now(),
-            })
+            Ok(crate::test_utils::UserPreferencesBuilder::new()
+                .with_user_id(user_id)
+                .private_timer()
+                .build())
         });
         prefs_repo.expect_find_by_user_id().returning(|user_id| {
-            Ok(Some(UserPreferences {
-                user_id,
-                timer_is_public: false,
-                timer_show_in_list: false,
-                created_at: chrono::Utc::now(),
-                updated_at: chrono::Utc::now(),
-            }))
+            Ok(Some(
+                crate::test_utils::UserPreferencesBuilder::new()
+                    .with_user_id(user_id)
+                    .private_timer()
+                    .build(),
+            ))
         });
 
         let token_repo = mock_token_repo();

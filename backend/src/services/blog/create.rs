@@ -55,6 +55,9 @@ pub async fn create_post(
         None
     };
 
+    // Remember if we're publishing for event emission
+    let is_publishing = request.status == "published";
+
     // Create repository DTO
     let create_dto = CreateBlogPost {
         slug,
@@ -70,7 +73,14 @@ pub async fn create_post(
     };
 
     // Call repository
-    service.repository.create_post(create_dto).await
+    let post = service.repository.create_post(create_dto).await?;
+
+    // Emit event if post was published
+    if is_publishing {
+        service.emit_blog_post_published_event(&post).await;
+    }
+
+    Ok(post)
 }
 
 /// Ensure slug is unique by appending numeric suffix if collision detected

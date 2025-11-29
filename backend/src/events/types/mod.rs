@@ -1,4 +1,5 @@
 pub mod access_request;
+pub mod blog_post;
 pub mod phrase_suggestion;
 pub mod security_notification;
 
@@ -6,6 +7,7 @@ pub mod security_notification;
 pub use access_request::{
     AccessRequestApprovedEvent, AccessRequestCreatedEvent, AccessRequestRejectedEvent,
 };
+pub use blog_post::BlogPostPublishedEvent;
 pub use phrase_suggestion::{
     PhraseSuggestionApprovedEvent, PhraseSuggestionCreatedEvent, PhraseSuggestionRejectedEvent,
 };

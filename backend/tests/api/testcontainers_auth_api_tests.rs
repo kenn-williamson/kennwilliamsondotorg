@@ -677,3 +677,144 @@ async fn test_register_success_without_captcha_backward_compat() {
     let body: serde_json::Value = resp.json().await.unwrap();
     assert!(body.get("token").is_some());
 }
+
+// ============================================================================
+// PREFERENCES TESTS - Blog notifications
+// ============================================================================
+
+#[actix_web::test]
+async fn test_update_preferences_with_blog_notifications() {
+    let ctx = TestContext::builder().build().await;
+
+    // Register a user
+    let email = crate::fixtures::unique_test_email();
+    let password = "TestPassword123!";
+    let register_request = json!({
+        "email": email,
+        "password": password,
+        "display_name": "Test User"
+    });
+
+    let mut register_resp = ctx
+        .server
+        .post("/backend/public/auth/register")
+        .send_json(&register_request)
+        .await
+        .unwrap();
+
+    assert!(register_resp.status().is_success());
+
+    let register_body: serde_json::Value = register_resp.json().await.unwrap();
+    let token = register_body.get("token").unwrap().as_str().unwrap();
+
+    // Check initial preferences (notify_blog_posts defaults to true)
+    let mut me_resp = ctx
+        .server
+        .get("/backend/protected/auth/me")
+        .insert_header(("Authorization", format!("Bearer {}", token)))
+        .send()
+        .await
+        .unwrap();
+
+    assert!(me_resp.status().is_success());
+    let me_body: serde_json::Value = me_resp.json().await.unwrap();
+    let preferences = me_body.get("preferences").unwrap();
+    assert_eq!(preferences.get("notify_blog_posts").unwrap(), true);
+
+    // Update preferences to disable blog notifications
+    let update_request = json!({
+        "timer_is_public": false,
+        "timer_show_in_list": false,
+        "notify_blog_posts": false
+    });
+
+    let mut update_resp = ctx
+        .server
+        .put("/backend/protected/auth/preferences")
+        .insert_header(("Authorization", format!("Bearer {}", token)))
+        .send_json(&update_request)
+        .await
+        .unwrap();
+
+    println!(
+        "Update preferences response status: {}",
+        update_resp.status()
+    );
+    assert!(update_resp.status().is_success());
+
+    let update_body: serde_json::Value = update_resp.json().await.unwrap();
+    let updated_preferences = update_body.get("preferences").unwrap();
+    assert_eq!(updated_preferences.get("notify_blog_posts").unwrap(), false);
+
+    // Re-enable blog notifications
+    let update_request2 = json!({
+        "timer_is_public": false,
+        "timer_show_in_list": false,
+        "notify_blog_posts": true
+    });
+
+    let mut update_resp2 = ctx
+        .server
+        .put("/backend/protected/auth/preferences")
+        .insert_header(("Authorization", format!("Bearer {}", token)))
+        .send_json(&update_request2)
+        .await
+        .unwrap();
+
+    assert!(update_resp2.status().is_success());
+
+    let update_body2: serde_json::Value = update_resp2.json().await.unwrap();
+    let updated_preferences2 = update_body2.get("preferences").unwrap();
+    assert_eq!(updated_preferences2.get("notify_blog_posts").unwrap(), true);
+}
+
+#[actix_web::test]
+async fn test_update_preferences_without_blog_notifications_backward_compat() {
+    let ctx = TestContext::builder().build().await;
+
+    // Register a user
+    let email = crate::fixtures::unique_test_email();
+    let register_request = json!({
+        "email": email,
+        "password": "TestPassword123!",
+        "display_name": "Test User"
+    });
+
+    let mut register_resp = ctx
+        .server
+        .post("/backend/public/auth/register")
+        .send_json(&register_request)
+        .await
+        .unwrap();
+
+    assert!(register_resp.status().is_success());
+
+    let register_body: serde_json::Value = register_resp.json().await.unwrap();
+    let token = register_body.get("token").unwrap().as_str().unwrap();
+
+    // Update preferences WITHOUT notify_blog_posts (backward compatibility)
+    let update_request = json!({
+        "timer_is_public": true,
+        "timer_show_in_list": false
+    });
+
+    let mut update_resp = ctx
+        .server
+        .put("/backend/protected/auth/preferences")
+        .insert_header(("Authorization", format!("Bearer {}", token)))
+        .send_json(&update_request)
+        .await
+        .unwrap();
+
+    println!(
+        "Update preferences response status: {}",
+        update_resp.status()
+    );
+    assert!(update_resp.status().is_success());
+
+    // notify_blog_posts should still be true (unchanged)
+    let update_body: serde_json::Value = update_resp.json().await.unwrap();
+    let preferences = update_body.get("preferences").unwrap();
+    assert_eq!(preferences.get("timer_is_public").unwrap(), true);
+    assert_eq!(preferences.get("notify_blog_posts").unwrap(), true);
+}

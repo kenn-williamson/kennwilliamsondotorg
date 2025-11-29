@@ -10,6 +10,7 @@ pub struct UserPreferences {
     pub user_id: Uuid,
     pub timer_is_public: bool,
     pub timer_show_in_list: bool,
+    pub notify_blog_posts: bool,
     pub created_at: DateTime<Utc>,
     pub updated_at: DateTime<Utc>,
 }
@@ -23,6 +24,7 @@ impl UserPreferences {
             user_id,
             timer_is_public: false,
             timer_show_in_list: false,
+            notify_blog_posts: true, // Default: opted-in (opt-out model)
             created_at: now,
             updated_at: now,
         }
@@ -39,6 +41,7 @@ mod tests {
             user_id: Uuid::new_v4(),
             timer_is_public: true,
             timer_show_in_list: false,
+            notify_blog_posts: true,
             created_at: Utc::now(),
             updated_at: Utc::now(),
         };
@@ -46,6 +49,7 @@ mod tests {
         let json = serde_json::to_string(&prefs).unwrap();
         assert!(json.contains("timer_is_public"));
         assert!(json.contains("timer_show_in_list"));
+        assert!(json.contains("notify_blog_posts"));
     }
 
     #[test]
@@ -56,6 +60,7 @@ mod tests {
         assert_eq!(prefs.user_id, user_id);
         assert!(!prefs.timer_is_public);
         assert!(!prefs.timer_show_in_list);
+        assert!(prefs.notify_blog_posts); // Default: opted-in
     }
 
     #[test]
@@ -64,6 +69,7 @@ mod tests {
             user_id: Uuid::new_v4(),
             timer_is_public: true,
             timer_show_in_list: true,
+            notify_blog_posts: true,
             created_at: Utc::now(),
             updated_at: Utc::now(),
         };
@@ -80,6 +86,7 @@ mod tests {
             user_id: Uuid::new_v4(),
             timer_is_public: false,
             timer_show_in_list: true, // This should be validated at service layer
+            notify_blog_posts: true,
             created_at: Utc::now(),
             updated_at: Utc::now(),
         };
@@ -89,5 +96,19 @@ mod tests {
         assert!(prefs.timer_show_in_list);
         // Note: This invalid state is allowed at model level
         // but should be caught by service layer validation
+    }
+
+    #[test]
+    fn test_user_preferences_blog_notifications() {
+        let prefs = UserPreferences {
+            user_id: Uuid::new_v4(),
+            timer_is_public: false,
+            timer_show_in_list: false,
+            notify_blog_posts: false, // User has opted out
+            created_at: Utc::now(),
+            updated_at: Utc::now(),
+        };
+
+        assert!(!prefs.notify_blog_posts);
     }
 }

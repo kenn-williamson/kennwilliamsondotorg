@@ -47,7 +47,7 @@ export const useEmailVerificationActions = () => {
 
         // Fetch fresh user data with updated roles and update session
         // /api/auth/me forces a token refresh and returns updated user data
-        const freshUserData = await $fetch(API_ROUTES.API.AUTH.ME)
+        const freshUserData = await smartFetch<{ roles: string[] }>(API_ROUTES.API.AUTH.ME)
         console.log('✅ [Email Verification] Got fresh user data with roles:', freshUserData.roles)
 
         // Clear JWT cache to force regeneration with updated roles on next request

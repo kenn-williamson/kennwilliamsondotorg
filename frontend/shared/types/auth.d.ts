@@ -15,6 +15,7 @@ declare module '#auth-utils' {
   interface PreferencesData {
     timer_is_public: boolean
     timer_show_in_list: boolean
+    notify_blog_posts: boolean
   }
 
   interface User {

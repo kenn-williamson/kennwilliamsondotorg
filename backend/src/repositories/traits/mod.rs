@@ -8,6 +8,7 @@ pub mod password_reset_token_repository;
 pub mod phrase_repository;
 pub mod pkce_storage;
 pub mod refresh_token_repository;
+pub mod unsubscribe_token_repository;
 pub mod user_credentials_repository;
 pub mod user_external_login_repository;
 pub mod user_preferences_repository;
@@ -30,6 +31,8 @@ pub use user_repository::UserRepository;
 pub use verification_token_repository::VerificationTokenRepository;
 
 // Re-export new trait definitions for use in service layer
+#[allow(unused_imports)]
+pub use unsubscribe_token_repository::UnsubscribeTokenRepository;
 #[allow(unused_imports)]
 pub use user_credentials_repository::UserCredentialsRepository;
 #[allow(unused_imports)]

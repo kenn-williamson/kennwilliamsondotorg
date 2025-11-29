@@ -19,9 +19,9 @@ pub fn get_rate_limit_configs() -> HashMap<String, RateLimitConfig> {
     configs.insert(
         "register".to_string(),
         RateLimitConfig {
-            requests_per_hour: 10,  // Increased from 3 (better UX for shared IPs)
-            burst_limit: 2,          // Increased from 1
-            burst_window: 300,       // 5 minutes (unchanged)
+            requests_per_hour: 10, // Increased from 3 (better UX for shared IPs)
+            burst_limit: 2,        // Increased from 1
+            burst_window: 300,     // 5 minutes (unchanged)
         },
     );
 

@@ -24,6 +24,7 @@ TRUNCATE TABLE
     refresh_tokens,
     verification_tokens,
     password_reset_tokens,
+    unsubscribe_tokens,
     access_requests,
     user_roles,
     user_preferences,
@@ -137,8 +138,8 @@ impl TestContainer {
             // Use slot-based container name for parallel test support
             // Each nextest slot gets its own reusable container
             // See: https://nexte.st/docs/configuration/env-vars/
-            let slot_id = std::env::var("NEXTEST_TEST_GLOBAL_SLOT")
-                .unwrap_or_else(|_| "0".to_string());
+            let slot_id =
+                std::env::var("NEXTEST_TEST_GLOBAL_SLOT").unwrap_or_else(|_| "0".to_string());
             let container_name = format!("test-postgres-{}", slot_id);
 
             // Create image with reuse enabled for faster test execution
@@ -342,6 +343,7 @@ impl TestContextBuilder {
         use backend::repositories::postgres::postgres_password_reset_token_repository::PostgresPasswordResetTokenRepository;
         use backend::repositories::postgres::postgres_phrase_repository::PostgresPhraseRepository;
         use backend::repositories::postgres::postgres_refresh_token_repository::PostgresRefreshTokenRepository;
+        use backend::repositories::postgres::postgres_unsubscribe_token_repository::PostgresUnsubscribeTokenRepository;
         use backend::repositories::postgres::postgres_user_credentials_repository::PostgresUserCredentialsRepository;
         use backend::repositories::postgres::postgres_user_external_login_repository::PostgresUserExternalLoginRepository;
         use backend::repositories::postgres::postgres_user_preferences_repository::PostgresUserPreferencesRepository;
@@ -414,6 +416,9 @@ impl TestContextBuilder {
                     test_container.pool.clone(),
                 )))
                 .preferences_repository(Box::new(PostgresUserPreferencesRepository::new(
+                    test_container.pool.clone(),
+                )))
+                .unsubscribe_token_repository(Box::new(PostgresUnsubscribeTokenRepository::new(
                     test_container.pool.clone(),
                 )))
                 .email_service(Box::new(email_service.as_ref().clone()))

@@ -157,6 +157,30 @@ impl AuthService {
         Ok(user_response)
     }
 
+    /// Update blog notification preference
+    pub async fn update_blog_notifications(
+        &self,
+        user_id: Uuid,
+        enabled: bool,
+    ) -> Result<UserResponse> {
+        if let Some(prefs_repo) = &self.preferences_repository {
+            prefs_repo
+                .update_blog_notifications(user_id, enabled)
+                .await?;
+        }
+
+        // Get updated user and build response
+        let user = self
+            .user_repository
+            .find_by_id(user_id)
+            .await?
+            .ok_or_else(|| anyhow::anyhow!("User not found"))?;
+        let roles = self.user_repository.get_user_roles(user.id).await?;
+        let user_response = self.build_user_response_with_details(user, roles).await?;
+
+        Ok(user_response)
+    }
+
     /// Get list of users with public timers
     pub async fn get_users_with_public_timers(
         &self,

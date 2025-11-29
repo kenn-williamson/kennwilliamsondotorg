@@ -1,16 +1,21 @@
 use crate::events::EventHandler;
 use crate::events::types::{
     AccessRequestApprovedEvent, AccessRequestCreatedEvent, AccessRequestRejectedEvent,
-    PasswordChangedEvent, PhraseSuggestionApprovedEvent, PhraseSuggestionCreatedEvent,
-    PhraseSuggestionRejectedEvent, ProfileUpdatedEvent, UserRegisteredEvent,
+    BlogPostPublishedEvent, PasswordChangedEvent, PhraseSuggestionApprovedEvent,
+    PhraseSuggestionCreatedEvent, PhraseSuggestionRejectedEvent, ProfileUpdatedEvent,
+    UserRegisteredEvent,
 };
-use crate::repositories::traits::{AdminRepository, UserRepository, VerificationTokenRepository};
+use crate::repositories::traits::{
+    AdminRepository, UnsubscribeTokenRepository, UserPreferencesRepository, UserRepository,
+    VerificationTokenRepository,
+};
 use crate::services::email::EmailService;
 use crate::services::email::templates::{
     AccessRequestApprovedTemplate, AccessRequestNotificationTemplate,
-    AccessRequestRejectedTemplate, Email, EmailTemplate, PasswordChangedEmailTemplate,
-    PhraseSuggestionApprovedTemplate, PhraseSuggestionNotificationTemplate,
-    PhraseSuggestionRejectedTemplate, ProfileUpdatedEmailTemplate, VerificationEmailTemplate,
+    AccessRequestRejectedTemplate, BlogPostPublishedTemplate, Email, EmailTemplate,
+    PasswordChangedEmailTemplate, PhraseSuggestionApprovedTemplate,
+    PhraseSuggestionNotificationTemplate, PhraseSuggestionRejectedTemplate,
+    ProfileUpdatedEmailTemplate, VerificationEmailTemplate,
 };
 use anyhow::Result;
 use async_trait::async_trait;
@@ -814,11 +819,195 @@ fn hash_verification_token(token: &str) -> String {
     hex::encode(hasher.finalize())
 }
 
+/// Generate a secure random unsubscribe token (32 bytes = 256 bits)
+fn generate_unsubscribe_token() -> String {
+    use rand::Rng;
+    let mut token_bytes = [0u8; 32];
+    rand::rng().fill(&mut token_bytes);
+    hex::encode(token_bytes)
+}
+
+/// Hash unsubscribe token using SHA-256 for storage
+fn hash_unsubscribe_token(token: &str) -> String {
+    use sha2::{Digest, Sha256};
+    let mut hasher = Sha256::new();
+    hasher.update(token.as_bytes());
+    hex::encode(hasher.finalize())
+}
+
+/// Email notification handler for blog post published events
+///
+/// Sends email notifications to all users who have opted in to blog notifications.
+/// Each email includes a unique unsubscribe token for one-click unsubscribe.
+pub struct BlogPostPublishedEmailHandler {
+    user_repository: Arc<dyn UserRepository>,
+    user_preferences_repository: Arc<dyn UserPreferencesRepository>,
+    unsubscribe_token_repository: Arc<dyn UnsubscribeTokenRepository>,
+    email_service: Arc<dyn EmailService>,
+    frontend_url: String,
+}
+
+impl BlogPostPublishedEmailHandler {
+    /// Create a new BlogPostPublishedEmailHandler
+    ///
+    /// # Arguments
+    /// * `user_repository` - Repository for fetching user details
+    /// * `user_preferences_repository` - Repository for finding users with notifications enabled
+    /// * `unsubscribe_token_repository` - Repository for creating unsubscribe tokens
+    /// * `email_service` - Service for sending emails
+    /// * `frontend_url` - Base URL for frontend links
+    pub fn new(
+        user_repository: Arc<dyn UserRepository>,
+        user_preferences_repository: Arc<dyn UserPreferencesRepository>,
+        unsubscribe_token_repository: Arc<dyn UnsubscribeTokenRepository>,
+        email_service: Arc<dyn EmailService>,
+        frontend_url: impl Into<String>,
+    ) -> Self {
+        Self {
+            user_repository,
+            user_preferences_repository,
+            unsubscribe_token_repository,
+            email_service,
+            frontend_url: frontend_url.into(),
+        }
+    }
+}
+
+#[async_trait]
+impl EventHandler<BlogPostPublishedEvent> for BlogPostPublishedEmailHandler {
+    async fn handle(&self, event: &BlogPostPublishedEvent) -> Result<()> {
+        use crate::models::db::unsubscribe_token::email_types;
+
+        log::info!(
+            "Handling BlogPostPublishedEvent for post '{}' ({})",
+            event.title,
+            event.slug
+        );
+
+        // Get all users with blog notifications enabled
+        let user_ids = self
+            .user_preferences_repository
+            .find_users_with_blog_notifications()
+            .await?;
+
+        if user_ids.is_empty() {
+            log::info!("No users have blog notifications enabled");
+            return Ok(());
+        }
+
+        log::info!(
+            "Sending blog post notification to {} user(s)",
+            user_ids.len()
+        );
+
+        let mut success_count = 0;
+        let mut error_count = 0;
+
+        for user_id in user_ids {
+            // Fetch user details
+            let user = match self.user_repository.find_by_id(user_id).await? {
+                Some(u) => u,
+                None => {
+                    log::warn!("User {} not found, skipping notification", user_id);
+                    continue;
+                }
+            };
+
+            // Generate unsubscribe token
+            let raw_token = generate_unsubscribe_token();
+            let token_hash = hash_unsubscribe_token(&raw_token);
+
+            // Store the hashed token
+            if let Err(e) = self
+                .unsubscribe_token_repository
+                .create_or_replace(user_id, email_types::BLOG_NOTIFICATIONS, &token_hash)
+                .await
+            {
+                log::error!(
+                    "Failed to create unsubscribe token for user {}: {}",
+                    user_id,
+                    e
+                );
+                error_count += 1;
+                continue;
+            }
+
+            // Build email template
+            let template = BlogPostPublishedTemplate::new(
+                &user.display_name,
+                &event.title,
+                &event.slug,
+                event.excerpt.clone(),
+                event.featured_image_url.clone(),
+                &raw_token,
+                &self.frontend_url,
+            );
+
+            // Render email content
+            let html_body = match template.render_html() {
+                Ok(html) => html,
+                Err(e) => {
+                    log::error!("Failed to render HTML for user {}: {}", user_id, e);
+                    error_count += 1;
+                    continue;
+                }
+            };
+            let text_body = template.render_plain_text();
+            let subject = template.subject();
+
+            // Build email
+            let email = match Email::builder()
+                .to(&user.email)
+                .subject(subject)
+                .text_body(text_body)
+                .html_body(html_body)
+                .build()
+            {
+                Ok(e) => e,
+                Err(e) => {
+                    log::error!("Failed to build email for user {}: {}", user_id, e);
+                    error_count += 1;
+                    continue;
+                }
+            };
+
+            // Send email
+            if let Err(e) = self.email_service.send_email(email).await {
+                log::error!("Failed to send email to user {}: {}", user_id, e);
+                error_count += 1;
+                continue;
+            }
+
+            success_count += 1;
+            log::debug!(
+                "Sent blog post notification to user '{}' ({})",
+                user.display_name,
+                user.email
+            );
+        }
+
+        log::info!(
+            "Blog post notification complete: {} sent, {} failed",
+            success_count,
+            error_count
+        );
+
+        Ok(())
+    }
+
+    fn handler_name(&self) -> &'static str {
+        "BlogPostPublishedEmailHandler"
+    }
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
     use crate::events::EventHandler;
-    use crate::repositories::mocks::{MockAdminRepository, MockUserRepository};
+    use crate::repositories::mocks::{
+        MockAdminRepository, MockUnsubscribeTokenRepository, MockUserPreferencesRepository,
+        MockUserRepository,
+    };
     use crate::services::email::MockEmailService;
     use crate::test_utils::UserBuilder;
     use uuid::Uuid;
@@ -989,5 +1178,168 @@ mod tests {
 
         // Verify no email was sent
         assert_eq!(email_service_clone.count(), 0);
+    }
+
+    #[tokio::test]
+    async fn test_blog_post_published_handler_sends_emails() {
+        // Setup mocks
+        let mut mock_user_repo = MockUserRepository::new();
+        let mut mock_prefs_repo = MockUserPreferencesRepository::new();
+        let mut mock_unsubscribe_repo = MockUnsubscribeTokenRepository::new();
+        let mock_email_service = MockEmailService::new();
+
+        let user_id = Uuid::new_v4();
+
+        // Configure user preferences repo to return one user
+        mock_prefs_repo
+            .expect_find_users_with_blog_notifications()
+            .times(1)
+            .returning(move || Ok(vec![user_id]));
+
+        // Configure user repository to return user details
+        mock_user_repo.expect_find_by_id().times(1).returning(|_| {
+            Ok(Some(
+                UserBuilder::new()
+                    .with_email("subscriber@example.com")
+                    .with_display_name("Blog Subscriber")
+                    .build(),
+            ))
+        });
+
+        // Configure unsubscribe token repo
+        mock_unsubscribe_repo
+            .expect_create_or_replace()
+            .times(1)
+            .returning(|_, _, _| Ok(true));
+
+        // Clone for verification
+        let email_service_clone = mock_email_service.clone();
+
+        // Create handler
+        let handler = BlogPostPublishedEmailHandler::new(
+            Arc::new(mock_user_repo),
+            Arc::new(mock_prefs_repo),
+            Arc::new(mock_unsubscribe_repo),
+            Arc::new(mock_email_service),
+            "https://kennwilliamson.org",
+        );
+
+        // Create event
+        let event = BlogPostPublishedEvent::new(
+            Uuid::new_v4(),
+            "my-awesome-post",
+            "My Awesome Post",
+            Some("This is an exciting new post!".to_string()),
+            Some("https://example.com/image.jpg".to_string()),
+        );
+
+        // Handle event
+        let result = handler.handle(&event).await;
+        assert!(result.is_ok());
+
+        // Verify email was sent
+        assert_eq!(email_service_clone.count(), 1);
+        let sent_emails = email_service_clone.get_sent_emails();
+        assert_eq!(sent_emails[0].to, vec!["subscriber@example.com"]);
+        assert!(sent_emails[0].subject.contains("My Awesome Post"));
+    }
+
+    #[tokio::test]
+    async fn test_blog_post_published_handler_no_subscribers() {
+        // Setup mocks
+        let mock_user_repo = MockUserRepository::new();
+        let mut mock_prefs_repo = MockUserPreferencesRepository::new();
+        let mock_unsubscribe_repo = MockUnsubscribeTokenRepository::new();
+        let mock_email_service = MockEmailService::new();
+
+        // Configure user preferences repo to return no users
+        mock_prefs_repo
+            .expect_find_users_with_blog_notifications()
+            .times(1)
+            .returning(|| Ok(vec![]));
+
+        let email_service_clone = mock_email_service.clone();
+
+        // Create handler
+        let handler = BlogPostPublishedEmailHandler::new(
+            Arc::new(mock_user_repo),
+            Arc::new(mock_prefs_repo),
+            Arc::new(mock_unsubscribe_repo),
+            Arc::new(mock_email_service),
+            "https://kennwilliamson.org",
+        );
+
+        // Create event
+        let event =
+            BlogPostPublishedEvent::new(Uuid::new_v4(), "test-post", "Test Post", None, None);
+
+        // Handle event
+        let result = handler.handle(&event).await;
+        assert!(result.is_ok());
+
+        // Verify no email was sent
+        assert_eq!(email_service_clone.count(), 0);
+    }
+
+    #[tokio::test]
+    async fn test_blog_post_published_handler_multiple_subscribers() {
+        // Setup mocks
+        let mut mock_user_repo = MockUserRepository::new();
+        let mut mock_prefs_repo = MockUserPreferencesRepository::new();
+        let mut mock_unsubscribe_repo = MockUnsubscribeTokenRepository::new();
+        let mock_email_service = MockEmailService::new();
+
+        let user_id1 = Uuid::new_v4();
+        let user_id2 = Uuid::new_v4();
+
+        // Configure user preferences repo to return two users
+        mock_prefs_repo
+            .expect_find_users_with_blog_notifications()
+            .times(1)
+            .returning(move || Ok(vec![user_id1, user_id2]));
+
+        // Configure user repository to return user details for each call
+        mock_user_repo.expect_find_by_id().times(2).returning(|id| {
+            Ok(Some(
+                UserBuilder::new()
+                    .with_id(id)
+                    .with_email(format!("user-{}@example.com", &id.to_string()[..8]))
+                    .build(),
+            ))
+        });
+
+        // Configure unsubscribe token repo for multiple calls
+        mock_unsubscribe_repo
+            .expect_create_or_replace()
+            .times(2)
+            .returning(|_, _, _| Ok(true));
+
+        // Clone for verification
+        let email_service_clone = mock_email_service.clone();
+
+        // Create handler
+        let handler = BlogPostPublishedEmailHandler::new(
+            Arc::new(mock_user_repo),
+            Arc::new(mock_prefs_repo),
+            Arc::new(mock_unsubscribe_repo),
+            Arc::new(mock_email_service),
+            "https://kennwilliamson.org",
+        );
+
+        // Create event
+        let event = BlogPostPublishedEvent::new(
+            Uuid::new_v4(),
+            "multi-subscriber-post",
+            "Multi Subscriber Post",
+            None,
+            None,
+        );
+
+        // Handle event
+        let result = handler.handle(&event).await;
+        assert!(result.is_ok());
+
+        // Verify both emails were sent
+        assert_eq!(email_service_clone.count(), 2);
     }
 }

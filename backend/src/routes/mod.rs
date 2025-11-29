@@ -2,6 +2,7 @@ pub mod access_request;
 pub mod admin;
 pub mod auth;
 pub mod blog;
+pub mod email;
 pub mod health;
 pub mod incident_timers;
 pub mod phrases;
@@ -58,6 +59,15 @@ pub fn configure_app_routes(cfg: &mut web::ServiceConfig) {
                                 .route("/posts/{slug}", web::get().to(blog::get_post_by_slug))
                                 .route("/tags", web::get().to(blog::get_all_tags))
                                 .route("/search", web::get().to(blog::search_posts)),
+                        )
+                        // Email public routes (unsubscribe - no auth required)
+                        .service(
+                            web::scope("/email")
+                                .route(
+                                    "/unsubscribe/{token}",
+                                    web::get().to(email::validate_unsubscribe_token),
+                                )
+                                .route("/unsubscribe", web::post().to(email::unsubscribe)),
                         ),
                 )
                 // Protected routes (with auth and rate limiting middleware)

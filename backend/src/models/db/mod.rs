@@ -4,6 +4,7 @@ pub mod email_suppression;
 pub mod incident_timer;
 pub mod phrase;
 pub mod refresh_token;
+pub mod unsubscribe_token;
 pub mod user;
 pub mod user_credentials;
 pub mod user_external_login;
@@ -15,6 +16,7 @@ pub use blog_post::*;
 pub use email_suppression::*;
 pub use incident_timer::*;
 pub use phrase::*;
+pub use unsubscribe_token::{UnsubscribeToken, UnsubscribeTokenInfo, email_types};
 pub use user::*;
 
 // Re-export for use in other modules (tests, services, etc.)

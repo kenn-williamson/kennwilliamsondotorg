@@ -37,19 +37,27 @@ pub async fn update_post(
         ));
     }
 
+    // Prevent unpublishing - once published, stays published
+    if existing_post.status == "published" && request.status.as_deref() == Some("draft") {
+        return Err(anyhow!(
+            "Cannot unpublish a published post. Edit it in place or delete it."
+        ));
+    }
+
+    // Check if we're publishing (draft -> published)
+    let is_publishing =
+        existing_post.status == "draft" && request.status.as_deref() == Some("published");
+
     // Determine published_at logic:
     // - If post was already published, preserve existing published_at
     // - If changing from draft to published, set published_at to now
-    // - If changing from published to draft, clear published_at
+    // Note: Unpublishing is not allowed, so no need to handle that case
     let published_at = match (&existing_post.status[..], request.status.as_deref()) {
         // Already published -> keep existing published_at
         ("published", None) | ("published", Some("published")) => existing_post.published_at,
 
         // Changing from draft to published -> set now
         ("draft", Some("published")) => Some(Utc::now()),
-
-        // Changing from published to draft -> clear published_at
-        ("published", Some("draft")) => None,
 
         // Draft staying draft -> keep None
         ("draft", None) | ("draft", Some("draft")) => None,
@@ -73,7 +81,14 @@ pub async fn update_post(
     };
 
     // Call repository
-    service.repository.update_post(id, update_dto).await
+    let post = service.repository.update_post(id, update_dto).await?;
+
+    // Emit event if post was just published
+    if is_publishing {
+        service.emit_blog_post_published_event(&post).await;
+    }
+
+    Ok(post)
 }
 
 #[cfg(test)]
@@ -267,5 +282,43 @@ mod tests {
                 .to_string()
                 .contains("Status must be 'draft' or 'published'")
         );
+    }
+
+    #[tokio::test]
+    async fn test_update_post_prevents_unpublishing() {
+        // Given: A published post
+        let mut mock_repo = MockBlogRepository::new();
+        let test_id = Uuid::new_v4();
+
+        mock_repo
+            .expect_get_post_by_id()
+            .with(eq(test_id))
+            .times(1)
+            .returning(move |_| {
+                Ok(Some(
+                    BlogPostBuilder::new().with_id(test_id).published().build(),
+                ))
+            });
+
+        let service = BlogService::new(Box::new(mock_repo), Box::new(MockImageStorage::new()));
+
+        let request = UpdateBlogPostRequest {
+            title: None,
+            slug: None,
+            content: None,
+            excerpt: None,
+            featured_image_url: None,
+            featured_image_alt: None,
+            tags: None,
+            status: Some("draft".to_string()), // Trying to unpublish
+            meta_description: None,
+        };
+
+        // When: Trying to unpublish
+        let result = service.update_post(test_id, request).await;
+
+        // Then: Error returned
+        assert!(result.is_err());
+        assert!(result.unwrap_err().to_string().contains("Cannot unpublish"));
     }
 }

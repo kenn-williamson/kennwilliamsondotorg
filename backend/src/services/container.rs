@@ -21,6 +21,7 @@ use crate::repositories::postgres::{
     postgres_password_reset_token_repository::PostgresPasswordResetTokenRepository,
     postgres_phrase_repository::PostgresPhraseRepository,
     postgres_refresh_token_repository::PostgresRefreshTokenRepository,
+    postgres_unsubscribe_token_repository::PostgresUnsubscribeTokenRepository,
     postgres_user_credentials_repository::PostgresUserCredentialsRepository,
     postgres_user_external_login_repository::PostgresUserExternalLoginRepository,
     postgres_user_preferences_repository::PostgresUserPreferencesRepository,
@@ -34,14 +35,15 @@ use crate::repositories::redis::RedisPkceStorage;
 use crate::events::event_bus::InMemoryEventBus;
 use crate::events::handlers::{
     AccessRequestApprovedEmailHandler, AccessRequestEmailNotificationHandler,
-    AccessRequestRejectedEmailHandler, PasswordChangedEmailHandler,
+    AccessRequestRejectedEmailHandler, BlogPostPublishedEmailHandler, PasswordChangedEmailHandler,
     PhraseSuggestionApprovedEmailHandler, PhraseSuggestionEmailNotificationHandler,
     PhraseSuggestionRejectedEmailHandler, ProfileUpdatedEmailHandler, UserRegisteredEmailHandler,
 };
 use crate::events::types::{
     AccessRequestApprovedEvent, AccessRequestCreatedEvent, AccessRequestRejectedEvent,
-    PasswordChangedEvent, PhraseSuggestionApprovedEvent, PhraseSuggestionCreatedEvent,
-    PhraseSuggestionRejectedEvent, ProfileUpdatedEvent, UserRegisteredEvent,
+    BlogPostPublishedEvent, PasswordChangedEvent, PhraseSuggestionApprovedEvent,
+    PhraseSuggestionCreatedEvent, PhraseSuggestionRejectedEvent, ProfileUpdatedEvent,
+    UserRegisteredEvent,
 };
 use crate::events::{EventBus, EventPublisher};
 
@@ -56,10 +58,10 @@ use super::email::MockEmailService;
 use super::email::{LogOnlyEmailService, SesEmailService, SuppressionGuard};
 use super::incident_timer::IncidentTimerService;
 use super::phrase::PhraseService;
-use super::turnstile::TurnstileServiceTrait;
+use super::turnstile::CloudflareTurnstileService;
 #[cfg(feature = "mocks")]
 use super::turnstile::MockTurnstileService;
-use super::turnstile::CloudflareTurnstileService;
+use super::turnstile::TurnstileServiceTrait;
 #[cfg(feature = "mocks")]
 use crate::middleware::rate_limiter::MockRateLimitService;
 use crate::middleware::rate_limiter::{RateLimitServiceTrait, RedisRateLimitService};
@@ -105,7 +107,9 @@ impl ServiceContainer {
             .unwrap_or(false);
 
         let email_service: Arc<dyn super::email::EmailService> = if disable_email_sending {
-            log::warn!("⚠️  Email sending DISABLED - using log-only mode (DISABLE_EMAIL_SENDING=true)");
+            log::warn!(
+                "⚠️  Email sending DISABLED - using log-only mode (DISABLE_EMAIL_SENDING=true)"
+            );
             Arc::new(LogOnlyEmailService::new())
         } else {
             // Production mode: use SES with suppression checking
@@ -257,6 +261,21 @@ impl ServiceContainer {
                 .register_handler::<UserRegisteredEvent>(Box::new(user_registered_handler))
                 .expect("Failed to register UserRegisteredEmailHandler");
 
+            // Reuse shared email service instance
+            let blog_post_email_service = Arc::clone(&email_service);
+
+            // Register BlogPostPublishedEmailHandler
+            let blog_post_handler = BlogPostPublishedEmailHandler::new(
+                Arc::new(PostgresUserRepository::new(pool.clone())),
+                Arc::new(PostgresUserPreferencesRepository::new(pool.clone())),
+                Arc::new(PostgresUnsubscribeTokenRepository::new(pool.clone())),
+                blog_post_email_service,
+                url.clone(),
+            );
+            event_bus
+                .register_handler::<BlogPostPublishedEvent>(Box::new(blog_post_handler))
+                .expect("Failed to register BlogPostPublishedEmailHandler");
+
             log::info!("EventBus configured with email notification handlers");
         } else {
             log::warn!("EventBus created without handlers - FRONTEND_URL not configured");
@@ -276,6 +295,9 @@ impl ServiceContainer {
             )))
             .profile_repository(Box::new(PostgresUserProfileRepository::new(pool.clone())))
             .preferences_repository(Box::new(PostgresUserPreferencesRepository::new(
+                pool.clone(),
+            )))
+            .unsubscribe_token_repository(Box::new(PostgresUnsubscribeTokenRepository::new(
                 pool.clone(),
             )))
             .refresh_token_repository(Box::new(PostgresRefreshTokenRepository::new(pool.clone())))
@@ -381,11 +403,10 @@ impl ServiceContainer {
         // Create Turnstile verification service
         let turnstile_secret_key = std::env::var("TURNSTILE_SECRET_KEY")
             .unwrap_or_else(|_| "1x0000000000000000000000000000000AA".to_string()); // Test key fallback
-        let turnstile_service: Arc<dyn TurnstileServiceTrait> = Arc::new(
-            CloudflareTurnstileService::new(turnstile_secret_key)
-        );
+        let turnstile_service: Arc<dyn TurnstileServiceTrait> =
+            Arc::new(CloudflareTurnstileService::new(turnstile_secret_key));
 
-        // Create blog service with PostgreSQL repository
+        // Create blog service with PostgreSQL repository and event bus
         // Note: MockImageStorage used even in production for Phase 4
         // TODO: Implement S3ImageStorage and use here in Phase 5
         #[cfg(feature = "mocks")]
@@ -393,6 +414,7 @@ impl ServiceContainer {
             BlogService::builder()
                 .with_repository(Box::new(PostgresBlogRepository::new(pool.clone())))
                 .with_image_storage(Box::new(MockImageStorage::new()))
+                .with_event_bus(Arc::clone(&event_publisher))
                 .build()
                 .expect("Failed to build BlogService"),
         );
@@ -410,6 +432,7 @@ impl ServiceContainer {
                 BlogService::builder()
                     .with_repository(Box::new(PostgresBlogRepository::new(pool.clone())))
                     .with_image_storage(Box::new(image_storage))
+                    .with_event_bus(Arc::clone(&event_publisher))
                     .build()
                     .expect("Failed to build BlogService"),
             )

@@ -5,6 +5,7 @@ use crate::repositories::traits::password_reset_token_repository::PasswordResetT
 use crate::repositories::traits::phrase_repository::PhraseRepository;
 use crate::repositories::traits::pkce_storage::PkceStorage;
 use crate::repositories::traits::refresh_token_repository::RefreshTokenRepository;
+use crate::repositories::traits::unsubscribe_token_repository::UnsubscribeTokenRepository;
 use crate::repositories::traits::user_credentials_repository::UserCredentialsRepository;
 use crate::repositories::traits::user_external_login_repository::UserExternalLoginRepository;
 use crate::repositories::traits::user_preferences_repository::UserPreferencesRepository;
@@ -31,6 +32,7 @@ pub struct AuthServiceBuilder {
     external_login_repository: Option<Box<dyn UserExternalLoginRepository>>,
     profile_repository: Option<Box<dyn UserProfileRepository>>,
     preferences_repository: Option<Box<dyn UserPreferencesRepository>>,
+    unsubscribe_token_repository: Option<Box<dyn UnsubscribeTokenRepository>>,
     event_publisher: Option<Arc<dyn EventPublisher>>,
     jwt_secret: Option<String>,
 }
@@ -51,6 +53,7 @@ impl AuthServiceBuilder {
             external_login_repository: None,
             profile_repository: None,
             preferences_repository: None,
+            unsubscribe_token_repository: None,
             event_publisher: None,
             jwt_secret: None,
         }
@@ -132,6 +135,14 @@ impl AuthServiceBuilder {
         self
     }
 
+    pub fn unsubscribe_token_repository(
+        mut self,
+        repo: Box<dyn UnsubscribeTokenRepository>,
+    ) -> Self {
+        self.unsubscribe_token_repository = Some(repo);
+        self
+    }
+
     pub fn event_publisher(mut self, publisher: Arc<dyn EventPublisher>) -> Self {
         self.event_publisher = Some(publisher);
         self
@@ -159,6 +170,7 @@ impl AuthServiceBuilder {
             external_login_repository: self.external_login_repository,
             profile_repository: self.profile_repository,
             preferences_repository: self.preferences_repository,
+            unsubscribe_token_repository: self.unsubscribe_token_repository,
             event_publisher: self.event_publisher,
         }
     }

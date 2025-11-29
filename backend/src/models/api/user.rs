@@ -43,6 +43,7 @@ pub struct ExternalAccount {
 pub struct PreferencesData {
     pub timer_is_public: bool,
     pub timer_show_in_list: bool,
+    pub notify_blog_posts: bool,
 }
 
 /// User response with nested structure for modularity
@@ -135,6 +136,8 @@ pub struct SetPasswordRequest {
 pub struct UpdatePreferencesRequest {
     pub timer_is_public: bool,
     pub timer_show_in_list: bool,
+    /// Optional: update blog post notification preference
+    pub notify_blog_posts: Option<bool>,
 }
 
 #[derive(Debug, Deserialize)]

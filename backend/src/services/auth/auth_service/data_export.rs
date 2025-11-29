@@ -756,7 +756,7 @@ mod tests {
         // Test that export includes data from all new authentication tables
         use crate::models::db::{
             user_credentials::UserCredentials, user_external_login::UserExternalLogin,
-            user_preferences::UserPreferences, user_profile::UserProfile,
+            user_profile::UserProfile,
         };
         use crate::repositories::mocks::{
             MockUserCredentialsRepository, MockUserExternalLoginRepository,
@@ -826,13 +826,10 @@ mod tests {
 
         // Mock preferences repository
         let mut prefs_repo = MockUserPreferencesRepository::new();
-        let prefs = UserPreferences {
-            user_id,
-            timer_is_public: true,
-            timer_show_in_list: true,
-            created_at: Utc::now(),
-            updated_at: Utc::now(),
-        };
+        let prefs = crate::test_utils::UserPreferencesBuilder::new()
+            .with_user_id(user_id)
+            .public_timer()
+            .build();
         prefs_repo
             .expect_find_by_user_id()
             .returning(move |_| Ok(Some(prefs.clone())));
@@ -1022,7 +1019,7 @@ mod tests {
         // Test that export can be serialized to valid JSON
         use crate::models::db::{
             user_credentials::UserCredentials, user_external_login::UserExternalLogin,
-            user_preferences::UserPreferences, user_profile::UserProfile,
+            user_profile::UserProfile,
         };
         use crate::repositories::mocks::{
             MockUserCredentialsRepository, MockUserExternalLoginRepository,
@@ -1087,13 +1084,10 @@ mod tests {
             .returning(move |_| Ok(Some(profile.clone())));
 
         let mut prefs_repo = MockUserPreferencesRepository::new();
-        let prefs = UserPreferences {
-            user_id,
-            timer_is_public: false,
-            timer_show_in_list: false,
-            created_at: Utc::now(),
-            updated_at: Utc::now(),
-        };
+        let prefs = crate::test_utils::UserPreferencesBuilder::new()
+            .with_user_id(user_id)
+            .private_timer()
+            .build();
         prefs_repo
             .expect_find_by_user_id()
             .returning(move |_| Ok(Some(prefs.clone())));

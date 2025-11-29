@@ -44,6 +44,9 @@ export const API_ROUTES = {
       TAGS: '/public/blog/tags',
       FEED: '/public/blog/feed.xml',
     },
+    EMAIL: {
+      UNSUBSCRIBE: '/public/email/unsubscribe',
+    },
   },
 
   /**

@@ -187,10 +187,13 @@
             errors.status ? 'border-red-300 bg-red-50' : 'border-nautical-300'
           ]"
         >
-          <option value="draft">Draft</option>
+          <option value="draft" :disabled="isAlreadyPublished">Draft</option>
           <option value="published">Published</option>
         </Field>
         <ErrorMessage name="status" class="text-red-600 text-sm mt-1" />
+        <p v-if="isAlreadyPublished" class="text-xs text-nautical-500 mt-1">
+          Published posts cannot be reverted to draft.
+        </p>
       </div>
 
       <!-- Meta Description Field (SEO) -->
@@ -223,6 +226,7 @@
       <!-- Submit Buttons -->
       <div class="flex justify-end gap-4">
         <button
+          v-if="!isAlreadyPublished"
           type="button"
           @click="saveDraft"
           :disabled="isSubmitting"
@@ -304,6 +308,11 @@ const slugManuallyEdited = ref(!!props.editingPost?.slug)
 const isFormValid = computed(() => {
   return values.title && values.content && values.status &&
     !errors.value.title && !errors.value.content
+})
+
+// Check if editing a post that's already published (can't revert to draft)
+const isAlreadyPublished = computed(() => {
+  return props.editingPost?.status === 'published'
 })
 
 // Methods

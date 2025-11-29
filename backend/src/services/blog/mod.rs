@@ -6,9 +6,11 @@
 /// - Excerpt generation from markdown content
 /// - Image management (upload, delete)
 /// - Publishing workflow (draft → published)
+/// - Event emission when posts are published
 use anyhow::Result;
 use std::sync::Arc;
 
+use crate::events::EventPublisher;
 use crate::models::api::{CreateBlogPostRequest, UpdateBlogPostRequest};
 use crate::models::db::BlogPost;
 use crate::repositories::traits::{BlogRepository, ImageStorage};
@@ -26,12 +28,14 @@ pub mod utils;
 pub struct BlogService {
     repository: Arc<dyn BlogRepository>,
     image_storage: Arc<dyn ImageStorage>,
+    event_bus: Option<Arc<dyn EventPublisher>>,
 }
 
 /// Builder for BlogService with validation
 pub struct BlogServiceBuilder {
     repository: Option<Box<dyn BlogRepository>>,
     image_storage: Option<Box<dyn ImageStorage>>,
+    event_bus: Option<Arc<dyn EventPublisher>>,
 }
 
 impl BlogServiceBuilder {
@@ -40,6 +44,7 @@ impl BlogServiceBuilder {
         Self {
             repository: None,
             image_storage: None,
+            event_bus: None,
         }
     }
 
@@ -52,6 +57,12 @@ impl BlogServiceBuilder {
     /// Set image storage implementation
     pub fn with_image_storage(mut self, image_storage: Box<dyn ImageStorage>) -> Self {
         self.image_storage = Some(image_storage);
+        self
+    }
+
+    /// Set event bus for publishing domain events
+    pub fn with_event_bus(mut self, event_bus: Arc<dyn EventPublisher>) -> Self {
+        self.event_bus = Some(event_bus);
         self
     }
 
@@ -70,6 +81,7 @@ impl BlogServiceBuilder {
                 self.image_storage
                     .ok_or_else(|| anyhow::anyhow!("ImageStorage is required"))?,
             ),
+            event_bus: self.event_bus,
         })
     }
 }
@@ -91,6 +103,31 @@ impl BlogService {
         Self {
             repository: Arc::from(repository),
             image_storage: Arc::from(image_storage),
+            event_bus: None,
+        }
+    }
+
+    /// Helper method to publish a blog post published event
+    pub(crate) async fn emit_blog_post_published_event(&self, post: &BlogPost) {
+        if let Some(event_bus) = &self.event_bus {
+            let event = crate::events::types::BlogPostPublishedEvent::new(
+                post.id,
+                &post.slug,
+                &post.title,
+                post.excerpt.clone(),
+                post.featured_image_url.clone(),
+            );
+
+            // Fire-and-forget event publishing
+            if let Err(e) = event_bus.publish(Box::new(event)).await {
+                log::error!("Failed to publish BlogPostPublishedEvent: {}", e);
+            } else {
+                log::debug!(
+                    "Published BlogPostPublishedEvent for post '{}' ({})",
+                    post.title,
+                    post.slug
+                );
+            }
         }
     }
 

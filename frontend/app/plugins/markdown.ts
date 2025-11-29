@@ -46,9 +46,9 @@ export default defineNuxtPlugin(() => {
   const renderSafe = (markdown: string): string => {
     const rawHtml = md.render(markdown)
 
-    // Configure DOMPurify to allow mermaid SVG elements
+    // Configure DOMPurify to allow mermaid SVG elements and br for mermaid line breaks
     return DOMPurify.sanitize(rawHtml, {
-      ADD_TAGS: ['svg', 'g', 'path', 'rect', 'text', 'tspan', 'foreignObject', 'marker', 'defs', 'line', 'polyline', 'polygon', 'circle', 'ellipse'],
+      ADD_TAGS: ['svg', 'g', 'path', 'rect', 'text', 'tspan', 'foreignObject', 'marker', 'defs', 'line', 'polyline', 'polygon', 'circle', 'ellipse', 'br'],
       ADD_ATTR: ['style', 'class', 'id', 'data-*', 'viewBox', 'transform', 'fill', 'stroke', 'stroke-width', 'x', 'y', 'width', 'height', 'cx', 'cy', 'r', 'rx', 'ry', 'points', 'd', 'marker-end', 'marker-start'],
     })
   }

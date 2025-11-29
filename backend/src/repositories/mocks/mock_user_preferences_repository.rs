@@ -15,5 +15,7 @@ mock! {
         async fn create(&self, user_id: Uuid) -> Result<UserPreferences>;
         async fn find_by_user_id(&self, user_id: Uuid) -> Result<Option<UserPreferences>>;
         async fn update_timer_settings(&self, user_id: Uuid, is_public: bool, show_in_list: bool) -> Result<()>;
+        async fn update_blog_notifications(&self, user_id: Uuid, enabled: bool) -> Result<()>;
+        async fn find_users_with_blog_notifications(&self) -> Result<Vec<Uuid>>;
     }
 }

@@ -8,6 +8,7 @@ pub mod mock_password_reset_token_repository;
 pub mod mock_phrase_repository;
 pub mod mock_pkce_storage;
 pub mod mock_refresh_token_repository;
+pub mod mock_unsubscribe_token_repository;
 pub mod mock_user_credentials_repository;
 pub mod mock_user_external_login_repository;
 pub mod mock_user_preferences_repository;
@@ -26,6 +27,8 @@ pub use mock_password_reset_token_repository::MockPasswordResetTokenRepository;
 pub use mock_phrase_repository::MockPhraseRepository;
 pub use mock_pkce_storage::MockPkceStorage;
 pub use mock_refresh_token_repository::MockRefreshTokenRepository;
+#[allow(unused_imports)]
+pub use mock_unsubscribe_token_repository::MockUnsubscribeTokenRepository;
 pub use mock_user_credentials_repository::MockUserCredentialsRepository;
 pub use mock_user_external_login_repository::MockUserExternalLoginRepository;
 pub use mock_user_preferences_repository::MockUserPreferencesRepository;
