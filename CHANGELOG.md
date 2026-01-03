@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.7.0](https://github.com/kenn-williamson/kennwilliamsondotorg/compare/v1.6.0...v1.7.0) (2026-01-03)
+
+
+### Features
+
+* **blog:** add RSS, Atom, and JSON Feed syndication ([b93dda8](https://github.com/kenn-williamson/kennwilliamsondotorg/commit/b93dda8b60167ff105e3a5b3235a9161a04e6a5c))
+
 ## [1.6.0](https://github.com/kenn-williamson/kennwilliamsondotorg/compare/v1.5.0...v1.6.0) (2025-11-29)
 
 
