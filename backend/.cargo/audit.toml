@@ -18,4 +18,10 @@ ignore = [
     # testcontainers is a dev-dependency used exclusively for integration tests.
     # It is never included in production builds and poses no risk to deployed code.
     "RUSTSEC-2025-0111",
+
+    # RUSTSEC-2025-0134: rustls-pemfile is unmaintained
+    # Reason: This crate is used by bollard -> testcontainers, which is a dev-dependency.
+    # testcontainers is used exclusively for integration tests and is never included
+    # in production builds. Waiting for upstream bollard to migrate to rustls-pki-types.
+    "RUSTSEC-2025-0134",
 ]

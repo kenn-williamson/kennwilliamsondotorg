@@ -20,7 +20,11 @@ useHead({
   link: [
     { rel: 'icon', type: 'image/png', sizes: '32x32', href: '/favicon-small.png' },
     { rel: 'icon', type: 'image/png', sizes: '192x192', href: '/favicon-large.png' },
-    { rel: 'apple-touch-icon', sizes: '192x192', href: '/favicon-large.png' }
+    { rel: 'apple-touch-icon', sizes: '192x192', href: '/favicon-large.png' },
+    // Feed autodiscovery links
+    { rel: 'alternate', type: 'application/rss+xml', title: 'KennWilliamson.org RSS Feed', href: '/feed/rss' },
+    { rel: 'alternate', type: 'application/atom+xml', title: 'KennWilliamson.org Atom Feed', href: '/feed/atom' },
+    { rel: 'alternate', type: 'application/feed+json', title: 'KennWilliamson.org JSON Feed', href: '/feed/json' }
   ]
 })
 

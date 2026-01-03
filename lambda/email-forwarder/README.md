@@ -2,6 +2,8 @@
 
 AWS Lambda function that forwards emails received by SES to a specified email address.
 
+**Runtime**: Node.js 24.x (AWS Lambda `nodejs24.x`)
+
 ## How It Works
 
 1. Email arrives at `*@kennwilliamson.org`
@@ -80,10 +82,21 @@ After modifying the code:
 ```bash
 cd lambda/email-forwarder
 npm install  # if dependencies changed
-zip -r function.zip index.js node_modules/ package.json
+npm run package
 aws lambda update-function-code \
   --function-name email-forwarder \
   --zip-file fileb://function.zip \
+  --region us-east-1
+```
+
+### Runtime Update
+
+To update the Node.js runtime (e.g., to Node.js 24.x LTS):
+
+```bash
+aws lambda update-function-configuration \
+  --function-name email-forwarder \
+  --runtime nodejs24.x \
   --region us-east-1
 ```
 

@@ -3,6 +3,7 @@ pub mod admin;
 pub mod auth;
 pub mod blog;
 pub mod email;
+pub mod feed;
 pub mod health;
 pub mod incident_timers;
 pub mod phrases;
@@ -59,6 +60,14 @@ pub fn configure_app_routes(cfg: &mut web::ServiceConfig) {
                                 .route("/posts/{slug}", web::get().to(blog::get_post_by_slug))
                                 .route("/tags", web::get().to(blog::get_all_tags))
                                 .route("/search", web::get().to(blog::search_posts)),
+                        )
+                        // Feed public routes (RSS, Atom, JSON Feed)
+                        .service(
+                            web::scope("/feed")
+                                .route("", web::get().to(feed::get_default_feed))
+                                .route("/rss", web::get().to(feed::get_rss_feed))
+                                .route("/atom", web::get().to(feed::get_atom_feed))
+                                .route("/json", web::get().to(feed::get_json_feed)),
                         )
                         // Email public routes (unsubscribe - no auth required)
                         .service(

@@ -4,6 +4,7 @@ pub mod blog;
 pub mod cleanup;
 pub mod container;
 pub mod email;
+pub mod feed;
 pub mod incident_timer;
 pub mod phrase;
 pub mod turnstile;

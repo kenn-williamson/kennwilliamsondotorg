@@ -109,6 +109,7 @@ async fn main() -> std::io::Result<()> {
             .app_data(web::Data::new(pool.clone()))
             .app_data(web::Data::from(container.auth_service.clone()))
             .app_data(web::Data::from(container.blog_service.clone()))
+            .app_data(web::Data::from(container.feed_service.clone()))
             .app_data(web::Data::from(container.incident_timer_service.clone()))
             .app_data(web::Data::from(container.phrase_service.clone()))
             .app_data(web::Data::from(container.admin_service.clone()))

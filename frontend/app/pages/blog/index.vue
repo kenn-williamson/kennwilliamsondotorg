@@ -12,8 +12,19 @@
         <div class="p-6 sm:p-8 lg:p-12">
           <!-- Header -->
           <header class="mb-8">
-            <div class="mb-4">
+            <div class="mb-4 flex items-center justify-between">
               <h1 class="text-4xl sm:text-5xl font-bold text-primary-900">Blog</h1>
+              <NuxtLink
+                to="/feed/rss"
+                class="feed-link"
+                aria-label="Subscribe to RSS feed"
+                title="Subscribe via RSS"
+              >
+                <svg class="w-5 h-5" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
+                  <path d="M6.18 15.64a2.18 2.18 0 0 1 2.18 2.18C8.36 19 7.38 20 6.18 20C5 20 4 19 4 17.82a2.18 2.18 0 0 1 2.18-2.18M4 4.44A15.56 15.56 0 0 1 19.56 20h-2.83A12.73 12.73 0 0 0 4 7.27V4.44m0 5.66a9.9 9.9 0 0 1 9.9 9.9h-2.83A7.07 7.07 0 0 0 4 12.93V10.1z"/>
+                </svg>
+                <span class="sr-only">RSS Feed</span>
+              </NuxtLink>
             </div>
 
             <p class="text-lg text-nautical-700">
@@ -148,5 +159,20 @@ useSocialShare({
     #1e293b 75%,     /* Nautical-800 - Back to slate */
     #0f172a 100%     /* Nautical-900 - Back to deep navy */
   );
+}
+
+.feed-link {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0.5rem;
+  border-radius: 0.375rem;
+  color: #64748b; /* slate-500 */
+  transition: all 0.2s ease;
+}
+
+.feed-link:hover {
+  color: #f97316; /* orange-500 - RSS orange */
+  background: rgba(249, 115, 22, 0.1);
 }
 </style>

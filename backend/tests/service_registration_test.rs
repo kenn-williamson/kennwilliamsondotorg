@@ -44,7 +44,9 @@ async fn test_all_services_are_registered() {
                 container.access_request_moderation_service.clone(),
             ))
             .app_data(web::Data::from(container.stats_service.clone()))
-            .app_data(web::Data::from(container.rate_limit_service.clone())),
+            .app_data(web::Data::from(container.rate_limit_service.clone()))
+            .app_data(web::Data::from(container.turnstile_service.clone()))
+            .app_data(web::Data::from(container.feed_service.clone())),
     )
     .await;
 
@@ -74,6 +76,8 @@ async fn test_service_container_has_all_expected_services() {
     // 8. stats_service
     // 9. rate_limit_service
     // 10. cleanup_service (used in background task, not in app_data)
+    // 11. turnstile_service
+    // 12. feed_service
 
     // If you add a new service to ServiceContainer, add it to this list
     // and update main.rs to register it with .app_data()

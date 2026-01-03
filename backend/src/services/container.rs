@@ -71,6 +71,7 @@ pub struct ServiceContainer {
     // Core services
     pub auth_service: Arc<AuthService>,
     pub blog_service: Arc<BlogService>,
+    pub feed_service: Arc<super::feed::FeedService>,
     pub incident_timer_service: Arc<IncidentTimerService>,
     pub phrase_service: Arc<PhraseService>,
     pub admin_service: Arc<UserManagementService>,
@@ -438,9 +439,18 @@ impl ServiceContainer {
             )
         };
 
+        // Create feed service with blog repository for feed generation
+        let feed_service = Arc::new(
+            super::feed::FeedService::builder()
+                .with_repository(Box::new(PostgresBlogRepository::new(pool.clone())))
+                .build()
+                .expect("Failed to build FeedService"),
+        );
+
         Self {
             auth_service,
             blog_service,
+            feed_service,
             incident_timer_service,
             phrase_service,
             admin_service,
@@ -524,9 +534,18 @@ impl ServiceContainer {
                 .expect("Failed to build BlogService"),
         );
 
+        // For testing, use mock feed service
+        let feed_service = Arc::new(
+            super::feed::FeedService::builder()
+                .with_repository(Box::new(MockBlogRepository::new()))
+                .build()
+                .expect("Failed to build FeedService"),
+        );
+
         Self {
             auth_service,
             blog_service,
+            feed_service,
             incident_timer_service,
             phrase_service,
             admin_service,

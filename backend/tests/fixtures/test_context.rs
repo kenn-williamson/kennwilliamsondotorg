@@ -503,6 +503,18 @@ impl TestContextBuilder {
                 .expect("Failed to build BlogService"),
         );
 
+        // Create feed service for API testing
+        use backend::services::feed::FeedService;
+
+        let feed_service = Arc::new(
+            FeedService::builder()
+                .with_repository(Box::new(PostgresBlogRepository::new(
+                    test_container.pool.clone(),
+                )))
+                .build()
+                .expect("Failed to build FeedService"),
+        );
+
         // Create turnstile service for testing (always succeeds)
         use backend::services::turnstile::{MockTurnstileService, TurnstileServiceTrait};
         let turnstile_service: Arc<dyn TurnstileServiceTrait> =
@@ -511,6 +523,7 @@ impl TestContextBuilder {
         let container = ServiceContainer {
             auth_service,
             blog_service,
+            feed_service,
             incident_timer_service,
             phrase_service,
             admin_service,
@@ -529,6 +542,7 @@ impl TestContextBuilder {
                 .app_data(web::Data::new(pool_clone.clone()))
                 .app_data(web::Data::from(container.auth_service.clone()))
                 .app_data(web::Data::from(container.blog_service.clone()))
+                .app_data(web::Data::from(container.feed_service.clone()))
                 .app_data(web::Data::from(container.incident_timer_service.clone()))
                 .app_data(web::Data::from(container.phrase_service.clone()))
                 .app_data(web::Data::from(container.admin_service.clone()))

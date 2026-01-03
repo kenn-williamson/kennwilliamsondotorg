@@ -1,10 +1,14 @@
 {
   "name": "email-forwarder",
-  "version": "1.0.0",
+  "version": "1.1.0",
   "description": "AWS Lambda function to forward emails received via SES",
   "main": "index.js",
+  "engines": {
+    "node": ">=24.0.0"
+  },
   "scripts": {
-    "test": "echo \"No tests yet\" && exit 0"
+    "test": "echo \"No tests yet\" && exit 0",
+    "package": "zip -r function.zip index.js node_modules/ package.json"
   },
   "keywords": [
     "aws",

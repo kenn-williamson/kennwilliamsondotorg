@@ -36,6 +36,8 @@ aws-sdk-s3 = "1.112"
 aws-sdk-sesv2 = "1.98.0"
 image = { version = "0.25", default-features = false, features = ["jpeg", "png", "gif", "webp"] }
 rss = "2.0"
+atom_syndication = "0.12"
+pulldown-cmark = "0.12"
 reqwest = { version = "0.12.23", features = ["json"] }
 oauth2 = { version = "5.0", features = ["reqwest"] }
 base64 = "0.22"
@@ -48,5 +50,5 @@ actix-rt = "2"
 actix-test = "0.1"
 tokio-test = "0.4"
 lazy_static = "1.4"
-testcontainers = { version = "0.25", features = ["reusable-containers"] }
-testcontainers-modules = "0.13"
+testcontainers = { version = "0.26", features = ["reusable-containers"] }
+testcontainers-modules = "0.14"
