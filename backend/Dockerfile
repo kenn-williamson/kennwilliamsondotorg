@@ -1,5 +1,5 @@
 # Multi-stage build for optimization
-FROM rust:1.90-alpine AS builder
+FROM rust:1.91-alpine AS builder
 
 WORKDIR /app
 RUN apk add --no-cache musl-dev openssl-dev openssl-libs-static

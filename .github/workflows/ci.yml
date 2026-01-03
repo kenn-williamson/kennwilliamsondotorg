@@ -13,12 +13,13 @@ concurrency:
 
 env:
   CARGO_TERM_COLOR: always
-  RUST_VERSION: 1.90.0
+  RUST_VERSION: 1.91.0
 
 jobs:
   backend-tests:
     name: Backend Tests & Coverage
     runs-on: ubuntu-latest
+    timeout-minutes: 20
 
     services:
       postgres:
@@ -118,6 +119,7 @@ jobs:
 
       - name: Run tests with coverage
         working-directory: backend
+        timeout-minutes: 15
         run: |
           mkdir -p coverage
           cargo llvm-cov nextest --locked --profile ci --lcov --output-path coverage/lcov.info --all-features
@@ -136,6 +138,7 @@ jobs:
   backend-clippy:
     name: Backend Clippy Lints
     runs-on: ubuntu-latest
+    timeout-minutes: 15
 
     steps:
       - name: Checkout code
@@ -171,6 +174,7 @@ jobs:
   backend-audit:
     name: Backend Security Audit
     runs-on: ubuntu-latest
+    timeout-minutes: 10
 
     steps:
       - name: Checkout code
@@ -210,6 +214,7 @@ jobs:
   frontend-tests:
     name: Frontend Tests & Checks
     runs-on: ubuntu-latest
+    timeout-minutes: 15
 
     steps:
       - name: Checkout code
@@ -249,6 +254,7 @@ jobs:
   docker-build:
     name: Docker Build Validation
     runs-on: ubuntu-latest
+    timeout-minutes: 20
     if: github.event_name == 'pull_request'  # Only run on PRs, not master pushes
 
     steps:
