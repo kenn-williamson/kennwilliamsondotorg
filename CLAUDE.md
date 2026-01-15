@@ -112,7 +112,7 @@ See [ARCHITECTURE.md](ARCHITECTURE.md#resource-management) for resource targets.
 ### Learning Goals
 **Impact**: Exploring AI-assisted development patterns
 - 3-layer architecture for testability and confidence
-- Comprehensive test coverage (~620 tests)
+- Comprehensive test coverage
 - Documentation-driven development for AI context
 
 ## What Makes This Unique

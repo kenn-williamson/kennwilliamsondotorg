@@ -118,6 +118,58 @@ Large services split into focused submodules:
 - Clear boundaries: Each module has single responsibility
 - Testability: Test modules independently
 
+### Blog Service Architecture
+**Decision**: Full 3-layer implementation with event-driven notifications
+
+**Pattern:**
+- `BlogRepository` trait with PostgreSQL and mock implementations
+- `BlogService` for CRUD, search, and publishing logic
+- `BlogPostPublishedEvent` triggers email notifications
+
+**Why:**
+- Consistent with existing architecture
+- Testable: Mock repository for unit tests
+- Event-driven: Decouples publishing from notification delivery
+
+### Feed Service
+**Decision**: Server-generated RSS, Atom, and JSON Feed syndication
+
+**Pattern:**
+- `FeedService` generates all three feed formats
+- Markdown converted to HTML for feed content
+- 1-hour cache headers for performance
+
+**Why:**
+- SEO: Search engines and feed readers discover content
+- Standards: RSS 2.0, Atom 1.0, JSON Feed 1.1 compliance
+- Performance: Cacheable responses
+
+### Email Notification Handler
+**Decision**: Event-driven blog post notifications
+
+**Pattern:**
+- Subscribes to `BlogPostPublishedEvent`
+- Queries user preferences for notification opt-in
+- Generates unique unsubscribe tokens per recipient
+
+**Why:**
+- Decoupled: Publishing doesn't block on email delivery
+- GDPR compliant: One-click unsubscribe tokens
+- Scalable: Handles multiple subscribers per post
+
+### Turnstile Verification Service
+**Decision**: Cloudflare Turnstile for bot protection
+
+**Pattern:**
+- `TurnstileServiceTrait` abstraction
+- `CloudflareTurnstileService` calls Cloudflare API
+- `MockTurnstileService` for testing
+
+**Why:**
+- Testability: Mock service in tests
+- Defense-in-depth: Part of multi-layer bot protection
+- See [BOT-PROTECTION-DESIGN.md](BOT-PROTECTION-DESIGN.md) for full design
+
 ## Security Architecture
 See [IMPLEMENTATION-SECURITY.md](IMPLEMENTATION-SECURITY.md) for authentication, authorization, and security decisions.
 

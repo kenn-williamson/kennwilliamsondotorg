@@ -263,6 +263,27 @@ Security architecture decisions covering authentication, authorization, data pro
 - Client: "Authentication failed"
 - Server log: "User not found: email@example.com"
 
+## Bot Protection
+
+### Cloudflare Turnstile
+**Decision**: Invisible CAPTCHA on registration
+
+**Why:**
+- Reduces spam account creation
+- Invisible to legitimate users
+- No user friction unless challenge triggered
+
+**Implementation:**
+- Frontend: TurnstileWidget component
+- Backend: TurnstileService verifies tokens with Cloudflare API
+- Defense-in-depth: Combined with honeypot field and rate limiting
+
+**Trade-offs:**
+- External dependency (Cloudflare)
+- Worth it: Effective bot protection with minimal UX impact
+
+See [BOT-PROTECTION-DESIGN.md](BOT-PROTECTION-DESIGN.md) for complete design rationale.
+
 ## Security Testing
 
 ### What We Test

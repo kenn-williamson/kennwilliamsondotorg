@@ -1046,9 +1046,72 @@
 - Technology stack badges (Rust, Actix-web, PostgreSQL, Nuxt.js, Vue.js, TypeScript, TailwindCSS, Docker, Nginx, AWS)
 - Navigation integration: Added "Project" link to desktop and mobile app header navigation
 
+### Recent Major Features (January 2026)
+
+#### Blog Feed Syndication
+**Achievement**: RSS, Atom, and JSON Feed syndication for blog content discovery.
+
+**Key Deliverables**:
+- RSS 2.0 feed at `/backend/public/feed/rss`
+- Atom 1.0 feed at `/backend/public/feed/atom`
+- JSON Feed 1.1 at `/backend/public/feed/json`
+- Markdown to HTML conversion for feed content
+- 1-hour cache headers for performance
+
+**Technical Implementation**:
+- FeedService with `generate_rss()`, `generate_atom()`, `generate_json()` methods
+- Uses `rss` and `atom_syndication` crates for standards compliance
+- Custom JSON Feed implementation following JSON Feed 1.1 specification
+- Featured images as RSS enclosures, categories/tags across all formats
+
+#### Blog Email Notifications
+**Achievement**: Event-driven email notifications for blog subscribers when new posts are published.
+
+**Key Deliverables**:
+- BlogPostPublishedEmailHandler triggered by BlogPostPublishedEvent
+- User preference opt-in for blog notifications
+- Unique unsubscribe tokens per recipient for GDPR compliance
+- HTML and plain text email templates
+
+**Technical Implementation**:
+- Event handler subscribes to BlogPostPublishedEvent
+- Queries user_preferences for notification opt-in
+- Generates one-click unsubscribe tokens per user
+- Askama templates for email rendering
+
+#### Cloudflare Turnstile Bot Protection
+**Achievement**: Invisible CAPTCHA integration protecting registration from automated attacks.
+
+**Key Deliverables**:
+- TurnstileWidget Vue component for frontend integration
+- TurnstileService with Cloudflare API verification
+- Defense-in-depth: Turnstile + honeypot + rate limiting
+- Mock service for testing environments
+
+**Technical Implementation**:
+- Frontend: Vue 3 component wrapping Turnstile SDK with `getToken()` and `reset()` methods
+- Backend: TurnstileServiceTrait abstraction with CloudflareTurnstileService and MockTurnstileService
+- Interaction-only mode (invisible unless challenge required)
+- See BOT-PROTECTION-DESIGN.md for complete design rationale
+
+#### Testcontainer Reuse Optimization
+**Achievement**: Faster test execution through PostgreSQL container reuse across test runs.
+
+**Key Deliverables**:
+- Container reuse with `ReuseDirective::Always`
+- Slot-based naming for parallel test support
+- TRUNCATE + re-seed cleanup strategy
+- Retry logic for container startup failures
+
+**Technical Implementation**:
+- testcontainers crate v0.26 with `reusable-containers` feature
+- Container naming: `test-postgres-{NEXTEST_TEST_GLOBAL_SLOT}`
+- Data cleanup via TRUNCATE with role and system phrase re-seeding
+- 15 retry attempts (3 containers × 5 attempts) for reliability
+
 ## Current Status
 - **Application**: Live at kennwilliamson.org with full production infrastructure
-- **Testing**: 720+ total tests (520+ backend + 191 frontend) with comprehensive coverage across all architectural layers
+- **Testing**: Comprehensive test coverage across all architectural layers (backend + frontend)
 - **Development Environment**: Complete hot reload with production-like routing
 - **Documentation**: Comprehensive implementation and workflow documentation with hybrid API architecture
 - **Architecture**: Clean 3-layer architecture with repository pattern, dependency injection, and comprehensive testing infrastructure
@@ -1065,6 +1128,8 @@
 - **Admin Panel**: Complete admin panel system with user management, phrase moderation, and system statistics
 - **Service Architecture**: All services refactored into modular design with embedded testing and comprehensive coverage
 - **Frontend Architecture**: Complete refactor with 25/25 components migrated to centralized store architecture with improved SSR hydration
-- **Frontend Testing**: Complete testing infrastructure with 175 tests achieving 100% success rate across action composables, pure services, pure stores, and utilities
+- **Frontend Testing**: Complete testing infrastructure across action composables, pure services, pure stores, and utilities
 - **SSR Hydration**: Improved store hydration and SSR consistency with smart fetch system for intelligent data fetching
+- **Blog Platform**: Complete microblog with Markdown editor, RSS/Atom/JSON feeds, and subscriber email notifications
+- **Bot Protection**: Cloudflare Turnstile integration with defense-in-depth strategy
 - **Compliance Status**: 2/9 critical compliance features complete (Account Deletion + Data Export), legal documents complete, 7 features remaining for full GDPR/CCPA compliance

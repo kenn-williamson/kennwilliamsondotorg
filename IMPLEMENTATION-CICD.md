@@ -107,7 +107,7 @@ This document explains the CI/CD (Continuous Integration / Continuous Deployment
 
 **Alternatives rejected**:
 - **ESLint in CI**: Not configured in project, would require setup first (can add later)
-- **E2E tests**: Slower, more brittle, existing 636 tests provide good coverage
+- **E2E tests**: Slower, more brittle, existing test suite provides good coverage
 - **Docker image scanning**: Adds complexity, less critical for low-traffic personal site
 
 **Trade-offs**:

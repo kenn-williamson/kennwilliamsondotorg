@@ -64,7 +64,7 @@ Production deployment architecture and decisions for AWS EC2 with Docker Compose
 **Architecture:**
 1. **CI (Continuous Integration)**: On pull requests
    - Run linters (Clippy, Prettier)
-   - Execute test suite (~620 tests)
+   - Execute test suite
    - Build Docker images (smoke test)
    - Generate code coverage reports
 

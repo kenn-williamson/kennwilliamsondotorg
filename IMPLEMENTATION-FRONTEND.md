@@ -268,3 +268,30 @@ See [IMPLEMENTATION-TESTING.md](IMPLEMENTATION-TESTING.md) for testing philosoph
 - Checks expiration on API calls
 - Refreshes proactively
 - Falls back to login on refresh failure
+
+### Blog Components
+**Decision**: Feature-based blog implementation with markdown rendering
+
+**Components:**
+- Blog post list with pagination and search
+- Post viewer with markdown-it rendering and syntax highlighting
+- Admin editor with draft/publish workflow
+- Category and tag filtering
+
+**Why:**
+- SSR: Initial page load rendered on server for SEO
+- Client hydration: Interactive features after load
+- Markdown: Flexible content authoring
+
+### Bot Protection Widget
+**Decision**: TurnstileWidget component for registration protection
+
+**Pattern:**
+- Vue 3 component wrapping Cloudflare Turnstile SDK
+- Exposes `getToken()` and `reset()` methods
+- Interaction-only mode (invisible unless challenge required)
+
+**Why:**
+- User experience: Invisible to most users
+- Security: Protects against automated registration
+- Testable: Can be mocked in tests
