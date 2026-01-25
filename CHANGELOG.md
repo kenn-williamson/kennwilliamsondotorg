@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.8.0](https://github.com/kenn-williamson/kennwilliamsondotorg/compare/v1.7.0...v1.8.0) (2026-01-25)
+
+
+### Features
+
+* **blog:** add mermaid diagram support with SSR markdown rendering ([20f5ed1](https://github.com/kenn-williamson/kennwilliamsondotorg/commit/20f5ed1b00193a8226241b29842c710feff268b5))
+
 ## [1.7.0](https://github.com/kenn-williamson/kennwilliamsondotorg/compare/v1.6.0...v1.7.0) (2026-01-03)
 
 
