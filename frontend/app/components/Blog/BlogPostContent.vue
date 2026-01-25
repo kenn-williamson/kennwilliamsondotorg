@@ -1,6 +1,16 @@
 <template>
-  <ClientOnly>
+  <!-- SSR path: pre-rendered HTML from backend -->
+  <div
+    v-if="html"
+    ref="contentRef"
+    class="markdown-content"
+    v-html="html"
+  />
+
+  <!-- Client-only path: live markdown preview (for admin editor) -->
+  <ClientOnly v-else>
     <div
+      ref="contentRef"
       class="markdown-content"
       v-html="renderedMarkdown"
     />
@@ -18,19 +28,25 @@
 
 <script setup lang="ts">
 import mermaid from 'mermaid'
+import Prism from 'prismjs'
 
 const props = defineProps<{
-  markdown: string
+  /** Pre-rendered HTML from backend (SSR-safe) */
+  html?: string
+  /** Raw markdown for client-side rendering (admin preview) */
+  markdown?: string
 }>()
 
+const contentRef = ref<HTMLElement | null>(null)
 const { $markdown } = useNuxtApp()
 
-// Render markdown with sanitization
+// Render markdown with sanitization (only used for client-only path)
 const renderedMarkdown = computed(() => {
+  if (!props.markdown) return ''
   return $markdown.render(props.markdown)
 })
 
-// Initialize mermaid after component mounts
+// Initialize mermaid and Prism after component mounts
 onMounted(() => {
   mermaid.initialize({
     theme: 'default',
@@ -44,35 +60,54 @@ onMounted(() => {
     },
   })
 
-  renderMermaidDiagrams()
+  enhanceContent()
 })
 
-// Decode base64 mermaid code from data attributes and render
-const renderMermaidDiagrams = async () => {
+// Enhance content with syntax highlighting and mermaid diagrams
+const enhanceContent = async () => {
   await nextTick()
 
-  // The markdown-it-mermaid plugin stores code in data-mermaid-code (base64 encoded)
-  const mermaidElements = document.querySelectorAll('.mermaid[data-mermaid-code]')
+  if (!contentRef.value) return
+
+  // Apply Prism syntax highlighting to code blocks
+  Prism.highlightAllUnder(contentRef.value)
+
+  // Decode and render mermaid diagrams
+  await renderMermaidDiagrams()
+}
+
+// Render mermaid diagrams from backend-rendered <pre class="mermaid"> blocks
+const renderMermaidDiagrams = async () => {
+  if (!contentRef.value) return
+
+  // Backend renders mermaid blocks as <pre class="mermaid">diagram code</pre>
+  // The content is HTML-escaped, so we need to decode it before mermaid can parse
+  const mermaidElements = contentRef.value.querySelectorAll('pre.mermaid')
+
   mermaidElements.forEach((el) => {
-    const encoded = el.getAttribute('data-mermaid-code')
-    if (encoded && !el.textContent?.trim()) {
-      try {
-        el.textContent = atob(encoded)
-      } catch {
-        console.error('Failed to decode mermaid content')
-      }
+    // Decode HTML entities (backend escapes <, >, & for safety)
+    const encoded = el.innerHTML
+    if (encoded) {
+      el.textContent = encoded
+        .replace(/&lt;/g, '<')
+        .replace(/&gt;/g, '>')
+        .replace(/&amp;/g, '&')
     }
   })
 
-  // Now run mermaid on all .mermaid elements
+  // Run mermaid on all .mermaid elements
   if (mermaidElements.length > 0) {
     await mermaid.run()
   }
 }
 
-// Re-render mermaid diagrams when content changes
+// Re-enhance content when props change (for admin preview)
 watch(() => props.markdown, async () => {
-  await renderMermaidDiagrams()
+  await enhanceContent()
+})
+
+watch(() => props.html, async () => {
+  await enhanceContent()
 })
 </script>
 

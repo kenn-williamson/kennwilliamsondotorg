@@ -4,6 +4,7 @@ pub mod models;
 pub mod repositories;
 pub mod routes;
 pub mod services;
+pub mod utils;
 
 // Test utilities - Available to both unit tests (in src/) and integration tests (in tests/)
 // Gated behind the mocks feature to prevent compilation in production

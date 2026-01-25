@@ -64,9 +64,9 @@
             class="w-full rounded-lg shadow-lg mb-8 max-h-96 object-cover"
           />
 
-          <!-- Content -->
+          <!-- Content (SSR with pre-rendered HTML) -->
           <div class="prose prose-lg max-w-none mb-8">
-            <BlogPostContent :markdown="post.content" />
+            <BlogPostContent :html="post.content_html" />
           </div>
 
           <!-- Footer: Share Buttons -->

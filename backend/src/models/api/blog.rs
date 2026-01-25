@@ -3,6 +3,7 @@ use serde::{Deserialize, Serialize};
 use uuid::Uuid;
 
 use crate::models::db::BlogPost;
+use crate::utils::markdown_to_html;
 
 // Request/Response models for blog operations
 
@@ -13,6 +14,8 @@ pub struct BlogPostResponse {
     pub title: String,
     pub excerpt: Option<String>,
     pub content: String,
+    /// Pre-rendered HTML from markdown content for SSR
+    pub content_html: String,
     pub featured_image_url: Option<String>,
     pub featured_image_alt: Option<String>,
     pub status: String,
@@ -78,12 +81,14 @@ pub struct ImageUploadResponse {
 
 impl From<BlogPost> for BlogPostResponse {
     fn from(post: BlogPost) -> Self {
+        let content_html = markdown_to_html(&post.content);
         BlogPostResponse {
             id: post.id,
             slug: post.slug,
             title: post.title,
             excerpt: post.excerpt,
             content: post.content,
+            content_html,
             featured_image_url: post.featured_image_url,
             featured_image_alt: post.featured_image_alt,
             status: post.status,

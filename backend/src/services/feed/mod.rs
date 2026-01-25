@@ -1,13 +1,14 @@
 /// Feed service module
 ///
 /// Generates RSS, Atom, and JSON Feed syndication feeds from published blog posts.
-/// Uses pulldown-cmark for markdown-to-HTML conversion.
+/// Uses shared markdown utility for markdown-to-HTML conversion.
 use anyhow::Result;
 use std::sync::Arc;
 
 use crate::models::api::feed::{JsonFeed, JsonFeedAuthor, JsonFeedItem};
 use crate::models::db::BlogPost;
 use crate::repositories::traits::{BlogPostFilters, BlogRepository};
+use crate::utils::markdown_to_html;
 
 /// Site metadata for feed generation
 #[derive(Debug)]
@@ -130,21 +131,6 @@ impl FeedService {
         Ok(result.posts)
     }
 
-    /// Convert markdown content to HTML
-    fn markdown_to_html(markdown: &str) -> String {
-        use pulldown_cmark::{html, Options, Parser};
-
-        let mut options = Options::empty();
-        options.insert(Options::ENABLE_STRIKETHROUGH);
-        options.insert(Options::ENABLE_TABLES);
-
-        let parser = Parser::new_ext(markdown, options);
-        let mut html_output = String::new();
-        html::push_html(&mut html_output, parser);
-
-        html_output
-    }
-
     /// Build post URL from slug
     fn post_url(&self, slug: &str) -> String {
         format!("{}/blog/{}", self.config.site_url, slug)
@@ -169,7 +155,7 @@ impl FeedService {
                     .title(Some(post.title.clone()))
                     .link(Some(self.post_url(&post.slug)))
                     .description(post.excerpt.clone())
-                    .content(Some(Self::markdown_to_html(&post.content)))
+                    .content(Some(markdown_to_html(&post.content)))
                     .author(Some(self.config.author_name.clone()))
                     .guid(Some(
                         rss::GuidBuilder::default()
@@ -253,7 +239,7 @@ impl FeedService {
                     .content(Some(
                         ContentBuilder::default()
                             .content_type(Some("html".to_string()))
-                            .value(Some(Self::markdown_to_html(&post.content)))
+                            .value(Some(markdown_to_html(&post.content)))
                             .build(),
                     ));
 
@@ -334,7 +320,7 @@ impl FeedService {
                 id: self.post_url(&post.slug),
                 url: Some(self.post_url(&post.slug)),
                 title: Some(post.title),
-                content_html: Some(Self::markdown_to_html(&post.content)),
+                content_html: Some(markdown_to_html(&post.content)),
                 content_text: None,
                 summary: post.excerpt,
                 image: post.featured_image_url,
@@ -548,25 +534,7 @@ mod tests {
         assert_eq!(feed["items"][0]["title"], "JSON Test Post");
     }
 
-    #[tokio::test]
-    async fn test_markdown_to_html_conversion() {
-        // Test basic markdown conversion
-        let markdown = "# Hello\n\nThis is **bold** and *italic*.";
-        let html = FeedService::markdown_to_html(markdown);
-
-        assert!(html.contains("<h1>Hello</h1>"));
-        assert!(html.contains("<strong>bold</strong>"));
-        assert!(html.contains("<em>italic</em>"));
-    }
-
-    #[tokio::test]
-    async fn test_markdown_to_html_with_code() {
-        let markdown = "Here is `inline code` and:\n\n```rust\nfn main() {}\n```";
-        let html = FeedService::markdown_to_html(markdown);
-
-        assert!(html.contains("<code>inline code</code>"));
-        assert!(html.contains("<pre>"));
-    }
+    // Note: markdown_to_html tests are now in crate::utils::markdown
 
     #[tokio::test]
     async fn test_builder_requires_repository() {

@@ -8,6 +8,8 @@ export interface BlogPost {
   title: string
   excerpt: string | null
   content: string
+  /** Pre-rendered HTML from markdown content for SSR */
+  content_html: string
   featured_image_url: string | null
   featured_image_alt: string | null
   status: 'draft' | 'published'
