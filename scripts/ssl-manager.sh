@@ -78,20 +78,35 @@ setup_webroot() {
     chmod 755 "$WEBROOT_PATH"
 }
 
-# Check if certificates exist and are valid
+# Check if certificates exist and are valid (not expired or expiring soon)
 check_existing_certificates() {
     local cert_path="/etc/letsencrypt/live/$DOMAIN_NAME/fullchain.pem"
     local key_path="/etc/letsencrypt/live/$DOMAIN_NAME/privkey.pem"
-    
+
     if [ -f "$cert_path" ] && [ -f "$key_path" ]; then
         # Check if it's a self-signed certificate (fake)
         local issuer=$(openssl x509 -issuer -noout -in "$cert_path" 2>/dev/null | grep -o "CN=[^,]*" | cut -d= -f2)
         if [ "$issuer" = "$DOMAIN_NAME" ]; then
             log "Found self-signed certificate - will replace with Let's Encrypt certificate"
             return 1  # Found fake cert, need to replace
+        fi
+
+        # Check if certificate is expired or expiring within 30 days
+        # (Let's Encrypt recommends renewal at 30 days remaining)
+        local expiry_date=$(openssl x509 -enddate -noout -in "$cert_path" 2>/dev/null | cut -d= -f2)
+        local expiry_epoch=$(date -d "$expiry_date" +%s 2>/dev/null || echo 0)
+        local current_epoch=$(date +%s)
+        local days_until_expiry=$(( (expiry_epoch - current_epoch) / 86400 ))
+
+        if [ $days_until_expiry -le 0 ]; then
+            warning "Certificate has expired! Will regenerate."
+            return 1  # Expired, need to replace
+        elif [ $days_until_expiry -le 30 ]; then
+            warning "Certificate expires in $days_until_expiry days - will regenerate"
+            return 1  # Expiring soon, need to replace
         else
-            log "Found existing Let's Encrypt certificate"
-            return 0  # Found real cert
+            log "Found valid Let's Encrypt certificate (expires in $days_until_expiry days)"
+            return 0  # Found valid cert
         fi
     else
         log "No existing certificates found"
@@ -185,33 +200,57 @@ generate_certificates() {
 # Renew certificates
 renew_certificates() {
     log "Checking for certificate renewal..."
-    
+
+    # Check if renewal is needed (within 30 days of expiry)
+    local cert_path="/etc/letsencrypt/live/$DOMAIN_NAME/fullchain.pem"
+    if [ -f "$cert_path" ]; then
+        local expiry_epoch=$(date -d "$(openssl x509 -enddate -noout -in "$cert_path" | cut -d= -f2)" +%s 2>/dev/null || echo 0)
+        local current_epoch=$(date +%s)
+        local days_until_expiry=$(( (expiry_epoch - current_epoch) / 86400 ))
+
+        if [ $days_until_expiry -gt 30 ]; then
+            log "Certificate valid for $days_until_expiry days - no renewal needed"
+            return 0
+        fi
+        log "Certificate expires in $days_until_expiry days - renewal required"
+    fi
+
+    # Stop nginx to free port 80 for standalone renewal
+    log "Stopping nginx container to free port 80..."
+    cd "$PROJECT_ROOT"
+    docker compose -f docker-compose.production.yml --env-file .env.production stop nginx
+
     # Renew certificates
-    certbot renew --quiet
-    
-    if [ $? -eq 0 ]; then
-        log "Certificate renewal check completed"
-        
-        # Check if certificates were actually renewed
+    log "Running certbot renewal..."
+    certbot renew
+    local renewal_status=$?
+
+    if [ $renewal_status -eq 0 ]; then
+        log "Certificate renewal completed"
+
+        # Copy renewed certificates to Docker volume
         if [ -f "/etc/letsencrypt/live/$DOMAIN_NAME/fullchain.pem" ]; then
-            # Copy renewed certificates to Docker volume
             log "Updating certificates in Docker volume..."
             docker run --rm \
                 -v /etc/letsencrypt:/source:ro \
                 -v kennwilliamsondotorg_certbot_certs:/data \
                 alpine sh -c "cp /source/live/$DOMAIN_NAME/fullchain.pem /data/live/$DOMAIN_NAME/ && cp /source/live/$DOMAIN_NAME/privkey.pem /data/live/$DOMAIN_NAME/"
-            
-            # Reload nginx to use new certificates
-            log "Reloading nginx with new certificates..."
-            cd "$PROJECT_ROOT"
-            docker compose --env-file .env.production exec nginx nginx -s reload
-            
-            success "Certificates renewed and nginx reloaded!"
+
+            success "Certificates copied to Docker volume!"
         fi
     else
         error "Certificate renewal failed"
+    fi
+
+    # Always restart nginx, even if renewal failed
+    log "Restarting nginx container..."
+    docker compose -f docker-compose.production.yml --env-file .env.production start nginx
+
+    if [ $renewal_status -ne 0 ]; then
         exit 1
     fi
+
+    success "Certificates renewed and nginx restarted!"
 }
 
 # Check certificate status

@@ -198,15 +198,15 @@ jobs:
               export GITHUB_USER=${{ github.repository_owner }}
 
               # Pull images for previous version
-              docker-compose -f docker-compose.production.yml --env-file .env.production pull
+              docker compose -f docker-compose.production.yml --env-file .env.production pull
 
               # Stop and restart with previous version (skip migrations - see note below)
-              docker-compose -f docker-compose.production.yml --env-file .env.production down --timeout 30
-              docker-compose -f docker-compose.production.yml --env-file .env.production up -d
+              docker compose -f docker-compose.production.yml --env-file .env.production down --timeout 30
+              docker compose -f docker-compose.production.yml --env-file .env.production up -d
 
               # Wait for services
               sleep 30
-              docker-compose -f docker-compose.production.yml --env-file .env.production ps
+              docker compose -f docker-compose.production.yml --env-file .env.production ps
 
               echo ""
               echo "⚠️  DATABASE MIGRATION NOTICE:"
