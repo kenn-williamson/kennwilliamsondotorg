@@ -3,9 +3,10 @@
  */
 
 import { API_ROUTES } from '#shared/config/api-routes'
-import type { 
-  IncidentTimer, 
+import type {
+  IncidentTimer,
   PublicTimerResponse,
+  StreakStats,
   CreateTimerRequest,
   UpdateTimerRequest,
   Fetcher
@@ -18,6 +19,10 @@ export const incidentTimerService = (fetcher: Fetcher) => ({
 
   getPublicTimer: async (userSlug: string): Promise<PublicTimerResponse> => {
     return fetcher<PublicTimerResponse>(API_ROUTES.PUBLIC.TIMERS.BY_USER_SLUG(userSlug))
+  },
+
+  getTimerStats: async (): Promise<{ streak_stats: StreakStats }> => {
+    return fetcher<{ streak_stats: StreakStats }>(API_ROUTES.PROTECTED.TIMERS.STATS)
   },
 
   createTimer: async (timerData: CreateTimerRequest): Promise<IncidentTimer> => {

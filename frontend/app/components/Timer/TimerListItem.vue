@@ -67,6 +67,10 @@ const props = defineProps({
   liveElapsedTime: {
     type: String,
     default: ''
+  },
+  endDate: {
+    type: Date,
+    default: undefined
   }
 })
 
@@ -78,11 +82,10 @@ const showEditModal = ref(false)
 
 // Compute elapsed time display
 const elapsedTimeDisplay = computed(() => {
-  if (props.isLatest) {
+  if (props.isLatest && props.liveElapsedTime) {
     return props.liveElapsedTime
-  } else {
-    return incidentTimerStore.formatElapsedTime(props.timer)
   }
+  return incidentTimerStore.formatElapsedTime(props.timer, props.endDate)
 })
 
 // Format date for display using utility

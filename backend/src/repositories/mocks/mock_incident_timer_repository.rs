@@ -3,6 +3,7 @@ use async_trait::async_trait;
 use mockall::mock;
 use uuid::Uuid;
 
+use crate::models::api::StreakStats;
 use crate::models::db::incident_timer::IncidentTimer;
 use crate::repositories::traits::incident_timer_repository::{
     CreateTimerData, IncidentTimerRepository, TimerUpdates,
@@ -17,6 +18,8 @@ mock! {
         async fn create_timer(&self, timer_data: &CreateTimerData) -> Result<IncidentTimer>;
         async fn find_by_user_id(&self, user_id: Uuid) -> Result<Vec<IncidentTimer>>;
         async fn find_latest_by_user_slug_with_display_name(&self, slug: &str) -> Result<Option<(IncidentTimer, String)>>;
+        async fn calculate_stats_by_user_slug(&self, slug: &str) -> Result<StreakStats>;
+        async fn calculate_stats_by_user_id(&self, user_id: Uuid) -> Result<StreakStats>;
         async fn update_timer(&self, id: Uuid, updates: &TimerUpdates) -> Result<IncidentTimer>;
         async fn delete_timer(&self, id: Uuid) -> Result<()>;
         async fn timer_belongs_to_user(&self, timer_id: Uuid, user_id: Uuid) -> Result<bool>;

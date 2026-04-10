@@ -3,6 +3,7 @@ use async_trait::async_trait;
 use sqlx::PgPool;
 use uuid::Uuid;
 
+use crate::models::api::StreakStats;
 use crate::models::db::incident_timer::IncidentTimer;
 use crate::repositories::traits::incident_timer_repository::{
     CreateTimerData, IncidentTimerRepository, TimerUpdates,
@@ -93,6 +94,66 @@ impl IncidentTimerRepository for PostgresIncidentTimerRepository {
             }
             None => Ok(None),
         }
+    }
+
+    async fn calculate_stats_by_user_slug(&self, slug: &str) -> Result<StreakStats> {
+        let row = sqlx::query!(
+            r#"
+            WITH streaks AS (
+                SELECT EXTRACT(EPOCH FROM (
+                    COALESCE(LEAD(it.reset_timestamp) OVER (ORDER BY it.reset_timestamp), NOW())
+                    - it.reset_timestamp
+                )) AS duration_seconds
+                FROM incident_timers it
+                JOIN users u ON it.user_id = u.id
+                LEFT JOIN user_preferences up ON u.id = up.user_id
+                WHERE u.slug = $1 AND COALESCE(up.timer_is_public, true) = true
+            )
+            SELECT
+                COALESCE(MAX(duration_seconds)::bigint, 0) AS "longest_streak_seconds!",
+                COALESCE(AVG(duration_seconds)::bigint, 0) AS "average_streak_seconds!",
+                COUNT(*)::integer AS "total_streaks!"
+            FROM streaks
+            "#,
+            slug
+        )
+        .fetch_one(&self.pool)
+        .await?;
+
+        Ok(StreakStats {
+            longest_streak_seconds: row.longest_streak_seconds,
+            average_streak_seconds: row.average_streak_seconds,
+            total_completed_streaks: row.total_streaks,
+        })
+    }
+
+    async fn calculate_stats_by_user_id(&self, user_id: Uuid) -> Result<StreakStats> {
+        let row = sqlx::query!(
+            r#"
+            WITH streaks AS (
+                SELECT EXTRACT(EPOCH FROM (
+                    COALESCE(LEAD(reset_timestamp) OVER (ORDER BY reset_timestamp), NOW())
+                    - reset_timestamp
+                )) AS duration_seconds
+                FROM incident_timers
+                WHERE user_id = $1
+            )
+            SELECT
+                COALESCE(MAX(duration_seconds)::bigint, 0) AS "longest_streak_seconds!",
+                COALESCE(AVG(duration_seconds)::bigint, 0) AS "average_streak_seconds!",
+                COUNT(*)::integer AS "total_streaks!"
+            FROM streaks
+            "#,
+            user_id
+        )
+        .fetch_one(&self.pool)
+        .await?;
+
+        Ok(StreakStats {
+            longest_streak_seconds: row.longest_streak_seconds,
+            average_streak_seconds: row.average_streak_seconds,
+            total_completed_streaks: row.total_streaks,
+        })
     }
 
     async fn update_timer(&self, id: Uuid, updates: &TimerUpdates) -> Result<IncidentTimer> {

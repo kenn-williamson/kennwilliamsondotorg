@@ -2,6 +2,7 @@ use anyhow::Result;
 use uuid::Uuid;
 
 use super::IncidentTimerService;
+use crate::models::api::StreakStats;
 use crate::models::db::IncidentTimer;
 
 impl IncidentTimerService {
@@ -10,10 +11,41 @@ impl IncidentTimerService {
         &self,
         user_slug: &str,
     ) -> Result<Option<(IncidentTimer, String)>> {
-        // Use the new repository method that returns both timer and display name
         self.repository
             .find_latest_by_user_slug_with_display_name(user_slug)
             .await
+    }
+
+    /// Get the latest timer with streak stats for a user by their slug (public access)
+    pub async fn get_public_timer_with_stats(
+        &self,
+        user_slug: &str,
+    ) -> Result<Option<(IncidentTimer, String, Option<StreakStats>)>> {
+        let latest = self
+            .repository
+            .find_latest_by_user_slug_with_display_name(user_slug)
+            .await?;
+
+        match latest {
+            Some((timer, display_name)) => {
+                let stats = self
+                    .repository
+                    .calculate_stats_by_user_slug(user_slug)
+                    .await?;
+                let stats = if stats.total_completed_streaks > 0 {
+                    Some(stats)
+                } else {
+                    None
+                };
+                Ok(Some((timer, display_name, stats)))
+            }
+            None => Ok(None),
+        }
+    }
+
+    /// Get streak stats for the authenticated user
+    pub async fn get_stats_for_user(&self, user_id: Uuid) -> Result<StreakStats> {
+        self.repository.calculate_stats_by_user_id(user_id).await
     }
 
     /// Get all timers for a specific user
@@ -27,6 +59,100 @@ mod tests {
     use super::*;
     use mockall::predicate::*;
     use uuid::Uuid;
+
+    #[tokio::test]
+    async fn test_get_stats_for_user_success() {
+        let mut mock_repo = crate::repositories::mocks::MockIncidentTimerRepository::new();
+        let user_id = Uuid::new_v4();
+
+        let expected_stats = StreakStats {
+            longest_streak_seconds: 5 * 3600,
+            average_streak_seconds: 5 * 3600,
+            total_completed_streaks: 1,
+        };
+        let stats_clone = expected_stats.clone();
+
+        mock_repo
+            .expect_calculate_stats_by_user_id()
+            .with(eq(user_id))
+            .times(1)
+            .returning(move |_| {
+                Ok(StreakStats {
+                    longest_streak_seconds: stats_clone.longest_streak_seconds,
+                    average_streak_seconds: stats_clone.average_streak_seconds,
+                    total_completed_streaks: stats_clone.total_completed_streaks,
+                })
+            });
+
+        let service = IncidentTimerService::new(Box::new(mock_repo));
+        let result = service.get_stats_for_user(user_id).await;
+
+        assert!(result.is_ok());
+        let stats = result.unwrap();
+        assert_eq!(stats.total_completed_streaks, 1);
+        assert_eq!(stats.longest_streak_seconds, 5 * 3600);
+        assert_eq!(stats.average_streak_seconds, 5 * 3600);
+    }
+
+    #[tokio::test]
+    async fn test_get_public_timer_with_stats_success() {
+        let mut mock_repo = crate::repositories::mocks::MockIncidentTimerRepository::new();
+        let user_slug = "test-user";
+        let now = chrono::Utc::now();
+
+        let latest_timer = crate::test_utils::IncidentTimerBuilder::new()
+            .with_reset_timestamp(now)
+            .with_notes("Latest")
+            .created_at(now)
+            .updated_at(now)
+            .build();
+        let display_name = "Test User".to_string();
+
+        mock_repo
+            .expect_find_latest_by_user_slug_with_display_name()
+            .with(eq(user_slug))
+            .times(1)
+            .returning(move |_| Ok(Some((latest_timer.clone(), display_name.clone()))));
+
+        mock_repo
+            .expect_calculate_stats_by_user_slug()
+            .with(eq(user_slug))
+            .times(1)
+            .returning(|_| {
+                Ok(StreakStats {
+                    longest_streak_seconds: 10 * 3600,
+                    average_streak_seconds: 10 * 3600,
+                    total_completed_streaks: 1,
+                })
+            });
+
+        let service = IncidentTimerService::new(Box::new(mock_repo));
+        let result = service.get_public_timer_with_stats(user_slug).await;
+
+        assert!(result.is_ok());
+        let (timer, name, stats) = result.unwrap().unwrap();
+        assert_eq!(timer.notes, Some("Latest".to_string()));
+        assert_eq!(name, "Test User");
+        assert!(stats.is_some());
+        let stats = stats.unwrap();
+        assert_eq!(stats.total_completed_streaks, 1);
+        assert_eq!(stats.longest_streak_seconds, 10 * 3600);
+    }
+
+    #[tokio::test]
+    async fn test_get_public_timer_with_stats_not_found() {
+        let mut mock_repo = crate::repositories::mocks::MockIncidentTimerRepository::new();
+
+        mock_repo
+            .expect_find_latest_by_user_slug_with_display_name()
+            .returning(|_| Ok(None));
+
+        let service = IncidentTimerService::new(Box::new(mock_repo));
+        let result = service.get_public_timer_with_stats("missing").await;
+
+        assert!(result.is_ok());
+        assert!(result.unwrap().is_none());
+    }
 
     #[tokio::test]
     async fn test_get_latest_by_user_slug_success() {

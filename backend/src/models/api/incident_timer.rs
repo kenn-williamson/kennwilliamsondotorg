@@ -25,6 +25,13 @@ pub struct IncidentTimerResponse {
     pub updated_at: DateTime<Utc>,
 }
 
+#[derive(Debug, Clone, Serialize)]
+pub struct StreakStats {
+    pub longest_streak_seconds: i64,
+    pub average_streak_seconds: i64,
+    pub total_completed_streaks: i32,
+}
+
 #[derive(Debug, Serialize)]
 pub struct PublicIncidentTimerResponse {
     pub id: Uuid,
@@ -33,6 +40,12 @@ pub struct PublicIncidentTimerResponse {
     pub created_at: DateTime<Utc>,
     pub updated_at: DateTime<Utc>,
     pub user_display_name: String,
+    pub streak_stats: Option<StreakStats>,
+}
+
+#[derive(Debug, Serialize)]
+pub struct IncidentTimerStatsResponse {
+    pub streak_stats: StreakStats,
 }
 
 impl From<IncidentTimer> for IncidentTimerResponse {

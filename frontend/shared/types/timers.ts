@@ -14,8 +14,15 @@ export interface PublicIncidentTimer extends IncidentTimer {
   user_display_name: string
 }
 
+export interface StreakStats {
+  longest_streak_seconds: number
+  average_streak_seconds: number
+  total_completed_streaks: number
+}
+
 export interface PublicTimerResponse extends IncidentTimer {
   user_display_name: string
+  streak_stats?: StreakStats
 }
 
 // Request types

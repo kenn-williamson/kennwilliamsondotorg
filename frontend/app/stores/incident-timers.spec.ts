@@ -350,6 +350,57 @@ describe('Incident Timer Store', () => {
       expect(seconds).toBeGreaterThanOrEqual(4)
       expect(seconds).toBeLessThanOrEqual(6)
     })
+
+    it('should calculate elapsed time breakdown with a custom endDate', () => {
+      const store = useIncidentTimerStore()
+      const timer = {
+        id: '1',
+        reset_timestamp: '2024-01-01T12:00:00Z',
+        notes: 'Test timer',
+        created_at: '2024-01-01T12:00:00Z',
+        updated_at: '2024-01-01T12:00:00Z'
+      }
+
+      const endDate = new Date('2024-01-02T13:30:45Z')
+      const breakdown = store.getElapsedTimeBreakdown(timer, endDate)
+      expect(breakdown.days).toBe(1)
+      expect(breakdown.hours).toBe(1)
+      expect(breakdown.minutes).toBe(30)
+      expect(breakdown.seconds).toBe(45)
+    })
+
+    it('should format elapsed time with a custom endDate', () => {
+      const store = useIncidentTimerStore()
+      const timer = {
+        id: '1',
+        reset_timestamp: '2024-01-01T12:00:00Z',
+        notes: 'Test timer',
+        created_at: '2024-01-01T12:00:00Z',
+        updated_at: '2024-01-01T12:00:00Z'
+      }
+
+      const endDate = new Date('2024-01-02T13:30:45Z')
+      const formatted = store.formatElapsedTime(timer, endDate)
+      expect(formatted).toContain('1 day')
+      expect(formatted).toContain('1 hour')
+      expect(formatted).toContain('30 minutes')
+      expect(formatted).toContain('45 seconds')
+    })
+
+    it('should format compact elapsed time with a custom endDate', () => {
+      const store = useIncidentTimerStore()
+      const timer = {
+        id: '1',
+        reset_timestamp: '2024-01-01T12:00:00Z',
+        notes: 'Test timer',
+        created_at: '2024-01-01T12:00:00Z',
+        updated_at: '2024-01-01T12:00:00Z'
+      }
+
+      const endDate = new Date('2024-01-01T13:30:45Z')
+      const formatted = store.formatElapsedTimeCompact(timer, endDate)
+      expect(formatted).toBe('01:30:45')
+    })
   })
 
   describe('State Management Functions', () => {

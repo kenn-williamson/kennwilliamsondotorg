@@ -15,9 +15,11 @@
       
       <div v-else class="timer-list">
         <TimerListItem
-          v-for="timer in timers"
+          v-for="(timer, index) in timers"
           :key="timer.id"
           :timer="timer"
+          :end-date="index > 0 ? new Date(timers[index - 1].reset_timestamp) : undefined"
+          :is-latest="index === 0"
         />
       </div>
     </div>

@@ -16,6 +16,14 @@
         </div>
       </div>
 
+      <!-- Streak Stats -->
+      <StreakStatsDisplay
+        v-if="incidentTimerStore.streakStats && incidentTimerStore.streakStats.total_completed_streaks > 0"
+        :longest-streak-seconds="incidentTimerStore.streakStats.longest_streak_seconds"
+        :average-streak-seconds="incidentTimerStore.streakStats.average_streak_seconds"
+        :total-completed-streaks="incidentTimerStore.streakStats.total_completed_streaks"
+      />
+
       <!-- Timer History -->
       <TimerList />
     </div>
@@ -33,11 +41,13 @@ import { ref } from 'vue'
 import { useIncidentTimerStore } from '~/stores/incident-timers'
 import TimerList from '~/components/Timer/TimerList.vue'
 import TimerResetModal from '~/components/Timer/TimerResetModal.vue'
+import StreakStatsDisplay from '~/components/Timer/StreakStatsDisplay.vue'
 
 const incidentTimerStore = useIncidentTimerStore()
 
-// Load user timers (useAsyncData caches and handles navigation correctly)
+// Load user timers and streak stats
 await useAsyncData('user-timers', () => incidentTimerStore.loadUserTimers())
+await useAsyncData('timer-streak-stats', () => incidentTimerStore.loadStreakStats())
 
 const isResetting = ref(false)
 const showResetModal = ref(false)

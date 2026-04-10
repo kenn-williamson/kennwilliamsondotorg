@@ -235,7 +235,7 @@ const formattedDate = computed(() => {
 /* Responsive design */
 @media (max-width: 768px) {
   .card-body {
-    padding: 40px 60px;
+    padding: 30px 40px;
   }
 
   .note-title {
@@ -244,10 +244,10 @@ const formattedDate = computed(() => {
 
   .note-text {
     font-size: 24px;
-    padding: 0 40px;
+    padding: 0 20px;
     display: -webkit-box;
-    -webkit-line-clamp: 2;
-    line-clamp: 2;
+    -webkit-line-clamp: 4;
+    line-clamp: 4;
     -webkit-box-orient: vertical;
     overflow: hidden;
   }
@@ -275,20 +275,22 @@ const formattedDate = computed(() => {
   }
 
   .card-body {
-    padding: 30px 40px;
+    padding: 20px 16px;
+    aspect-ratio: auto;
+    min-height: auto;
   }
 
   .note-title {
-    font-size: 32px;
+    font-size: 28px;
   }
 
   .note-text {
-    font-size: 20px;
-    padding: 0 30px;
-    margin: 16px 0;
+    font-size: 18px;
+    padding: 0 8px;
+    margin: 12px 0;
     display: -webkit-box;
-    -webkit-line-clamp: 2;
-    line-clamp: 2;
+    -webkit-line-clamp: 4;
+    line-clamp: 4;
     -webkit-box-orient: vertical;
     overflow: hidden;
   }

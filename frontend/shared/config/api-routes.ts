@@ -70,6 +70,7 @@ export const API_ROUTES = {
     TIMERS: {
       LIST: '/protected/incident-timers',
       CREATE: '/protected/incident-timers',
+      STATS: '/protected/incident-timers/stats',
       UPDATE: (id: string) => `/protected/incident-timers/${id}`,
       DELETE: (id: string) => `/protected/incident-timers/${id}`,
     },
