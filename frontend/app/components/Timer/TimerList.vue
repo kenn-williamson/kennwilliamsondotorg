@@ -18,7 +18,7 @@
           v-for="(timer, index) in timers"
           :key="timer.id"
           :timer="timer"
-          :end-date="index > 0 ? new Date(timers[index - 1].reset_timestamp) : undefined"
+          :end-date="index > 0 ? new Date(timers[index - 1]!.reset_timestamp) : undefined"
           :is-latest="index === 0"
         />
       </div>
