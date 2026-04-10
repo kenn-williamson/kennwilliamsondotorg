@@ -1,5 +1,17 @@
 # Changelog
 
+## [1.9.0](https://github.com/kenn-williamson/kennwilliamsondotorg/compare/v1.8.0...v1.9.0) (2026-04-10)
+
+
+### Features
+
+* **timers:** add streak stats, fix elapsed time, update deps ([#19](https://github.com/kenn-williamson/kennwilliamsondotorg/issues/19)) ([5cd18ec](https://github.com/kenn-williamson/kennwilliamsondotorg/commit/5cd18ec2bbde72b0dd068d6739bd76728a9b9c72))
+
+
+### Bug Fixes
+
+* **ssl:** fix certificate auto-renewal and align expiration thresholds ([d44fda1](https://github.com/kenn-williamson/kennwilliamsondotorg/commit/d44fda10aa3b227fc5d79bd36c9f582ad3790347))
+
 ## [1.8.0](https://github.com/kenn-williamson/kennwilliamsondotorg/compare/v1.7.0...v1.8.0) (2026-01-25)
 
 
