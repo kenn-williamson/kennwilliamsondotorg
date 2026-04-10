@@ -107,6 +107,7 @@ pub fn configure_app_routes(cfg: &mut web::ServiceConfig) {
                             web::scope("/incident-timers")
                                 .route("", web::get().to(incident_timers::get_user_timers))
                                 .route("", web::post().to(incident_timers::create_timer))
+                                .route("/stats", web::get().to(incident_timers::get_user_timer_stats))
                                 .route("/{id}", web::put().to(incident_timers::update_timer))
                                 .route("/{id}", web::delete().to(incident_timers::delete_timer)),
                         )

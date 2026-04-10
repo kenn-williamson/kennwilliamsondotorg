@@ -3,7 +3,8 @@ use uuid::Uuid;
 
 use crate::middleware::auth::AuthContext;
 use crate::models::api::{
-    CreateIncidentTimer, IncidentTimerResponse, PublicIncidentTimerResponse, UpdateIncidentTimer,
+    CreateIncidentTimer, IncidentTimerResponse, IncidentTimerStatsResponse,
+    PublicIncidentTimerResponse, UpdateIncidentTimer,
 };
 use crate::services::incident_timer::IncidentTimerService;
 
@@ -17,13 +18,16 @@ pub struct TimerIdPath {
     id: Uuid,
 }
 
-// Public endpoint - get latest timer for user by slug
+// Public endpoint - get latest timer for user by slug (includes streak stats)
 pub async fn get_latest_by_user_slug(
     path: web::Path<UserSlugPath>,
     service: web::Data<IncidentTimerService>,
 ) -> ActixResult<HttpResponse> {
-    match service.get_latest_by_user_slug(&path.user_slug).await {
-        Ok(Some((timer, user_display_name))) => {
+    match service
+        .get_public_timer_with_stats(&path.user_slug)
+        .await
+    {
+        Ok(Some((timer, user_display_name, streak_stats))) => {
             let response = PublicIncidentTimerResponse {
                 id: timer.id,
                 reset_timestamp: timer.reset_timestamp,
@@ -31,6 +35,7 @@ pub async fn get_latest_by_user_slug(
                 created_at: timer.created_at,
                 updated_at: timer.updated_at,
                 user_display_name,
+                streak_stats,
             };
             Ok(HttpResponse::Ok().json(response))
         }
@@ -43,6 +48,28 @@ pub async fn get_latest_by_user_slug(
                 path.user_slug,
                 err
             );
+            Ok(HttpResponse::InternalServerError().json(serde_json::json!({
+                "error": "Internal server error"
+            })))
+        }
+    }
+}
+
+// Protected endpoint - get streak stats for current user
+pub async fn get_user_timer_stats(
+    req: HttpRequest,
+    service: web::Data<IncidentTimerService>,
+) -> ActixResult<HttpResponse> {
+    let user_id = req.extensions().get::<Uuid>().cloned().unwrap();
+    match service.get_stats_for_user(user_id).await {
+        Ok(stats) => {
+            let response = IncidentTimerStatsResponse {
+                streak_stats: stats,
+            };
+            Ok(HttpResponse::Ok().json(response))
+        }
+        Err(err) => {
+            log::error!("Failed to get timer stats for user {}: {}", user_id, err);
             Ok(HttpResponse::InternalServerError().json(serde_json::json!({
                 "error": "Internal server error"
             })))

@@ -2,7 +2,7 @@
  * Enhanced Incident Timer Store - Centralized state management with actions
  */
 
-import type { IncidentTimer, PublicTimerResponse, CreateTimerRequest, UpdateTimerRequest } from '#shared/types/timers'
+import type { IncidentTimer, PublicTimerResponse, StreakStats, CreateTimerRequest, UpdateTimerRequest } from '#shared/types/timers'
 import type { PublicTimerListItem, UpdatePreferencesRequest } from '#shared/types'
 import { incidentTimerService } from '~/services/incidentTimerService'
 import { userPreferencesService } from '~/services/userPreferencesService'
@@ -22,6 +22,8 @@ export const useIncidentTimerStore = defineStore('incident-timers', () => {
   const publicTimersPage = ref(1)
   const publicTimersPageSize = ref(20)
   const publicTimersLoading = ref(false)
+
+  const streakStats = ref<StreakStats | null>(null)
 
   const isLoading = ref(false)
   const error = ref<string | null>(null)
@@ -86,15 +88,15 @@ export const useIncidentTimerStore = defineStore('incident-timers', () => {
   }
 
   // Utility functions for timer calculations (pure functions)
-  const getElapsedTimeBreakdown = (timer: IncidentTimer) => {
+  const getElapsedTimeBreakdown = (timer: IncidentTimer, endDate?: Date) => {
     if (!timer?.reset_timestamp) return { 
       years: 0, months: 0, weeks: 0, days: 0, 
       hours: 0, minutes: 0, seconds: 0 
     }
 
     const startDate = new Date(timer.reset_timestamp)
-    const now = new Date()
-    
+    const now = endDate ?? new Date()
+
     if (now < startDate) {
       return { years: 0, months: 0, weeks: 0, days: 0, hours: 0, minutes: 0, seconds: 0 }
     }
@@ -166,10 +168,10 @@ export const useIncidentTimerStore = defineStore('incident-timers', () => {
     return Math.floor((now - startTime) / 1000)
   }
 
-  const formatElapsedTime = (timer: IncidentTimer): string => {
+  const formatElapsedTime = (timer: IncidentTimer, endDate?: Date): string => {
     if (!timer?.reset_timestamp) return 'No incident started'
-    
-    const breakdown = getElapsedTimeBreakdown(timer)
+
+    const breakdown = getElapsedTimeBreakdown(timer, endDate)
     const parts: string[] = []
     
     if (breakdown.years > 0) parts.push(`${breakdown.years} year${breakdown.years !== 1 ? 's' : ''}`)
@@ -183,12 +185,12 @@ export const useIncidentTimerStore = defineStore('incident-timers', () => {
     return parts.join(', ')
   }
 
-  const formatElapsedTimeCompact = (timer: IncidentTimer): string => {
+  const formatElapsedTimeCompact = (timer: IncidentTimer, endDate?: Date): string => {
     if (!timer?.reset_timestamp) return '00:00:00'
-    
+
     // Calculate total seconds directly
     const startTime = new Date(timer.reset_timestamp).getTime()
-    const now = Date.now()
+    const now = endDate ? endDate.getTime() : Date.now()
     const totalSeconds = Math.floor((now - startTime) / 1000)
     
     const hours = Math.floor(totalSeconds / 3600)
@@ -196,6 +198,32 @@ export const useIncidentTimerStore = defineStore('incident-timers', () => {
     const seconds = totalSeconds % 60
 
     return `${hours.toString().padStart(2, '0')}:${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`
+  }
+
+  const formatDurationSeconds = (totalSeconds: number): string => {
+    if (totalSeconds <= 0) return '0 seconds'
+
+    const years = Math.floor(totalSeconds / (365.25 * 24 * 3600))
+    let remaining = totalSeconds - years * Math.floor(365.25 * 24 * 3600)
+    const months = Math.floor(remaining / (30.44 * 24 * 3600))
+    remaining -= months * Math.floor(30.44 * 24 * 3600)
+    const weeks = Math.floor(remaining / (7 * 24 * 3600))
+    remaining -= weeks * 7 * 24 * 3600
+    const days = Math.floor(remaining / (24 * 3600))
+    remaining -= days * 24 * 3600
+    const hours = Math.floor(remaining / 3600)
+    remaining -= hours * 3600
+    const minutes = Math.floor(remaining / 60)
+
+    const parts: string[] = []
+    if (years > 0) parts.push(`${years} year${years !== 1 ? 's' : ''}`)
+    if (months > 0) parts.push(`${months} month${months !== 1 ? 's' : ''}`)
+    if (weeks > 0) parts.push(`${weeks} week${weeks !== 1 ? 's' : ''}`)
+    if (days > 0) parts.push(`${days} day${days !== 1 ? 's' : ''}`)
+    if (hours > 0) parts.push(`${hours} hour${hours !== 1 ? 's' : ''}`)
+    if (minutes > 0) parts.push(`${minutes} minute${minutes !== 1 ? 's' : ''}`)
+
+    return parts.length > 0 ? parts.join(', ') : '< 1 minute'
   }
 
   const latestTimer = computed((): IncidentTimer | null => {
@@ -343,6 +371,14 @@ export const useIncidentTimerStore = defineStore('incident-timers', () => {
     return data
   }
 
+  const loadStreakStats = async () => {
+    const data = await _handleAction(() => incidentTimerServiceInstance.getTimerStats(), 'loadStreakStats')
+    if (data) {
+      streakStats.value = data.streak_stats
+    }
+    return data
+  }
+
   const createTimer = async (timerData: CreateTimerRequest) => {
     const data = await _handleAction(() => incidentTimerServiceInstance.createTimer(timerData), 'createTimer')
     _handleSuccess('Timer created successfully')
@@ -454,9 +490,12 @@ export const useIncidentTimerStore = defineStore('incident-timers', () => {
     latestTimer,
     hasError,
 
+    streakStats,
+
     loadUserTimers,
     loadPublicTimer,
     loadPublicTimerList,
+    loadStreakStats,
     createTimer,
     updateTimer,
     deleteTimer,
@@ -481,6 +520,7 @@ export const useIncidentTimerStore = defineStore('incident-timers', () => {
     getElapsedTimeBreakdown,
     getElapsedSeconds,
     formatElapsedTime,
-    formatElapsedTimeCompact
+    formatElapsedTimeCompact,
+    formatDurationSeconds
   }
 })

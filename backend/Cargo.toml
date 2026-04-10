@@ -31,9 +31,9 @@ rand = "0.9"
 async-trait = "0.1"
 mockall = "0.13.1"
 redis = "0.32.5"
-aws-config = { version = "1.8.7", features = ["behavior-version-latest"] }
-aws-sdk-s3 = "1.112"
-aws-sdk-sesv2 = "1.98.0"
+aws-config = { version = "1.8.15", features = ["behavior-version-latest"] }
+aws-sdk-s3 = "1.129"
+aws-sdk-sesv2 = "1.117"
 image = { version = "0.25", default-features = false, features = ["jpeg", "png", "gif", "webp"] }
 rss = "2.0"
 atom_syndication = "0.12"
@@ -50,5 +50,5 @@ actix-rt = "2"
 actix-test = "0.1"
 tokio-test = "0.4"
 lazy_static = "1.4"
-testcontainers = { version = "0.26", features = ["reusable-containers"] }
-testcontainers-modules = "0.14"
+testcontainers = { version = "0.27", features = ["reusable-containers"] }
+testcontainers-modules = "0.15"

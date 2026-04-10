@@ -50,10 +50,18 @@
 
 
         <!-- Vintage Note Card -->
-        <VintageNoteCard 
+        <VintageNoteCard
           v-if="incidentTimerStore.publicTimer.notes"
           :notes="incidentTimerStore.publicTimer.notes"
           :reset-timestamp="incidentTimerStore.publicTimer.reset_timestamp"
+        />
+
+        <!-- Streak Stats -->
+        <StreakStatsDisplay
+          v-if="incidentTimerStore.publicTimer.streak_stats"
+          :longest-streak-seconds="incidentTimerStore.publicTimer.streak_stats.longest_streak_seconds"
+          :average-streak-seconds="incidentTimerStore.publicTimer.streak_stats.average_streak_seconds"
+          :total-completed-streaks="incidentTimerStore.publicTimer.streak_stats.total_completed_streaks"
         />
       </div>
     </div>

@@ -3,6 +3,7 @@ use async_trait::async_trait;
 use chrono::{DateTime, Utc};
 use uuid::Uuid;
 
+use crate::models::api::StreakStats;
 use crate::models::db::incident_timer::IncidentTimer;
 
 /// Data structure for creating a new incident timer
@@ -40,6 +41,12 @@ pub trait IncidentTimerRepository: Send + Sync {
 
     /// Delete an incident timer
     async fn delete_timer(&self, id: Uuid) -> Result<()>;
+
+    /// Calculate streak stats for a user by slug (public, respects privacy settings)
+    async fn calculate_stats_by_user_slug(&self, slug: &str) -> Result<StreakStats>;
+
+    /// Calculate streak stats for a user by ID (authenticated)
+    async fn calculate_stats_by_user_id(&self, user_id: Uuid) -> Result<StreakStats>;
 
     /// Check if timer belongs to user
     async fn timer_belongs_to_user(&self, timer_id: Uuid, user_id: Uuid) -> Result<bool>;
