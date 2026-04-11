@@ -24,4 +24,11 @@ ignore = [
     # testcontainers is used exclusively for integration tests and is never included
     # in production builds. Waiting for upstream bollard to migrate to rustls-pki-types.
     "RUSTSEC-2025-0134",
+
+    # RUSTSEC-2026-0097: rand unsoundness with custom logger using rand::rng()
+    # Reason: Our direct dependency (rand 0.9) is updated to 0.9.3 (patched).
+    # This ignore covers the transitive rand 0.8.5 pulled in by sqlx-postgres/sqlx-mysql,
+    # actix-multipart, and oauth2, which we cannot update until those crates release new versions.
+    # TODO: Remove once upstream deps update — tracking in #20
+    "RUSTSEC-2026-0097",
 ]

@@ -403,6 +403,71 @@ describe('Incident Timer Store', () => {
     })
   })
 
+  describe('formatDurationSeconds', () => {
+    it('should return "0 seconds" for zero', () => {
+      const store = useIncidentTimerStore()
+      expect(store.formatDurationSeconds(0)).toBe('0 seconds')
+    })
+
+    it('should return "0 seconds" for negative values', () => {
+      const store = useIncidentTimerStore()
+      expect(store.formatDurationSeconds(-5)).toBe('0 seconds')
+    })
+
+    it('should return "< 1 minute" for sub-minute durations', () => {
+      const store = useIncidentTimerStore()
+      expect(store.formatDurationSeconds(30)).toBe('< 1 minute')
+    })
+
+    it('should format minutes only', () => {
+      const store = useIncidentTimerStore()
+      expect(store.formatDurationSeconds(300)).toBe('5 minutes')
+    })
+
+    it('should format hours and minutes', () => {
+      const store = useIncidentTimerStore()
+      expect(store.formatDurationSeconds(3660)).toBe('1 hour, 1 minute')
+    })
+
+    it('should format days and hours', () => {
+      const store = useIncidentTimerStore()
+      // 90000s = 1 day (86400) + 1 hour (3600)
+      expect(store.formatDurationSeconds(90000)).toBe('1 day, 1 hour')
+    })
+
+    it('should format weeks and days', () => {
+      const store = useIncidentTimerStore()
+      // 691200s = 8 days = 1 week + 1 day
+      expect(store.formatDurationSeconds(691200)).toBe('1 week, 1 day')
+    })
+
+    it('should use singular for 1 unit', () => {
+      const store = useIncidentTimerStore()
+      expect(store.formatDurationSeconds(604800)).toBe('1 week')
+    })
+
+    it('should use plural for multiple units', () => {
+      const store = useIncidentTimerStore()
+      expect(store.formatDurationSeconds(1209600)).toBe('2 weeks')
+    })
+
+    it('should never output months or years', () => {
+      const store = useIncidentTimerStore()
+      // 365 days = 31536000 seconds = 52 weeks + 1 day
+      const result = store.formatDurationSeconds(31536000)
+      expect(result).toBe('52 weeks, 1 day')
+      expect(result).not.toContain('month')
+      expect(result).not.toContain('year')
+    })
+
+    it('should handle large values with all units', () => {
+      const store = useIncidentTimerStore()
+      // 5,000,000s = 57d 20h 53m 20s = 8w 1d 20h 53m
+      const result = store.formatDurationSeconds(5000000)
+      expect(result).toBe('8 weeks, 1 day, 20 hours, 53 minutes')
+    })
+  })
+
   describe('State Management Functions', () => {
     it('should set timers correctly', () => {
       const store = useIncidentTimerStore()
