@@ -203,12 +203,8 @@ export const useIncidentTimerStore = defineStore('incident-timers', () => {
   const formatDurationSeconds = (totalSeconds: number): string => {
     if (totalSeconds <= 0) return '0 seconds'
 
-    const years = Math.floor(totalSeconds / (365.25 * 24 * 3600))
-    let remaining = totalSeconds - years * Math.floor(365.25 * 24 * 3600)
-    const months = Math.floor(remaining / (30.44 * 24 * 3600))
-    remaining -= months * Math.floor(30.44 * 24 * 3600)
-    const weeks = Math.floor(remaining / (7 * 24 * 3600))
-    remaining -= weeks * 7 * 24 * 3600
+    const weeks = Math.floor(totalSeconds / (7 * 24 * 3600))
+    let remaining = totalSeconds - weeks * 7 * 24 * 3600
     const days = Math.floor(remaining / (24 * 3600))
     remaining -= days * 24 * 3600
     const hours = Math.floor(remaining / 3600)
@@ -216,8 +212,6 @@ export const useIncidentTimerStore = defineStore('incident-timers', () => {
     const minutes = Math.floor(remaining / 60)
 
     const parts: string[] = []
-    if (years > 0) parts.push(`${years} year${years !== 1 ? 's' : ''}`)
-    if (months > 0) parts.push(`${months} month${months !== 1 ? 's' : ''}`)
     if (weeks > 0) parts.push(`${weeks} week${weeks !== 1 ? 's' : ''}`)
     if (days > 0) parts.push(`${days} day${days !== 1 ? 's' : ''}`)
     if (hours > 0) parts.push(`${hours} hour${hours !== 1 ? 's' : ''}`)
