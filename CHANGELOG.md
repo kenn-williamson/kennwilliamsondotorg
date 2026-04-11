@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.9.1](https://github.com/kenn-williamson/kennwilliamsondotorg/compare/v1.9.0...v1.9.1) (2026-04-11)
+
+
+### Bug Fixes
+
+* streak duration format and rand audit patch ([#21](https://github.com/kenn-williamson/kennwilliamsondotorg/issues/21)) ([2030829](https://github.com/kenn-williamson/kennwilliamsondotorg/commit/203082965fade8cf27d953f78b70270ac7a8616a))
+
 ## [1.9.0](https://github.com/kenn-williamson/kennwilliamsondotorg/compare/v1.8.0...v1.9.0) (2026-04-10)
 
 
