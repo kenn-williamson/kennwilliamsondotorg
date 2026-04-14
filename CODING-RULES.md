@@ -137,8 +137,8 @@ This document establishes coding standards and development conventions for the K
   ```
 
 ### Frontend Testing
-- **Unit Tests**: Component-level testing (planned)
-- **Integration Tests**: User flow testing (planned)
+- **Unit Tests**: Composable, service, store, and utility testing (Vitest)
+- **Integration Tests**: API layer and state management testing (Vitest)
 - **E2E Testing**: Full application workflow testing (planned)
 
 ## Documentation Standards

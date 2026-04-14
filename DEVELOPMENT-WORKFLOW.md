@@ -86,8 +86,6 @@ git push origin <branch>
 - **`prepare-sqlx.sh`**: Generate query cache (`--clean` to regenerate)
 - **`reset-db.sh`**: Fresh database start
 - **`backup-db.sh`**: Backup/restore database
-- **`setup-test-db.sh`**: Create test database with migrations
-- **`cleanup-test-db.sh`**: Drop test database
 
 ## Troubleshooting
 
@@ -117,25 +115,19 @@ docker-compose --env-file .env.production -f docker-compose.yml -f docker-compos
 
 ## Testing Workflow
 
-### Test Database Setup
+### Running Backend Tests
 ```bash
 # Start development environment (if not running)
 ./scripts/dev-start.sh
 
-# Create test database with migrations
-./scripts/setup-test-db.sh
-
-# Run tests (see IMPLEMENTATION-TESTING.md for detailed testing documentation)
+# Run tests (testcontainers handles DB setup automatically)
 cd backend && cargo test -- --test-threads=4
-
-# Clean up test database when done
-./scripts/cleanup-test-db.sh
 ```
 
 ### Test Database Details
-- **Test DB**: `kennwilliamson_test` (separate from dev)
-- **Connection**: `postgresql://postgres:password@localhost:5432/kennwilliamson_test`
-- **Isolation**: Complete separation from development data
+- **Integration tests** use testcontainers to spin up isolated PostgreSQL containers per test
+- **No manual DB setup required** -- each test gets its own container with migrations applied automatically
+- **Resource management**: Limited to 4 parallel test threads to prevent Docker resource exhaustion
 
 ## Release & Deployment Workflow
 
@@ -242,7 +234,7 @@ git push origin v1.0.1
 - ✅ Docker builds passed (both backend and frontend)
 
 **Before Creating Release Tag**:
-- ✅ All CI checks passed on main
+- ✅ All CI checks passed on master
 - ✅ Code reviewed (if team grows)
 - ✅ Manual testing completed
 - ✅ Database migrations tested locally

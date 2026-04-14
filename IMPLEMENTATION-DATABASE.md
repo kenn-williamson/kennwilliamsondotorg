@@ -139,16 +139,17 @@ Database architecture decisions and schema design rationale.
 ## Performance Decisions
 
 ### Connection Pooling
-**Decision**: 10 max connections, 2 min
+**Decision**: SQLx default pool configuration (10 max connections)
 
 **Why:**
-- AWS free tier constraint (limited connections)
-- Balance availability and resource usage
-- Sufficient for single-instance deployment
+- SQLx defaults are well-tuned for single-instance deployment
+- Uses `PgPool::connect()` without explicit pool options
+- 10 max connections sufficient for current scale
+- AWS t3.small constraint (limited PostgreSQL connections)
 
 **Trade-offs:**
-- May need to increase for multiple instances
-- Worth it: Fits current infrastructure
+- May need explicit configuration for multiple instances
+- Worth it: Defaults fit current infrastructure
 
 ### Indexing Strategy
 **Decision**: Index primary keys, foreign keys, and search fields

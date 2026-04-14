@@ -5,8 +5,6 @@
 
 **CI/CD Pipeline**: Trunk-based development with tag-triggered deployments implemented. GitHub Actions workflows provide automated testing (backend + frontend), linting, security scans, Docker builds, and automated deployment to production via GitHub Container Registry. See [IMPLEMENTATION-CICD.md](IMPLEMENTATION-CICD.md) for complete architecture.
 
-## Immediate Priorities
-
 ## Next Priorities
 
 ### OpenAPI Documentation (MEDIUM-HIGH PRIORITY)
@@ -54,7 +52,7 @@
 - Local network access for phone testing
 - Mobile-specific development tools
 
-## Next Priorities
+## Later Priorities
 
 ### QR Code Networking System
 **Priority**: Medium

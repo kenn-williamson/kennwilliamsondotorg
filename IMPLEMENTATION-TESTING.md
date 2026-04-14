@@ -247,23 +247,23 @@ npm test -- --run
 
 ### Generating Coverage Reports Locally
 
-**Backend Coverage** (using cargo-tarpaulin):
+**Backend Coverage** (using cargo-llvm-cov):
 ```bash
 cd backend
 
-# Install tarpaulin (one-time setup)
-cargo install cargo-tarpaulin
+# Install llvm-cov (one-time setup)
+cargo install cargo-llvm-cov
 
 # Generate HTML coverage report
-cargo tarpaulin --out Html --output-dir target/tarpaulin --all-features
+cargo llvm-cov --html --all-features
 
 # Open report in browser
-# macOS: open target/tarpaulin/index.html
-# Linux: xdg-open target/tarpaulin/index.html
-# WSL: explorer.exe target/tarpaulin/index.html
+# macOS: open target/llvm-cov/html/index.html
+# Linux: xdg-open target/llvm-cov/html/index.html
+# WSL: explorer.exe target/llvm-cov/html/index.html
 
 # Generate LCOV format (for CI/Codecov)
-cargo tarpaulin --out Lcov --output-dir coverage/ --all-features
+cargo llvm-cov --lcov --output-path coverage/lcov.info --all-features
 ```
 
 **Frontend Coverage** (using Vitest + coverage-v8):
@@ -286,7 +286,7 @@ npm run test:coverage
 ### Coverage in CI/CD
 
 **Automated on Pull Requests:**
-- Backend: cargo-tarpaulin generates LCOV
+- Backend: cargo-llvm-cov generates LCOV
 - Frontend: Vitest generates LCOV
 - Codecov uploads both reports
 - PR comments show coverage changes
@@ -309,7 +309,7 @@ npm run test:coverage
 - Focused on business logic (services, composables, stores, utils)
 
 **What we don't measure:**
-- Branch coverage (not supported by tarpaulin)
+- Branch coverage (supported by cargo-llvm-cov but not currently configured)
 - UI components (excluded from frontend coverage)
 - Pages and layouts (excluded)
 - Test files themselves
@@ -332,7 +332,7 @@ npm run test:coverage
 coverage/                    # Root coverage directory
 frontend/coverage/           # Frontend coverage reports
 backend/coverage/            # Backend LCOV files
-backend/target/tarpaulin/    # Backend HTML reports
+backend/target/llvm-cov/     # Backend HTML reports
 *.lcov                       # LCOV format files
 ```
 
