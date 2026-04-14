@@ -24,12 +24,16 @@ Development Environment (https://localhost)
 │Vue 3  │ │ Actix   │
 │SSR    │ │ API     │
 │:3000  │ │ :8080   │
-└───────┘ └──┬──────┘
-              │
-        ┌─────▼─────┐
-        │PostgreSQL │
-        │   :5432   │
-        └───────────┘
+└───┬───┘ └──┬──────┘
+    │         │
+    └────┬────┘
+         │
+    ┌────┴────┐
+    │         │
+┌───▼───┐ ┌──▼──────┐
+│ Redis │ │PostgreSQL│
+│ :6379 │ │  :5432   │
+└───────┘ └──────────┘
 ```
 
 ### Service Architecture
@@ -157,20 +161,13 @@ See [DEVELOPMENT-WORKFLOW.md](DEVELOPMENT-WORKFLOW.md) for detailed development 
 
 **Trade-off**: Resource optimization complexity vs. cost savings. Architecture must be efficient, but enables learning performance optimization patterns.
 
-### Development Environment (Typical Development Machine)
-- **Nginx**: ~20MB (lightweight alpine)
-- **Frontend (Nuxt.js)**: ~150MB (development mode)
-- **Backend (Rust)**: ~50MB (debug build)
-- **PostgreSQL**: ~100MB (development load)
-- **Docker Overhead**: ~50MB
-
-### Production Target (AWS t3.small - 2GB RAM)
-- **Nginx**: ~50MB
-- **Frontend (Nuxt.js)**: ~200MB (production build)
-- **Backend (Rust)**: ~150MB (release build)
-- **PostgreSQL**: ~800MB (tuned for 2GB environment)
-- **System/Docker**: ~800MB
-- **Total**: ~2000MB (fits within 2GB with minimal headroom)
+### Production Container Limits (docker-compose)
+- **PostgreSQL**: 800MB max, 400MB reserved
+- **Frontend (Nuxt.js)**: 250MB max, 150MB reserved
+- **Backend (Rust)**: 200MB max, 100MB reserved
+- **Redis**: 128MB max, 64MB reserved
+- **Nginx**: 100MB max, 50MB reserved
+- **Migrations**: 100MB max, 50MB reserved
 
 ## Integration Points
 

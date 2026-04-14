@@ -60,7 +60,7 @@ Security architecture decisions covering authentication, authorization, data pro
 
 **Flow:**
 1. Generate code verifier + challenge
-2. Store state in Redis (10min expiry)
+2. Store state in Redis (5min expiry)
 3. User authenticates with provider
 4. Validate state, exchange code for token
 5. Create/link user account
@@ -327,9 +327,11 @@ See [BOT-PROTECTION-DESIGN.md](BOT-PROTECTION-DESIGN.md) for complete design rat
 
 ## Future Security Enhancements
 
+**Already implemented:**
+- **Rate limiting**: Backend middleware with per-endpoint limits (register: 10/min, login: 5/min, etc.). Nginx rate limiting disabled due to Docker shared memory issues.
+
 **When to add:**
 - **2FA**: When user base grows
-- **Rate limiting**: Already implemented
 - **Audit logging**: When compliance requires
 - **WAF**: When attack patterns emerge
 

@@ -42,7 +42,7 @@ A modern web application built with Nuxt.js 4 and Rust, featuring OAuth and JWT 
 
 ### Development & Quality
 - **CI/CD Pipeline**: Automated testing, linting, and deployment via GitHub Actions
-- **Test Coverage**: 600+ comprehensive tests across all layers with coverage reporting
+- **Test Coverage**: 1000+ comprehensive tests across all layers with coverage reporting
 - **Hot Reload Development**: Instant updates for both frontend and backend during development
 - **Responsive Design**: Mobile-first design with Gothic construction theming and steampunk aesthetics
 
@@ -53,11 +53,11 @@ A modern web application built with Nuxt.js 4 and Rust, featuring OAuth and JWT 
 - **TypeScript** - Type-safe JavaScript
 - **TailwindCSS** - Utility-first CSS framework
 - **Pinia** - State management
-- **VeeValidate + Yup** - Form validation
+- **VeeValidate + Yup/Zod** - Form and server-side validation
 - **Vitest** - Unit testing with coverage
 
 ### Backend
-- **Rust 1.90.0** - Systems programming language
+- **Rust 1.91.1** - Systems programming language
 - **Actix-web 4.x** - High-performance web framework
 - **PostgreSQL 17** - Database with UUIDv7 support
 - **SQLx** - Compile-time verified SQL queries
@@ -65,7 +65,7 @@ A modern web application built with Nuxt.js 4 and Rust, featuring OAuth and JWT 
 - **OAuth2** - Google OAuth integration
 - **AWS SES** - Email delivery service
 - **Redis** - Session storage and caching
-- **cargo-tarpaulin** - Code coverage reporting
+- **cargo-llvm-cov** - Code coverage reporting
 
 ### Infrastructure & DevOps
 - **Docker Compose** - Container orchestration
@@ -110,12 +110,12 @@ A modern web application built with Nuxt.js 4 and Rust, featuring OAuth and JWT 
 ## CI/CD & Quality Assurance
 
 ### Automated Testing
-- **Backend**: 520+ Rust tests with cargo-tarpaulin coverage
-- **Frontend**: 191+ TypeScript/Vue tests with Vitest coverage
-- **Total**: 700+ comprehensive tests across all layers
+- **Backend**: 800+ Rust tests with cargo-llvm-cov coverage
+- **Frontend**: 190+ TypeScript/Vue tests with Vitest coverage
+- **Total**: 1000+ comprehensive tests across all layers
 
 ### CI Pipeline (GitHub Actions)
-- Automated tests on every PR and push to main
+- Automated tests on every PR and push to master
 - Code coverage reporting with Codecov PR comments
 - Rust linting with Clippy
 - Security scanning with cargo audit and npm audit
@@ -155,7 +155,7 @@ kennwilliamsondotorg/
 │   └── middleware/        # Route protection
 ├── backend/               # Rust API server
 │   ├── src/               # 3-layer architecture
-│   │   ├── api/           # HTTP handlers
+│   │   ├── routes/        # HTTP handlers
 │   │   ├── services/      # Business logic
 │   │   └── repositories/  # Database access
 │   ├── tests/             # Integration tests

@@ -5,17 +5,17 @@ This document explains the CI/CD (Continuous Integration / Continuous Deployment
 ## Overview
 
 **Pattern**: Trunk-based development with tag-triggered deployments
-- **CI**: Automated testing and validation on every push/PR to `main`
+- **CI**: Automated testing and validation on every push/PR to `master`
 - **CD**: Automated deployment on semantic version tags (e.g., `v1.0.0`)
 
 ## Architecture Decisions
 
 ### Trunk-Based Development with Tag Deployment
 
-**Decision**: CI runs on all commits to `main`, but deployment only triggers on version tags.
+**Decision**: CI runs on all commits to `master`, but deployment only triggers on version tags.
 
 **Why**:
-- **Main always deployable**: CI validates every commit, ensuring main branch is always in a releasable state
+- **Main always deployable**: CI validates every commit, ensuring master branch is always in a releasable state
 - **Deliberate releases**: Deployments happen when you're ready, not automatically on every merge
 - **Easy rollback**: Simple to roll back by tagging a previous commit
 - **Professional workflow**: Demonstrates understanding of production Git workflows for portfolio
@@ -63,7 +63,7 @@ This document explains the CI/CD (Continuous Integration / Continuous Deployment
 
 ### CI Pipeline Components
 
-**Decision**: Three parallel CI jobs - backend tests, frontend tests, Docker builds.
+**Decision**: Five parallel CI jobs - backend tests, backend clippy, backend audit, frontend tests, Docker builds.
 
 **Why**:
 - **Parallel execution**: Faster CI completion (jobs run concurrently)
@@ -73,21 +73,27 @@ This document explains the CI/CD (Continuous Integration / Continuous Deployment
 
 **Components**:
 
-#### Backend CI (backend-tests job)
-1. **Rust tests** with cargo-nextest (CI profile, JUnit XML output)
-2. **Clippy linting** (Rust code quality, fail on warnings)
-3. **cargo audit** (security vulnerability scanning)
-4. **PostgreSQL + Redis services** (integration test dependencies)
+#### Backend Tests (backend-tests job)
+1. **Rust tests with coverage** using cargo-llvm-cov + cargo-nextest (CI profile, LCOV output)
+2. **PostgreSQL + Redis services** (integration test dependencies)
+3. **SQLx migrations** run before tests
 
-**Why these checks**:
-- Nextest: Faster test runner, built-in retry for flaky tests, CI-ready JUnit output
-- Clippy: Enforces Rust best practices, catches common mistakes at compile time
-- cargo audit: Protects users from known security vulnerabilities in dependencies
+**Why**: Full test suite with coverage reporting, catches regressions and measures test quality
 
-#### Frontend CI (frontend-tests job)
-1. **Vitest tests** (unit and integration tests)
-2. **TypeScript type checking** (vue-tsc, no compilation, type safety only)
-3. **npm audit** (security vulnerability scanning)
+#### Backend Clippy (backend-clippy job)
+1. **Clippy linting** with `--all-targets --all-features` (fail on warnings)
+
+**Why**: Separate job for fast failure isolation. Enforces Rust best practices, catches common mistakes at compile time. The `--all-targets` flag ensures tests, benches, and examples are also linted.
+
+#### Backend Audit (backend-audit job)
+1. **cargo audit** with `--deny warnings` (security vulnerability scanning)
+
+**Why**: Separate job so security scanning runs independently. Protects users from known security vulnerabilities in dependencies.
+
+#### Frontend Tests (frontend-tests job)
+1. **TypeScript type checking** (vue-tsc, no compilation, type safety only)
+2. **Vitest tests with coverage** (unit and integration tests)
+3. **npm audit** (security vulnerability scanning, high severity)
 
 **Why these checks**:
 - Type checking: Catches type errors before runtime, demonstrates TypeScript usage
@@ -98,12 +104,17 @@ This document explains the CI/CD (Continuous Integration / Continuous Deployment
 1. **Build backend Docker image** (validates production build process)
 2. **Build frontend Docker image** (validates production build process)
 3. **GitHub Actions cache** (speeds up subsequent builds)
+4. **Only runs on PRs** (skipped on master pushes to save resources)
 
 **Why Docker build validation**:
 - Catch Docker build failures early (before attempting deployment)
 - Validates SQLx cache is up-to-date (backend)
 - Validates TypeScript compilation (frontend)
 - Uses GitHub Actions cache for faster subsequent builds
+
+#### Auxiliary Jobs
+- **codecov-upload**: Uploads backend + frontend coverage to Codecov (PR only)
+- **ci-success**: Gate job that fails if any required job fails (used for branch protection)
 
 **Alternatives rejected**:
 - **ESLint in CI**: Not configured in project, would require setup first (can add later)
@@ -234,7 +245,7 @@ This document explains the CI/CD (Continuous Integration / Continuous Deployment
 
 ### Decision: Automated Coverage Reports on Pull Requests
 
-**Decision**: Use cargo-tarpaulin (Rust) + Vitest coverage (Frontend) + Codecov for automated PR coverage reports.
+**Decision**: Use cargo-llvm-cov (Rust) + Vitest coverage (Frontend) + Codecov for automated PR coverage reports.
 
 **Why**:
 - **Visibility**: Developers see exactly which lines are/aren't covered in PRs
@@ -245,13 +256,14 @@ This document explains the CI/CD (Continuous Integration / Continuous Deployment
 
 **Components**:
 
-#### Backend Coverage: cargo-tarpaulin
-- Runs on stable Rust (no nightly required)
-- Linux-optimized (perfect for Ubuntu CI runners)
+#### Backend Coverage: cargo-llvm-cov
+- Uses LLVM instrumentation for accurate coverage
+- Runs on stable Rust with `llvm-tools-preview` component
+- Integrates with cargo-nextest for fast test execution
 - Generates LCOV format for Codecov
 - Integrated into `backend-tests` job
 
-**Command**: `cargo tarpaulin --out Lcov --output-dir coverage/ --all-features`
+**Command**: `cargo llvm-cov nextest --lcov --output-path coverage/lcov.info --all-features`
 
 #### Frontend Coverage: Vitest + @vitest/coverage-v8
 - Already configured in project
@@ -271,7 +283,7 @@ This document explains the CI/CD (Continuous Integration / Continuous Deployment
 **Configuration**: `codecov.yml` at project root
 
 **Alternatives rejected**:
-- **cargo-llvm-cov**: More accurate but requires nightly or specific setup
+- **cargo-tarpaulin**: Simpler setup but less accurate, no branch coverage support
 - **grcov**: Requires nightly Rust, more complex
 - **Coveralls**: Less feature-rich than Codecov
 - **Manual coverage**: No automation, no trend tracking
@@ -281,7 +293,8 @@ This document explains the CI/CD (Continuous Integration / Continuous Deployment
 - ✅ Coverage trends tracked over time
 - ✅ Free for public repos
 - ✅ Beautiful visualizations
-- ❌ CI time +1-2 minutes (tarpaulin slower than nextest)
+- ✅ Accurate LLVM-based instrumentation with branch coverage support
+- ❌ Requires llvm-tools-preview component
 - ❌ External service dependency (Codecov)
 
 ### Coverage Thresholds
@@ -324,9 +337,9 @@ Files Changed:
 **Backend**:
 ```bash
 cd backend
-cargo install cargo-tarpaulin  # One-time install
-cargo tarpaulin --out Html --output-dir target/tarpaulin
-# Open target/tarpaulin/index.html in browser
+cargo install cargo-llvm-cov  # One-time install
+cargo llvm-cov --html
+# Open target/llvm-cov/html/index.html in browser
 ```
 
 **Frontend**:
@@ -338,7 +351,7 @@ npm run test:coverage
 
 **Coverage artifacts** (gitignored):
 - `backend/coverage/` - LCOV reports
-- `backend/target/tarpaulin/` - HTML reports
+- `backend/target/llvm-cov/` - HTML reports
 - `frontend/coverage/` - Istanbul reports
 
 ---
@@ -348,22 +361,24 @@ npm run test:coverage
 ### CI Workflow (`.github/workflows/ci.yml`)
 
 **Triggers**:
-- Push to `main` branch
-- Pull requests to `main` branch
+- Push to `master` branch
+- Pull requests to `master` branch
 
 **Jobs**:
-1. `backend-tests`: Rust tests with coverage (tarpaulin), clippy, cargo audit
-2. `frontend-tests`: Vitest tests with coverage, TypeScript check, npm audit
-3. `docker-build`: Build validation for backend/frontend Docker images
-4. `codecov-upload`: Upload coverage reports to Codecov (PR only)
-5. `ci-success`: Gate job that fails if any other job fails
+1. `backend-tests`: Rust tests with coverage (cargo-llvm-cov + nextest)
+2. `backend-clippy`: Clippy lints with `--all-targets`
+3. `backend-audit`: Security vulnerability scanning (cargo audit)
+4. `frontend-tests`: Vitest tests with coverage, TypeScript check, npm audit
+5. `docker-build`: Build validation for backend/frontend Docker images (PRs only)
+6. `codecov-upload`: Upload coverage reports to Codecov (PR only)
+7. `ci-success`: Gate job that fails if any other job fails
 
 **Environment**:
-- PostgreSQL 17.0 service container
+- PostgreSQL service container (ghcr.io/fboulnois/pg_uuidv7:1.6.0)
 - Redis 7 service container
-- Rust 1.90.0 toolchain
-- Node.js 20
-- cargo-tarpaulin, cargo-audit
+- Rust 1.91.1 toolchain with llvm-tools-preview
+- Node.js 24
+- cargo-llvm-cov, cargo-nextest, cargo-audit
 
 **Artifacts**:
 - Backend coverage (LCOV format) - 30 days retention
@@ -565,7 +580,7 @@ cat ~/.ssh/github_deploy  # Copy this to EC2_SSH_KEY secret
 ```
 
 #### Configure Branch Protection (Optional but Recommended)
-Repository → Settings → Branches → Add rule for `main`:
+Repository → Settings → Branches → Add rule for `master`:
 - Require status checks to pass before merging
 - Select required checks: `backend-tests`, `frontend-tests`, `docker-build`
 - Require branches to be up to date before merging
@@ -755,13 +770,13 @@ cat deployment-history.log  # Rollback audit trail
 - **Parallel jobs**: Backend/frontend/Docker jobs run concurrently
 
 **Typical CI Times** (with coverage):
-- Backend tests with coverage: 4-7 minutes (tarpaulin +1-2 min vs nextest)
+- Backend tests with coverage: 4-7 minutes (cargo-llvm-cov + nextest)
+- Backend clippy: 2-4 minutes
+- Backend audit: 1-2 minutes
 - Frontend tests with coverage: 2.5-3.5 minutes (+30 sec coverage overhead)
 - Docker builds: 5-7 minutes
 - Codecov upload: ~15 seconds (PR only)
 - **Total CI time**: ~9-10 minutes (parallel execution)
-
-**Coverage overhead**: +2-3 minutes total, worth it for PR feedback
 
 ### CD Performance
 - **Image builds**: 5-10 minutes (cached builds faster)
