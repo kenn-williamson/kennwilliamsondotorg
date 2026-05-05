@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.9.2](https://github.com/kenn-williamson/kennwilliamsondotorg/compare/v1.9.1...v1.9.2) (2026-05-05)
+
+
+### Bug Fixes
+
+* **ssl:** sync Docker volume cert when system certbot renews independently ([969e08a](https://github.com/kenn-williamson/kennwilliamsondotorg/commit/969e08ad3539229ea92490f84cf34e0b15528bed))
+
 ## [1.9.1](https://github.com/kenn-williamson/kennwilliamsondotorg/compare/v1.9.0...v1.9.1) (2026-04-11)
 
 
