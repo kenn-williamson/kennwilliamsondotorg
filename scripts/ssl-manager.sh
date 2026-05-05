@@ -197,6 +197,29 @@ generate_certificates() {
     fi
 }
 
+# Sync host cert to Docker volume if they differ, then reload nginx (no downtime)
+sync_cert_to_docker_volume() {
+    local host_cert="/etc/letsencrypt/live/$DOMAIN_NAME/fullchain.pem"
+    local host_hash
+    host_hash=$(openssl x509 -noout -fingerprint -in "$host_cert" 2>/dev/null)
+    local vol_hash
+    vol_hash=$(docker run --rm -v kennwilliamsondotorg_certbot_certs:/data alpine \
+        sh -c "apk add -q openssl && openssl x509 -noout -fingerprint -in /data/live/$DOMAIN_NAME/fullchain.pem 2>/dev/null" 2>/dev/null)
+
+    if [ "$host_hash" = "$vol_hash" ]; then
+        log "Docker volume cert is already up to date"
+        return 0
+    fi
+
+    log "Docker volume cert differs from host cert - syncing..."
+    docker run --rm \
+        -v /etc/letsencrypt:/source:ro \
+        -v kennwilliamsondotorg_certbot_certs:/data \
+        alpine sh -c "cp /source/live/$DOMAIN_NAME/fullchain.pem /data/live/$DOMAIN_NAME/ && cp /source/live/$DOMAIN_NAME/privkey.pem /data/live/$DOMAIN_NAME/"
+    docker exec kennwilliamsondotorg-nginx-1 nginx -s reload
+    success "Docker volume cert synced and nginx reloaded (no downtime)"
+}
+
 # Renew certificates
 renew_certificates() {
     log "Checking for certificate renewal..."
@@ -210,6 +233,8 @@ renew_certificates() {
 
         if [ $days_until_expiry -gt 30 ]; then
             log "Certificate valid for $days_until_expiry days - no renewal needed"
+            # The system certbot may have already renewed; sync Docker volume if stale
+            sync_cert_to_docker_volume
             return 0
         fi
         log "Certificate expires in $days_until_expiry days - renewal required"
