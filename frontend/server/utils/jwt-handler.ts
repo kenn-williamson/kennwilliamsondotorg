@@ -11,6 +11,7 @@ import type { AuthResponse } from '#shared/types'
 
 // Refresh lock to prevent multiple simultaneous refresh operations
 const refreshLocks = new Map<string, Promise<string | null>>()
+const REFRESH_RETRY_DELAYS_MS = [250, 1000]
 
 /**
  * Get a valid JWT token, attempting refresh if needed
@@ -93,44 +94,66 @@ export async function getValidJwtToken(event: any): Promise<string | null> {
  * @returns New JWT token or null if refresh failed
  */
 export async function performRefresh(event: any, session: any, refreshToken: string): Promise<string | null> {
-  try {
-    const config = useRuntimeConfig()
-    const refreshResponse = await $fetch<AuthResponse>(`${config.apiBase}${API_ROUTES.PUBLIC.AUTH.REFRESH}`, {
-      method: 'POST',
-      body: { refresh_token: refreshToken }
-    })
+  const config = useRuntimeConfig()
 
-    console.log('✅ [JWT Handler] Refresh successful, got new tokens and user data')
-    console.log('🔄 [JWT Handler] New JWT:', refreshResponse.token.substring(0, 20) + '...')
-    console.log('🔄 [JWT Handler] New refresh token:', refreshResponse.refresh_token.substring(0, 20) + '...')
-    console.log('🔄 [JWT Handler] User roles:', refreshResponse.user.roles)
-    
-    if (refreshResponse.token) {
-      console.log('🔄 [JWT Handler] Updating session with new tokens and user data...')
-      await replaceUserSession(event, {
-        user: refreshResponse.user,
-        loggedInAt: new Date(),
-        secure: {
-          jwtToken: refreshResponse.token,
-          refreshToken: refreshResponse.refresh_token
-        }
+  for (let attempt = 0; attempt <= REFRESH_RETRY_DELAYS_MS.length; attempt++) {
+    try {
+      const refreshResponse = await $fetch<AuthResponse>(`${config.apiBase}${API_ROUTES.PUBLIC.AUTH.REFRESH}`, {
+        method: 'POST',
+        body: { refresh_token: refreshToken }
       })
-      console.log('✅ [JWT Handler] Session updated with fresh tokens and user data')
+
+      console.log('✅ [JWT Handler] Refresh successful, got new tokens and user data')
+      console.log('🔄 [JWT Handler] New JWT:', refreshResponse.token.substring(0, 20) + '...')
+      console.log('🔄 [JWT Handler] New refresh token:', refreshResponse.refresh_token.substring(0, 20) + '...')
+      console.log('🔄 [JWT Handler] User roles:', refreshResponse.user.roles)
       
-      // Re-read the session to ensure we have the latest data
-      const updatedSession = await getUserSession(event)
-      console.log('🔄 [JWT Handler] Re-read session, new refresh token:', updatedSession?.secure?.refreshToken?.substring(0, 20) + '...')
+      if (refreshResponse.token) {
+        console.log('🔄 [JWT Handler] Updating session with new tokens and user data...')
+        await replaceUserSession(event, {
+          user: refreshResponse.user,
+          loggedInAt: new Date(),
+          secure: {
+            jwtToken: refreshResponse.token,
+            refreshToken: refreshResponse.refresh_token
+          }
+        })
+        console.log('✅ [JWT Handler] Session updated with fresh tokens and user data')
+        
+        // Re-read the session to ensure we have the latest data
+        const updatedSession = await getUserSession(event)
+        console.log('🔄 [JWT Handler] Re-read session, new refresh token:', updatedSession?.secure?.refreshToken?.substring(0, 20) + '...')
+        
+        return refreshResponse.token
+      }
       
-      return refreshResponse.token
+      return null
+    } catch (refreshError: any) {
+      const statusCode = getRefreshErrorStatusCode(refreshError)
+      const isAuthFailure = statusCode === 400 || statusCode === 401
+      const shouldRetry = !isAuthFailure && attempt < REFRESH_RETRY_DELAYS_MS.length
+
+      console.log('❌ [JWT Handler] Refresh failed:', refreshError)
+
+      if (shouldRetry) {
+        const delay = REFRESH_RETRY_DELAYS_MS[attempt]
+        console.log(`🔁 [JWT Handler] Retrying refresh in ${delay}ms (attempt ${attempt + 2})`)
+        await wait(delay)
+        continue
+      }
+
+      if (isAuthFailure) {
+        console.log('🔄 [JWT Handler] Refresh token rejected, clearing session')
+        await clearUserSession(event)
+      } else {
+        console.log('⚠️ [JWT Handler] Refresh failed with transient error, preserving session for retry on next request')
+      }
+
+      return null
     }
-    
-    return null
-  } catch (refreshError) {
-    console.log('❌ [JWT Handler] Refresh failed:', refreshError)
-    // Clear the entire user session on refresh failure
-    await clearUserSession(event)
-    return null
   }
+
+  return null
 }
 
 /**
@@ -148,4 +171,24 @@ export async function requireValidJwtToken(event: any): Promise<string> {
     })
   }
   return token
+}
+
+function getRefreshErrorStatusCode(error: any): number | undefined {
+  if (typeof error?.statusCode === 'number') {
+    return error.statusCode
+  }
+
+  if (typeof error?.status === 'number') {
+    return error.status
+  }
+
+  if (typeof error?.data?.statusCode === 'number') {
+    return error.data.statusCode
+  }
+
+  return undefined
+}
+
+function wait(ms: number): Promise<void> {
+  return new Promise(resolve => setTimeout(resolve, ms))
 }
