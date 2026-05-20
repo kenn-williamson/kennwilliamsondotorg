@@ -31,4 +31,14 @@ ignore = [
     # actix-multipart, and oauth2, which we cannot update until those crates release new versions.
     # TODO: Remove once upstream deps update — tracking in #20
     "RUSTSEC-2026-0097",
+
+    # RUSTSEC-2026-0098, RUSTSEC-2026-0099, RUSTSEC-2026-0104: rustls-webpki 0.101.7
+    # Reason: Pulled in transitively by aws-smithy-http-client 1.1.12 (latest available) via
+    # hyper-rustls 0.24.2 (legacy compat path). Our actual HTTPS calls use the modern rustls
+    # 0.23 / rustls-webpki 0.103.13 line, which is patched. The legacy 0.101.7 path is dead
+    # code that we cannot remove until aws-smithy-http-client drops the hyper-rustls 0.24
+    # compat connector. Tracked upstream in awslabs/smithy-rs.
+    "RUSTSEC-2026-0098",
+    "RUSTSEC-2026-0099",
+    "RUSTSEC-2026-0104",
 ]
