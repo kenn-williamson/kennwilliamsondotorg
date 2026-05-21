@@ -1,5 +1,14 @@
 # Changelog
 
+## [1.9.2](https://github.com/kenn-williamson/kennwilliamsondotorg/compare/v1.9.1...v1.9.2) (2026-05-20)
+
+
+### Bug Fixes
+
+* **auth:** retry JWT refresh on transient errors, preserve session ([748bcf5](https://github.com/kenn-williamson/kennwilliamsondotorg/commit/748bcf53ae55d82ddef5f872ec368337e0eb5137))
+* **deps:** patch security audit findings (backend + frontend) ([54b5419](https://github.com/kenn-williamson/kennwilliamsondotorg/commit/54b5419cd2d341201201d892be06fa46bc61e00e))
+* **ssl:** sync Docker volume cert when system certbot renews independently ([969e08a](https://github.com/kenn-williamson/kennwilliamsondotorg/commit/969e08ad3539229ea92490f84cf34e0b15528bed))
+
 ## [1.9.1](https://github.com/kenn-williamson/kennwilliamsondotorg/compare/v1.9.0...v1.9.1) (2026-04-11)
 
 
