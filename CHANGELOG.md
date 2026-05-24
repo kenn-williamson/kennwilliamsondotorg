@@ -1,5 +1,13 @@
 # Changelog
 
+## [1.9.3](https://github.com/kenn-williamson/kennwilliamsondotorg/compare/v1.9.2...v1.9.3) (2026-05-24)
+
+
+### Bug Fixes
+
+* **deps:** bump js-cookie to patch GHSA-qjx8-664m-686j ([a54d446](https://github.com/kenn-williamson/kennwilliamsondotorg/commit/a54d44657811eba18ac657b416e9421348d6239c))
+* **frontend:** unblock deploy by fixing JWT retry type error and CI gap ([8a56a39](https://github.com/kenn-williamson/kennwilliamsondotorg/commit/8a56a39e734e8040cff3145f00c97494fe99bcd9))
+
 ## [1.9.2](https://github.com/kenn-williamson/kennwilliamsondotorg/compare/v1.9.1...v1.9.2) (2026-05-20)
 
 
