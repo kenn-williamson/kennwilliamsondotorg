@@ -136,7 +136,7 @@ export async function performRefresh(event: any, session: any, refreshToken: str
       console.log('❌ [JWT Handler] Refresh failed:', refreshError)
 
       if (shouldRetry) {
-        const delay = REFRESH_RETRY_DELAYS_MS[attempt]
+        const delay = REFRESH_RETRY_DELAYS_MS[attempt] ?? 0
         console.log(`🔁 [JWT Handler] Retrying refresh in ${delay}ms (attempt ${attempt + 2})`)
         await wait(delay)
         continue

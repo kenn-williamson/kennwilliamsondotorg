@@ -95,7 +95,7 @@ if [ "$CHECK_FRONTEND" = true ]; then
     cd "$PROJECT_ROOT/frontend"
     echo -e "${YELLOW}  Regenerating Nuxt types...${NC}"
     npx nuxt prepare
-    if npx vue-tsc --noEmit; then
+    if npx vue-tsc -b --noEmit; then
         echo -e "${GREEN}✓ Frontend TypeScript passed${NC}\n"
     else
         echo -e "${RED}✗ Frontend TypeScript failed${NC}\n"
