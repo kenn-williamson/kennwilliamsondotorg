@@ -14,17 +14,58 @@
           <header class="mb-8">
             <div class="mb-4 flex items-center justify-between">
               <h1 class="text-4xl sm:text-5xl font-bold text-primary-900">Blog</h1>
-              <NuxtLink
-                to="/feed/rss"
-                class="feed-link"
-                aria-label="Subscribe to RSS feed"
-                title="Subscribe via RSS"
-              >
-                <svg class="w-5 h-5" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
-                  <path d="M6.18 15.64a2.18 2.18 0 0 1 2.18 2.18C8.36 19 7.38 20 6.18 20C5 20 4 19 4 17.82a2.18 2.18 0 0 1 2.18-2.18M4 4.44A15.56 15.56 0 0 1 19.56 20h-2.83A12.73 12.73 0 0 0 4 7.27V4.44m0 5.66a9.9 9.9 0 0 1 9.9 9.9h-2.83A7.07 7.07 0 0 0 4 12.93V10.1z"/>
-                </svg>
-                <span class="sr-only">RSS Feed</span>
-              </NuxtLink>
+              <div class="relative feed-menu">
+                <button
+                  type="button"
+                  class="feed-link"
+                  :aria-expanded="showFeedMenu"
+                  aria-haspopup="menu"
+                  aria-label="Subscribe via RSS, Atom, or JSON Feed"
+                  title="Subscribe (RSS, Atom, JSON)"
+                  @click="showFeedMenu = !showFeedMenu"
+                >
+                  <svg class="w-5 h-5" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
+                    <path d="M6.18 15.64a2.18 2.18 0 0 1 2.18 2.18C8.36 19 7.38 20 6.18 20C5 20 4 19 4 17.82a2.18 2.18 0 0 1 2.18-2.18M4 4.44A15.56 15.56 0 0 1 19.56 20h-2.83A12.73 12.73 0 0 0 4 7.27V4.44m0 5.66a9.9 9.9 0 0 1 9.9 9.9h-2.83A7.07 7.07 0 0 0 4 12.93V10.1z"/>
+                  </svg>
+                  <svg class="w-3 h-3 ml-0.5" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true">
+                    <path fill-rule="evenodd" d="M5.23 7.21a.75.75 0 011.06.02L10 11.06l3.71-3.83a.75.75 0 011.08 1.04l-4.25 4.39a.75.75 0 01-1.08 0L5.21 8.27a.75.75 0 01.02-1.06z" clip-rule="evenodd" />
+                  </svg>
+                  <span class="sr-only">Subscribe</span>
+                </button>
+                <div
+                  v-if="showFeedMenu"
+                  role="menu"
+                  class="absolute right-0 mt-2 w-64 bg-white rounded-md shadow-lg border border-nautical-200 py-1 z-50"
+                >
+                  <a
+                    href="/feed/rss"
+                    role="menuitem"
+                    class="feed-menu-item"
+                    @click="showFeedMenu = false"
+                  >
+                    <span class="feed-menu-title">RSS</span>
+                    <span class="feed-menu-desc">Widest reader support</span>
+                  </a>
+                  <a
+                    href="/feed/atom"
+                    role="menuitem"
+                    class="feed-menu-item"
+                    @click="showFeedMenu = false"
+                  >
+                    <span class="feed-menu-title">Atom</span>
+                    <span class="feed-menu-desc">Richer metadata</span>
+                  </a>
+                  <a
+                    href="/feed/json"
+                    role="menuitem"
+                    class="feed-menu-item"
+                    @click="showFeedMenu = false"
+                  >
+                    <span class="feed-menu-title">JSON Feed</span>
+                    <span class="feed-menu-desc">Modern, easy to parse</span>
+                  </a>
+                </div>
+              </div>
             </div>
 
             <p class="text-lg text-nautical-700">
@@ -90,6 +131,26 @@ import type { BlogPostList } from '#shared/types'
 
 const route = useRoute()
 const blogStore = useBlogStore()
+
+const showFeedMenu = ref(false)
+
+onMounted(() => {
+  const handleClickOutside = (event: MouseEvent) => {
+    const target = event.target as HTMLElement | null
+    if (!target?.closest('.feed-menu')) {
+      showFeedMenu.value = false
+    }
+  }
+  const handleKeydown = (event: KeyboardEvent) => {
+    if (event.key === 'Escape') showFeedMenu.value = false
+  }
+  document.addEventListener('click', handleClickOutside)
+  document.addEventListener('keydown', handleKeydown)
+  onUnmounted(() => {
+    document.removeEventListener('click', handleClickOutside)
+    document.removeEventListener('keydown', handleKeydown)
+  })
+})
 
 // Reactive query params
 const page = computed(() => parseInt(route.query.page as string) || 1)
@@ -174,5 +235,29 @@ useSocialShare({
 .feed-link:hover {
   color: #f97316; /* orange-500 - RSS orange */
   background: rgba(249, 115, 22, 0.1);
+}
+
+.feed-menu-item {
+  display: flex;
+  flex-direction: column;
+  padding: 0.5rem 1rem;
+  text-decoration: none;
+  color: #334155; /* nautical-700 */
+  transition: background 0.15s ease;
+}
+
+.feed-menu-item:hover {
+  background: #f1f5f9; /* nautical-100 */
+}
+
+.feed-menu-title {
+  font-weight: 600;
+  font-size: 0.875rem;
+  color: #0f172a; /* nautical-900 */
+}
+
+.feed-menu-desc {
+  font-size: 0.75rem;
+  color: #64748b; /* slate-500 */
 }
 </style>
