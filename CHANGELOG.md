@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.9.4](https://github.com/kenn-williamson/kennwilliamsondotorg/compare/v1.9.3...v1.9.4) (2026-05-25)
+
+
+### Bug Fixes
+
+* **blog:** use anchor for feed link and expose all 3 syndication formats ([#25](https://github.com/kenn-williamson/kennwilliamsondotorg/issues/25)) ([7aa440b](https://github.com/kenn-williamson/kennwilliamsondotorg/commit/7aa440b7761b50847af6412628ac021de5b9d2a3))
+
 ## [1.9.3](https://github.com/kenn-williamson/kennwilliamsondotorg/compare/v1.9.2...v1.9.3) (2026-05-24)
 
 
