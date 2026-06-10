@@ -13,17 +13,11 @@ ignore = [
     # but is never compiled or used in our binary.
     "RUSTSEC-2023-0071",
 
-    # RUSTSEC-2025-0111: tokio-tar PAX extended headers parsing vulnerability
-    # Reason: This vulnerability is in tokio-tar, which is only used by testcontainers.
-    # testcontainers is a dev-dependency used exclusively for integration tests.
-    # It is never included in production builds and poses no risk to deployed code.
-    "RUSTSEC-2025-0111",
-
-    # RUSTSEC-2025-0134: rustls-pemfile is unmaintained
-    # Reason: This crate is used by bollard -> testcontainers, which is a dev-dependency.
-    # testcontainers is used exclusively for integration tests and is never included
-    # in production builds. Waiting for upstream bollard to migrate to rustls-pki-types.
-    "RUSTSEC-2025-0134",
+    # NOTE: RUSTSEC-2025-0111 (tokio-tar) and RUSTSEC-2025-0134 (rustls-pemfile) were
+    # previously ignored here. Both crates are no longer in Cargo.lock (testcontainers
+    # switched to the astral-tokio-tar fork; bollard dropped rustls-pemfile), so the
+    # ignores were removed. Caveat: aws-smithy-http-client 1.1.13+ depends on
+    # rustls-pemfile again, so RUSTSEC-2025-0134 may resurface after an AWS SDK update.
 
     # RUSTSEC-2026-0097: rand unsoundness with custom logger using rand::rng()
     # Reason: Our direct dependency (rand 0.9) is updated to 0.9.3 (patched).
