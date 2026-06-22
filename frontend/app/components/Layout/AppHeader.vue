@@ -45,6 +45,7 @@
               Project
             </NuxtLink>
             <NuxtLink
+              v-if="loggedIn"
               to="/incidents"
               class="nav-link"
               :class="{ 'nav-link-active': $route.path === '/incidents' }"
@@ -167,6 +168,7 @@
             Project
           </NuxtLink>
           <NuxtLink
+            v-if="loggedIn"
             to="/incidents"
             class="mobile-nav-link"
             @click="showMobileMenu = false"
