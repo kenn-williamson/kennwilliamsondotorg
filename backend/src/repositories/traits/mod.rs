@@ -1,5 +1,6 @@
 pub mod access_request_repository;
 pub mod admin_repository;
+pub mod audio_storage;
 pub mod blog_repository;
 pub mod email_suppression_repository;
 pub mod image_storage;
@@ -8,6 +9,7 @@ pub mod password_reset_token_repository;
 pub mod phrase_repository;
 pub mod pkce_storage;
 pub mod refresh_token_repository;
+pub mod song_repository;
 pub mod unsubscribe_token_repository;
 pub mod user_credentials_repository;
 pub mod user_external_login_repository;
@@ -18,10 +20,12 @@ pub mod verification_token_repository;
 
 pub use access_request_repository::AccessRequestRepository;
 pub use admin_repository::AdminRepository;
+pub use audio_storage::{AudioStorage, AudioUpload};
 pub use blog_repository::{
     BlogPostFilters, BlogPostList, BlogRepository, CreateBlogPost, TagCount, UpdateBlogPost,
 };
 pub use image_storage::{ImageStorage, ImageUrls};
+pub use song_repository::{CreateSong, SongFilters, SongList, SongRepository, UpdateSong};
 pub use incident_timer_repository::IncidentTimerRepository;
 pub use password_reset_token_repository::PasswordResetTokenRepository;
 pub use phrase_repository::PhraseRepository;

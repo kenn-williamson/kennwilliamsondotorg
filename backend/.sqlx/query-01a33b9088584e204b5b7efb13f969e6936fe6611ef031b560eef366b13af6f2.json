@@ -1,0 +1,101 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "\n                    SELECT\n                        id, slug, title, description, lyrics, credits, audio_url, artwork_url,\n                        duration_seconds, display_order, status, published_at, created_at, updated_at\n                    FROM songs\n                    ORDER BY display_order ASC, created_at DESC\n                    LIMIT $1 OFFSET $2\n                    ",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "id",
+        "type_info": "Uuid"
+      },
+      {
+        "ordinal": 1,
+        "name": "slug",
+        "type_info": "Varchar"
+      },
+      {
+        "ordinal": 2,
+        "name": "title",
+        "type_info": "Varchar"
+      },
+      {
+        "ordinal": 3,
+        "name": "description",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 4,
+        "name": "lyrics",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 5,
+        "name": "credits",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 6,
+        "name": "audio_url",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 7,
+        "name": "artwork_url",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 8,
+        "name": "duration_seconds",
+        "type_info": "Int4"
+      },
+      {
+        "ordinal": 9,
+        "name": "display_order",
+        "type_info": "Int4"
+      },
+      {
+        "ordinal": 10,
+        "name": "status",
+        "type_info": "Varchar"
+      },
+      {
+        "ordinal": 11,
+        "name": "published_at",
+        "type_info": "Timestamptz"
+      },
+      {
+        "ordinal": 12,
+        "name": "created_at",
+        "type_info": "Timestamptz"
+      },
+      {
+        "ordinal": 13,
+        "name": "updated_at",
+        "type_info": "Timestamptz"
+      }
+    ],
+    "parameters": {
+      "Left": [
+        "Int8",
+        "Int8"
+      ]
+    },
+    "nullable": [
+      false,
+      false,
+      false,
+      true,
+      true,
+      true,
+      true,
+      true,
+      true,
+      false,
+      false,
+      true,
+      false,
+      false
+    ]
+  },
+  "hash": "01a33b9088584e204b5b7efb13f969e6936fe6611ef031b560eef366b13af6f2"
+}

@@ -45,6 +45,13 @@
               Project
             </NuxtLink>
             <NuxtLink
+              to="/music"
+              class="nav-link"
+              :class="{ 'nav-link-active': $route.path.startsWith('/music') }"
+            >
+              Music
+            </NuxtLink>
+            <NuxtLink
               v-if="loggedIn"
               to="/incidents"
               class="nav-link"
@@ -166,6 +173,13 @@
             @click="showMobileMenu = false"
           >
             Project
+          </NuxtLink>
+          <NuxtLink
+            to="/music"
+            class="mobile-nav-link"
+            @click="showMobileMenu = false"
+          >
+            Music
           </NuxtLink>
           <NuxtLink
             v-if="loggedIn"

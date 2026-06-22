@@ -7,11 +7,25 @@ use uuid::Uuid;
 
 pub struct S3ImageStorage {
     bucket_name: String,
+    /// Key prefix grouping uploads (e.g. "blog" -> blog/originals, blog/featured)
+    key_prefix: String,
 }
 
 impl S3ImageStorage {
+    /// Create storage scoped to a bucket, defaulting to the "blog" key prefix.
     pub fn new(bucket_name: String) -> Self {
-        Self { bucket_name }
+        Self {
+            bucket_name,
+            key_prefix: "blog".to_string(),
+        }
+    }
+
+    /// Create storage with a custom key prefix (e.g. "music" for cover artwork).
+    pub fn with_prefix(bucket_name: String, key_prefix: String) -> Self {
+        Self {
+            bucket_name,
+            key_prefix,
+        }
     }
 
     /// Create S3 client from environment (credentials loaded from environment or EC2 instance role)
@@ -57,7 +71,7 @@ impl ImageStorage for S3ImageStorage {
         let image_id = Uuid::new_v4();
 
         // 5. Save original to S3
-        let original_key = format!("blog/originals/{}.{}", image_id, extension);
+        let original_key = format!("{}/originals/{}.{}", self.key_prefix, image_id, extension);
         s3_client
             .put_object()
             .bucket(&self.bucket_name)
@@ -79,7 +93,7 @@ impl ImageStorage for S3ImageStorage {
             .context("Failed to encode resized image")?;
 
         // 8. Save featured image to S3
-        let featured_key = format!("blog/featured/{}.jpg", image_id);
+        let featured_key = format!("{}/featured/{}.jpg", self.key_prefix, image_id);
         s3_client
             .put_object()
             .bucket(&self.bucket_name)

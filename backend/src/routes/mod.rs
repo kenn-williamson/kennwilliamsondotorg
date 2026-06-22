@@ -6,6 +6,7 @@ pub mod email;
 pub mod feed;
 pub mod health;
 pub mod incident_timers;
+pub mod music;
 pub mod phrases;
 pub mod webhooks;
 
@@ -60,6 +61,12 @@ pub fn configure_app_routes(cfg: &mut web::ServiceConfig) {
                                 .route("/posts/{slug}", web::get().to(blog::get_post_by_slug))
                                 .route("/tags", web::get().to(blog::get_all_tags))
                                 .route("/search", web::get().to(blog::search_posts)),
+                        )
+                        // Music public routes (published songs only)
+                        .service(
+                            web::scope("/music")
+                                .route("/songs", web::get().to(music::get_published_songs))
+                                .route("/songs/{slug}", web::get().to(music::get_song_by_slug)),
                         )
                         // Feed public routes (RSS, Atom, JSON Feed)
                         .service(
@@ -206,6 +213,19 @@ pub fn configure_app_routes(cfg: &mut web::ServiceConfig) {
                                         .route("/posts/{id}", web::put().to(blog::update_post))
                                         .route("/posts/{id}", web::delete().to(blog::delete_post))
                                         .route("/upload-image", web::post().to(blog::upload_image)),
+                                )
+                                // Music admin routes
+                                .service(
+                                    web::scope("/music")
+                                        .route("/songs", web::get().to(music::get_all_songs))
+                                        .route("/songs", web::post().to(music::create_song))
+                                        .route("/songs/{id}", web::put().to(music::update_song))
+                                        .route("/songs/{id}", web::delete().to(music::delete_song))
+                                        .route("/upload-audio", web::post().to(music::upload_audio))
+                                        .route(
+                                            "/upload-artwork",
+                                            web::post().to(music::upload_artwork),
+                                        ),
                                 ),
                         ),
                 ),

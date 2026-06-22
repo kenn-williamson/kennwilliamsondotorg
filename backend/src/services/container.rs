@@ -2,15 +2,17 @@ use sqlx::PgPool;
 use std::sync::Arc;
 
 #[cfg(not(feature = "mocks"))]
+use crate::repositories::s3_audio_storage::S3AudioStorage;
+#[cfg(not(feature = "mocks"))]
 use crate::repositories::s3_image_storage::S3ImageStorage;
 
 #[cfg(feature = "mocks")]
 use crate::repositories::mocks::{
-    MockAccessRequestRepository, MockAdminRepository, MockBlogRepository, MockImageStorage,
-    MockIncidentTimerRepository, MockPasswordResetTokenRepository, MockPhraseRepository,
-    MockPkceStorage, MockRefreshTokenRepository, MockUserCredentialsRepository,
-    MockUserExternalLoginRepository, MockUserPreferencesRepository, MockUserProfileRepository,
-    MockUserRepository, MockVerificationTokenRepository,
+    MockAccessRequestRepository, MockAdminRepository, MockAudioStorage, MockBlogRepository,
+    MockImageStorage, MockIncidentTimerRepository, MockPasswordResetTokenRepository,
+    MockPhraseRepository, MockPkceStorage, MockRefreshTokenRepository, MockSongRepository,
+    MockUserCredentialsRepository, MockUserExternalLoginRepository, MockUserPreferencesRepository,
+    MockUserProfileRepository, MockUserRepository, MockVerificationTokenRepository,
 };
 use crate::repositories::postgres::{
     postgres_access_request_repository::PostgresAccessRequestRepository,
@@ -21,6 +23,7 @@ use crate::repositories::postgres::{
     postgres_password_reset_token_repository::PostgresPasswordResetTokenRepository,
     postgres_phrase_repository::PostgresPhraseRepository,
     postgres_refresh_token_repository::PostgresRefreshTokenRepository,
+    postgres_song_repository::PostgresSongRepository,
     postgres_unsubscribe_token_repository::PostgresUnsubscribeTokenRepository,
     postgres_user_credentials_repository::PostgresUserCredentialsRepository,
     postgres_user_external_login_repository::PostgresUserExternalLoginRepository,
@@ -53,6 +56,7 @@ use super::admin::{
 use super::auth::AuthService;
 use super::blog::BlogService;
 use super::cleanup::CleanupService;
+use super::music::MusicService;
 #[cfg(feature = "mocks")]
 use super::email::MockEmailService;
 use super::email::{LogOnlyEmailService, SesEmailService, SuppressionGuard};
@@ -71,6 +75,7 @@ pub struct ServiceContainer {
     // Core services
     pub auth_service: Arc<AuthService>,
     pub blog_service: Arc<BlogService>,
+    pub music_service: Arc<MusicService>,
     pub feed_service: Arc<super::feed::FeedService>,
     pub incident_timer_service: Arc<IncidentTimerService>,
     pub phrase_service: Arc<PhraseService>,
@@ -439,6 +444,41 @@ impl ServiceContainer {
             )
         };
 
+        // Create music service with PostgreSQL repository and storage backends
+        #[cfg(feature = "mocks")]
+        let music_service = Arc::new(
+            MusicService::builder()
+                .with_repository(Box::new(PostgresSongRepository::new(pool.clone())))
+                .with_audio_storage(Box::new(MockAudioStorage::new()))
+                .with_image_storage(Box::new(MockImageStorage::new()))
+                .build()
+                .expect("Failed to build MusicService"),
+        );
+
+        #[cfg(not(feature = "mocks"))]
+        let music_service = {
+            // Audio + artwork share one bucket. Falls back to the blog images
+            // bucket when a dedicated music bucket isn't configured, so existing
+            // deployments work without new infrastructure.
+            let bucket_name = std::env::var("AWS_S3_BUCKET_MUSIC")
+                .ok()
+                .filter(|s| !s.trim().is_empty())
+                .or_else(|| std::env::var("AWS_S3_BUCKET_BLOG_IMAGES").ok())
+                .expect("AWS_S3_BUCKET_MUSIC or AWS_S3_BUCKET_BLOG_IMAGES must be set");
+
+            let audio_storage = S3AudioStorage::new(bucket_name.clone());
+            let artwork_storage = S3ImageStorage::with_prefix(bucket_name, "music".to_string());
+
+            Arc::new(
+                MusicService::builder()
+                    .with_repository(Box::new(PostgresSongRepository::new(pool.clone())))
+                    .with_audio_storage(Box::new(audio_storage))
+                    .with_image_storage(Box::new(artwork_storage))
+                    .build()
+                    .expect("Failed to build MusicService"),
+            )
+        };
+
         // Create feed service with blog repository for feed generation
         let feed_service = Arc::new(
             super::feed::FeedService::builder()
@@ -450,6 +490,7 @@ impl ServiceContainer {
         Self {
             auth_service,
             blog_service,
+            music_service,
             feed_service,
             incident_timer_service,
             phrase_service,
@@ -534,6 +575,16 @@ impl ServiceContainer {
                 .expect("Failed to build BlogService"),
         );
 
+        // For testing, use mock music service
+        let music_service = Arc::new(
+            MusicService::builder()
+                .with_repository(Box::new(MockSongRepository::new()))
+                .with_audio_storage(Box::new(MockAudioStorage::new()))
+                .with_image_storage(Box::new(MockImageStorage::new()))
+                .build()
+                .expect("Failed to build MusicService"),
+        );
+
         // For testing, use mock feed service
         let feed_service = Arc::new(
             super::feed::FeedService::builder()
@@ -545,6 +596,7 @@ impl ServiceContainer {
         Self {
             auth_service,
             blog_service,
+            music_service,
             feed_service,
             incident_timer_service,
             phrase_service,

@@ -14,6 +14,7 @@ pub mod blog_post_builder;
 pub mod incident_timer_builder;
 pub mod phrase_builder;
 pub mod refresh_token_builder;
+pub mod song_builder;
 pub mod user_builder;
 pub mod user_preferences_builder;
 
@@ -23,5 +24,6 @@ pub use blog_post_builder::BlogPostBuilder;
 pub use incident_timer_builder::IncidentTimerBuilder;
 pub use phrase_builder::{PhraseBuilder, PhraseSuggestionBuilder};
 pub use refresh_token_builder::RefreshTokenBuilder;
+pub use song_builder::SongBuilder;
 pub use user_builder::UserBuilder;
 pub use user_preferences_builder::UserPreferencesBuilder;
