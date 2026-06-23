@@ -240,12 +240,58 @@ const handleAudioSelect = async (event: Event) => {
     const result = await musicStore.uploadAudio(file)
     if (result) {
       audioUrl.value = result.url
-      durationSeconds.value = result.duration_seconds
+      if (result.duration_seconds != null) durationSeconds.value = result.duration_seconds
     }
+    // Best-effort: pre-fill blank fields from the file's embedded tags.
+    await prefillFromMetadata(file)
   } catch (error) {
     audioError.value = error instanceof Error ? error.message : 'Failed to upload audio'
   } finally {
     uploadingAudio.value = false
+  }
+}
+
+/**
+ * Pre-fill blank fields from the audio file's embedded metadata (ID3 etc.).
+ * Admin-only and dynamically imported, so `music-metadata` never ships to the
+ * public bundle. Only fills empty fields, so it never overwrites your edits,
+ * and a parse failure is non-fatal (the upload still succeeds).
+ */
+const prefillFromMetadata = async (file: File) => {
+  try {
+    const { parseBlob } = await import('music-metadata')
+    const { common, format } = await parseBlob(file)
+
+    // Title -> only when blank; regenerate slug for new songs
+    if (!title.value.trim() && common.title) {
+      title.value = common.title
+      if (!props.editingSong && !slugManuallyEdited.value) {
+        slug.value = generateSlugFromTitle(title.value)
+      }
+    }
+
+    // Track duration
+    if (durationSeconds.value == null && format.duration) {
+      durationSeconds.value = Math.round(format.duration)
+    }
+
+    // Embedded cover art -> upload as artwork, only when none is set yet
+    const pic = common.picture?.[0]
+    if (!artworkUrl.value && pic) {
+      const mime = pic.format || 'image/jpeg'
+      const ext = mime.split('/')[1]?.split('+')[0] || 'jpg'
+      const artFile = new File([new Uint8Array(pic.data)], `cover.${ext}`, { type: mime })
+      uploadingArtwork.value = true
+      try {
+        const res = await musicStore.uploadArtwork(artFile)
+        if (res) artworkUrl.value = res.url
+      } finally {
+        uploadingArtwork.value = false
+      }
+    }
+  } catch (err) {
+    // Embedded tags are optional; never block the upload on a parse failure.
+    console.warn('Could not read audio metadata:', err)
   }
 }
 
