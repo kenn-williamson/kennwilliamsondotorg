@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.12.1](https://github.com/kenn-williamson/kennwilliamsondotorg/compare/v1.12.0...v1.12.1) (2026-06-23)
+
+
+### Bug Fixes
+
+* **music:** keep cover art square (grid layout, no crop) ([#37](https://github.com/kenn-williamson/kennwilliamsondotorg/issues/37)) ([e5f7483](https://github.com/kenn-williamson/kennwilliamsondotorg/commit/e5f7483a3cf430280ce21d67cce605f2816e9bb2))
+
 ## [1.12.0](https://github.com/kenn-williamson/kennwilliamsondotorg/compare/v1.11.0...v1.12.0) (2026-06-23)
 
 
