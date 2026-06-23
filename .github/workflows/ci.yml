@@ -1,8 +1,9 @@
 name: CI Pipeline
 
+# PR-gated CI: runs only on pull requests targeting master. Code reaches
+# master exclusively through PRs, so the PR run is the gate and there is no
+# redundant post-merge re-run of the same tree.
 on:
-  push:
-    branches: [master]
   pull_request:
     branches: [master]
 
@@ -16,10 +17,38 @@ env:
   RUST_VERSION: 1.91.1
 
 jobs:
+  # Detect which areas changed so we only run the heavy jobs that matter.
+  # The workflow runs on every PR (so the "CI Pipeline Success" check always
+  # reports and can be made a required check), but backend/frontend jobs skip
+  # when their area is untouched. Release-please/docs-only PRs touch neither
+  # area -> heavy jobs skip and ci-success passes in seconds.
+  changes:
+    name: Detect changes
+    runs-on: ubuntu-latest
+    outputs:
+      backend: ${{ steps.filter.outputs.backend }}
+      frontend: ${{ steps.filter.outputs.frontend }}
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v5
+
+      - uses: dorny/paths-filter@v3
+        id: filter
+        with:
+          filters: |
+            backend:
+              - 'backend/**'
+              - '.github/workflows/ci.yml'
+            frontend:
+              - 'frontend/**'
+              - '.github/workflows/ci.yml'
+
   backend-tests:
     name: Backend Tests & Coverage
     runs-on: ubuntu-latest
     timeout-minutes: 20
+    needs: changes
+    if: needs.changes.outputs.backend == 'true'
 
     services:
       postgres:
@@ -48,7 +77,7 @@ jobs:
 
     steps:
       - name: Checkout code
-        uses: actions/checkout@v4
+        uses: actions/checkout@v5
 
       - name: Install Rust toolchain
         uses: dtolnay/rust-toolchain@master
@@ -75,7 +104,7 @@ jobs:
 
       - name: Cache sqlx-cli binary
         id: cache-sqlx
-        uses: actions/cache@v4
+        uses: actions/cache@v6
         with:
           path: ~/.cargo/bin/sqlx
           key: ${{ runner.os }}-sqlx-cli-0.8.6
@@ -129,7 +158,7 @@ jobs:
 
       - name: Upload backend coverage
         if: always()
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: backend-coverage
           path: backend/coverage/lcov.info
@@ -139,10 +168,12 @@ jobs:
     name: Backend Clippy Lints
     runs-on: ubuntu-latest
     timeout-minutes: 15
+    needs: changes
+    if: needs.changes.outputs.backend == 'true'
 
     steps:
       - name: Checkout code
-        uses: actions/checkout@v4
+        uses: actions/checkout@v5
 
       - name: Install Rust toolchain
         uses: dtolnay/rust-toolchain@master
@@ -175,10 +206,12 @@ jobs:
     name: Backend Security Audit
     runs-on: ubuntu-latest
     timeout-minutes: 10
+    needs: changes
+    if: needs.changes.outputs.backend == 'true'
 
     steps:
       - name: Checkout code
-        uses: actions/checkout@v4
+        uses: actions/checkout@v5
 
       - name: Install Rust toolchain
         uses: dtolnay/rust-toolchain@master
@@ -215,13 +248,15 @@ jobs:
     name: Frontend Tests & Checks
     runs-on: ubuntu-latest
     timeout-minutes: 15
+    needs: changes
+    if: needs.changes.outputs.frontend == 'true'
 
     steps:
       - name: Checkout code
-        uses: actions/checkout@v4
+        uses: actions/checkout@v5
 
       - name: Setup Node.js
-        uses: actions/setup-node@v4
+        uses: actions/setup-node@v6
         with:
           node-version: '24'
           cache: 'npm'
@@ -243,7 +278,7 @@ jobs:
 
       - name: Upload frontend coverage
         if: always()
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: frontend-coverage
           path: frontend/coverage/lcov.info
@@ -257,11 +292,13 @@ jobs:
     name: Docker Build Validation
     runs-on: ubuntu-latest
     timeout-minutes: 20
-    if: github.event_name == 'pull_request'  # Only run on PRs, not master pushes
+    needs: changes
+    # Only validate image builds on PRs, and only when code actually changed
+    if: github.event_name == 'pull_request' && (needs.changes.outputs.backend == 'true' || needs.changes.outputs.frontend == 'true')
 
     steps:
       - name: Checkout code
-        uses: actions/checkout@v4
+        uses: actions/checkout@v5
 
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v3
@@ -290,20 +327,23 @@ jobs:
     name: Upload Coverage to Codecov
     runs-on: ubuntu-latest
     needs: [backend-tests, frontend-tests]
-    if: github.event_name == 'pull_request'
+    # Run on PRs whenever at least one test job actually produced coverage
+    if: always() && github.event_name == 'pull_request' && (needs.backend-tests.result == 'success' || needs.frontend-tests.result == 'success')
 
     steps:
       - name: Checkout code
-        uses: actions/checkout@v4
+        uses: actions/checkout@v5
 
       - name: Download backend coverage
-        uses: actions/download-artifact@v4
+        if: needs.backend-tests.result == 'success'
+        uses: actions/download-artifact@v8
         with:
           name: backend-coverage
           path: coverage/backend
 
       - name: Download frontend coverage
-        uses: actions/download-artifact@v4
+        if: needs.frontend-tests.result == 'success'
+        uses: actions/download-artifact@v8
         with:
           name: frontend-coverage
           path: coverage/frontend
@@ -319,27 +359,38 @@ jobs:
   ci-success:
     name: CI Pipeline Success
     runs-on: ubuntu-latest
-    needs: [backend-tests, backend-clippy, backend-audit, frontend-tests, docker-build]
+    needs: [changes, backend-tests, backend-clippy, backend-audit, frontend-tests, docker-build]
     if: always()
 
     steps:
       - name: Check CI status
         run: |
-          # docker-build is skipped on master pushes, so check if it ran
-          DOCKER_RESULT="${{ needs.docker-build.result }}"
+          # 'success' and 'skipped' are acceptable (skipped == that area didn't
+          # change). Only 'failure'/'cancelled' fail the gate.
+          fail=0
+          check() {
+            if [ "$2" != "success" ] && [ "$2" != "skipped" ]; then
+              echo "❌ $1: $2"; fail=1
+            else
+              echo "✅ $1: $2"
+            fi
+          }
 
-          if [ "${{ needs.backend-tests.result }}" != "success" ] || \
-             [ "${{ needs.backend-clippy.result }}" != "success" ] || \
-             [ "${{ needs.backend-audit.result }}" != "success" ] || \
-             [ "${{ needs.frontend-tests.result }}" != "success" ]; then
+          # The change detector itself must succeed (skipped is not valid here).
+          if [ "${{ needs.changes.result }}" != "success" ]; then
+            echo "❌ changes: ${{ needs.changes.result }}"; fail=1
+          else
+            echo "✅ changes: ${{ needs.changes.result }}"
+          fi
+
+          check "backend-tests"  "${{ needs.backend-tests.result }}"
+          check "backend-clippy" "${{ needs.backend-clippy.result }}"
+          check "backend-audit"  "${{ needs.backend-audit.result }}"
+          check "frontend-tests" "${{ needs.frontend-tests.result }}"
+          check "docker-build"   "${{ needs.docker-build.result }}"
+
+          if [ "$fail" = "1" ]; then
             echo "❌ CI pipeline failed"
             exit 1
           fi
-
-          # Only check docker-build if it ran (on PRs)
-          if [ "$DOCKER_RESULT" != "" ] && [ "$DOCKER_RESULT" != "success" ] && [ "$DOCKER_RESULT" != "skipped" ]; then
-            echo "❌ Docker build failed"
-            exit 1
-          fi
-
           echo "✅ CI pipeline passed"
