@@ -36,7 +36,8 @@ defineProps<{
 
 <style scoped>
 .song-card {
-  display: flex;
+  display: grid;
+  grid-template-columns: auto 1fr;
   gap: 1rem;
   padding: 1rem;
   background: #ffffff;
@@ -51,13 +52,12 @@ defineProps<{
   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.12);
 }
 
-/* Art stretches to the content height so its bottom is flush with the player. */
+/* Square cover sized to the card's content height. Grid gives the cell a
+   definite height, so aspect-ratio yields a real square (flush, no crop). */
 .song-art-link {
-  flex-shrink: 0;
-  align-self: stretch;
-  width: 7rem;
-  min-height: 6rem;
   position: relative;
+  height: 100%;
+  aspect-ratio: 1 / 1;
   overflow: hidden;
   border-radius: 0.375rem;
   border: 1px solid #cbd5e1;
