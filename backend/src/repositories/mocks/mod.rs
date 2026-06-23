@@ -1,5 +1,6 @@
 pub mod mock_access_request_repository;
 pub mod mock_admin_repository;
+pub mod mock_audio_storage;
 pub mod mock_blog_repository;
 pub mod mock_email_suppression_repository;
 pub mod mock_image_storage;
@@ -8,6 +9,7 @@ pub mod mock_password_reset_token_repository;
 pub mod mock_phrase_repository;
 pub mod mock_pkce_storage;
 pub mod mock_refresh_token_repository;
+pub mod mock_song_repository;
 pub mod mock_unsubscribe_token_repository;
 pub mod mock_user_credentials_repository;
 pub mod mock_user_external_login_repository;
@@ -18,6 +20,7 @@ pub mod mock_verification_token_repository;
 
 pub use mock_access_request_repository::MockAccessRequestRepository;
 pub use mock_admin_repository::MockAdminRepository;
+pub use mock_audio_storage::MockAudioStorage;
 pub use mock_blog_repository::MockBlogRepository;
 #[allow(unused_imports)]
 pub use mock_email_suppression_repository::MockEmailSuppressionRepository;
@@ -27,6 +30,7 @@ pub use mock_password_reset_token_repository::MockPasswordResetTokenRepository;
 pub use mock_phrase_repository::MockPhraseRepository;
 pub use mock_pkce_storage::MockPkceStorage;
 pub use mock_refresh_token_repository::MockRefreshTokenRepository;
+pub use mock_song_repository::MockSongRepository;
 #[allow(unused_imports)]
 pub use mock_unsubscribe_token_repository::MockUnsubscribeTokenRepository;
 pub use mock_user_credentials_repository::MockUserCredentialsRepository;

@@ -4,6 +4,7 @@ pub mod blog;
 pub mod data_export;
 pub mod feed;
 pub mod incident_timer;
+pub mod music;
 pub mod phrase;
 pub mod user;
 
@@ -12,5 +13,6 @@ pub use admin::*;
 pub use blog::*;
 pub use feed::*;
 pub use incident_timer::*;
+pub use music::*;
 pub use phrase::*;
 pub use user::*;

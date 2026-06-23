@@ -32,3 +32,6 @@ export * from './ui'
 
 // Blog types
 export * from './blog'
+
+// Music types
+export * from './music'

@@ -503,6 +503,22 @@ impl TestContextBuilder {
                 .expect("Failed to build BlogService"),
         );
 
+        // Create music service for API testing
+        use backend::repositories::mocks::MockAudioStorage;
+        use backend::repositories::postgres::postgres_song_repository::PostgresSongRepository;
+        use backend::services::music::MusicService;
+
+        let music_service = Arc::new(
+            MusicService::builder()
+                .with_repository(Box::new(PostgresSongRepository::new(
+                    test_container.pool.clone(),
+                )))
+                .with_audio_storage(Box::new(MockAudioStorage::new()))
+                .with_image_storage(Box::new(MockImageStorage::new()))
+                .build()
+                .expect("Failed to build MusicService"),
+        );
+
         // Create feed service for API testing
         use backend::services::feed::FeedService;
 
@@ -523,6 +539,7 @@ impl TestContextBuilder {
         let container = ServiceContainer {
             auth_service,
             blog_service,
+            music_service,
             feed_service,
             incident_timer_service,
             phrase_service,
@@ -542,6 +559,7 @@ impl TestContextBuilder {
                 .app_data(web::Data::new(pool_clone.clone()))
                 .app_data(web::Data::from(container.auth_service.clone()))
                 .app_data(web::Data::from(container.blog_service.clone()))
+                .app_data(web::Data::from(container.music_service.clone()))
                 .app_data(web::Data::from(container.feed_service.clone()))
                 .app_data(web::Data::from(container.incident_timer_service.clone()))
                 .app_data(web::Data::from(container.phrase_service.clone()))

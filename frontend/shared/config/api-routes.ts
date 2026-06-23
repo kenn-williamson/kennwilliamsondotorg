@@ -44,6 +44,10 @@ export const API_ROUTES = {
       TAGS: '/public/blog/tags',
       FEED: '/public/blog/feed.xml',
     },
+    MUSIC: {
+      SONGS: '/public/music/songs',
+      SONG_BY_SLUG: (slug: string) => `/public/music/songs/${slug}`,
+    },
     EMAIL: {
       UNSUBSCRIBE: '/public/email/unsubscribe',
     },
@@ -114,6 +118,12 @@ export const API_ROUTES = {
         POSTS: '/protected/admin/blog/posts',
         POST_BY_ID: (id: string) => `/protected/admin/blog/posts/${id}`,
         UPLOAD_IMAGE: '/protected/admin/blog/upload-image',
+      },
+      MUSIC: {
+        SONGS: '/protected/admin/music/songs',
+        SONG_BY_ID: (id: string) => `/protected/admin/music/songs/${id}`,
+        UPLOAD_AUDIO: '/protected/admin/music/upload-audio',
+        UPLOAD_ARTWORK: '/protected/admin/music/upload-artwork',
       },
     },
   },
