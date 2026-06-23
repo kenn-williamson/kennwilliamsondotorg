@@ -1,8 +1,9 @@
 name: CI Pipeline
 
+# PR-gated CI: runs only on pull requests targeting master. Code reaches
+# master exclusively through PRs, so the PR run is the gate and there is no
+# redundant post-merge re-run of the same tree.
 on:
-  push:
-    branches: [master]
   pull_request:
     branches: [master]
 
@@ -17,10 +18,10 @@ env:
 
 jobs:
   # Detect which areas changed so we only run the heavy jobs that matter.
-  # The workflow ALWAYS runs (so the required "CI Pipeline Success" check always
-  # reports), but backend/frontend jobs skip when their area is untouched.
-  # Release-please/docs-only commits touch neither area -> heavy jobs skip and
-  # ci-success passes in seconds.
+  # The workflow runs on every PR (so the "CI Pipeline Success" check always
+  # reports and can be made a required check), but backend/frontend jobs skip
+  # when their area is untouched. Release-please/docs-only PRs touch neither
+  # area -> heavy jobs skip and ci-success passes in seconds.
   changes:
     name: Detect changes
     runs-on: ubuntu-latest
