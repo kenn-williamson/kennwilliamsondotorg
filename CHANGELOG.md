@@ -1,5 +1,13 @@
 # Changelog
 
+## [1.10.0](https://github.com/kenn-williamson/kennwilliamsondotorg/compare/v1.9.4...v1.10.0) (2026-06-23)
+
+
+### Features
+
+* **music:** add music section with S3-streamed audio player ([#29](https://github.com/kenn-williamson/kennwilliamsondotorg/issues/29)) ([8f69253](https://github.com/kenn-williamson/kennwilliamsondotorg/commit/8f69253d77490b706718d1d89a7f4f36746e3938))
+* **nav:** show Incidents link to logged-in users only ([#28](https://github.com/kenn-williamson/kennwilliamsondotorg/issues/28)) ([80ef3aa](https://github.com/kenn-williamson/kennwilliamsondotorg/commit/80ef3aa6eb58fd58531acbd31d48812716dcc692))
+
 ## [1.9.4](https://github.com/kenn-williamson/kennwilliamsondotorg/compare/v1.9.3...v1.9.4) (2026-05-25)
 
 
