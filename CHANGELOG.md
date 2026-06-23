@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.12.0](https://github.com/kenn-williamson/kennwilliamsondotorg/compare/v1.11.0...v1.12.0) (2026-06-23)
+
+
+### Features
+
+* **music:** player download button + card layout fixes ([#35](https://github.com/kenn-williamson/kennwilliamsondotorg/issues/35)) ([02e969c](https://github.com/kenn-williamson/kennwilliamsondotorg/commit/02e969c00fb586e0c3e4dd1c136307ff919e932c))
+
 ## [1.11.0](https://github.com/kenn-williamson/kennwilliamsondotorg/compare/v1.10.0...v1.11.0) (2026-06-23)
 
 
