@@ -17,7 +17,6 @@
     <div class="song-info">
       <div class="song-header">
         <NuxtLink :to="`/music/${song.slug}`" class="song-title">{{ song.title }}</NuxtLink>
-        <span v-if="song.duration_seconds" class="song-duration">{{ formatDuration(song.duration_seconds) }}</span>
       </div>
 
       <p v-if="song.description" class="song-desc">{{ song.description }}</p>
@@ -33,12 +32,6 @@ import type { Song } from '#shared/types'
 defineProps<{
   song: Song
 }>()
-
-const formatDuration = (seconds: number): string => {
-  const m = Math.floor(seconds / 60)
-  const s = Math.floor(seconds % 60)
-  return `${m}:${s.toString().padStart(2, '0')}`
-}
 </script>
 
 <style scoped>
@@ -58,16 +51,24 @@ const formatDuration = (seconds: number): string => {
   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.12);
 }
 
+/* Art stretches to the content height so its bottom is flush with the player. */
 .song-art-link {
   flex-shrink: 0;
+  align-self: stretch;
+  width: 7rem;
+  min-height: 6rem;
+  position: relative;
+  overflow: hidden;
+  border-radius: 0.375rem;
+  border: 1px solid #cbd5e1;
 }
 
 .song-art {
-  width: 6rem;
-  height: 6rem;
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
   object-fit: cover;
-  border-radius: 0.375rem;
-  border: 1px solid #cbd5e1;
 }
 
 .song-art--placeholder {
@@ -103,13 +104,6 @@ const formatDuration = (seconds: number): string => {
 
 .song-title:hover {
   color: #1d4ed8; /* primary-700 */
-}
-
-.song-duration {
-  flex-shrink: 0;
-  font-size: 0.8125rem;
-  font-variant-numeric: tabular-nums;
-  color: #64748b;
 }
 
 .song-desc {

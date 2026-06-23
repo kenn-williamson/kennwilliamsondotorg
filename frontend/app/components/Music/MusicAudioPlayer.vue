@@ -36,6 +36,23 @@
       <p v-if="!src" class="player-unavailable">Audio coming soon</p>
     </div>
 
+    <button
+      v-if="src"
+      type="button"
+      class="download-btn"
+      :disabled="downloading"
+      :aria-label="`Download ${title}`"
+      :title="`Download ${title}`"
+      @click="downloadTrack"
+    >
+      <svg v-if="!downloading" class="download-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" aria-hidden="true">
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v2a2 2 0 002 2h12a2 2 0 002-2v-2M7 10l5 5 5-5M12 15V3" />
+      </svg>
+      <svg v-else class="download-icon download-spinner" viewBox="0 0 24 24" fill="none" stroke="currentColor" aria-hidden="true">
+        <circle cx="12" cy="12" r="9" stroke-width="2" stroke-dasharray="42" stroke-linecap="round" />
+      </svg>
+    </button>
+
     <audio
       v-if="src"
       ref="audioRef"
@@ -79,6 +96,37 @@ const togglePlay = () => {
     void el.play()
   } else {
     el.pause()
+  }
+}
+
+const downloading = ref(false)
+
+const downloadTrack = async () => {
+  const src = props.src
+  if (!src || downloading.value) return
+  downloading.value = true
+  try {
+    // Fetch (allowed by the bucket CORS) so we can save with a clean filename
+    // instead of opening the raw S3 object inline.
+    const res = await fetch(src)
+    if (!res.ok) throw new Error(`HTTP ${res.status}`)
+    const blob = await res.blob()
+    const objectUrl = URL.createObjectURL(blob)
+    const clean = src.split('?')[0] ?? src
+    const ext = clean.split('.').pop() || 'mp3'
+    const a = document.createElement('a')
+    a.href = objectUrl
+    a.download = `${props.title}.${ext}`
+    document.body.appendChild(a)
+    a.click()
+    a.remove()
+    URL.revokeObjectURL(objectUrl)
+  } catch (err) {
+    // Fallback: open the file so the user can still save it manually
+    console.error('Download failed, opening in a new tab:', err)
+    window.open(src, '_blank', 'noopener')
+  } finally {
+    downloading.value = false
   }
 }
 
@@ -163,6 +211,46 @@ const formatTime = (seconds: number): string => {
 .play-icon {
   width: 1.5rem;
   height: 1.5rem;
+}
+
+.download-btn {
+  flex-shrink: 0;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 2.25rem;
+  height: 2.25rem;
+  border-radius: 9999px;
+  border: 1px solid rgba(148, 163, 184, 0.4);
+  background: transparent;
+  color: #94a3b8;
+  transition: all 0.2s ease;
+}
+
+.download-btn:hover:not(:disabled) {
+  color: #67e8f9;
+  border-color: rgba(103, 232, 249, 0.6);
+  background: rgba(103, 232, 249, 0.08);
+}
+
+.download-btn:disabled {
+  opacity: 0.6;
+  cursor: progress;
+}
+
+.download-icon {
+  width: 1.1rem;
+  height: 1.1rem;
+}
+
+.download-spinner {
+  animation: spin 0.8s linear infinite;
+}
+
+@keyframes spin {
+  to {
+    transform: rotate(360deg);
+  }
 }
 
 .player-body {
