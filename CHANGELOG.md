@@ -1,5 +1,17 @@
 # Changelog
 
+## [1.11.0](https://github.com/kenn-williamson/kennwilliamsondotorg/compare/v1.10.0...v1.11.0) (2026-06-23)
+
+
+### Features
+
+* **music:** pre-fill admin editor from uploaded audio metadata ([#33](https://github.com/kenn-williamson/kennwilliamsondotorg/issues/33)) ([3210446](https://github.com/kenn-williamson/kennwilliamsondotorg/commit/3210446099461c7163f00674cffe8d6e0dec1fe2))
+
+
+### Bug Fixes
+
+* **home,music:** music-forward homepage; drop em dashes from music copy ([#32](https://github.com/kenn-williamson/kennwilliamsondotorg/issues/32)) ([cc0fd0b](https://github.com/kenn-williamson/kennwilliamsondotorg/commit/cc0fd0b980b31d454a4f6c78ea3cb4a22e6daf92))
+
 ## [1.10.0](https://github.com/kenn-williamson/kennwilliamsondotorg/compare/v1.9.4...v1.10.0) (2026-06-23)
 
 
