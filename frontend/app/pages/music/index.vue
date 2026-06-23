@@ -12,7 +12,7 @@
           <header class="mb-8">
             <h1 class="text-4xl sm:text-5xl font-bold text-primary-900 mb-4">Music</h1>
             <p class="text-lg text-nautical-700">
-              Songs I've been making — written and directed by me, brought to life with AI, with my own vocals on a few.
+              Songs I've been making. Written and directed by me, brought to life with AI, with my own vocals on a few.
             </p>
           </header>
 
@@ -43,7 +43,7 @@
               <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M9 18V5l12-2v13M9 18a3 3 0 11-6 0 3 3 0 016 0zm12-2a3 3 0 11-6 0 3 3 0 016 0z" />
             </svg>
             <h2 class="text-2xl font-bold text-nautical-800 mb-2">No tracks yet</h2>
-            <p class="text-nautical-600">New songs are on the way — check back soon!</p>
+            <p class="text-nautical-600">New songs are on the way. Check back soon!</p>
           </div>
 
           <!-- Songs List -->
@@ -80,7 +80,7 @@ useHead({
   meta: [
     {
       name: 'description',
-      content: 'Original songs by Kenn Williamson — written and directed by Kenn, produced with AI.'
+      content: 'Original songs by Kenn Williamson, written and directed by Kenn, produced with AI.'
     }
   ]
 })
@@ -89,7 +89,7 @@ useHead({
 const { useSocialShare } = await import('~/composables/useSocialShare')
 useSocialShare({
   title: 'Music - Kenn Williamson',
-  description: 'Original songs — written and directed by Kenn, produced with AI.'
+  description: 'Original songs written and directed by Kenn, produced with AI.'
 })
 </script>
 

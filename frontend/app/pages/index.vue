@@ -64,10 +64,10 @@
             See How It's Built
           </NuxtLink>
           <NuxtLink
-            to="/incidents"
+            to="/music"
             class="px-8 py-3 bg-nautical-700 hover:bg-nautical-600 text-white font-semibold rounded-lg shadow-lg transition-all duration-200 transform hover:scale-105"
           >
-            Try Incident Timers
+            Listen to My Music
           </NuxtLink>
         </div>
       </div>
@@ -160,26 +160,26 @@
             </NuxtLink>
           </div>
 
-          <!-- Incident Timer Card -->
+          <!-- Music Card -->
           <div class="group bg-gradient-to-br from-sky-50 to-primary-50 rounded-lg p-8 shadow-lg hover:shadow-xl transition-all duration-300 border-2 border-sky-200 hover:border-primary-400">
             <div class="flex items-center mb-4">
-              <!-- Clock Icon -->
+              <!-- Music Note Icon -->
               <svg class="w-12 h-12 text-primary-600 mr-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 18V5l12-2v13M9 18a3 3 0 11-6 0 3 3 0 016 0zm12-2a3 3 0 11-6 0 3 3 0 016 0z"/>
               </svg>
               <h3 class="text-2xl font-bold text-nautical-900">
-                Incident Timer
+                Music
               </h3>
             </div>
             <p class="text-nautical-700 mb-6">
-              Track time since last incidents with a steampunk-themed UI. A practical tool with
-              full CRUD operations, public sharing, and beautiful design. Proof that I build things.
+              Original songs I've been making. Written and directed by me, brought to life with AI,
+              with my own vocals on a few. Have a listen.
             </p>
             <NuxtLink
-              to="/incidents"
+              to="/music"
               class="text-primary-600 hover:text-primary-700 font-semibold underline"
             >
-              Try It Live →
+              Listen →
             </NuxtLink>
           </div>
 
@@ -319,10 +319,10 @@
             See How It's Built
           </NuxtLink>
           <NuxtLink
-            to="/incidents"
+            to="/music"
             class="px-8 py-3 bg-nautical-700 hover:bg-nautical-600 text-white font-semibold rounded-lg shadow-lg transition-all duration-200 transform hover:scale-105"
           >
-            Try Incident Timers
+            Listen to My Music
           </NuxtLink>
         </div>
       </div>
