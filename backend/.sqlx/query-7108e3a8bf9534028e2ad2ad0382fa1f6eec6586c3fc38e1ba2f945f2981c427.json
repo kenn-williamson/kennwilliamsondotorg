@@ -1,0 +1,28 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "\n                SELECT tag AS \"tag!\", COUNT(*) AS \"count!\"\n                FROM blog_posts, UNNEST(tags) AS tag\n                WHERE status = $1\n                GROUP BY tag\n                ORDER BY COUNT(*) DESC, tag\n                ",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "tag!",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 1,
+        "name": "count!",
+        "type_info": "Int8"
+      }
+    ],
+    "parameters": {
+      "Left": [
+        "Text"
+      ]
+    },
+    "nullable": [
+      null,
+      null
+    ]
+  },
+  "hash": "7108e3a8bf9534028e2ad2ad0382fa1f6eec6586c3fc38e1ba2f945f2981c427"
+}
