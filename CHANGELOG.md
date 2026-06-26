@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.12.2](https://github.com/kenn-williamson/kennwilliamsondotorg/compare/v1.12.1...v1.12.2) (2026-06-26)
+
+
+### Bug Fixes
+
+* **music:** responsive song card layout on mobile ([2dc621b](https://github.com/kenn-williamson/kennwilliamsondotorg/commit/2dc621bc67cb90a54a0a4a332cfb14dbdac1527d))
+
 ## [1.12.1](https://github.com/kenn-williamson/kennwilliamsondotorg/compare/v1.12.0...v1.12.1) (2026-06-23)
 
 
