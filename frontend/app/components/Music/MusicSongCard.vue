@@ -20,9 +20,9 @@
       </div>
 
       <p v-if="song.description" class="song-desc">{{ song.description }}</p>
-
-      <MusicAudioPlayer :id="song.id" :src="song.audio_url" :title="song.title" />
     </div>
+
+    <MusicAudioPlayer class="song-player" :id="song.id" :src="song.audio_url" :title="song.title" />
   </article>
 </template>
 
@@ -35,10 +35,18 @@ defineProps<{
 </script>
 
 <style scoped>
+/* Mobile-first: a compact thumbnail + title/description sit on top, with the
+   audio player on its own full-width row below so its controls never get
+   crushed. At sm and up the artwork becomes a square spanning the full card
+   height beside the stacked title/desc/player (see the media query). */
 .song-card {
   display: grid;
-  grid-template-columns: auto 1fr;
-  gap: 1rem;
+  grid-template-columns: 4.5rem 1fr;
+  grid-template-areas:
+    'art info'
+    'player player';
+  column-gap: 0.875rem;
+  row-gap: 0.875rem;
   padding: 1rem;
   background: #ffffff;
   border: 1px solid #e2e8f0; /* nautical-200 */
@@ -52,11 +60,14 @@ defineProps<{
   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.12);
 }
 
-/* Square cover sized to the card's content height. Grid gives the cell a
-   definite height, so aspect-ratio yields a real square (flush, no crop). */
+/* Square cover. On mobile the grid column fixes its width; on sm+ the art
+   spans both rows so the cell height is definite and aspect-ratio yields a
+   real square (flush, no crop). */
 .song-art-link {
+  grid-area: art;
   position: relative;
-  height: 100%;
+  width: 100%;
+  height: auto;
   aspect-ratio: 1 / 1;
   overflow: hidden;
   border-radius: 0.375rem;
@@ -80,11 +91,15 @@ defineProps<{
 }
 
 .song-info {
-  flex: 1;
+  grid-area: info;
   min-width: 0;
   display: flex;
   flex-direction: column;
   gap: 0.5rem;
+}
+
+.song-player {
+  grid-area: player;
 }
 
 .song-header {
@@ -113,5 +128,23 @@ defineProps<{
   -webkit-line-clamp: 2;
   -webkit-box-orient: vertical;
   overflow: hidden;
+}
+
+@media (min-width: 640px) {
+  .song-card {
+    grid-template-columns: auto 1fr;
+    grid-template-areas:
+      'art info'
+      'art player';
+    column-gap: 1rem;
+    row-gap: 0.5rem;
+  }
+
+  /* Art spans both rows, so its height is the full card content height;
+     aspect-ratio derives the matching width for a flush square. */
+  .song-art-link {
+    width: auto;
+    height: 100%;
+  }
 }
 </style>
