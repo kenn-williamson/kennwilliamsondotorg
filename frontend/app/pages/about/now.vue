@@ -38,7 +38,7 @@
     <h3>Aurora Maeve (Rory)</h3>
 
     <p>
-      Rory is my oldest at 10, and she's like the girl version of me in so many ways. I
+      Rory is my oldest at {{ roryAge }}, and she's like the girl version of me in so many ways. I
       see myself in her constantly. She has a tendency to ask lots of questions,
       especially precocious ones that can be a little uncomfortable for the person she's
       asking. She has no filter yet, no understanding of how a question might land. I
@@ -114,7 +114,7 @@
     <h3>Charlotte Ann (Charlie)</h3>
 
     <p>
-      Charlie is 9 and is so much like my mom. I'm not a social butterfly, so it's a
+      Charlie is {{ charlieAge }} and is so much like my mom. I'm not a social butterfly, so it's a
       little hard for me to fully understand how she does it, but she seems to make
       friends everywhere she goes easily. She's very friendly, very good about
       greeting people. Strangers, people she doesn't know. Just very emotionally
@@ -182,7 +182,7 @@
     <h3>Theodore Lysander (Teddy)</h3>
 
     <p>
-      Teddy is 5 and has
+      Teddy is {{ teddyAge }} and has
       <SteampunkTooltip :clickable="true" placement="top">
         <template #default>
           <span>level three autism</span>
@@ -669,10 +669,19 @@
 
 <script setup>
 import AboutLayout from "~/components/About/AboutLayout.vue";
+import { ageFromYearMonth } from "~/utils/age";
+import { BIRTHDAYS } from "~/constants/birthdays";
 
 definePageMeta({
   middleware: 'trusted-contact'
 })
+
+// Ages are computed from birth year+month at render time (birth day omitted for
+// privacy). Seed "now" on the server so SSR and client hydration agree.
+const now = new Date(useState("about:now", () => Date.now()).value);
+const roryAge = ageFromYearMonth(BIRTHDAYS.rory, now);
+const charlieAge = ageFromYearMonth(BIRTHDAYS.charlie, now);
+const teddyAge = ageFromYearMonth(BIRTHDAYS.teddy, now);
 
 useHead({
   title: "Life Now - Kenn Williamson",
