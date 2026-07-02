@@ -377,8 +377,8 @@ import { ageFromYearMonth } from "~/utils/age";
 import { BIRTHDAYS } from "~/constants/birthdays";
 
 // Computed from birth year+month at render time so it never goes stale.
-// Seed "now" on the server so SSR and client hydration agree.
-const now = new Date(useState("about:now", () => Date.now()).value);
+// useAboutNow() provides a shared, SSR-safe reference instant.
+const now = useAboutNow();
 const kennAge = ageFromYearMonth(BIRTHDAYS.kenn, now);
 // Format in UTC so SSR and client agree (and so it flips on the same boundary
 // as the age above, which is UTC-based).

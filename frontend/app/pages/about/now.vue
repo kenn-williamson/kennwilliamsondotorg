@@ -677,8 +677,8 @@ definePageMeta({
 })
 
 // Ages are computed from birth year+month at render time (birth day omitted for
-// privacy). Seed "now" on the server so SSR and client hydration agree.
-const now = new Date(useState("about:now", () => Date.now()).value);
+// privacy). useAboutNow() provides a shared, SSR-safe reference instant.
+const now = useAboutNow();
 const roryAge = ageFromYearMonth(BIRTHDAYS.rory, now);
 const charlieAge = ageFromYearMonth(BIRTHDAYS.charlie, now);
 const teddyAge = ageFromYearMonth(BIRTHDAYS.teddy, now);
