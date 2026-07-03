@@ -12,9 +12,10 @@
     <h2>Present Tense</h2>
 
     <p>
-      I'm a single dad to three remarkable kids: Rory (10), Charlie (9), and Teddy
-      (5). By day, I'm an Enterprise Architect at SEQTEK, building software
-      systems and helping companies navigate the AI revolution with a healthy dose of
+      I'm a single dad to three remarkable kids: Rory ({{ roryAge }}), Charlie
+      ({{ charlieAge }}), and Teddy ({{ teddyAge }}). By day, I'm an Enterprise
+      Architect at SEQTEK, building software systems and helping companies
+      navigate the AI revolution with a healthy dose of
       realism. By calling, I'm a disciple of Christ trying to figure out what it means
       to walk in love, exploring theological territory that most people haven't heard of
       and many would find strange.
@@ -31,9 +32,8 @@
     </p>
 
     <p>
-      I'm also looking for the right person to share life with, though I've learned that
-      "right" means Kingdom-oriented, traditionally-minded, and mutually attracted. It's
-      a combination that dating apps haven't been able to deliver.
+      I'm also looking for the right person to share life with — someone dating apps
+      haven't quite been able to deliver.
     </p>
 
     <p>
@@ -280,8 +280,17 @@
 import AboutLayout from "~/components/About/AboutLayout.vue";
 import SteampunkTooltip from "~/components/Steampunk/SteampunkTooltip.vue";
 import AccessPrompt from "~/components/About/AccessPrompt.vue";
+import { ageFromYearMonth } from "~/utils/age";
+import { BIRTHDAYS } from "~/constants/birthdays";
 
 const { hasTrustedContactAccess } = useUserRoles()
+
+// Ages are computed from birth year+month at render time (birth day omitted for
+// privacy). useAboutNow() provides a shared, SSR-safe reference instant.
+const now = useAboutNow();
+const roryAge = ageFromYearMonth(BIRTHDAYS.rory, now);
+const charlieAge = ageFromYearMonth(BIRTHDAYS.charlie, now);
+const teddyAge = ageFromYearMonth(BIRTHDAYS.teddy, now);
 
 useHead({
   title: "About Kenn Williamson",
