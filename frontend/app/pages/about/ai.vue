@@ -81,9 +81,9 @@
     <h2>Intelligence Augmentation: What We're Actually Building</h2>
 
     <p>
-      Intelligence Augmentation (IA) isn't just a rebranding of "AI used responsibly." It's
-      a fundamentally different framework that recognizes these systems as tools for amplifying
-      human capabilities, not substitutes for human judgment. Here's what that means in practice:
+      Intelligence Augmentation (IA) is more than a rebranding of "AI used responsibly." It's
+      a fundamentally different framework: these systems are tools for amplifying human
+      capabilities, not substitutes for human judgment. Here's what that means in practice:
     </p>
 
     <h3>What Generative Models (GMs) Are Good At</h3>
@@ -191,8 +191,8 @@
     <h2>The Real Transformation: Intelligence Augmentation in Practice</h2>
 
     <p>
-      What excites me about IA isn't that technology will replace human expertise. It's that
-      Intelligence Augmentation will transform what human experts can accomplish.
+      What excites me about IA is that it transforms what human experts can accomplish, not
+      that technology will eventually replace them.
     </p>
 
     <h3>The Productivity Multiplier</h3>
@@ -316,7 +316,7 @@
       </li>
       <li>
         <strong>Sound judgment</strong> - Knowing when to trust GM output and when to question it.
-        Developing processes for leveraging IA while maintaining quality.
+        Developing processes for using IA while maintaining quality.
       </li>
     </ul>
 
@@ -419,7 +419,7 @@
         Successful organizations have mastered Intelligence Augmentation. They've figured out
         the optimal division of labor between GMs and human judgment
       </li>
-      <li>Professional roles evolve to emphasize human strengths while leveraging IA</li>
+      <li>Professional roles evolve to emphasize human strengths while using IA</li>
     </ul>
 
     <p><strong>Long term (7+ years):</strong></p>
@@ -444,7 +444,7 @@
 
     <p>
       The future belongs to people who practice Intelligence Augmentation effectively:
-      those who leverage GMs while maintaining the human capabilities that GMs can't
+      those who use GMs while maintaining the human capabilities that GMs can't
       replicate (judgment, creativity, communication, understanding context, asking the
       right questions).
     </p>

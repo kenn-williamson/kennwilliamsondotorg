@@ -46,11 +46,10 @@
         placement="top"
       >
         <span>theosis</span> </SteampunkTooltip
-      >: that God became man so that man might become god. This isn't about humans
-      literally becoming divine. It's about participating in God's nature, being
-      transformed into His likeness. The Incarnation isn't just about fixing a legal
-      problem (satisfying divine justice). It's about God entering into creation to
-      transform it from within.
+      >: that God became man so that man might become god. Theosis means participating in
+      God's nature, being transformed into His likeness, not literally becoming divine.
+      And the Incarnation is about God entering into creation to transform it from
+      within, not just fixing a legal problem (satisfying divine justice).
     </p>
 
     <h3 class="clear-both">
@@ -71,10 +70,10 @@
         class="w-48 rounded-lg shadow-md float-left mr-4 mb-4"
       />
       Gregory's understanding of universal reconciliation and the transformation of
-      desire resonated deeply. He saw salvation not as escape from punishment but as
-      healing and restoration. Sin isn't primarily about breaking rules; it's about
-      disordered desires that lead us away from what's actually good for us. Salvation
-      is God reordering those desires, healing us into wholeness.
+      desire resonated deeply. He saw salvation as healing and restoration, not escape
+      from punishment. Sin is primarily about disordered desires that lead us away from
+      what's actually good for us, not about breaking rules. Salvation is God reordering
+      those desires, healing us into wholeness.
     </p>
 
     <h3 class="clear-both">
@@ -306,8 +305,8 @@
     </p>
 
     <p>
-      Jesus dies not because God needs blood to forgive, but because humans, caught in
-      mimetic rivalry and scapegoating, always kill the innocent and call it justice.
+      Jesus dies because humans, caught in mimetic rivalry and scapegoating, always kill
+      the innocent and call it justice, not because God needs blood to forgive.
       But there's a crucial difference from all other scapegoats in history: Jesus
       voluntarily enters this pattern to break it from within, and the resurrection
       vindicates him, preventing the mob's version of events from standing unchallenged.
@@ -321,8 +320,8 @@
     </p>
 
     <p>
-      God isn't demanding the sacrifice. God is the victim of the sacrifice, revealing
-      once and for all that this mechanism is built on a lie. And once revealed, the
+      God isn't demanding the sacrifice; God is its victim, revealing once and for all
+      that this mechanism is built on a lie. And once revealed, the
       mechanism loses its power. Humanity can no longer scapegoat with unconscious
       innocence.
     </p>
