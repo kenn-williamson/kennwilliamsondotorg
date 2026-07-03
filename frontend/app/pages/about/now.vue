@@ -552,12 +552,12 @@
     </p>
 
     <p>
-      Here's what I'm looking for: someone who's Kingdom-oriented, where faith is central
-      rather than peripheral. Someone bubbly, vivacious, outgoing, the kind of person
-      who's a natural connector, who can draw me out of my introverted default without
-      getting frustrated when there's resistance. I need loyalty, sincerity, earnestness,
-      someone hardworking who embodies traditional family values rather than focusing on
-      climbing the corporate ladder. I want to build something together.
+      Here's what I'm looking for: someone for whom faith matters. Someone bubbly,
+      vivacious, outgoing, the kind of person who's a natural connector, who can draw me
+      out of my introverted default without getting frustrated when there's resistance.
+      I need loyalty, sincerity, earnestness, someone hardworking who embodies
+      traditional family values rather than focusing on climbing the corporate ladder. I
+      want to build something together.
     </p>
 
     <p>
@@ -571,15 +571,15 @@
       I'm picky, and I don't apologize for that. I've learned that being with the wrong
       person is worse than being alone. So I'm working on being the best version of
       myself I can be: growing in patience, fighting my tendency to isolate, learning to
-      reach out to people despite my fear of rejection. I'm trusting that if it's God's
-      will for me to find someone, He'll bring her into my life in His timing.
+      reach out to people despite my fear of rejection. I'm trying to hold this loosely
+      and trust the timing, rather than force something that isn't ready.
     </p>
 
     <p>
       I hope that happens. I'd love to have more children. I'd love to build a life with
       someone and have a partner in this parenting journey. But I'm holding it with open
-      hands. I'm focused on being faithful with what's in front of me and loving the
-      people around me well. The rest is in God's hands.
+      hands, focused on being faithful with what's in front of me and loving the people
+      around me well.
     </p>
 
     <h2>Daily Struggles: The Ongoing Work</h2>
@@ -599,13 +599,6 @@
       especially in situations where roles aren't clear or people are acting
       ambiguously. When I'm in a clear teaching role, I do well. Otherwise, I get
       frustrated easily.
-    </p>
-
-    <p>
-      <strong>Self-control</strong>: Particularly with lust. I struggle with thinking
-      about women in sexual ways, and not having a godly outlet for that makes it
-      harder. Maybe that's a cop-out. I'm working on bringing this under control through
-      discipline and prayer.
     </p>
 
     <p>
