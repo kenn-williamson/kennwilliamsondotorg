@@ -14,11 +14,10 @@
     <p>
       I'm a single dad to three remarkable kids: Rory ({{ roryAge }}), Charlie
       ({{ charlieAge }}), and Teddy ({{ teddyAge }}). By day, I'm an Enterprise
-      Architect at SEQTEK, building software systems and helping companies
-      navigate the AI revolution with a healthy dose of
-      realism. By calling, I'm a disciple of Christ trying to figure out what it means
-      to walk in love, exploring theological territory that most people haven't heard of
-      and many would find strange.
+      Architect at SEQTEK, building software systems and helping companies cut through AI
+      hype to figure out what actually works. By calling, I'm a disciple of Christ trying
+      to figure out what it means to walk in love, exploring theological territory that
+      most people haven't heard of and many would find strange.
     </p>
 
     <p>
@@ -32,7 +31,7 @@
     </p>
 
     <p>
-      I'm also looking for the right person to share life with — someone dating apps
+      I'm also looking for the right person to share life with, someone dating apps
       haven't quite been able to deliver.
     </p>
 
@@ -85,8 +84,9 @@
     <p>
       I met my co-parent during that broken season, and we had three kids together:
       Rory, Charlie, and Teddy. They are the best things that have ever happened to me,
-      full stop. The relationship didn't last; we've been separated for over two and a
-      half years and split custody, with me having marginally more time. Teddy has
+      full stop. The relationship didn't last; we've been separated for over
+      {{ separationDuration }} years and split custody, with me having marginally more
+      time. Teddy has
       <SteampunkTooltip :clickable="true" placement="top">
         <template #default>
           <span>level three autism</span>
@@ -124,7 +124,7 @@
       The transformation didn't happen all at once. There was a hungover morning when I
       prayed, "Lord, can you save me again?" and slowly, things started to change. I
       found my way back to faith, but not the vanilla Midwestern Protestantism I grew up
-      with — discovering Jonathan Pageau's symbolic way of reading Scripture led me to
+      with. Discovering Jonathan Pageau's symbolic way of reading Scripture led me to
       Orthodox Christianity and the Church Fathers. (More on that journey, and the
       theology I've landed on, in
       <NuxtLink to="/about/faith" class="text-primary-700 hover:text-primary-900 underline"
@@ -154,8 +154,7 @@
       three kids to walk in love while figuring out what that means myself. I'm critical
       of myself in ways I'm not critical of others. I struggle with patience, with
       self-regulation, with the fear that I'm still getting it all wrong. But I'm also
-      building something. Not simply software, but a life that has purpose beyond my own
-      comfort.
+      building a life that has purpose beyond my own comfort, not just software.
     </p>
 
     <hr class="my-8 border-primary-300" />
@@ -247,9 +246,9 @@
     <p>
       I'm usually pretty reserved about myself until someone asks. Then I'm open, maybe
       too open. This is the forum for that openness. You'll find vulnerability here, but
-      not oversharing. Honesty about struggles, but not glorification of them.
-      Self-criticism balanced with recognition of growth. And throughout it all, an
-      attempt to point toward something bigger than myself: toward God, toward love,
+      not oversharing. I'm honest about my struggles without dwelling on them, and
+      self-critical without losing sight of how far I've come. Throughout it all, I'm
+      trying to point toward something bigger than myself: toward God, toward love,
       toward truth.
     </p>
 
@@ -271,8 +270,9 @@
 import AboutLayout from "~/components/About/AboutLayout.vue";
 import SteampunkTooltip from "~/components/Steampunk/SteampunkTooltip.vue";
 import AccessPrompt from "~/components/About/AccessPrompt.vue";
-import { ageFromYearMonth } from "~/utils/age";
+import { ageFromYearMonth, halfYearsSince, formatHalfYears } from "~/utils/age";
 import { BIRTHDAYS } from "~/constants/birthdays";
+import { MILESTONES } from "~/constants/milestones";
 
 const { hasTrustedContactAccess } = useUserRoles()
 
@@ -282,6 +282,7 @@ const now = useAboutNow();
 const roryAge = ageFromYearMonth(BIRTHDAYS.rory, now);
 const charlieAge = ageFromYearMonth(BIRTHDAYS.charlie, now);
 const teddyAge = ageFromYearMonth(BIRTHDAYS.teddy, now);
+const separationDuration = formatHalfYears(halfYearsSince(MILESTONES.separation, now));
 
 useHead({
   title: "About Kenn Williamson",

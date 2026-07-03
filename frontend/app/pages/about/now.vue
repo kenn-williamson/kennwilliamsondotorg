@@ -287,7 +287,7 @@
     </p>
 
     <p>
-      As Teddy's dad, I navigate grief and hope in equal measure. I grieve for uncertain
+      As Teddy's dad, I carry both grief and hope. I grieve for uncertain
       potential, wrestle with frustration and guilt, wonder what I could have done
       differently. My hope is that he can have a somewhat independent life, that he can
       find purpose and meaning, maybe love. My fear is that he'll be trapped in

@@ -287,7 +287,7 @@
     <p>
       <strong>Brent Fields (President)</strong>: When I was hired, Brent was the
       Director of Operations. He's now the President, and he's also my best friend.
-      Brent has been instrumental in teaching me how to leverage my social and
+      Brent has been instrumental in teaching me how to use my social and
       communication skills professionally. I used to have this persona of "technical
       excellence with minimal communication," but Brent showed me how to use my
       communication abilities to become a better leader. That's been crucial in my
@@ -340,7 +340,7 @@
     <p>
       <strong>IA evangelism</strong>: I'm giving talks to various industries (oil and
       gas, manufacturing, healthcare) about Intelligence Augmentation (IA) and how to
-      actually leverage these technologies effectively. (See my full thoughts on this in
+      actually use these technologies effectively. (See my full thoughts on this in
       the From AI to IA section.)
     </p>
 

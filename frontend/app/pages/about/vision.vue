@@ -9,8 +9,8 @@
     />
 
     <p>
-      The question isn't just what you believe. It's whether you're willing to live like
-      it's actually true. If you've read this far, you have a sense of who I am and
+      Believing the right things isn't the hard part. Living like they're actually true
+      is. If you've read this far, you have a sense of who I am and
       where I've been. This final section is about what I believe, what I'm working
       toward, and what I hope to leave behind.
     </p>
@@ -50,8 +50,8 @@
       >
       spell it out: love, joy, peace, patience, kindness, goodness, faithfulness,
       gentleness, self-control. This is what I'm aiming for, even though I fail at it
-      constantly. Love isn't a feeling. It's a practice, a discipline, a choice to act
-      in the best interest of others even when it costs you something.
+      constantly. Love is a practice, a discipline, a choice to act in the best interest
+      of others even when it costs you something, not just a feeling.
     </p>
 
     <p>
@@ -327,10 +327,10 @@
 
     <p>
       He tried to love people well, even though he failed often. He was honest about his
-      struggles. He didn't pretend to have it all figured out. He pointed people toward
-      Jesus, toward truth, toward beauty. He was a good father who prioritized his kids.
-      He was a good friend who genuinely cared. He tried to do his work with excellence.
-      He refused to join the mob. He kept getting back up.
+      struggles and didn't pretend to have it all figured out. He pointed people toward
+      Jesus, toward truth, toward beauty. He prioritized his kids and was a good friend
+      who genuinely cared. He did his work with excellence, refused to join the mob, and
+      kept getting back up.
     </p>
 
     <p>That would be enough. That would be a life well lived.</p>

@@ -227,8 +227,8 @@
 
     <p>
       She's dealing with her own trauma and wasn't interested in the new direction my
-      life was taking. We've been separated for over two and a half years and split
-      custody, with me having marginally more time with the kids. She's not a bad
+      life was taking. We've been separated for over {{ separationDuration }} years and
+      split custody, with me having marginally more time with the kids. She's not a bad
       person. I don't wish her any ill will. I hope she finds peace.
     </p>
 
@@ -257,7 +257,7 @@
       that I was some kind of prophet, ready to correct the church's errors before I'd
       even read the whole Bible straight through. I was insufferable about it. One
       night, going on about it to a friend, he'd finally had enough, grabbed me by the
-      throat, and started choking me. I didn't fight it — I wasn't that attached to my
+      throat, and started choking me. I didn't fight it. I wasn't that attached to my
       own life at the time, so part of me just accepted it. Another friend pulled him
       off me. It was a real wake-up call: I wasn't a prophet, I was an arrogant mess who
       needed to actually do the work instead of just feeling enlightened.
@@ -323,10 +323,17 @@
 
 <script setup>
 import AboutLayout from "~/components/About/AboutLayout.vue";
+import { halfYearsSince, formatHalfYears } from "~/utils/age";
+import { MILESTONES } from "~/constants/milestones";
 
 definePageMeta({
   middleware: 'trusted-contact'
 })
+
+// Duration is computed from year+month at render time (day omitted; see
+// ~/utils/age). useAboutNow() provides a shared, SSR-safe reference instant.
+const now = useAboutNow();
+const separationDuration = formatHalfYears(halfYearsSince(MILESTONES.separation, now));
 
 useHead({
   title: "The Wilderness - Kenn Williamson",
