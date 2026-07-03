@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.13.0](https://github.com/kenn-williamson/kennwilliamsondotorg/compare/v1.12.2...v1.13.0) (2026-07-03)
+
+
+### Features
+
+* **about:** compute family ages from birthdays ([#41](https://github.com/kenn-williamson/kennwilliamsondotorg/issues/41)) ([e766a48](https://github.com/kenn-williamson/kennwilliamsondotorg/commit/e766a4889a4d9243a032ae2e1fe12942e64152da))
+
 ## [1.12.2](https://github.com/kenn-williamson/kennwilliamsondotorg/compare/v1.12.1...v1.12.2) (2026-06-26)
 
 
