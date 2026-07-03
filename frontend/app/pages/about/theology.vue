@@ -355,7 +355,7 @@
     <p>This is where people start thinking I'm crazy, but bear with me.</p>
 
     <p>
-      I describe myself as a Christian Voluntaryist. That sounds abstract, but
+      I describe myself as a Christian Voluntarist. That sounds abstract, but
       it's simply taking Jesus seriously when He says to turn the other cheek and love
       your enemies, and applying this to all human relationships.
     </p>

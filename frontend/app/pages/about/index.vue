@@ -202,7 +202,7 @@
         >
           Theology & Practice
         </NuxtLink>: Mimetic theory, the non-sacrificial reading of the Gospel, and what Christian
-        anarchism actually means
+        Voluntarism actually means
       </li>
       <li>
         <NuxtLink
