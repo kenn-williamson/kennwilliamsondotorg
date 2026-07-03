@@ -124,9 +124,9 @@
       The transformation didn't happen all at once. There was a hungover morning when I
       prayed, "Lord, can you save me again?" and slowly, things started to change. I
       found my way back to faith, but not the vanilla Midwestern Protestantism I grew up
-      with — an unlikely chain from Jordan Peterson to Jonathan Pageau led me to Orthodox
-      Christianity and the Church Fathers. (More on that journey, and the theology I've
-      landed on, in
+      with — discovering Jonathan Pageau's symbolic way of reading Scripture led me to
+      Orthodox Christianity and the Church Fathers. (More on that journey, and the
+      theology I've landed on, in
       <NuxtLink to="/about/faith" class="text-primary-700 hover:text-primary-900 underline"
         >Finding Faith</NuxtLink
       >
@@ -249,8 +249,8 @@
       too open. This is the forum for that openness. You'll find vulnerability here, but
       not oversharing. Honesty about struggles, but not glorification of them.
       Self-criticism balanced with recognition of growth. And throughout it all, an
-      attempt to point toward something bigger than myself: toward the Kingdom, toward
-      love, toward truth.
+      attempt to point toward something bigger than myself: toward God, toward love,
+      toward truth.
     </p>
 
     <p>

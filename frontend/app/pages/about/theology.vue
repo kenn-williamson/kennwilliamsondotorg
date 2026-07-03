@@ -300,8 +300,8 @@
         </template>
         <span>non-sacrificial reading</span>
       </SteampunkTooltip>
-      says: that's backwards. God doesn't demand sacrifice. Humans demand sacrifice.
-      The crucifixion exposes humanity's scapegoating mechanism rather than
+      says: that's backwards. I've come to believe God doesn't demand sacrifice —
+      humans do. The crucifixion exposes humanity's scapegoating mechanism rather than
       participating in its logic.
     </p>
 

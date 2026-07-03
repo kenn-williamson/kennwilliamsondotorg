@@ -70,8 +70,8 @@
       >
         <span>Austrian economics</span> </SteampunkTooltip
       >. I still believe the economic analysis is largely correct. I still think free
-      markets produce better outcomes than central planning. I still think the state is
-      fundamentally a tool of violence and coercion.
+      markets produce better outcomes than central planning, and I'm skeptical of how
+      much state power should be trusted to fix things.
     </p>
 
     <p>
@@ -92,17 +92,15 @@
     </p>
 
     <p>
-      The actual problem is the people gaming the system. The oligarchy. The
-      military-banking-industrial-intelligence-silicon complex. The
+      The actual problem, as I see it, is the people gaming the system: the
       <SteampunkTooltip
         text="Rent-seeking is obtaining wealth by manipulating public policy or economic conditions without creating new wealth. Rent-seekers extract uncompensated value from others through political manipulation (subsidies, tariffs, regulations that hamper competitors) rather than productive activity. This results in economic inefficiency, reduced competition, and heightened inequality."
         placement="top"
       >
         <span>rent-seekers</span>
       </SteampunkTooltip>
-      who use state power to extract wealth without creating value. They want us
-      fighting each other over cultural issues so we don't notice what they're doing
-      economically.
+      who use state power to extract wealth without creating value, regardless of which
+      party's in charge. Tribal politics distracts from that more than it fixes it.
     </p>
 
     <p>
@@ -222,10 +220,10 @@
     </p>
 
     <p>
-      <strong>The Kingdom work</strong>: Continue taking steps toward God and His
-      kingdom, doing the work, loving the people around me. I'm open to where that
-      leads. I have many opportunities and ideas, and finding the right ones to bring to
-      fruition will be part of my spiritual journey as well as my life journey.
+      <strong>Faith and purpose</strong>: Continue taking steps toward God, doing the
+      work, loving the people around me. I'm open to where that leads. I have many
+      opportunities and ideas, and finding the right ones to bring to fruition will be
+      part of my spiritual journey as well as my life journey.
     </p>
 
     <h3>For My Kids</h3>

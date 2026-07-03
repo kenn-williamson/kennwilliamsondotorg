@@ -54,11 +54,9 @@
     </p>
 
     <p>
-      This dovetailed with my growing interest in libertarianism and Austrian economics.
-      I was reading Murray Rothbard, who was an atheist and had some choice things to
-      say about the "throne and altar," the unholy alliance between church and state. I
-      came to see organized religion as fundamentally a control grid, a way for powerful
-      people to manipulate the masses.
+      This dovetailed with a growing interest in libertarian economics and a general
+      suspicion of institutions. I came to see organized religion as just another system
+      powerful people used to manipulate the masses.
     </p>
 
     <p>
@@ -96,55 +94,22 @@
     </p>
 
     <p>
-      Around this time, I started listening to Jordan Peterson. Love him or hate him,
-      Peterson was talking about the Bible and myth and meaning in ways that made sense
-      to my analytically-minded, logic-driven brain. He was treating Scripture seriously
-      as a source of wisdom without requiring me to check my intellect at the door.
+      But the change wasn't instant or clean. I got genuinely arrogant for a while,
+      convinced I'd figured out big theological ideas before I'd actually done the work
+      to earn them — before I'd even read the whole Bible straight through. It took a
+      painful wake-up call to knock that out of me. (More on that period
+      in
+      <NuxtLink
+        to="/about/wilderness"
+        class="text-primary-700 hover:text-primary-900 underline"
+        >The Wilderness</NuxtLink
+      >.)
     </p>
-
-    <p>
-      But here's where things went wrong: I became arrogant. Dangerously arrogant. I
-      convinced myself that I was going to be a prophet of the Lord Jesus and correct
-      all the errors of the church. This was before I'd done any serious reading, before
-      I'd read through the whole Bible, before I'd engaged with the Church Fathers. I
-      was absorbing Peterson's ideas and thinking I'd figured it all out.
-    </p>
-
-    <p>
-      I was insufferable. I remember being out to lunch with my friends Harry and David,
-      fresh off Harry's failed road trip to Missouri to meet a girl who had a boyfriend.
-      We'd all told him not to go, that nothing would happen. I was being a complete
-      jerk about it, and to drive the point home, I asked our waitress to weigh in on
-      whether he ever had a chance. It was cruel and humiliating.
-    </p>
-
-    <p>
-      We went back to my house. I was playing guitar and going on about how I was going
-      to fix the church with all this stuff I'd figured out from Peterson. Then Harry
-      snapped. This guy is six-seven, six-eight, maybe 350 pounds. He jumped up, crossed
-      the room in two strides, lifted me by my throat, slammed me to the ground, and
-      started choking me to death.
-    </p>
-
-    <p>
-      I took it. I didn't fight back. I didn't resist. At the time, I wasn't that
-      enamored with my life, so I accepted that this was how it was going to end. David
-      had to physically pull Harry off me. I was legitimately on the verge of death.
-    </p>
-
-    <p>
-      Looking back, that moment showed me two things: how little I valued my own life at
-      that time, and how delusional I'd become about my supposed prophetic calling. I
-      wasn't a prophet. I was an arrogant jerk who'd read some Jordan Peterson and
-      thought he had all the answers.
-    </p>
-
-    <p>That was a wake-up call. I needed to actually do the work.</p>
 
     <h2>Doing the Work: Reading and Discovery</h2>
 
     <p>
-      After that incident, I got serious about actually understanding what I was talking
+      After that, I got serious about actually understanding what I was talking
       about. I committed to reading the entire Bible in one year using a daily reading
       plan. Not skimming, not cherry-picking favorite passages, but working through the
       whole thing systematically.
@@ -163,10 +128,9 @@
         text="Jonathan Pageau is a French-Canadian Orthodox icon carver, YouTuber, and speaker on symbolism and Eastern Orthodox Christianity. He teaches that all reality should be understood as interlocking patterns of meaning, and explores how symbolic patterns in Scripture find visual form in sacred art."
         placement="top"
       >
-        <span>Jonathan Pageau</span>
-      </SteampunkTooltip>
-      through Peterson. Pageau is an Orthodox icon carver who talks about symbolism, and
-      his work opened up entirely new ways of seeing. He showed me how to read Scripture
+        <span>Jonathan Pageau</span> </SteampunkTooltip
+      >, an Orthodox icon carver who talks about symbolism. His work opened up entirely
+      new ways of seeing. He showed me how to read Scripture
       typologically and symbolically, how patterns repeat across different scales, how
       reality itself is structured hierarchically with meaning embedded at every level.
       Suddenly the world looked different. Everything seemed layered with significance.

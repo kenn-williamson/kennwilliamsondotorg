@@ -253,6 +253,17 @@
     </p>
 
     <p>
+      One of those mistakes nearly killed me. Somewhere in there I got it into my head
+      that I was some kind of prophet, ready to correct the church's errors before I'd
+      even read the whole Bible straight through. I was insufferable about it. One
+      night, going on about it to a friend, he'd finally had enough, grabbed me by the
+      throat, and started choking me. I didn't fight it — I wasn't that attached to my
+      own life at the time, so part of me just accepted it. Another friend pulled him
+      off me. It was a real wake-up call: I wasn't a prophet, I was an arrogant mess who
+      needed to actually do the work instead of just feeling enlightened.
+    </p>
+
+    <p>
       Having kids gave me a purpose I'd been missing. I couldn't destroy myself anymore
       because I had these three little people depending on me. Becoming their father is
       the greatest gift I've ever received. Rory, Charlie, and Teddy needed a father who
