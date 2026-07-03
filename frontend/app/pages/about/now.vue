@@ -552,15 +552,6 @@
     </p>
 
     <p>
-      Here's what I'm looking for: someone for whom faith matters. Someone bubbly,
-      vivacious, outgoing, the kind of person who's a natural connector, who can draw me
-      out of my introverted default without getting frustrated when there's resistance.
-      I need loyalty, sincerity, earnestness, someone hardworking who embodies
-      traditional family values rather than focusing on climbing the corporate ladder. I
-      want to build something together.
-    </p>
-
-    <p>
       I'm attracted to women who take care of themselves and carry themselves with
       confidence. Physical chemistry matters, and I know it when I feel it. I've learned
       from past relationships that genuine mutual attraction is important. When there's
