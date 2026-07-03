@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.13.1](https://github.com/kenn-williamson/kennwilliamsondotorg/compare/v1.13.0...v1.13.1) (2026-07-03)
+
+
+### Bug Fixes
+
+* **about:** compute ages + soften partner-requirements line on About landing page ([#44](https://github.com/kenn-williamson/kennwilliamsondotorg/issues/44)) ([aa697ef](https://github.com/kenn-williamson/kennwilliamsondotorg/commit/aa697ef7d27471aaf188773ba6ac023493a048d6))
+
 ## [1.13.0](https://github.com/kenn-williamson/kennwilliamsondotorg/compare/v1.12.2...v1.13.0) (2026-07-03)
 
 
