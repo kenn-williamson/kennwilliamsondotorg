@@ -98,7 +98,7 @@
       convinced I'd figured out big theological ideas before I'd actually done the work
       to earn them — before I'd even read the whole Bible straight through. It took a
       painful wake-up call to knock that out of me. (That whole stretch gets a fuller
-      telling elsewhere on the site, for people who stick around long enough to see it.)
+      telling in a gated section of the site.)
     </p>
 
     <h2>Doing the Work: Reading and Discovery</h2>
