@@ -300,7 +300,7 @@
         </template>
         <span>non-sacrificial reading</span>
       </SteampunkTooltip>
-      says: that's backwards. I've come to believe God doesn't demand sacrifice —
+      says: that's backwards. I've come to believe God doesn't demand sacrifice;
       humans do. The crucifixion exposes humanity's scapegoating mechanism rather than
       participating in its logic.
     </p>
@@ -374,7 +374,7 @@
       I'm theologically orthodox (I affirm the creeds and read the Church Fathers),
       politically libertarian (I accept
       <SteampunkTooltip
-        text="Murray Rothbard (1926-1995) was an economist and political philosopher associated with the Austrian School. He argued that all human interactions should be voluntary and that a legitimate society requires no coercive state -- private property, free markets, and voluntary association should govern everything instead. His framework is sometimes called anarcho-capitalism."
+        text="Murray Rothbard (1926-1995) was an economist and political philosopher associated with the Austrian School. He argued that all human interactions should be voluntary and that a legitimate society requires no coercive state: private property, free markets, and voluntary association should govern everything instead. His framework is sometimes called anarcho-capitalism."
         placement="top"
       >
         <span>Rothbardian</span> </SteampunkTooltip

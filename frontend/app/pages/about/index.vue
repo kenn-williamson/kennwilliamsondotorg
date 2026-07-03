@@ -32,7 +32,7 @@
     </p>
 
     <p>
-      I'm also looking for the right person to share life with — someone dating apps
+      I'm also looking for the right person to share life with, someone dating apps
       haven't quite been able to deliver.
     </p>
 
@@ -85,8 +85,9 @@
     <p>
       I met my co-parent during that broken season, and we had three kids together:
       Rory, Charlie, and Teddy. They are the best things that have ever happened to me,
-      full stop. The relationship didn't last; we've been separated for over two and a
-      half years and split custody, with me having marginally more time. Teddy has
+      full stop. The relationship didn't last; we've been separated for over
+      {{ separationDuration }} years and split custody, with me having marginally more
+      time. Teddy has
       <SteampunkTooltip :clickable="true" placement="top">
         <template #default>
           <span>level three autism</span>
@@ -124,7 +125,7 @@
       The transformation didn't happen all at once. There was a hungover morning when I
       prayed, "Lord, can you save me again?" and slowly, things started to change. I
       found my way back to faith, but not the vanilla Midwestern Protestantism I grew up
-      with — discovering Jonathan Pageau's symbolic way of reading Scripture led me to
+      with. Discovering Jonathan Pageau's symbolic way of reading Scripture led me to
       Orthodox Christianity and the Church Fathers. (More on that journey, and the
       theology I've landed on, in
       <NuxtLink to="/about/faith" class="text-primary-700 hover:text-primary-900 underline"
@@ -271,8 +272,9 @@
 import AboutLayout from "~/components/About/AboutLayout.vue";
 import SteampunkTooltip from "~/components/Steampunk/SteampunkTooltip.vue";
 import AccessPrompt from "~/components/About/AccessPrompt.vue";
-import { ageFromYearMonth } from "~/utils/age";
+import { ageFromYearMonth, halfYearsSince, formatHalfYears } from "~/utils/age";
 import { BIRTHDAYS } from "~/constants/birthdays";
+import { MILESTONES } from "~/constants/milestones";
 
 const { hasTrustedContactAccess } = useUserRoles()
 
@@ -282,6 +284,7 @@ const now = useAboutNow();
 const roryAge = ageFromYearMonth(BIRTHDAYS.rory, now);
 const charlieAge = ageFromYearMonth(BIRTHDAYS.charlie, now);
 const teddyAge = ageFromYearMonth(BIRTHDAYS.teddy, now);
+const separationDuration = formatHalfYears(halfYearsSince(MILESTONES.separation, now));
 
 useHead({
   title: "About Kenn Williamson",
