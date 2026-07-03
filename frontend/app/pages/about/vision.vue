@@ -340,7 +340,7 @@
     <h2>Final Thoughts: Still Being Written</h2>
 
     <p>
-      This is where I am right now, at 43 years old, in October 2025. But the story
+      This is where I am right now, at {{ kennAge }} years old, in {{ currentMonthYear }}. But the story
       isn't finished. I'm still learning, still growing, still failing and getting back
       up. Still trying to figure out what it means to walk in love in a world that runs
       on violence and fear.
@@ -373,6 +373,20 @@
 <script setup>
 import AboutLayout from "~/components/About/AboutLayout.vue";
 import SteampunkTooltip from "~/components/Steampunk/SteampunkTooltip.vue";
+import { ageFromYearMonth } from "~/utils/age";
+import { BIRTHDAYS } from "~/constants/birthdays";
+
+// Computed from birth year+month at render time so it never goes stale.
+// useAboutNow() provides a shared, SSR-safe reference instant.
+const now = useAboutNow();
+const kennAge = ageFromYearMonth(BIRTHDAYS.kenn, now);
+// Format in UTC so SSR and client agree (and so it flips on the same boundary
+// as the age above, which is UTC-based).
+const currentMonthYear = now.toLocaleDateString("en-US", {
+  month: "long",
+  year: "numeric",
+  timeZone: "UTC",
+});
 
 useHead({
   title: "Philosophy & Vision - Kenn Williamson",
