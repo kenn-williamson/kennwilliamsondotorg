@@ -372,8 +372,14 @@
 
     <p>
       I'm theologically orthodox (I affirm the creeds and read the Church Fathers),
-      politically libertarian (I accept Rothbardian voluntarism, markets, and property rights),
-      and practically pacifist. <strong>Tolstoy</strong> articulated the pacifist vision brilliantly:
+      politically libertarian (I accept
+      <SteampunkTooltip
+        text="Murray Rothbard (1926-1995) was an economist and political philosopher associated with the Austrian School. He argued that all human interactions should be voluntary and that a legitimate society requires no coercive state -- private property, free markets, and voluntary association should govern everything instead. His framework is sometimes called anarcho-capitalism."
+        placement="top"
+      >
+        <span>Rothbardian</span> </SteampunkTooltip
+      >
+      voluntarism, markets, and property rights), and practically pacifist. <strong>Tolstoy</strong> articulated the pacifist vision brilliantly:
       true Christianity is fundamentally non-violent. When Jesus says "resist not evil," He means it.
       When He says to love your enemies and pray for those who persecute you, He's not being
       metaphorical. I share his pacifism and emphasis on personal transformation, though I differ
