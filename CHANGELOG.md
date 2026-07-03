@@ -1,5 +1,13 @@
 # Changelog
 
+## [1.13.2](https://github.com/kenn-williamson/kennwilliamsondotorg/compare/v1.13.1...v1.13.2) (2026-07-03)
+
+
+### Bug Fixes
+
+* **about:** rebalance tone on landing page, fix church/name inconsistencies ([e772672](https://github.com/kenn-williamson/kennwilliamsondotorg/commit/e772672e04d1cc9d5f62a7bb72f3cf88d2db4e74))
+* **about:** remove AI-tic voice drift, add computed separation duration ([#46](https://github.com/kenn-williamson/kennwilliamsondotorg/issues/46)) ([a84e0e6](https://github.com/kenn-williamson/kennwilliamsondotorg/commit/a84e0e6af589e1a9e805ff23400ccdc48ef8239a))
+
 ## [1.13.1](https://github.com/kenn-williamson/kennwilliamsondotorg/compare/v1.13.0...v1.13.1) (2026-07-03)
 
 
