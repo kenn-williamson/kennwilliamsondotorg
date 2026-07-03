@@ -12,9 +12,10 @@
     <h2>Present Tense</h2>
 
     <p>
-      I'm a single dad to three remarkable kids: Rory (10), Charlie (9), and Teddy
-      (5). By day, I'm an Enterprise Architect at SEQTEK, building software
-      systems and helping companies navigate the AI revolution with a healthy dose of
+      I'm a single dad to three remarkable kids: Rory ({{ roryAge }}), Charlie
+      ({{ charlieAge }}), and Teddy ({{ teddyAge }}). By day, I'm an Enterprise
+      Architect at SEQTEK, building software systems and helping companies
+      navigate the AI revolution with a healthy dose of
       realism. By calling, I'm a disciple of Christ trying to figure out what it means
       to walk in love, exploring theological territory that most people haven't heard of
       and many would find strange.
@@ -31,9 +32,8 @@
     </p>
 
     <p>
-      I'm also looking for the right person to share life with, though I've learned that
-      "right" means Kingdom-oriented, traditionally-minded, and mutually attracted. It's
-      a combination that dating apps haven't been able to deliver.
+      I'm also looking for the right person to share life with — someone dating apps
+      haven't quite been able to deliver.
     </p>
 
     <p>
@@ -83,12 +83,10 @@
     </p>
 
     <p>
-      I met my co-parent during that broken season. We had three kids together: Rory,
-      Charlie, and Teddy. They are the best things that have ever happened to me, full
-      stop. But the relationship with their mother was built on an unstable foundation.
-      She's dealing with her own trauma and wasn't interested in the new direction my
-      life was taking. We've been separated for over two and a half years and split
-      custody, with me having marginally more time. Teddy has
+      I met my co-parent during that broken season, and we had three kids together:
+      Rory, Charlie, and Teddy. They are the best things that have ever happened to me,
+      full stop. The relationship didn't last; we've been separated for over two and a
+      half years and split custody, with me having marginally more time. Teddy has
       <SteampunkTooltip :clickable="true" placement="top">
         <template #default>
           <span>level three autism</span>
@@ -126,26 +124,19 @@
       The transformation didn't happen all at once. There was a hungover morning when I
       prayed, "Lord, can you save me again?" and slowly, things started to change. I
       found my way back to faith, but not the vanilla Midwestern Protestantism I grew up
-      with. I started listening to Jordan Peterson, which led me to discover Jonathan
-      Pageau and the symbolic way of reading Scripture. Through Pageau, I found my way
-      to an Orthodox church and began reading the Church Fathers systematically. Then I
-      discovered René Girard's
-      <SteampunkTooltip
-        text="Mimetic theory proposes that human desire is imitative: we want things because others want them. This imitation leads to rivalry and conflict. Girard showed how societies resolve this through scapegoating: uniting against a victim to restore peace."
-        placement="top"
+      with — discovering Jonathan Pageau's symbolic way of reading Scripture led me to
+      Orthodox Christianity and the Church Fathers. (More on that journey, and the
+      theology I've landed on, in
+      <NuxtLink to="/about/faith" class="text-primary-700 hover:text-primary-900 underline"
+        >Finding Faith</NuxtLink
       >
-        <span>mimetic theory</span> </SteampunkTooltip
-      >, which gave me language for patterns I'd already been seeing in Scripture. I
-      found a reading of the Gospel that made sense of contradictions I'd struggled with
-      my whole life. I'm now what you'd call a
-      <SteampunkTooltip
-        text="Christian Voluntarism means I believe all human relationships should be voluntary: no coercion in politics, economics, or faith. It combines taking Jesus seriously (the Sermon on the Mount isn't optional) with rejection of state violence. I'm theologically orthodox (I affirm the creeds and read the Church Fathers), politically libertarian, and practically pacifist. Christianity and state coercion are incompatible."
-        placement="top"
+      and
+      <NuxtLink
+        to="/about/theology"
+        class="text-primary-700 hover:text-primary-900 underline"
+        >Theology &amp; Practice</NuxtLink
       >
-        <span>Christian Voluntaryist</span> </SteampunkTooltip
-      >, which sounds abstract but means I think Jesus meant what he said about turning
-      the other cheek and loving your enemies, and that we should build communities on
-      voluntary commitment, not violence or coercion.
+      below.)
     </p>
 
     <p>
@@ -211,7 +202,7 @@
         >
           Theology & Practice
         </NuxtLink>: Mimetic theory, the non-sacrificial reading of the Gospel, and what Christian
-        anarchism actually means
+        Voluntarism actually means
       </li>
       <li>
         <NuxtLink
@@ -258,16 +249,16 @@
       too open. This is the forum for that openness. You'll find vulnerability here, but
       not oversharing. Honesty about struggles, but not glorification of them.
       Self-criticism balanced with recognition of growth. And throughout it all, an
-      attempt to point toward something bigger than myself: toward the Kingdom, toward
-      love, toward truth.
+      attempt to point toward something bigger than myself: toward God, toward love,
+      toward truth.
     </p>
 
     <p>
       If you're here because you're considering working with me professionally, you'll
       get a sense of how I think and what I value. If you're here because we might date,
-      well, here's the whole picture. If you're here because you're curious about this
-      Girard guy or what "non-sacrificial reading" means, I'll do my best to explain
-      without assuming you have a theology degree.
+      this'll give you a real sense of who I am. If you're here because you're curious
+      about this Girard guy or what "non-sacrificial reading" means, I'll do my best to
+      explain without assuming you have a theology degree.
     </p>
 
     <p>Welcome to the story. It's still being written.</p>
@@ -280,8 +271,17 @@
 import AboutLayout from "~/components/About/AboutLayout.vue";
 import SteampunkTooltip from "~/components/Steampunk/SteampunkTooltip.vue";
 import AccessPrompt from "~/components/About/AccessPrompt.vue";
+import { ageFromYearMonth } from "~/utils/age";
+import { BIRTHDAYS } from "~/constants/birthdays";
 
 const { hasTrustedContactAccess } = useUserRoles()
+
+// Ages are computed from birth year+month at render time (birth day omitted for
+// privacy). useAboutNow() provides a shared, SSR-safe reference instant.
+const now = useAboutNow();
+const roryAge = ageFromYearMonth(BIRTHDAYS.rory, now);
+const charlieAge = ageFromYearMonth(BIRTHDAYS.charlie, now);
+const teddyAge = ageFromYearMonth(BIRTHDAYS.teddy, now);
 
 useHead({
   title: "About Kenn Williamson",

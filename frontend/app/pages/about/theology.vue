@@ -300,8 +300,8 @@
         </template>
         <span>non-sacrificial reading</span>
       </SteampunkTooltip>
-      says: that's backwards. God doesn't demand sacrifice. Humans demand sacrifice.
-      The crucifixion exposes humanity's scapegoating mechanism rather than
+      says: that's backwards. I've come to believe God doesn't demand sacrifice —
+      humans do. The crucifixion exposes humanity's scapegoating mechanism rather than
       participating in its logic.
     </p>
 
@@ -355,7 +355,7 @@
     <p>This is where people start thinking I'm crazy, but bear with me.</p>
 
     <p>
-      I describe myself as a Christian Voluntaryist. That sounds abstract, but
+      I describe myself as a Christian Voluntarist. That sounds abstract, but
       it's simply taking Jesus seriously when He says to turn the other cheek and love
       your enemies, and applying this to all human relationships.
     </p>
@@ -372,8 +372,14 @@
 
     <p>
       I'm theologically orthodox (I affirm the creeds and read the Church Fathers),
-      politically libertarian (I accept Rothbardian voluntarism, markets, and property rights),
-      and practically pacifist. <strong>Tolstoy</strong> articulated the pacifist vision brilliantly:
+      politically libertarian (I accept
+      <SteampunkTooltip
+        text="Murray Rothbard (1926-1995) was an economist and political philosopher associated with the Austrian School. He argued that all human interactions should be voluntary and that a legitimate society requires no coercive state -- private property, free markets, and voluntary association should govern everything instead. His framework is sometimes called anarcho-capitalism."
+        placement="top"
+      >
+        <span>Rothbardian</span> </SteampunkTooltip
+      >
+      voluntarism, markets, and property rights), and practically pacifist. <strong>Tolstoy</strong> articulated the pacifist vision brilliantly:
       true Christianity is fundamentally non-violent. When Jesus says "resist not evil," He means it.
       When He says to love your enemies and pray for those who persecute you, He's not being
       metaphorical. I share his pacifism and emphasis on personal transformation, though I differ

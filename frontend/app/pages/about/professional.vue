@@ -371,10 +371,9 @@
     </p>
 
     <p>
-      Ultimately, my professional work is part of my kingdom work. I want to use my
-      platform to be a witness, to love people well, to help organizations succeed in
-      ways that benefit their employees and customers. That's what success looks like to
-      me.
+      Ultimately, my professional work is an extension of my faith. I want to use my
+      platform to love people well, to help organizations succeed in ways that benefit
+      their employees and customers. That's what success looks like to me.
     </p>
 
     <p>
