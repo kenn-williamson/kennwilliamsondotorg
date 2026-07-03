@@ -15,24 +15,18 @@
       I'm a single dad to three remarkable kids: Rory ({{ roryAge }}), Charlie
       ({{ charlieAge }}), and Teddy ({{ teddyAge }}). By day, I'm an Enterprise
       Architect at SEQTEK, building software systems and helping companies cut through AI
-      hype to figure out what actually works. By calling, I'm a disciple of Christ trying
-      to figure out what it means to walk in love, exploring theological territory that
-      most people haven't heard of and many would find strange.
+      hype to figure out what actually works. By calling, I'm a disciple of Christ, still
+      figuring out what it means to walk in love.
     </p>
 
     <p>
       I live in Jenks, Oklahoma, where I'm juggling work deadlines, dance recitals,
       autism therapy appointments, homeschool co-op volunteering, and an ambitious
       personal website project that lets me geek out on Rust and modern web
-      architecture. I read theology the way other people binge Netflix. I used to play
-      many video games until real-time gaming and single parenthood proved incompatible.
-      I'm learning to hike mountains despite a fear of heights, trying to stay patient
-      when I want to be critical, and working on actually believing the grace I preach.
-    </p>
-
-    <p>
-      I'm also looking for the right person to share life with, someone dating apps
-      haven't quite been able to deliver.
+      architecture. I like to write music, blog posts, and code, play guitar reasonably
+      well, and I'm a huge nerd for anime and way too many fantasy novels. I'm learning
+      to hike mountains despite a fear of heights, trying to stay patient when I want to
+      be critical, and working on living the grace I preach.
     </p>
 
     <p>
@@ -69,8 +63,7 @@
       College was supposed to be the fresh start. Instead, it was a ten-year odyssey of
       false starts, major changes, and dropping out multiple times. I finally graduated
       with a mechanical engineering degree at 28, but not before working at a wastewater
-      treatment plant where my boss told me I could have his job in ten years if I stuck
-      with it. That was the clearest picture of a future I absolutely didn't want.
+      treatment plant and many other temporary jobs.
     </p>
 
     <p>
@@ -121,10 +114,9 @@
     </p>
 
     <p>
-      The transformation didn't happen all at once. There was a hungover morning when I
-      prayed, "Lord, can you save me again?" and slowly, things started to change. I
-      found my way back to faith, but not the vanilla Midwestern Protestantism I grew up
-      with. Discovering Jonathan Pageau's symbolic way of reading Scripture led me to
+      The transformation didn't happen all at once. I found my way back to faith, but
+      not the Midwestern Protestantism I grew up with. Discovering Jonathan
+      Pageau's symbolic way of reading Scripture led me to
       Orthodox Christianity and the Church Fathers. (More on that journey, and the
       theology I've landed on, in
       <NuxtLink to="/about/faith" class="text-primary-700 hover:text-primary-900 underline"
@@ -250,14 +242,6 @@
       self-critical without losing sight of how far I've come. Throughout it all, I'm
       trying to point toward something bigger than myself: toward God, toward love,
       toward truth.
-    </p>
-
-    <p>
-      If you're here because you're considering working with me professionally, you'll
-      get a sense of how I think and what I value. If you're here because we might date,
-      this'll give you a real sense of who I am. If you're here because you're curious
-      about this Girard guy or what "non-sacrificial reading" means, I'll do my best to
-      explain without assuming you have a theology degree.
     </p>
 
     <p>Welcome to the story. It's still being written.</p>

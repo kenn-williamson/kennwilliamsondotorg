@@ -353,7 +353,7 @@
 
     <p>
       But there were good teachers at Metro. I had two fantastic math teachers, Mrs.
-      Stayton and Mrs. Passmore, who nurtured my talent and pushed me with the right mix
+      Staton and Mrs. Passmore, who nurtured my talent and pushed me with the right mix
       of empathy and tough love. There was a Bible teacher who was genuinely empathetic.
       These relationships mattered, even if the overall experience was difficult.
     </p>
@@ -410,7 +410,7 @@
 
     <p>
       I was involved in several activities: drama (performed in a short, fun one-act
-      play), chess club where we made it to the conference championship, and varsity
+      play), chess club, quiz bowl where we made it to the conference championship, and varsity
       football where I earned a letter mostly because they needed seniors on the team,
       not because of any particular athletic skill on my part.
     </p>

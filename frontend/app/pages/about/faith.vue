@@ -185,9 +185,8 @@
     <h2>Where I Am Now</h2>
 
     <p>
-      I'm now at Church on the Move. It's not Orthodox, and it's not a place where my
-      particular theological views are particularly understood or welcomed. But it's
-      where I've found genuine community and am able to serve. I'm part of Bible study
+      I recently started attending an Orthodox parish. I'm trying to find my place
+      within the community. I'm part of Bible study
       groups and small group ministries where I can share insights with believers at
       different stages of their faith journey.
     </p>

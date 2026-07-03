@@ -365,9 +365,9 @@
     <h2>Church and Community</h2>
 
     <p>
-      I'm at Church on the Move, which has been a good community for me. I'm involved in
-      Bible study groups and small group ministries. I feel like I'm making some impact
-      in encouraging and teaching newer believers, which is fulfilling.
+      I recently started attending an Orthodox parish. I'm still finding my place within
+      the community, but I'm part of Bible study groups and small group ministries,
+      sharing insights with believers at different stages of their faith journey.
     </p>
 
     <p>
