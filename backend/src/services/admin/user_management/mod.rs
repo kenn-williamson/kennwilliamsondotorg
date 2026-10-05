@@ -183,7 +183,7 @@ impl UserManagementService {
 
 /// Generate a random password for admin reset
 fn generate_random_password() -> String {
-    use rand::{Rng, distr::Alphanumeric};
+    use rand::{RngExt, distr::Alphanumeric};
     rand::rng()
         .sample_iter(&Alphanumeric)
         .take(12)

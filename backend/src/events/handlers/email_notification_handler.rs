@@ -805,7 +805,7 @@ impl EventHandler<UserRegisteredEvent> for UserRegisteredEmailHandler {
 
 /// Generate a secure random verification token (32 bytes = 256 bits)
 fn generate_verification_token() -> String {
-    use rand::Rng;
+    use rand::RngExt;
     let mut token_bytes = [0u8; 32];
     rand::rng().fill(&mut token_bytes);
     hex::encode(token_bytes)
@@ -821,7 +821,7 @@ fn hash_verification_token(token: &str) -> String {
 
 /// Generate a secure random unsubscribe token (32 bytes = 256 bits)
 fn generate_unsubscribe_token() -> String {
-    use rand::Rng;
+    use rand::RngExt;
     let mut token_bytes = [0u8; 32];
     rand::rng().fill(&mut token_bytes);
     hex::encode(token_bytes)
