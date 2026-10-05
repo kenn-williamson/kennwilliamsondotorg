@@ -19,20 +19,21 @@ ignore = [
     # ignores were removed. Caveat: aws-smithy-http-client 1.1.13+ depends on
     # rustls-pemfile again, so RUSTSEC-2025-0134 may resurface after an AWS SDK update.
 
-    # RUSTSEC-2026-0097: rand unsoundness with custom logger using rand::rng()
-    # Reason: Our direct dependency (rand 0.9) is updated to 0.9.3 (patched).
-    # This ignore covers the transitive rand 0.8.5 pulled in by sqlx-postgres/sqlx-mysql,
-    # actix-multipart, and oauth2, which we cannot update until those crates release new versions.
-    # TODO: Remove once upstream deps update — tracking in #20
-    "RUSTSEC-2026-0097",
-
     # RUSTSEC-2026-0098, RUSTSEC-2026-0099, RUSTSEC-2026-0104: rustls-webpki 0.101.7
-    # Reason: Pulled in transitively by aws-smithy-http-client 1.1.12 (latest available) via
+    # Reason: Pulled in transitively by aws-smithy-http-client 1.5.0 (latest available) via
     # hyper-rustls 0.24.2 (legacy compat path). Our actual HTTPS calls use the modern rustls
-    # 0.23 / rustls-webpki 0.103.13 line, which is patched. The legacy 0.101.7 path is dead
+    # 0.23 / rustls-webpki 0.103.15 line, which is patched. The legacy 0.101.7 path is dead
     # code that we cannot remove until aws-smithy-http-client drops the hyper-rustls 0.24
     # compat connector. Tracked upstream in awslabs/smithy-rs.
     "RUSTSEC-2026-0098",
     "RUSTSEC-2026-0099",
     "RUSTSEC-2026-0104",
+
+    # RUSTSEC-2026-0258: h2 0.3.27 unbounded empty DATA frames (fixed only in h2 >=0.4.16)
+    # Reason: No patched 0.3.x release. h2 0.3 comes from actix-http 3.x, awc (dev-only via
+    # actix-test) and aws-smithy-http-client's hyper 0.14 path. The backend publishes no ports
+    # and is reached only through nginx, which proxies HTTP/1.x upstream, so the actix HTTP/2
+    # server path is unreachable; the AWS client only talks to AWS endpoints.
+    # TODO: Remove once actix-http moves to h2 0.4.
+    "RUSTSEC-2026-0258",
 ]
