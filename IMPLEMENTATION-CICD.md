@@ -376,7 +376,7 @@ npm run test:coverage
 **Environment**:
 - PostgreSQL service container (ghcr.io/fboulnois/pg_uuidv7:1.6.0)
 - Redis 7 service container
-- Rust 1.91.1 toolchain with llvm-tools-preview
+- Rust 1.95.0 toolchain with llvm-tools-preview
 - Node.js 24
 - cargo-llvm-cov, cargo-nextest, cargo-audit
 

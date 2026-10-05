@@ -57,7 +57,7 @@ A modern web application built with Nuxt.js 4 and Rust, featuring OAuth and JWT 
 - **Vitest** - Unit testing with coverage
 
 ### Backend
-- **Rust 1.91.1** - Systems programming language
+- **Rust 1.95.0** - Systems programming language
 - **Actix-web 4.x** - High-performance web framework
 - **PostgreSQL 17** - Database with UUIDv7 support
 - **SQLx** - Compile-time verified SQL queries

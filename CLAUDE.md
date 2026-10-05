@@ -29,7 +29,7 @@
 
 ### Core Technologies
 - **Frontend**: Nuxt.js 4.0.3 (Vue 3 + SSR + TypeScript)
-- **Backend**: Rust 1.91.1 + Actix-web 4.x
+- **Backend**: Rust 1.95.0 + Actix-web 4.x
 - **Database**: PostgreSQL 17 (via ghcr.io/fboulnois/pg_uuidv7 image)
 - **Infrastructure**: Docker Compose + Nginx + AWS
 

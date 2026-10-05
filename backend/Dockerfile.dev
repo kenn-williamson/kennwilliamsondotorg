@@ -1,5 +1,5 @@
 # Development Dockerfile for Rust backend with hot reload
-FROM rust:1.90-alpine AS dev
+FROM rust:1.95.0-alpine AS dev
 
 # Install development dependencies
 RUN apk add --no-cache \
