@@ -34,9 +34,9 @@ export default defineConfig({
   },
   resolve: {
     alias: {
-      '~': resolve(__dirname, './app'),
-      '#shared': resolve(__dirname, './shared'),
-      '@': resolve(__dirname, './app'),
+      '~': resolve(import.meta.dirname, './app'),
+      '#shared': resolve(import.meta.dirname, './shared'),
+      '@': resolve(import.meta.dirname, './app'),
     },
   },
   define: {

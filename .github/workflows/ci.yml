@@ -286,7 +286,7 @@ jobs:
 
       - name: Run security audit
         working-directory: frontend
-        run: npm audit --audit-level=high
+        run: npx audit-ci --config audit-ci.jsonc
 
   docker-build:
     name: Docker Build Validation

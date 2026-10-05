@@ -112,7 +112,7 @@ if [ "$CHECK_FRONTEND" = true ]; then
     fi
 
     echo -e "${BLUE}[7/7] Frontend Security Audit${NC}"
-    if npm audit --audit-level=high; then
+    if npx audit-ci --config audit-ci.jsonc; then
         echo -e "${GREEN}✓ Frontend audit passed${NC}\n"
     else
         echo -e "${RED}✗ Frontend audit failed${NC}\n"

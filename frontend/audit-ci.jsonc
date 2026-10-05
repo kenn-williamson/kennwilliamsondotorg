@@ -1,0 +1,19 @@
+// npm audit gate (CI + scripts/ci-check.sh). Mirrors backend/.cargo/audit.toml:
+// each allowlisted advisory documents why it is accepted.
+{
+  "$schema": "https://github.com/IBM/audit-ci/raw/main/docs/schema.json",
+  "high": true,
+  "report-type": "summary",
+  "allowlist": [
+    // node-forge <=1.4.0, no patched release. Pulled in only by listhen (nuxt dev
+    // server, via @nuxt/cli and nitropack) to generate self-signed dev certs; RSA
+    // signature verification is never used and node-forge is not in .output.
+    // TODO: Remove once listhen/@nuxt/cli drop node-forge or a fix ships.
+    "GHSA-86w9-cpqp-85rv",
+
+    // braces <=3.0.3, no patched release. Pulled in only by tailwindcss 3 (via
+    // @nuxtjs/tailwindcss) for build-time globbing of our own content paths.
+    // TODO: Remove with the Tailwind 4 migration or once braces ships a fix.
+    "GHSA-vfj7-8cjw-p6xm"
+  ]
+}
