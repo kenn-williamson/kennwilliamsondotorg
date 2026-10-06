@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.14.0](https://github.com/kenn-williamson/kennwilliamsondotorg/compare/v1.13.2...v1.14.0) (2026-10-06)
+
+
+### Features
+
+* **music:** add Zosima's Pupil section to music page ([#48](https://github.com/kenn-williamson/kennwilliamsondotorg/issues/48)) ([4bbacf3](https://github.com/kenn-williamson/kennwilliamsondotorg/commit/4bbacf3aca0ca467aa809585fd07c181bb05fd3d))
+
 ## [1.13.2](https://github.com/kenn-williamson/kennwilliamsondotorg/compare/v1.13.1...v1.13.2) (2026-07-03)
 
 
