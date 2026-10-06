@@ -6,7 +6,7 @@ Rust-based REST API using Actix-web 4.x with PostgreSQL integration and comprehe
 ## Technology Stack Decisions
 
 ### Core Technologies
-- **Language**: Rust 1.91.1
+- **Language**: Rust 1.95.0
   - Why: Type safety, performance, fearless concurrency
 - **Framework**: Actix-web 4.x
   - Why: High performance, async by default, mature ecosystem

@@ -309,7 +309,7 @@ impl AuthService {
 
 /// Generate refresh token string
 fn generate_refresh_token_string() -> String {
-    use rand::{Rng, rng};
+    use rand::{RngExt, rng};
     let mut token_bytes = [0u8; 32]; // 256 bits
     rng().fill(&mut token_bytes);
     hex::encode(token_bytes)

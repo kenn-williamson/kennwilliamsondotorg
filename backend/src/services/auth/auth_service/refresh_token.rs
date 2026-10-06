@@ -1,6 +1,6 @@
 use anyhow::Result;
 use chrono::{Duration, Utc};
-use rand::{Rng, rng};
+use rand::{RngExt, rng};
 use sha2::{Digest, Sha256};
 use uuid::Uuid;
 

@@ -93,12 +93,12 @@ This document explains the CI/CD (Continuous Integration / Continuous Deployment
 #### Frontend Tests (frontend-tests job)
 1. **TypeScript type checking** (vue-tsc, no compilation, type safety only)
 2. **Vitest tests with coverage** (unit and integration tests)
-3. **npm audit** (security vulnerability scanning, high severity)
+3. **npm audit** via `audit-ci` (security vulnerability scanning, high severity)
 
 **Why these checks**:
 - Type checking: Catches type errors before runtime, demonstrates TypeScript usage
 - Vitest: Fast test runner for Nuxt/Vue, modern tooling
-- npm audit: Frontend security scanning (set to high severity to avoid noise)
+- npm audit: Frontend security scanning (set to high severity to avoid noise). `audit-ci` adds what plain `npm audit` lacks: an allowlist for unpatched advisories, documented in `frontend/audit-ci.jsonc` like `backend/.cargo/audit.toml`
 
 #### Docker Build CI (docker-build job)
 1. **Build backend Docker image** (validates production build process)
@@ -376,7 +376,7 @@ npm run test:coverage
 **Environment**:
 - PostgreSQL service container (ghcr.io/fboulnois/pg_uuidv7:1.6.0)
 - Redis 7 service container
-- Rust 1.91.1 toolchain with llvm-tools-preview
+- Rust 1.95.0 toolchain with llvm-tools-preview
 - Node.js 24
 - cargo-llvm-cov, cargo-nextest, cargo-audit
 

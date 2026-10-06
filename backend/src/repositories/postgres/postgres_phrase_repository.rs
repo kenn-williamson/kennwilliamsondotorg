@@ -46,7 +46,7 @@ impl PhraseRepository for PostgresPhraseRepository {
         // Smart random selection based on dataset size
         let phrase_text = if count <= 100 {
             // For small datasets, use OFFSET with random
-            use rand::Rng;
+            use rand::RngExt;
             let random_offset = rand::rng().random_range(0..count);
             sqlx::query_scalar!(
                 r#"
@@ -117,7 +117,7 @@ impl PhraseRepository for PostgresPhraseRepository {
         // Smart random selection based on dataset size
         let phrase_text = if count <= 100 {
             // For small datasets, use OFFSET with random
-            use rand::Rng;
+            use rand::RngExt;
             let random_offset = rand::rng().random_range(0..count);
             sqlx::query_scalar!(
                 r#"

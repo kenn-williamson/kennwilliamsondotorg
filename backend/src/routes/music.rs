@@ -224,10 +224,10 @@ async fn read_file_field(
 
         let content_disposition = field.content_disposition();
 
-        if let Some(name) = content_disposition.get_name()
+        if let Some(name) = content_disposition.and_then(|cd| cd.get_name())
             && name == field_name
         {
-            if let Some(fname) = content_disposition.get_filename() {
+            if let Some(fname) = content_disposition.and_then(|cd| cd.get_filename()) {
                 filename = fname.to_string();
             }
 

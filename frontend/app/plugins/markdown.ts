@@ -39,6 +39,9 @@ export default defineNuxtPlugin(() => {
     },
   })
 
+  // markdown-it 15 disabled fuzzy links by default; keep auto-linking bare domains
+  md.linkify.set({ fuzzyLink: true })
+
   // Add mermaid diagram support
   md.use(markdownItMermaid)
 

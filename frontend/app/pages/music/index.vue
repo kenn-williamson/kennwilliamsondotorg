@@ -16,6 +16,35 @@
             </p>
           </header>
 
+          <!-- Artist project -->
+          <section class="mb-10 flex flex-col sm:flex-row gap-6 items-center sm:items-start">
+            <img
+              src="~/assets/images/zosimas-pupil-eye.jpg"
+              alt="Zosima's Pupil logo: a grey eye with a neon ZP in the pupil"
+              class="w-36 h-36 sm:w-40 sm:h-40 rounded-full object-cover border-2 border-primary-700 shadow-md flex-shrink-0"
+            />
+            <div class="flex-1 min-w-0">
+              <h2 class="text-2xl sm:text-3xl font-bold text-primary-900 mb-3">Zosima's Pupil</h2>
+              <p class="text-lg text-nautical-700">
+                I release these songs as <strong>Zosima's Pupil</strong>. The debut EP, <em>Vigil and Thirst</em>, is out December 4, 2026 on Skandalon Records, with a new single every Friday from October 30.
+              </p>
+              <p class="mt-4 flex flex-wrap gap-x-6 gap-y-2">
+                <a
+                  href="https://open.spotify.com/artist/2fSLvbg3aLEubTzxbFjG5n"
+                  target="_blank"
+                  rel="noopener"
+                  class="text-primary-700 hover:text-primary-900 font-medium underline underline-offset-2"
+                >Zosima's Pupil on Spotify</a>
+                <a
+                  href="https://music.apple.com/artist/6817109497"
+                  target="_blank"
+                  rel="noopener"
+                  class="text-primary-700 hover:text-primary-900 font-medium underline underline-offset-2"
+                >Zosima's Pupil on Apple Music</a>
+              </p>
+            </div>
+          </section>
+
           <!-- Loading State -->
           <div v-if="pending" class="space-y-4">
             <div v-for="i in 3" :key="i" class="flex gap-4 bg-white rounded-lg shadow-md p-4 animate-pulse border border-nautical-200">
@@ -80,7 +109,7 @@ useHead({
   meta: [
     {
       name: 'description',
-      content: 'Original songs by Kenn Williamson, written and directed by Kenn, produced with AI.'
+      content: "Original songs by Kenn Williamson, released as Zosima's Pupil. Written and directed by Kenn, produced with AI."
     }
   ]
 })

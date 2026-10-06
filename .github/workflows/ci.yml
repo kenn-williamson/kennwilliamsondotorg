@@ -14,7 +14,7 @@ concurrency:
 
 env:
   CARGO_TERM_COLOR: always
-  RUST_VERSION: 1.91.1
+  RUST_VERSION: 1.95.0
 
 jobs:
   # Detect which areas changed so we only run the heavy jobs that matter.
@@ -286,7 +286,7 @@ jobs:
 
       - name: Run security audit
         working-directory: frontend
-        run: npm audit --audit-level=high
+        run: npx audit-ci --config audit-ci.jsonc
 
   docker-build:
     name: Docker Build Validation
