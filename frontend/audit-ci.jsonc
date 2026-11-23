@@ -9,11 +9,6 @@
     // server, via @nuxt/cli and nitropack) to generate self-signed dev certs; RSA
     // signature verification is never used and node-forge is not in .output.
     // TODO: Remove once listhen/@nuxt/cli drop node-forge or a fix ships.
-    "GHSA-86w9-cpqp-85rv",
-
-    // braces <=3.0.3, no patched release. Pulled in only by tailwindcss 3 (via
-    // @nuxtjs/tailwindcss) for build-time globbing of our own content paths.
-    // TODO: Remove with the Tailwind 4 migration or once braces ships a fix.
-    "GHSA-vfj7-8cjw-p6xm"
+    "GHSA-86w9-cpqp-85rv"
   ]
 }
